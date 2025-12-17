@@ -1,0 +1,39 @@
+.markdown {
+  line-height: 1.9;
+  font-size: 18px;
+}
+
+.markdown h1 { font-size: 32px; margin: 24px 0 12px; }
+.markdown h2 { font-size: 24px; margin: 22px 0 10px; }
+.markdown h3 { font-size: 20px; margin: 18px 0 8px; }
+
+.markdown p { margin: 12px 0; }
+
+.markdown ul, .markdown ol {
+  margin: 12px 0;
+  padding-right: 22px; /* RTL */
+}
+
+.markdown li { margin: 6px 0; }
+
+.markdown a { text-decoration: underline; }
+
+.markdown blockquote {
+  margin: 14px 0;
+  padding: 10px 14px;
+  border-right: 4px solid #ccc;
+  background: rgba(0,0,0,0.04);
+}
+
+.markdown code {
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.06);
+}
+
+.markdown pre {
+  padding: 12px;
+  border-radius: 10px;
+  overflow: auto;
+  background: rgba(0,0,0,0.06);
+}
