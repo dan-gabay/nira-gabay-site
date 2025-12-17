@@ -29,7 +29,7 @@ export default async function ArticlePage({ params }: Props) {
   let error = null;
 
   // First try by slug
-  const { data: articleBySlug } = await supabase
+  const { data: articleBySlug, error: slugError } = await supabase
     .from('articles')
     .select(`
       *,
@@ -40,8 +40,11 @@ export default async function ArticlePage({ params }: Props) {
       )
     `)
     .eq('slug', slug)
-    .eq('is_published', true)
     .single();
+  
+  console.log('Looking for slug:', slug);
+  console.log('Found by slug:', articleBySlug);
+  console.log('Error:', slugError);
 
   if (articleBySlug) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -63,8 +66,10 @@ export default async function ArticlePage({ params }: Props) {
         )
       `)
       .eq('id', slug)
-      .eq('is_published', true)
       .single();
+    
+    console.log('Trying by ID:', slug);
+    console.log('Found by ID:', articleById);
     
     if (articleById) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
