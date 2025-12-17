@@ -189,6 +189,17 @@ export default function Articles() {
                   transition={{ duration: 0.4, delay: index * 0.1 }}
                   className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
                 >
+                  {/* Article Image */}
+                  {article.image_url && (
+                    <div className="relative h-52 w-full overflow-hidden bg-stone-100">
+                      <img
+                        src={article.image_url}
+                        alt={article.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  )}
+                  
                   <div className="p-6">
                     <h3 className="text-xl font-bold text-stone-800 mb-3 group-hover:text-amber-700 transition-colors">
                       {article.title}

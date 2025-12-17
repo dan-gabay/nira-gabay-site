@@ -137,6 +137,17 @@ export default async function ArticlePage({ params }: Props) {
       {/* Content */}
       <section className="py-16">
         <div className="container mx-auto px-4 md:px-8 max-w-4xl">
+          {/* Featured Image */}
+          {article.image_url && (
+            <div className="mb-12">
+              <img
+                src={article.image_url}
+                alt={article.title}
+                className="w-full h-auto max-h-[500px] object-cover rounded-2xl shadow-lg"
+              />
+            </div>
+          )}
+          
           <article className="prose prose-lg prose-stone max-w-none
             prose-headings:text-stone-800 prose-headings:font-bold
             prose-p:text-stone-700 prose-p:leading-relaxed
