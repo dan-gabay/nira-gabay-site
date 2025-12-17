@@ -75,7 +75,7 @@ export default function Articles() {
             <span className="inline-block px-4 py-2 bg-amber-100 rounded-full text-amber-800 text-sm mb-6">
               מאמרים
             </span>
-            <h1 className="text-4xl md:text-5xl font-bold text-stone-800 mb-6 font-serif">
+            <h1 className="text-4xl md:text-5xl font-bold text-stone-800 mb-6">
               ידע ותובנות
             </h1>
             <p className="text-xl text-stone-600">

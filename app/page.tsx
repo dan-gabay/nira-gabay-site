@@ -63,7 +63,7 @@ export default function Home() {
             <span className="inline-block px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm mb-6">
               פסיכותרפיה ממכון אדלר | CBT
             </span>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 font-serif leading-tight">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
               נירה גבאי
             </h1>
             <p className="text-xl md:text-2xl text-white/90 mb-4 font-light">
@@ -104,7 +104,7 @@ export default function Home() {
       >
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-stone-800 mb-8 font-serif">
+            <h2 className="text-3xl md:text-4xl font-bold text-stone-800 mb-8">
               ברוכים הבאים למרחב הטיפולי שלי
             </h2>
             <p className="text-lg text-stone-600 leading-relaxed mb-8">
@@ -133,7 +133,7 @@ export default function Home() {
       >
         <div className="container mx-auto px-4 md:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-stone-800 mb-4 font-serif">
+            <h2 className="text-3xl md:text-4xl font-bold text-stone-800 mb-4">
               תחומי ההתמחות שלי
             </h2>
             <p className="text-lg text-stone-600 max-w-2xl mx-auto">
@@ -152,7 +152,7 @@ export default function Home() {
                     {service.icon}
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-bold text-stone-800 mb-2 font-serif">{service.title}</h3>
+                    <h3 className="text-lg font-bold text-stone-800 mb-2">{service.title}</h3>
                     <p className="text-stone-600 text-sm leading-relaxed">{service.description}</p>
                   </div>
                 </div>
@@ -183,7 +183,7 @@ export default function Home() {
                   />
                 </div>
                 <div className="w-full md:w-2/3 text-center md:text-right">
-                  <h3 className="text-2xl font-bold text-stone-800 mb-4 font-serif">הקליניקה שלי</h3>
+                  <h3 className="text-2xl font-bold text-stone-800 mb-4">הקליניקה שלי</h3>
                   <p className="text-stone-600 leading-relaxed mb-6">
                     הקליניקה ממוקמת במושב שואבה, במרחב שקט וירוק המאפשר חוויה טיפולית אינטימית ומרגיעה. 
                     המקום מעוצב ליצירת אווירה חמה ומכילה.
