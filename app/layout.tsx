@@ -23,10 +23,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="he" dir="rtl">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <nav style={{
+          width: '100%',
+          background: '#fff',
+          borderBottom: '1px solid #eee',
+          padding: '0.5rem 0',
+          marginBottom: 24,
+          position: 'sticky',
+          top: 0,
+          zIndex: 100
+        }}>
+          <div style={{maxWidth: 1200, margin: '0 auto', display: 'flex', gap: 24, alignItems: 'center', justifyContent: 'flex-end', padding: '0 1rem'}}>
+            <a href="/" style={{fontWeight: 500, color: '#222', textDecoration: 'none'}}>דף הבית</a>
+            <a href="/about" style={{fontWeight: 500, color: '#222', textDecoration: 'none'}}>אודות</a>
+            <a href="/articles" style={{fontWeight: 500, color: '#222', textDecoration: 'none'}}>מאמרים</a>
+          </div>
+        </nav>
         {children}
       </body>
     </html>

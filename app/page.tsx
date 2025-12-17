@@ -1,4 +1,6 @@
+"use client";
 import React from 'react';
+import { motion } from 'framer-motion';
 
 const services = [
   {
@@ -37,7 +39,12 @@ export default function Home() {
   return (
     <div className="overflow-hidden">
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center">
+      <motion.section
+        className="relative min-h-[90vh] flex items-center"
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+      >
         {/* Background */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-l from-stone-900/70 via-stone-900/50 to-transparent z-10" />
@@ -85,10 +92,16 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Introduction Section */}
-      <section className="py-24 bg-white">
+      <motion.section
+        className="py-24 bg-white"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+      >
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-stone-800 mb-8 font-serif">
@@ -108,10 +121,16 @@ export default function Home() {
             </a>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Services Section */}
-      <section className="py-24 bg-gradient-to-b from-stone-50 to-white">
+      <motion.section
+        className="py-24 bg-gradient-to-b from-stone-50 to-white"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+      >
         <div className="container mx-auto px-4 md:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-stone-800 mb-4 font-serif">
@@ -141,10 +160,16 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Clinic Info */}
-      <section className="py-20 bg-gradient-to-br from-amber-50 to-stone-50">
+      <motion.section
+        className="py-20 bg-gradient-to-br from-amber-50 to-stone-50"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+      >
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-3xl p-8 md:p-12 shadow-xl">
@@ -171,7 +196,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
     </div>
   );
 }
