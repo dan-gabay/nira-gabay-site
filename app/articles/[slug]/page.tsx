@@ -4,15 +4,77 @@ import { ArrowRight, Calendar, Tag } from 'lucide-react';
 
 type Props = { params: { slug: string } };
 
+type Article = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  content?: string;
+  image_url?: string;
+  reading_time?: number;
+  likes_count?: number;
+  views_count?: number;
+  created_date?: string;
+  is_published?: boolean;
+  tag_names?: string[];
+  article_tags?: Array<{tags: {name: string}}>;
+};
+
 export default async function ArticlePage({ params }: Props) {
   const slug = params.slug;
 
-  const { data: article, error } = await supabase
+  // Try to fetch by slug first, then by ID
+  let article: Article | null = null;
+  let error = null;
+
+  // First try by slug
+  const { data: articleBySlug } = await supabase
     .from('articles')
-    .select('*')
+    .select(`
+      *,
+      article_tags(
+        tags(
+          name
+        )
+      )
+    `)
     .eq('slug', slug)
     .eq('is_published', true)
     .single();
+
+  if (articleBySlug) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tags = (articleBySlug.article_tags as any || []).map((at: any) => at.tags?.name).filter(Boolean);
+    article = {
+      ...articleBySlug,
+      tag_names: tags
+    } as Article;
+  } else {
+    // If not found by slug, try by ID
+    const { data: articleById, error: idError } = await supabase
+      .from('articles')
+      .select(`
+        *,
+        article_tags(
+          tags(
+            name
+          )
+        )
+      `)
+      .eq('id', slug)
+      .eq('is_published', true)
+      .single();
+    
+    if (articleById) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tags = (articleById.article_tags as any || []).map((at: any) => at.tags?.name).filter(Boolean);
+      article = {
+        ...articleById,
+        tag_names: tags
+      } as Article;
+    }
+    error = idError;
+  }
 
   if (error || !article) {
     return (

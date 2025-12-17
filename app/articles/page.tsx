@@ -11,8 +11,14 @@ type Article = {
   slug: string;
   excerpt?: string;
   content?: string;
-  tag_names?: string[];
+  image_url?: string;
+  reading_time?: number;
+  likes_count?: number;
+  views_count?: number;
   created_date?: string;
+  is_published?: boolean;
+  tag_names?: string[];
+  article_tags?: Array<{tags: {name: string}}>;
 };
 
 type Tag = {
@@ -29,24 +35,50 @@ export default function Articles() {
 
   useEffect(() => {
     async function fetchData() {
+      // Fetch articles with their tags through the join table
       const { data: articlesData } = await supabase
         .from('articles')
-        .select('*')
+        .select(`
+          id,
+          title,
+          slug,
+          excerpt,
+          content,
+          image_url,
+          reading_time,
+          likes_count,
+          views_count,
+          created_date,
+          is_published,
+          article_tags(
+            tags(
+              name
+            )
+          )
+        `)
         .eq('is_published', true)
         .order('created_date', { ascending: false });
       
       const { data: tagsData } = await supabase
         .from('tags')
-        .select('*');
+        .select('id, name');
       
-      setArticles(articlesData || []);
+      // Transform the data to extract tag names
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const transformedArticles = (articlesData || []).map((article: any) => ({
+        ...article,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        tag_names: (article.article_tags || []).map((at: any) => at.tags?.name).filter(Boolean)
+      }));
+      
+      setArticles(transformedArticles as Article[]);
       setTags(tagsData || []);
       setIsLoading(false);
     }
     fetchData();
   }, []);
 
-  const filteredArticles = articles.filter(article => {
+  const filteredArticles = articles.filter((article) => {
     const matchesSearch =
       !searchQuery ||
       article.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -54,9 +86,7 @@ export default function Articles() {
 
     const matchesTag =
       !selectedTag ||
-      (Array.isArray(article.tag_names)
-        ? article.tag_names.includes(selectedTag)
-        : false);
+      (Array.isArray(article.tag_names) && article.tag_names.includes(selectedTag));
 
     return matchesSearch && matchesTag;
   });
@@ -153,7 +183,7 @@ export default function Articles() {
               {filteredArticles.map((article, index) => (
                 <motion.a
                   key={article.id}
-                  href={`/articles/${article.slug}`}
+                  href={`/articles/${article.slug || article.id}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.1 }}
@@ -165,6 +195,9 @@ export default function Articles() {
                     </h3>
                     {article.excerpt && (
                       <p className="text-stone-600 line-clamp-3 mb-4">{article.excerpt}</p>
+                    )}
+                    {!article.slug && (
+                      <div className="text-xs text-red-500 mb-2">⚠️ חסר slug - משתמש ב-ID</div>
                     )}
                     <div className="text-amber-700 text-sm font-medium">קרא עוד ←</div>
                   </div>

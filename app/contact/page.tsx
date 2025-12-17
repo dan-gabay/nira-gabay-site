@@ -100,7 +100,8 @@ export default function Contact() {
           email: formData.email,
           phone: formData.phone,
           message: formData.message,
-          created_at: new Date().toISOString()
+          is_read: false,
+          created_date: new Date().toISOString()
         }]);
 
       if (submitError) throw submitError;
