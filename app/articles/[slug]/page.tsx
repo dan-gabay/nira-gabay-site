@@ -1,4 +1,4 @@
-import { createClient } from '../../../lib/supabaseServer';
+import { supabaseServer } from '../../../lib/supabaseServer';
 import Link from 'next/link';
 import { ArrowRight, Calendar, Tag } from 'lucide-react';
 
@@ -22,7 +22,7 @@ type Article = {
 
 export default async function ArticlePage({ params }: Props) {
   const slug = params.slug;
-  const supabase = createClient();
+  const supabase = supabaseServer();
 
   // Try to fetch by slug first, then by ID
   let article: Article | null = null;
