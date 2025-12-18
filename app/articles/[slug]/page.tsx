@@ -21,7 +21,7 @@ type Article = {
 };
 
 export default async function ArticlePage({ params }: Props) {
-  const slug = params.slug;
+  const { slug } = await params; // Next.js 15: params is a Promise!
   const supabase = supabaseServer();
 
   // Try to fetch by slug first, then by ID
@@ -40,12 +40,13 @@ export default async function ArticlePage({ params }: Props) {
       )
     `)
     .eq('slug', slug)
-    .eq('is_published', 'true')
+    .eq('is_published', true)
     .single();
   
+  console.log('=== ARTICLE PAGE DEBUG ===');
   console.log('Looking for slug:', slug);
-  console.log('Found by slug:', articleBySlug);
-  console.log('Error:', slugError);
+  console.log('Found by slug:', JSON.stringify(articleBySlug, null, 2));
+  console.log('Slug Error:', slugError);
 
   if (articleBySlug) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -67,11 +68,12 @@ export default async function ArticlePage({ params }: Props) {
         )
       `)
       .eq('id', slug)
-      .eq('is_published', 'true')
+      .eq('is_published', true)
       .single();
     
     console.log('Trying by ID:', slug);
-    console.log('Found by ID:', articleById);
+    console.log('Found by ID:', JSON.stringify(articleById, null, 2));
+    console.log('ID Error:', idError);
     
     if (articleById) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
