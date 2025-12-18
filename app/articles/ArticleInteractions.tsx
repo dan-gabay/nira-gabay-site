@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Heart, MessageCircle, Facebook, Send, User, Mail, Loader2 } from 'lucide-react';
 import { getUserIdentifier } from '@/lib/userIdentifier';
-import { supabaseClient } from '@/lib/supabaseClient';
+import { supabase as supabaseClient } from '@/lib/supabaseClient';
 
 type ArticleInteractionsProps = {
   articleId: string;
