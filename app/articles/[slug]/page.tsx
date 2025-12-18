@@ -40,6 +40,7 @@ export default async function ArticlePage({ params }: Props) {
       )
     `)
     .eq('slug', slug)
+    .eq('is_published', 'true')
     .single();
   
   console.log('Looking for slug:', slug);
@@ -66,6 +67,7 @@ export default async function ArticlePage({ params }: Props) {
         )
       `)
       .eq('id', slug)
+      .eq('is_published', 'true')
       .single();
     
     console.log('Trying by ID:', slug);
