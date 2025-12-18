@@ -279,18 +279,18 @@ export default async function ArticlePage({ params }: Props) {
           
           {/* Article Content */}
           <article className="prose prose-xl max-w-none prose-stone 
-            prose-headings:font-serif prose-headings:text-stone-800 prose-headings:font-bold 
-            prose-h1:text-4xl prose-h1:mt-12 prose-h1:mb-8 prose-h1:leading-tight
-            prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-h2:leading-snug
-            prose-h3:text-2xl prose-h3:mt-10 prose-h3:mb-5 prose-h3:leading-snug
-            prose-p:text-lg prose-p:leading-loose prose-p:mb-6 prose-p:text-stone-700
-            prose-a:text-amber-700 prose-a:font-medium
-            prose-ul:mr-6 prose-ul:space-y-3 prose-ul:my-6
-            prose-ol:mr-6 prose-ol:space-y-3 prose-ol:my-6
-            prose-li:text-lg prose-li:leading-relaxed
-            prose-strong:text-stone-900 prose-strong:font-semibold
-            prose-em:text-stone-600
-            prose-blockquote:border-r-4 prose-blockquote:border-amber-500 prose-blockquote:pr-4 prose-blockquote:italic
+            prose-headings:font-assistant prose-headings:text-stone-900 prose-headings:font-bold 
+            prose-h1:text-4xl prose-h1:mt-16 prose-h1:mb-8 prose-h1:leading-tight prose-h1:pb-4 prose-h1:border-b-2 prose-h1:border-amber-200
+            prose-h2:text-3xl prose-h2:mt-14 prose-h2:mb-6 prose-h2:leading-snug
+            prose-h3:text-2xl prose-h3:mt-10 prose-h3:mb-5 prose-h3:leading-snug prose-h3:text-amber-900
+            prose-p:text-lg prose-p:leading-[1.9] prose-p:mb-6 prose-p:text-stone-700
+            prose-a:text-amber-700 prose-a:font-medium prose-a:underline hover:prose-a:text-amber-800
+            prose-ul:mr-8 prose-ul:space-y-3 prose-ul:my-8 prose-ul:list-disc
+            prose-ol:mr-8 prose-ol:space-y-3 prose-ol:my-8 prose-ol:list-decimal
+            prose-li:text-lg prose-li:leading-relaxed prose-li:text-stone-700 prose-li:mb-2
+            prose-strong:text-stone-900 prose-strong:font-bold
+            prose-em:text-stone-600 prose-em:italic
+            prose-blockquote:border-r-4 prose-blockquote:border-amber-500 prose-blockquote:pr-6 prose-blockquote:py-4 prose-blockquote:my-8 prose-blockquote:italic prose-blockquote:bg-amber-50/50
             mb-12"
           >
             <ReactMarkdown>{article.content}</ReactMarkdown>
