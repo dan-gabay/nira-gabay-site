@@ -9,12 +9,23 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-heebo: var(--font-heebo);
+  --font-assistant: var(--font-assistant);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-heebo), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-assistant), var(--font-heebo), sans-serif;
+  font-weight: 700;
+}
+
+.font-serif {
+  font-family: var(--font-assistant), var(--font-heebo), sans-serif !important;
+  font-weight: 700;
 }
 
 /* Performance optimizations */

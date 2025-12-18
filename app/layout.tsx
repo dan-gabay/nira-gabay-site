@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Heebo } from "next/font/google";
+import { Heebo, Assistant } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -8,8 +8,16 @@ import JsonLd from "@/components/JsonLd";
 
 const heebo = Heebo({
   subsets: ["hebrew", "latin"],
-  weight: ["300", "400", "500", "700", "900"],
+  weight: ["300", "400", "500", "700"],
   variable: "--font-heebo",
+  display: "swap",
+  preload: true,
+});
+
+const assistant = Assistant({
+  subsets: ["hebrew", "latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-assistant",
   display: "swap",
   preload: true,
 });
@@ -125,7 +133,7 @@ export default function RootLayout({
       <head>
         <JsonLd data={organizationSchema} />
       </head>
-      <body className={`${heebo.variable} antialiased font-heebo`}>
+      <body className={`${heebo.variable} ${assistant.variable} antialiased font-heebo`}>
         <Header />
         <main className="pt-20">
           {children}
