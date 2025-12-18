@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Heebo } from "next/font/google";
 import "./globals.css";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import WhatsAppButton from "@/components/WhatsAppButton";
 
 const heebo = Heebo({
   subsets: ["hebrew", "latin"],
@@ -61,26 +64,12 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl">
       <body className={`${heebo.variable} antialiased font-heebo`}>
-        <nav style={{
-          width: '100%',
-          background: '#fff',
-          borderBottom: '1px solid #eee',
-          padding: '0.5rem 0',
-          marginBottom: 24,
-          position: 'sticky',
-          top: 0,
-          zIndex: 100,
-          backdropFilter: 'blur(8px)',
-          backgroundColor: 'rgba(255, 255, 255, 0.95)'
-        }}>
-          <div style={{maxWidth: 1200, margin: '0 auto', display: 'flex', gap: 24, alignItems: 'center', justifyContent: 'flex-end', padding: '0 1rem'}}>
-            <a href="/" style={{fontWeight: 500, color: '#222', textDecoration: 'none'}}>דף הבית</a>
-            <a href="/about" style={{fontWeight: 500, color: '#222', textDecoration: 'none'}}>אודות</a>
-            <a href="/articles" style={{fontWeight: 500, color: '#222', textDecoration: 'none'}}>מאמרים</a>
-            <a href="/contact" style={{fontWeight: 500, color: '#222', textDecoration: 'none'}}>צור קשר</a>
-          </div>
-        </nav>
-        {children}
+        <Header />
+        <main className="pt-20">
+          {children}
+        </main>
+        <Footer />
+        <WhatsAppButton />
       </body>
     </html>
   );
