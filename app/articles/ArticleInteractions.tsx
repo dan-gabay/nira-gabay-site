@@ -103,7 +103,12 @@ export default function ArticleInteractions({
       // הוספת לייק
       const { error: likeError } = await supabaseClient
         .from('article_likes')
-        .insert({ article_id: articleId, user_identifier: userIdentifier });
+        .insert({ 
+          id: crypto.randomUUID(),
+          article_id: articleId, 
+          user_identifier: userIdentifier,
+          created_date: new Date().toISOString()
+        });
       
       if (likeError) throw likeError;
       
@@ -137,11 +142,13 @@ export default function ArticleInteractions({
       const { error } = await supabaseClient
         .from('comments')
         .insert({
+          id: crypto.randomUUID(),
           article_id: articleId,
           author_name: commentForm.author_name,
           author_email: commentForm.author_email,
           content: commentForm.content,
-          is_approved: false
+          is_approved: false,
+          created_date: new Date().toISOString()
         });
       
       if (error) throw error;

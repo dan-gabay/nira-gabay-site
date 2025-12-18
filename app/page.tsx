@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, Calendar, MessageCircle, Users, User, Heart, Baby, HeartHandshake, Brain } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import JsonLd from '@/components/JsonLd';
+import { faqSchema } from '@/lib/faqSchema';
 
 const services = [
   {
@@ -72,6 +74,7 @@ export default function Home() {
 
   return (
     <div className="overflow-hidden">
+      <JsonLd data={faqSchema} />
       <style>{`
         @media (max-width: 768px) {
           .hero-bg-image {
