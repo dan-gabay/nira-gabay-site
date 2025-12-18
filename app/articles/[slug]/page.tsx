@@ -53,6 +53,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: 'article',
       publishedTime: article.created_date,
       authors: ['נירה גבאי'],
+      url: `https://niragabay.com/articles/${slug}`,
+      siteName: 'נירה גבאי - פסיכולוגית קלינית',
+      locale: 'he_IL',
+      images: article.image_url ? [{
+        url: article.image_url,
+        width: 1200,
+        height: 630,
+        alt: article.title,
+      }] : [],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: article.title,
+      description: article.excerpt || article.content?.substring(0, 160),
       images: article.image_url ? [article.image_url] : [],
     },
   };
@@ -146,14 +160,14 @@ export default async function ArticlePage({ params }: Props) {
       '@type': 'Person',
       name: 'נירה גבאי',
       jobTitle: 'פסיכולוגית קלינית',
-      url: 'https://nira-gabay-site.vercel.app/about'
+      url: 'https://niragabay.com/about'
     },
     publisher: {
       '@type': 'Organization',
       name: 'נירה גבאי - פסיכולוגית קלינית',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://nira-gabay-site.vercel.app/logo.png'
+        url: 'https://niragabay.com/logo.png'
       }
     },
     keywords: article.tag_names?.join(', '),
@@ -169,19 +183,19 @@ export default async function ArticlePage({ params }: Props) {
         '@type': 'ListItem',
         position: 1,
         name: 'דף הבית',
-        item: 'https://nira-gabay-site.vercel.app'
+        item: 'https://niragabay.com'
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: 'מאמרים',
-        item: 'https://nira-gabay-site.vercel.app/articles'
+        item: 'https://niragabay.com/articles'
       },
       {
         '@type': 'ListItem',
         position: 3,
         name: article.title,
-        item: `https://nira-gabay-site.vercel.app/articles/${article.slug}`
+        item: `https://niragabay.com/articles/${article.slug}`
       }
     ]
   };

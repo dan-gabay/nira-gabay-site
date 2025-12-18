@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/api/', '/admin/'],
       },
     ],
-    sitemap: 'https://nira-gabay-site.vercel.app/sitemap.xml',
+    sitemap: 'https://niragabay.com/sitemap.xml',
   }
 }

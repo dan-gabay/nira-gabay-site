@@ -3,7 +3,7 @@ import { supabaseServer } from '../lib/supabaseServer'
  
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = supabaseServer()
-  const baseUrl = 'https://nira-gabay-site.vercel.app'
+  const baseUrl = 'https://niragabay.com'
   
   // Fetch all published articles
   const { data: articles } = await supabase

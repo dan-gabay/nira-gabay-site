@@ -25,7 +25,7 @@ const assistant = Assistant({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://nira-gabay-site.vercel.app'),
+  metadataBase: new URL('https://niragabay.com'),
   title: {
     default: 'נירה גבאי - פסיכותרפיה והדרכת הורים',
     template: '%s | נירה גבאי'
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'he_IL',
-    url: 'https://nira-gabay-site.vercel.app',
+    url: 'https://niragabay.com',
     siteName: 'נירה גבאי - פסיכותרפיה',
     title: 'נירה גבאי - פסיכותרפיה והדרכת הורים',
     description: 'מטפלת בפסיכותרפיה ומדריכת הורים. מלווה מתבגרים, מבוגרים וזוגות בדרכם להגשמה עצמית.',
@@ -77,7 +77,7 @@ export default function RootLayout({
     '@type': 'Psychologist',
     name: 'נירה גבאי',
     description: 'מטפלת בפסיכותרפיה ומדריכת הורים',
-    url: 'https://nira-gabay-site.vercel.app',
+    url: 'https://niragabay.com',
     logo: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6939893ccce1b9a0f8ccda5e/e2d28bde5_Screenshot2025-12-11at1546BackgroundRemoved19.png',
     image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6939893ccce1b9a0f8ccda5e/e176dba49_gemini-cleaned-aph4ywt.png',
     telephone: '+972-50-7936681',
