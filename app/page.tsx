@@ -3,37 +3,37 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Calendar, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, MessageCircle, Users, User, Heart, Baby, Sparkles, Brain } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
 const services = [
   {
-    icon: '👥',
+    icon: Users,
     title: 'טיפול במתבגרים',
     description: 'ליווי מקצועי ורגיש בתקופה מאתגרת של התבגרות, עם דגש על בניית ביטחון עצמי וכלים להתמודדות.'
   },
   {
-    icon: '🧑',
+    icon: User,
     title: 'טיפול במבוגרים',
     description: 'מרחב בטוח לעיבוד רגשי, התמודדות עם אתגרי החיים והגשמה עצמית.'
   },
   {
-    icon: '🤝',
+    icon: Heart,
     title: 'טיפול זוגי',
     description: 'חיזוק הקשר הזוגי, שיפור התקשורת והתמודדות עם משברים מתוך הבנה ואמפתיה.'
   },
   {
-    icon: '👶',
+    icon: Baby,
     title: 'הדרכת הורים',
     description: 'כלים מעשיים להורות מיטבית, הבנת עולמם של הילדים ובניית קשר משפחתי בריא.'
   },
   {
-    icon: '❤️',
+    icon: Sparkles,
     title: 'טיפול מיני',
     description: 'התמחות במיניות בריאה, ליווי זוגות ויחידים בנושאי אינטימיות וחיי מין.'
   },
   {
-    icon: '🧠',
+    icon: Brain,
     title: 'טיפול קוגניטיבי התנהגותי (CBT)',
     description: 'גישה מעשית ומוכחת מדעית לטיפול בחרדות, דיכאון, פוביות ודפוסי חשיבה שליליים.'
   }
@@ -201,22 +201,29 @@ export default function Home() {
             <div className="w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mt-6 mx-auto" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.map((service, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-stone-100 group h-full"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300 text-2xl">
-                    {service.icon}
+            {services.map((service, index) => {
+              const IconComponent = service.icon;
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-stone-100 group h-full"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                      <IconComponent className="w-7 h-7 text-stone-700" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-stone-800 mb-2">{service.title}</h3>
+                      <p className="text-stone-600 text-sm leading-relaxed">{service.description}</p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-stone-800 mb-2">{service.title}</h3>
-                    <p className="text-stone-600 text-sm leading-relaxed">{service.description}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </motion.section>
