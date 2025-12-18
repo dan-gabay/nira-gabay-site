@@ -23,7 +23,7 @@ export async function getArticles() {
         )
       )
     `)
-    .eq('is_published', 'true')
+    .eq('is_published', true)
     .order('created_date', { ascending: false });
 
   if (error) {

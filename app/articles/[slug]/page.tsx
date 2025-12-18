@@ -1,6 +1,10 @@
 import { supabaseServer } from '../../../lib/supabaseServer';
 import Link from 'next/link';
-import { ArrowRight, Calendar, Tag } from 'lucide-react';
+import Image from 'next/image';
+import { ArrowRight, Calendar, Tag, Clock, Heart } from 'lucide-react';
+import ArticleInteractions from '../ArticleInteractions';
+import RelatedArticles from '../RelatedArticles';
+import ReactMarkdown from 'react-markdown';
 
 type Props = { params: { slug: string } };
 
@@ -42,11 +46,6 @@ export default async function ArticlePage({ params }: Props) {
     .eq('slug', slug)
     .eq('is_published', true)
     .single();
-  
-  console.log('=== ARTICLE PAGE DEBUG ===');
-  console.log('Looking for slug:', slug);
-  console.log('Found by slug:', JSON.stringify(articleBySlug, null, 2));
-  console.log('Slug Error:', slugError);
 
   if (articleBySlug) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -70,10 +69,6 @@ export default async function ArticlePage({ params }: Props) {
       .eq('id', slug)
       .eq('is_published', true)
       .single();
-    
-    console.log('Trying by ID:', slug);
-    console.log('Found by ID:', JSON.stringify(articleById, null, 2));
-    console.log('ID Error:', idError);
     
     if (articleById) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -106,40 +101,72 @@ export default async function ArticlePage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-stone-50">
+      {/* Breadcrumb */}
+      <div className="bg-stone-50 py-4 border-b border-stone-100">
+        <div className="container mx-auto px-4 md:px-8 max-w-4xl">
+          <nav className="flex items-center gap-2 text-sm text-stone-500">
+            <Link href="/" className="hover:text-stone-800">דף הבית</Link>
+            <span>/</span>
+            <Link href="/articles" className="hover:text-stone-800">מאמרים</Link>
+            <span>/</span>
+            <span className="text-stone-800 truncate max-w-xs">{article.title}</span>
+          </nav>
+        </div>
+      </div>
+
       {/* Header */}
       <section className="py-12 bg-gradient-to-br from-stone-100 to-amber-50">
         <div className="container mx-auto px-4 md:px-8 max-w-4xl">
-          <Link 
-            href="/articles"
-            className="inline-flex items-center gap-2 text-stone-600 hover:text-stone-800 transition-colors mb-8"
-          >
-            <ArrowRight className="w-5 h-5" />
-            חזרה למאמרים
-          </Link>
+          {/* Tags */}
+          {article.tag_names && article.tag_names.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-6">
+              {article.tag_names.map((tag, i) => (
+                <Link 
+                  key={i} 
+                  href={`/articles?tag=${encodeURIComponent(tag)}`}
+                  className="inline-flex items-center px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-medium hover:bg-amber-200 transition-colors"
+                >
+                  {tag}
+                </Link>
+              ))}
+            </div>
+          )}
           
-          <h1 className="text-4xl md:text-5xl font-bold text-stone-800 mb-4 leading-tight">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-stone-800 mb-6 font-serif leading-tight">
             {article.title}
           </h1>
           
           {article.excerpt && (
-            <p className="text-xl text-stone-600 leading-relaxed">
+            <p className="text-xl text-stone-600 leading-relaxed mb-6">
               {article.excerpt}
             </p>
           )}
           
-          <div className="flex flex-wrap items-center gap-4 mt-6 text-sm text-stone-500">
+          {/* Meta */}
+          <div className="flex flex-wrap items-center gap-6 text-stone-500 pb-6 border-b border-stone-200">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-100 to-stone-200 flex items-center justify-center">
+                <span className="text-sm font-bold text-stone-700">נ</span>
+              </div>
+              <span className="font-medium text-stone-700">נירה גבאי</span>
+            </div>
+            
             {article.created_date && (
-              <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
                 {new Date(article.created_date).toLocaleDateString('he-IL')}
-              </div>
+              </span>
             )}
-            {article.tag_names && article.tag_names.length > 0 && (
-              <div className="flex items-center gap-2">
-                <Tag className="w-4 h-4" />
-                {article.tag_names.join(', ')}
-              </div>
-            )}
+            
+            <span className="flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              {article.reading_time || 5} דקות קריאה
+            </span>
+            
+            <span className="flex items-center gap-1">
+              <Heart className="w-4 h-4" />
+              {article.likes_count || 0} לייקים
+            </span>
           </div>
         </div>
       </section>
@@ -150,24 +177,82 @@ export default async function ArticlePage({ params }: Props) {
           {/* Featured Image */}
           {article.image_url && (
             <div className="mb-12">
-              <img
+              <Image
                 src={article.image_url}
-                alt={article.title}
+                alt={`תמונת המאמר: ${article.title} - נירה גבאי פסיכותרפיה`}
+                width={1200}
+                height={600}
                 className="w-full h-auto max-h-[500px] object-cover rounded-2xl shadow-lg"
               />
             </div>
           )}
           
-          <article className="prose prose-lg prose-stone max-w-none
-            prose-headings:text-stone-800 prose-headings:font-bold
-            prose-p:text-stone-700 prose-p:leading-relaxed
-            prose-a:text-amber-700 prose-a:no-underline hover:prose-a:underline
-            prose-strong:text-stone-800
-            prose-ul:text-stone-700 prose-ol:text-stone-700
-            prose-blockquote:border-amber-500 prose-blockquote:text-stone-600
-          ">
-            <div className="whitespace-pre-wrap">{article.content}</div>
+          {/* Article Content */}
+          <article className="prose prose-xl max-w-none prose-stone 
+            prose-headings:font-serif prose-headings:text-stone-800 prose-headings:font-bold 
+            prose-h1:text-4xl prose-h1:mt-12 prose-h1:mb-8 prose-h1:leading-tight
+            prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-h2:leading-snug
+            prose-h3:text-2xl prose-h3:mt-10 prose-h3:mb-5 prose-h3:leading-snug
+            prose-p:text-lg prose-p:leading-loose prose-p:mb-6 prose-p:text-stone-700
+            prose-a:text-amber-700 prose-a:font-medium
+            prose-ul:mr-6 prose-ul:space-y-3 prose-ul:my-6
+            prose-ol:mr-6 prose-ol:space-y-3 prose-ol:my-6
+            prose-li:text-lg prose-li:leading-relaxed
+            prose-strong:text-stone-900 prose-strong:font-semibold
+            prose-em:text-stone-600
+            prose-blockquote:border-r-4 prose-blockquote:border-amber-500 prose-blockquote:pr-4 prose-blockquote:italic
+            mb-12"
+          >
+            <ReactMarkdown>{article.content}</ReactMarkdown>
           </article>
+
+          {/* Interactions (Likes, Share, Comments) */}
+          <ArticleInteractions 
+            articleId={article.id}
+            initialLikesCount={article.likes_count || 0}
+            initialViewsCount={article.views_count || 0}
+          />
+
+          {/* Author Box */}
+          <div className="bg-gradient-to-br from-amber-50 to-stone-50 rounded-2xl p-6 md:p-8 my-12">
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <Image
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6939893ccce1b9a0f8ccda5e/e176dba49_gemini-cleaned-aph4ywt.png"
+                alt="נירה גבאי - מטפלת בפסיכותרפיה ומדריכת הורים, בעלת תואר M.A ממכון אדלר"
+                width={96}
+                height={96}
+                className="rounded-full object-cover shadow-lg"
+                loading="lazy"
+              />
+              <div className="text-center sm:text-right">
+                <h3 className="text-xl font-bold text-stone-800 mb-2 font-serif">נירה גבאי</h3>
+                <p className="text-stone-600 text-sm mb-4">
+                  מטפלת בפסיכותרפיה ומדריכת הורים. מלווה מתבגרים, מבוגרים וזוגות בדרכם להגשמה עצמית.
+                </p>
+                <Link href="/about">
+                  <button className="px-4 py-2 border-2 border-stone-300 text-stone-700 rounded-lg hover:border-stone-400 hover:bg-stone-50 transition-all">
+                    קראו עוד עליי
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Related Articles */}
+          <RelatedArticles 
+            currentArticleId={article.id}
+            tags={article.tag_names}
+          />
+
+          {/* Back Link */}
+          <div className="mt-12 pt-8 border-t border-stone-200">
+            <Link href="/articles">
+              <button className="inline-flex items-center gap-2 px-6 py-3 border-2 border-stone-300 text-stone-700 rounded-lg hover:border-stone-400 hover:bg-stone-50 transition-all">
+                <ArrowRight className="w-5 h-5" />
+                חזרה לכל המאמרים
+              </button>
+            </Link>
+          </div>
         </div>
       </section>
 
