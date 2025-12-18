@@ -82,6 +82,7 @@ export default async function RelatedArticles({ currentArticleId, tags }: Relate
                   src={article.image_url}
                   alt={article.title}
                   fill
+                  unoptimized
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
