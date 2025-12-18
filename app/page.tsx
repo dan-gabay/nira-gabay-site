@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Calendar, MessageCircle, Users, User, Heart, Baby, Sparkles, Brain } from 'lucide-react';
+import { ArrowLeft, Calendar, MessageCircle, Users, User, Heart, Baby, HeartHandshake, Brain } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
 const services = [
@@ -28,7 +28,7 @@ const services = [
     description: 'כלים מעשיים להורות מיטבית, הבנת עולמם של הילדים ובניית קשר משפחתי בריא.'
   },
   {
-    icon: Sparkles,
+    icon: HeartHandshake,
     title: 'טיפול מיני',
     description: 'התמחות במיניות בריאה, ליווי זוגות ויחידים בנושאי אינטימיות וחיי מין.'
   },
@@ -297,6 +297,7 @@ export default function Home() {
                             src={article.image_url}
                             alt={article.title}
                             fill
+                            unoptimized
                             className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         </div>

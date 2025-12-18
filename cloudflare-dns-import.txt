@@ -1,0 +1,8 @@
+; DNS records for niragabay.com - Vercel hosting
+; Import this file to Cloudflare DNS
+
+; A record - Main domain
+@	3600	IN	A	216.198.79.1
+
+; CNAME record - www subdomain
+www	3600	IN	CNAME	niragabay.com

@@ -272,6 +272,7 @@ export default async function ArticlePage({ params }: Props) {
                 alt={`תמונת המאמר: ${article.title} - נירה גבאי פסיכותרפיה`}
                 width={1200}
                 height={600}
+                unoptimized
                 className="w-full h-auto max-h-[500px] object-cover rounded-2xl shadow-lg"
               />
             </div>
