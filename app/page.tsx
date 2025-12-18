@@ -204,12 +204,8 @@ export default function Home() {
             {services.map((service, index) => {
               const IconComponent = service.icon;
               return (
-                <motion.div
+                <div
                   key={index}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
                   className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-stone-100 group h-full"
                 >
                   <div className="flex items-start gap-4">
@@ -221,7 +217,7 @@ export default function Home() {
                       <p className="text-stone-600 text-sm leading-relaxed">{service.description}</p>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
           </div>
