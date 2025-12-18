@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import JsonLd from "@/components/JsonLd";
 
 const heebo = Heebo({
   subsets: ["hebrew", "latin"],
@@ -61,8 +62,69 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Psychologist',
+    name: 'נירה גבאי',
+    description: 'מטפלת בפסיכותרפיה ומדריכת הורים',
+    url: 'https://nira-gabay-site.vercel.app',
+    logo: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6939893ccce1b9a0f8ccda5e/e2d28bde5_Screenshot2025-12-11at1546BackgroundRemoved19.png',
+    image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6939893ccce1b9a0f8ccda5e/e176dba49_gemini-cleaned-aph4ywt.png',
+    telephone: '+972-50-7936681',
+    email: 'niraga1123@gmail.com',
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'שואבה',
+      addressCountry: 'IL',
+    },
+    sameAs: [
+      'https://www.facebook.com/nira.gabay',
+      'https://www.instagram.com/niragabay',
+    ],
+    priceRange: '$$',
+    areaServed: {
+      '@type': 'Country',
+      name: 'ישראל',
+    },
+    availableService: [
+      {
+        '@type': 'Service',
+        name: 'טיפול במתבגרים',
+        description: 'ליווי מקצועי ורגיש בתקופה מאתגרת של התבגרות',
+      },
+      {
+        '@type': 'Service',
+        name: 'טיפול במבוגרים',
+        description: 'מרחב בטוח לעיבוד רגשי והתמודדות עם אתגרי החיים',
+      },
+      {
+        '@type': 'Service',
+        name: 'טיפול זוגי',
+        description: 'חיזוק הקשר הזוגי ושיפור התקשורת',
+      },
+      {
+        '@type': 'Service',
+        name: 'הדרכת הורים',
+        description: 'כלים מעשיים להורות מיטבית',
+      },
+      {
+        '@type': 'Service',
+        name: 'טיפול מיני',
+        description: 'התמחות במיניות בריאה',
+      },
+      {
+        '@type': 'Service',
+        name: 'טיפול קוגניטיבי התנהגותי (CBT)',
+        description: 'גישה מעשית לטיפול בחרדות ודיכאון',
+      },
+    ],
+  };
+
   return (
     <html lang="he" dir="rtl">
+      <head>
+        <JsonLd data={organizationSchema} />
+      </head>
       <body className={`${heebo.variable} antialiased font-heebo`}>
         <Header />
         <main className="pt-20">

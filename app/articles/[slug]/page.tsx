@@ -5,6 +5,8 @@ import { ArrowRight, Calendar, Tag, Clock, Heart } from 'lucide-react';
 import ArticleInteractions from '../ArticleInteractions';
 import RelatedArticles from '../RelatedArticles';
 import ReactMarkdown from 'react-markdown';
+import JsonLd from '@/components/JsonLd';
+import type { Metadata } from 'next';
 
 type Props = { params: { slug: string } };
 
@@ -23,6 +25,38 @@ type Article = {
   tag_names?: string[];
   article_tags?: Array<{tags: {name: string}}>;
 };
+
+// Dynamic metadata
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = supabaseServer();
+  
+  const { data: article } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('slug', slug)
+    .single();
+  
+  if (!article) {
+    return {
+      title: 'מאמר לא נמצא',
+    };
+  }
+  
+  return {
+    title: article.title,
+    description: article.excerpt || article.content?.substring(0, 160),
+    keywords: article.tag_names || [],
+    openGraph: {
+      title: article.title,
+      description: article.excerpt || article.content?.substring(0, 160),
+      type: 'article',
+      publishedTime: article.created_date,
+      authors: ['נירה גבאי'],
+      images: article.image_url ? [article.image_url] : [],
+    },
+  };
+}
 
 export default async function ArticlePage({ params }: Props) {
   const { slug } = await params; // Next.js 15: params is a Promise!
@@ -99,8 +133,64 @@ export default async function ArticlePage({ params }: Props) {
     );
   }
 
+  // Structured Data - Article Schema
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: article.title,
+    description: article.excerpt,
+    image: article.image_url,
+    datePublished: article.created_date,
+    dateModified: article.created_date,
+    author: {
+      '@type': 'Person',
+      name: 'נירה גבאי',
+      jobTitle: 'פסיכולוגית קלינית',
+      url: 'https://nira-gabay-site.vercel.app/about'
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'נירה גבאי - פסיכולוגית קלינית',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://nira-gabay-site.vercel.app/logo.png'
+      }
+    },
+    keywords: article.tag_names?.join(', '),
+    articleBody: article.content
+  };
+
+  // Breadcrumb Schema
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'דף הבית',
+        item: 'https://nira-gabay-site.vercel.app'
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'מאמרים',
+        item: 'https://nira-gabay-site.vercel.app/articles'
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: article.title,
+        item: `https://nira-gabay-site.vercel.app/articles/${article.slug}`
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-stone-50">
+      <JsonLd data={articleSchema} />
+      <JsonLd data={breadcrumbSchema} />
+      
       {/* Breadcrumb */}
       <div className="bg-stone-50 py-4 border-b border-stone-100">
         <div className="container mx-auto px-4 md:px-8 max-w-4xl">

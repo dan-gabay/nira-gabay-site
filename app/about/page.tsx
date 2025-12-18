@@ -1,7 +1,22 @@
-"use client";
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'אודות',
+  description: 'נירה גבאי - מטפלת בפסיכותרפיה ומדריכת הורים. בעלת תואר M.A בייעוץ חינוכי, מומחית למיניות בריאה וטיפול CBT. ניסיון רב-שנתי בטיפול במתבגרים, מבוגרים וזוגות.',
+  keywords: ['נירה גבאי', 'פסיכותרפיה', 'הדרכת הורים', 'M.A ייעוץ חינוכי', 'מיניות בריאה', 'CBT', 'מושב שואבה'],
+  openGraph: {
+    title: 'אודות נירה גבאי - פסיכותרפיה והדרכת הורים',
+    description: 'בעלת תואר M.A בייעוץ חינוכי, מומחית למיניות בריאה וטיפול CBT. ניסיון רב-שנתי בטיפול במתבגרים, מבוגרים וזוגות.',
+    type: 'profile',
+  },
+};
+
+'use client';
 import React from 'react';
 import { motion } from 'framer-motion';
 import { GraduationCap, Award, Heart, MapPin, Sparkles, Users, BookOpen, Monitor } from 'lucide-react';
+
+export default function About() {
 
 const milestones = [
   {

@@ -1,3 +1,15 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'מאמרים',
+  description: 'מאמרים מקצועיים בנושאי פסיכותרפיה, הדרכת הורים, טיפול זוגי, מיניות בריאה ו-CBT. תובנות וכלים מעשיים להתמודדות עם אתגרי החיים.',
+  keywords: ['מאמרים פסיכותרפיה', 'הדרכת הורים', 'טיפול זוגי', 'מיניות בריאה', 'CBT', 'התמודדות רגשית'],
+  openGraph: {
+    title: 'מאמרים - נירה גבאי',
+    description: 'מאמרים מקצועיים בנושאי פסיכותרפיה, הדרכת הורים וטיפול. תובנות וכלים מעשיים.',
+  },
+};
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
