@@ -39,30 +39,33 @@ export default function ManageCommentsPage() {
 
   async function loadComments() {
     try {
-      const { data, error } = await supabase
+      // First get all comments
+      const { data: commentsData, error: commentsError } = await supabase
         .from('comments')
-        .select(`
-          id,
-          article_id,
-          author_name,
-          author_email,
-          content,
-          is_approved,
-          created_date,
-          articles(title, slug)
-        `)
+        .select('*')
         .order('created_date', { ascending: false });
 
-      if (error) throw error;
+      if (commentsError) throw commentsError;
       
-      const commentsWithArticles = (data || []).map(comment => ({
-        ...comment,
-        article: Array.isArray(comment.articles) 
-          ? comment.articles[0] 
-          : comment.articles
-      }));
-      
-      setComments(commentsWithArticles);
+      // Then get articles separately
+      if (commentsData && commentsData.length > 0) {
+        const articleIds = [...new Set(commentsData.map(c => c.article_id))];
+        const { data: articlesData } = await supabase
+          .from('articles')
+          .select('id, title, slug')
+          .in('id', articleIds);
+        
+        const articlesMap = new Map(articlesData?.map(a => [a.id, a]) || []);
+        
+        const commentsWithArticles = commentsData.map(comment => ({
+          ...comment,
+          article: articlesMap.get(comment.article_id) || undefined
+        }));
+        
+        setComments(commentsWithArticles);
+      } else {
+        setComments([]);
+      }
     } catch (error) {
       console.error('Error loading comments:', error);
     } finally {
@@ -229,7 +232,7 @@ export default function ManageCommentsPage() {
                         </div>
                       )}
                     </div>
-                    {comment.article && (
+                    {comment.article ? (
                       <Link
                         href={`/articles/${comment.article.slug}`}
                         target="_blank"
@@ -237,6 +240,10 @@ export default function ManageCommentsPage() {
                       >
                         מאמר: {comment.article.title}
                       </Link>
+                    ) : (
+                      <span className="text-sm text-stone-500">
+                        מאמר: {comment.article_id} (לא נמצא)
+                      </span>
                     )}
                   </div>
                   
