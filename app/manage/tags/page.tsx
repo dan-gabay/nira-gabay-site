@@ -55,7 +55,7 @@ export default function ManageTagsPage() {
       const tagCounts: Record<string, number> = {};
       articles?.forEach(article => {
         if (article.tags) {
-          const articleTags = article.tags.split(',').map(t => t.trim());
+          const articleTags = article.tags.split(',').map((t: string) => t.trim());
           articleTags.forEach(tagName => {
             if (tagName) {
               tagCounts[tagName] = (tagCounts[tagName] || 0) + 1;
@@ -146,7 +146,7 @@ export default function ManageTagsPage() {
         // Update each article to remove this tag
         for (const article of articles || []) {
           if (article.tags) {
-            const tagArray = article.tags.split(',').map(t => t.trim());
+            const tagArray = article.tags.split(',').map((t: string) => t.trim());
             const updatedTags = tagArray.filter(t => t !== name).join(', ');
             
             const { error: updateError } = await supabase
