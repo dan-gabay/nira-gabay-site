@@ -1,7 +1,8 @@
 'use client';
 import React from 'react';
 import { motion } from 'framer-motion';
-import { GraduationCap, Award, Heart, MapPin, Sparkles, Users, BookOpen, Monitor } from 'lucide-react';
+import Image from 'next/image';
+import { GraduationCap, Award, Heart, MapPin, Users, BookOpen, Monitor } from 'lucide-react';
 
 const milestones = [
   {
@@ -52,12 +53,15 @@ export default function About() {
             >
               <div className="relative">
                 <div className="absolute -top-4 -right-4 w-full h-full bg-gradient-to-br from-amber-200 to-stone-200 rounded-3xl" />
-                <img
-                  src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png"
-                  alt="נירה גבאי - מטפלת בפסיכותרפיה, בעלת תואר שני M.A ממכון אדלר, מומחית למיניות בריאה וטיפול CBT"
-                  className="relative w-full h-auto rounded-3xl shadow-2xl object-cover"
-                  loading="lazy"
-                />
+                <div className="relative w-full h-[500px]">
+                  <Image
+                    src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png"
+                    alt="נירה גבאי - מטפלת בפסיכותרפיה, בעלת תואר שני M.A ממכון אדלר, מומחית למיניות בריאה וטיפול CBT"
+                    fill
+                    className="rounded-3xl shadow-2xl object-cover"
+                    loading="lazy"
+                  />
+                </div>
               </div>
             </motion.div>
 
@@ -246,12 +250,13 @@ export default function About() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
-                className="w-full lg:w-1/2"
+                className="w-full lg:w-1/2 relative h-80"
               >
-                <img
+                <Image
                   src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/profile.png"
                   alt="פנים הקליניקה לפסיכותרפיה של נירה גבאי במושב שואבה - חדר טיפול מעוצב באווירה חמה ומכילה"
-                  className="w-full h-80 object-cover rounded-2xl shadow-2xl"
+                  fill
+                  className="object-cover rounded-2xl shadow-2xl"
                   loading="lazy"
                 />
               </motion.div>

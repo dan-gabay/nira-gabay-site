@@ -1,7 +1,7 @@
 import { supabaseServer } from '../../../lib/supabaseServer';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Calendar, Tag, Clock, Heart } from 'lucide-react';
+import { ArrowRight, Calendar, Clock, Heart } from 'lucide-react';
 import ArticleInteractions from '../ArticleInteractions';
 import RelatedArticles from '../RelatedArticles';
 import ReactMarkdown from 'react-markdown';
@@ -24,7 +24,6 @@ type Article = {
   created_date?: string;
   is_published?: boolean;
   tag_names?: string[];
-  article_tags?: Array<{tags: {name: string}}>;
 };
 
 // Dynamic metadata

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Filter, FileText } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
+import Image from 'next/image';
 
 type Article = {
   id: string;
@@ -187,11 +188,12 @@ export default function Articles() {
                   {/* Article Image */}
                   {article.image_url && (
                     <div className="relative h-52 w-full overflow-hidden bg-stone-100">
-                      <img
+                      <Image
                         src={article.image_url}
                         alt={article.title}
+                        fill
                         loading="lazy"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
                   )}

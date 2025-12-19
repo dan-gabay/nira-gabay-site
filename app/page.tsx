@@ -49,12 +49,7 @@ export default function Home() {
     async function fetchArticles() {
       const { data } = await supabase
         .from('articles')
-        .select(`
-          *,
-          article_tags(
-            tags(name)
-          )
-        `)
+        .select('*')
         .eq('is_published', true)
         .order('created_date', { ascending: false })
         .limit(3);
@@ -62,7 +57,7 @@ export default function Home() {
       if (data) {
         const articlesWithTags = data.map(article => ({
           ...article,
-          tag_names: article.article_tags?.map((at: any) => at.tags?.name).filter(Boolean) || []
+          tag_names: article.tags ? article.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : []
         }));
         setArticles(articlesWithTags);
       }
@@ -239,11 +234,12 @@ export default function Home() {
           <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-3xl p-8 md:p-12 shadow-xl">
               <div className="flex flex-col md:flex-row items-center gap-8">
-                <div className="w-full md:w-1/3">
-                  <img
+                <div className="w-full md:w-1/3 relative h-64">
+                  <Image
                     src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/profile.png"
                     alt="חדר טיפולים בקליניקה של נירה גבאי במושב שואבה - סביבה שקטה ומרגיעה לפסיכותרפיה"
-                    className="w-full h-64 object-cover rounded-2xl shadow-lg"
+                    fill
+                    className="object-cover rounded-2xl shadow-lg"
                     loading="lazy"
                   />
                 </div>
