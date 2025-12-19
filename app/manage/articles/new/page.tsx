@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
@@ -10,6 +10,8 @@ export default function NewArticlePage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -21,6 +23,33 @@ export default function NewArticlePage() {
     is_published: false,
     reading_time: 5
   });
+
+  useEffect(() => {
+    loadTags();
+  }, []);
+
+  async function loadTags() {
+    try {
+      const { data, error } = await supabase
+        .from('tags')
+        .select('name')
+        .order('name');
+      
+      if (error) throw error;
+      setAvailableTags(data.map(t => t.name));
+    } catch (error) {
+      console.error('Error loading tags:', error);
+    }
+  }
+
+  function toggleTag(tag: string) {
+    const newSelectedTags = selectedTags.includes(tag)
+      ? selectedTags.filter(t => t !== tag)
+      : [...selectedTags, tag];
+    
+    setSelectedTags(newSelectedTags);
+    setFormData(prev => ({ ...prev, tags: newSelectedTags.join(', ') }));
+  }
 
   function calculateReadingTime(text: string): number {
     // Calculate based on Hebrew text: ~1000 characters per minute
@@ -233,30 +262,30 @@ export default function NewArticlePage() {
 
           {/* Tags */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-100">
-            <label className="block text-sm font-medium text-stone-700 mb-2">
-              תגיות (מופרדות בפסיקים)
+            <label className="block text-sm font-medium text-stone-700 mb-3">
+              תגיות (בחר מהרשימה)
             </label>
-            <input
-              type="text"
-              value={formData.tags}
-              onChange={(e) => handleChange('tags', e.target.value)}
-              className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              placeholder="חרדה, דיכאון, טיפול קוגניטיבי התנהגותי"
-            />
-          </div>
-
-          {/* Reading Time */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-100">
-            <label className="block text-sm font-medium text-stone-700 mb-2">
-              זמן קריאה (דקות)
-            </label>
-            <input
-              type="number"
-              value={formData.reading_time}
-              onChange={(e) => handleChange('reading_time', parseInt(e.target.value))}
-              className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              min="1"
-            />
+            <div className="flex flex-wrap gap-2">
+              {availableTags.map(tag => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => toggleTag(tag)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    selectedTags.includes(tag)
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+            {selectedTags.length > 0 && (
+              <p className="text-stone-600 text-sm mt-3">
+                תגיות נבחרות: {selectedTags.join(', ')}
+              </p>
+            )}
           </div>
 
           {/* Publish Status */}

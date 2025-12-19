@@ -14,6 +14,8 @@ export default function EditArticlePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -28,7 +30,22 @@ export default function EditArticlePage() {
 
   useEffect(() => {
     loadArticle();
+    loadTags();
   }, [articleId]);
+
+  async function loadTags() {
+    try {
+      const { data, error } = await supabase
+        .from('tags')
+        .select('name')
+        .order('name');
+      
+      if (error) throw error;
+      setAvailableTags(data.map(t => t.name));
+    } catch (error) {
+      console.error('Error loading tags:', error);
+    }
+  }
 
   async function loadArticle() {
     try {
@@ -40,16 +57,21 @@ export default function EditArticlePage() {
 
       if (error) throw error;
       
+      const tags = data.tags || '';
+      const tagsArray = tags ? tags.split(',').map((t: string) => t.trim()) : [];
+      
       setFormData({
         title: data.title || '',
         slug: data.slug || '',
         excerpt: data.excerpt || '',
         content: data.content || '',
         image_url: data.image_url || '',
-        tags: data.tags || '',
+        tags: tags,
         is_published: data.is_published || false,
         reading_time: data.reading_time || 5
       });
+      
+      setSelectedTags(tagsArray);
     } catch (error) {
       console.error('Error loading article:', error);
       alert('שגיאה בטעינת המאמר');
@@ -57,6 +79,15 @@ export default function EditArticlePage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function toggleTag(tag: string) {
+    const newSelectedTags = selectedTags.includes(tag)
+      ? selectedTags.filter(t => t !== tag)
+      : [...selectedTags, tag];
+    
+    setSelectedTags(newSelectedTags);
+    setFormData(prev => ({ ...prev, tags: newSelectedTags.join(', ') }));
   }
 
   function calculateReadingTime(text: string): number {
@@ -264,30 +295,30 @@ export default function EditArticlePage() {
 
           {/* Tags */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-100">
-            <label className="block text-sm font-medium text-stone-700 mb-2">
-              תגיות (מופרדות בפסיקים)
+            <label className="block text-sm font-medium text-stone-700 mb-3">
+              תגיות (בחר מהרשימה)
             </label>
-            <input
-              type="text"
-              value={formData.tags}
-              onChange={(e) => handleChange('tags', e.target.value)}
-              className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              placeholder="חרדה, דיכאון, טיפול קוגניטיבי התנהגותי"
-            />
-          </div>
-
-          {/* Reading Time */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-100">
-            <label className="block text-sm font-medium text-stone-700 mb-2">
-              זמן קריאה (דקות)
-            </label>
-            <input
-              type="number"
-              value={formData.reading_time}
-              onChange={(e) => handleChange('reading_time', parseInt(e.target.value))}
-              className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              min="1"
-            />
+            <div className="flex flex-wrap gap-2">
+              {availableTags.map(tag => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => toggleTag(tag)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    selectedTags.includes(tag)
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+            {selectedTags.length > 0 && (
+              <p className="text-stone-600 text-sm mt-3">
+                תגיות נבחרות: {selectedTags.join(', ')}
+              </p>
+            )}
           </div>
 
           {/* Publish Status */}
