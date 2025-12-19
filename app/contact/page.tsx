@@ -96,6 +96,7 @@ export default function Contact() {
       const { error: submitError } = await supabase
         .from('contact_messages')
         .insert([{
+          id: crypto.randomUUID(),
           name: formData.name,
           email: formData.email,
           phone: formData.phone,

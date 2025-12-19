@@ -45,6 +45,9 @@ export default function ManageCommentsPage() {
         .select('*')
         .order('created_date', { ascending: false });
 
+      console.log('Comments data:', commentsData);
+      console.log('Comments error:', commentsError);
+      
       if (commentsError) throw commentsError;
       
       // Then get articles separately
