@@ -44,24 +44,25 @@ export default function NewArticlePage() {
     try {
       setUploading(true);
       
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const formData = new FormData();
+      formData.append('file', file);
       
-      const { data, error } = await supabase.storage
-        .from('base44-prod')
-        .upload(fileName, file);
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
 
-      if (error) throw error;
+      const result = await response.json();
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('base44-prod')
-        .getPublicUrl(data.path);
+      if (!response.ok) {
+        throw new Error(result.error || 'שגיאה בהעלאת התמונה');
+      }
 
-      setFormData(prev => ({ ...prev, image_url: publicUrl }));
-      alert('התמונה הועלתה בהצלחה');
+      setFormData(prev => ({ ...prev, image_url: result.url }));
+      alert('התמונה הועלתה בהצלחה ל-Vercel Blob');
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('שגיאה בהעלאת התמונה');
+      alert(error instanceof Error ? error.message : 'שגיאה בהעלאת התמונה');
     } finally {
       setUploading(false);
     }
