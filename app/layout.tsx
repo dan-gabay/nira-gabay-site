@@ -35,6 +35,13 @@ export const metadata: Metadata = {
   keywords: ['פסיכותרפיה', 'הדרכת הורים', 'טיפול זוגי', 'CBT', 'טיפול מיני', 'טיפול במתבגרים', 'נירה גבאי'],
   authors: [{ name: 'נירה גבאי' }],
   creator: 'נירה גבאי',
+  icons: {
+    icon: [
+      { url: '/icon.png', sizes: '512x512', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    apple: { url: '/icon.png', sizes: '180x180', type: 'image/png' },
+  },
   openGraph: {
     type: 'website',
     locale: 'he_IL',
