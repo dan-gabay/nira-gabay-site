@@ -22,10 +22,12 @@ const nextConfig: NextConfig = {
   // Performance
   compress: true,
   poweredByHeader: false,
+  reactStrictMode: true,
   
   // Experimental features for better performance
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
+    optimizeCss: true,
   },
 };
 

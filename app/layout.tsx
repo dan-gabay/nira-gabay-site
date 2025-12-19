@@ -141,6 +141,8 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl">
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <JsonLd data={organizationSchema} />
       </head>
       <body className={`${heebo.variable} ${assistant.variable} antialiased font-heebo`}>

@@ -46,8 +46,21 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
 }
 
 /* Reduce motion for accessibility */
