@@ -78,7 +78,7 @@ export default function Home() {
       <style>{`
         @media (max-width: 768px) {
           .hero-bg-image {
-            background-image: url('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6939893ccce1b9a0f8ccda5e/9addc0feb_Screenshot2025-12-14at01854.png') !important;
+            background-image: url('https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-mobile.png') !important;
             background-position: left center !important;
           }
         }
@@ -97,7 +97,7 @@ export default function Home() {
           <div 
             className="w-full h-full hero-bg-image"
             style={{
-              backgroundImage: 'url(https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6939893ccce1b9a0f8ccda5e/e176dba49_gemini-cleaned-aph4ywt.png)',
+              backgroundImage: 'url(https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png)',
               backgroundSize: 'cover',
               backgroundPosition: 'center'
             }}
@@ -241,7 +241,7 @@ export default function Home() {
               <div className="flex flex-col md:flex-row items-center gap-8">
                 <div className="w-full md:w-1/3">
                   <img
-                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6939893ccce1b9a0f8ccda5e/8fa23344b_nano_banana_removed.png"
+                    src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/profile.png"
                     alt="חדר טיפולים בקליניקה של נירה גבאי במושב שואבה - סביבה שקטה ומרגיעה לפסיכותרפיה"
                     className="w-full h-64 object-cover rounded-2xl shadow-lg"
                     loading="lazy"

@@ -323,7 +323,7 @@ export default async function ArticlePage({ params }: Props) {
           <div className="bg-gradient-to-br from-amber-50 to-stone-50 rounded-2xl p-6 md:p-8 my-12">
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <Image
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6939893ccce1b9a0f8ccda5e/e176dba49_gemini-cleaned-aph4ywt.png"
+                src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png"
                 alt="נירה גבאי - מטפלת בפסיכותרפיה ומדריכת הורים, בעלת תואר M.A ממכון אדלר"
                 width={96}
                 height={96}

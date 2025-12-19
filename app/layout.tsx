@@ -78,8 +78,8 @@ export default function RootLayout({
     name: 'נירה גבאי',
     description: 'מטפלת בפסיכותרפיה ומדריכת הורים',
     url: 'https://niragabay.com',
-    logo: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6939893ccce1b9a0f8ccda5e/e2d28bde5_Screenshot2025-12-11at1546BackgroundRemoved19.png',
-    image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6939893ccce1b9a0f8ccda5e/e176dba49_gemini-cleaned-aph4ywt.png',
+    logo: 'https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/logo.png',
+    image: 'https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png',
     telephone: '+972-50-7936681',
     email: 'niraga1123@gmail.com',
     address: {

@@ -368,7 +368,7 @@ export default function Contact() {
             
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
               <Image
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6939893ccce1b9a0f8ccda5e/8fa23344b_nano_banana_removed.png"
+                src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/profile.png"
                 alt="חדר טיפולים בקליניקה של נירה גבאי במושב שואבה"
                 width={800}
                 height={256}

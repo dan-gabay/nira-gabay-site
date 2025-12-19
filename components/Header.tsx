@@ -41,7 +41,7 @@ export default function Header() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3">
               <Image 
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6939893ccce1b9a0f8ccda5e/e2d28bde5_Screenshot2025-12-11at1546BackgroundRemoved19.png"
+                src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/logo.png"
                 alt="לוגו נירה גבאי - פסיכותרפיה והדרכת הורים"
                 width={48}
                 height={48}
