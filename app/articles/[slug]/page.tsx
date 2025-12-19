@@ -84,21 +84,13 @@ export default async function ArticlePage({ params }: Props) {
   // First try by slug
   const { data: articleBySlug, error: slugError } = await supabase
     .from('articles')
-    .select(`
-      *,
-      article_tags(
-        tags(
-          name
-        )
-      )
-    `)
+    .select('*')
     .eq('slug', slug)
     .eq('is_published', true)
     .single();
 
   if (articleBySlug) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const tags = (articleBySlug.article_tags as any || []).map((at: any) => at.tags?.name).filter(Boolean);
+    const tags = articleBySlug.tags ? articleBySlug.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [];
     article = {
       ...articleBySlug,
       tag_names: tags
@@ -107,21 +99,13 @@ export default async function ArticlePage({ params }: Props) {
     // If not found by slug, try by ID
     const { data: articleById, error: idError } = await supabase
       .from('articles')
-      .select(`
-        *,
-        article_tags(
-          tags(
-            name
-          )
-        )
-      `)
+      .select('*')
       .eq('id', slug)
       .eq('is_published', true)
       .single();
     
     if (articleById) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const tags = (articleById.article_tags as any || []).map((at: any) => at.tags?.name).filter(Boolean);
+      const tags = articleById.tags ? articleById.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [];
       article = {
         ...articleById,
         tag_names: tags
