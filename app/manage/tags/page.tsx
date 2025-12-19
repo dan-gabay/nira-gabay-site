@@ -147,7 +147,7 @@ export default function ManageTagsPage() {
         for (const article of articles || []) {
           if (article.tags) {
             const tagArray = article.tags.split(',').map((t: string) => t.trim());
-            const updatedTags = tagArray.filter(t => t !== name).join(', ');
+            const updatedTags = tagArray.filter((t: string) => t !== name).join(', ');
             
             const { error: updateError } = await supabase
               .from('articles')
