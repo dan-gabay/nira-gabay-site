@@ -22,6 +22,13 @@ export default function NewArticlePage() {
     reading_time: 5
   });
 
+  function calculateReadingTime(text: string): number {
+    // Calculate based on Hebrew text: ~1000 characters per minute
+    const charCount = text.length;
+    const minutes = Math.max(1, Math.ceil(charCount / 1000));
+    return minutes;
+  }
+
   function handleChange(field: string, value: string | boolean | number) {
     setFormData(prev => ({ ...prev, [field]: value }));
     
@@ -34,6 +41,12 @@ export default function NewArticlePage() {
         .replace(/-+/g, '-')
         .trim();
       setFormData(prev => ({ ...prev, slug }));
+    }
+    
+    // Auto-calculate reading time from content
+    if (field === 'content' && typeof value === 'string') {
+      const readingTime = calculateReadingTime(value);
+      setFormData(prev => ({ ...prev, reading_time: readingTime }));
     }
   }
 
