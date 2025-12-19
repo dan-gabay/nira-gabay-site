@@ -56,7 +56,7 @@ export default function ManageTagsPage() {
       articles?.forEach(article => {
         if (article.tags) {
           const articleTags = article.tags.split(',').map((t: string) => t.trim());
-          articleTags.forEach(tagName => {
+          articleTags.forEach((tagName: string) => {
             if (tagName) {
               tagCounts[tagName] = (tagCounts[tagName] || 0) + 1;
             }
