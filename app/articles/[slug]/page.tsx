@@ -5,6 +5,7 @@ import { ArrowRight, Calendar, Tag, Clock, Heart } from 'lucide-react';
 import ArticleInteractions from '../ArticleInteractions';
 import RelatedArticles from '../RelatedArticles';
 import ReactMarkdown from 'react-markdown';
+import remarkBreaks from 'remark-breaks';
 import JsonLd from '@/components/JsonLd';
 import type { Metadata } from 'next';
 
@@ -308,7 +309,7 @@ export default async function ArticlePage({ params }: Props) {
             prose-blockquote:border-r-4 prose-blockquote:border-amber-500 prose-blockquote:pr-6 prose-blockquote:py-4 prose-blockquote:my-8 prose-blockquote:italic prose-blockquote:bg-amber-50/50
             mb-12"
           >
-            <ReactMarkdown>{article.content}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkBreaks]}>{article.content}</ReactMarkdown>
           </article>
 
           {/* Interactions (Likes, Share, Comments) */}
