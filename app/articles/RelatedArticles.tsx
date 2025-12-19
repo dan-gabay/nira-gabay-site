@@ -74,13 +74,13 @@ export default async function RelatedArticles({ currentArticleId, tags }: Relate
             className="group block bg-white rounded-xl overflow-hidden border border-stone-200 hover:shadow-lg transition-all duration-300"
           >
             {article.image_url && (
-              <div className="relative h-48 overflow-hidden bg-stone-100">
+              <div className="relative w-full aspect-[16/9] overflow-hidden bg-stone-100">
                 <Image
                   src={article.image_url}
                   alt={article.title}
                   fill
-                  unoptimized
                   className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  sizes="(max-width: 768px) 100vw, 33vw"
                 />
               </div>
             )}

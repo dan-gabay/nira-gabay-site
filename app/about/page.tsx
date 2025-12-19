@@ -58,8 +58,9 @@ export default function About() {
                     src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png"
                     alt="נירה גבאי - מטפלת בפסיכותרפיה, בעלת תואר שני M.A ממכון אדלר, מומחית למיניות בריאה וטיפול CBT"
                     fill
+                    priority
                     className="rounded-3xl shadow-2xl object-cover"
-                    loading="lazy"
+                    sizes="(max-width: 1024px) 100vw, 40vw"
                   />
                 </div>
               </div>
@@ -250,15 +251,17 @@ export default function About() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
-                className="w-full lg:w-1/2 relative h-80"
+                className="w-full lg:w-1/2"
               >
-                <Image
-                  src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/profile.png"
-                  alt="פנים הקליניקה לפסיכותרפיה של נירה גבאי במושב שואבה - חדר טיפול מעוצב באווירה חמה ומכילה"
-                  fill
-                  className="object-cover rounded-2xl shadow-2xl"
-                  loading="lazy"
-                />
+                <div className="relative w-full aspect-[4/3]">
+                  <Image
+                    src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/profile.png"
+                    alt="פנים הקליניקה לפסיכותרפיה של נירה גבאי במושב שואבה - חדר טיפול מעוצב באווירה חמה ומכילה"
+                    fill
+                    className="object-cover rounded-2xl shadow-2xl"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                  />
+                </div>
               </motion.div>
               
               <motion.div

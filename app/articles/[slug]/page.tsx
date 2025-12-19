@@ -264,14 +264,14 @@ export default async function ArticlePage({ params }: Props) {
         <div className="container mx-auto px-4 md:px-8 max-w-4xl">
           {/* Featured Image */}
           {article.image_url && (
-            <div className="mb-12">
+            <div className="mb-12 relative w-full aspect-[2.4/1]">
               <Image
                 src={article.image_url}
                 alt={`תמונת המאמר: ${article.title} - נירה גבאי פסיכותרפיה`}
-                width={1200}
-                height={600}
-                unoptimized
-                className="w-full h-auto max-h-[500px] object-cover rounded-2xl shadow-lg"
+                fill
+                priority
+                className="object-cover rounded-2xl shadow-lg"
+                sizes="(max-width: 1024px) 100vw, 1024px"
               />
             </div>
           )}

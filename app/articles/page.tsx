@@ -187,13 +187,13 @@ export default function Articles() {
                 >
                   {/* Article Image */}
                   {article.image_url && (
-                    <div className="relative h-52 w-full overflow-hidden bg-stone-100">
+                    <div className="relative w-full aspect-[16/9] overflow-hidden bg-stone-100">
                       <Image
                         src={article.image_url}
                         alt={article.title}
                         fill
-                        loading="lazy"
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       />
                     </div>
                   )}

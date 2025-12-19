@@ -89,13 +89,13 @@ export default function Home() {
         {/* Background */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-l from-stone-900/70 via-stone-900/50 to-transparent z-10" />
-          <div 
-            className="w-full h-full hero-bg-image"
-            style={{
-              backgroundImage: 'url(https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            }}
+          <Image
+            src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png"
+            alt="נירה גבאי - קליניקה לפסיכותרפיה"
+            fill
+            priority
+            className="object-cover hero-bg-image"
+            sizes="100vw"
           />
         </div>
         {/* Content */}
@@ -234,14 +234,16 @@ export default function Home() {
           <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-3xl p-8 md:p-12 shadow-xl">
               <div className="flex flex-col md:flex-row items-center gap-8">
-                <div className="w-full md:w-1/3 relative h-64">
-                  <Image
-                    src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/profile.png"
-                    alt="חדר טיפולים בקליניקה של נירה גבאי במושב שואבה - סביבה שקטה ומרגיעה לפסיכותרפיה"
-                    fill
-                    className="object-cover rounded-2xl shadow-lg"
-                    loading="lazy"
-                  />
+                <div className="w-full md:w-1/3">
+                  <div className="relative w-full aspect-[4/3]">
+                    <Image
+                      src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/profile.png"
+                      alt="חדר טיפולים בקליניקה של נירה גבאי במושב שואבה - סביבה שקטה ומרגיעה לפסיכותרפיה"
+                      fill
+                      className="object-cover rounded-2xl shadow-lg"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                    />
+                  </div>
                 </div>
                 <div className="w-full md:w-2/3 text-center md:text-right">
                   <h3 className="text-2xl font-bold text-stone-800 mb-4">הקליניקה שלי</h3>
@@ -291,13 +293,13 @@ export default function Home() {
                   <Link href={`/articles/${article.slug}`}>
                     <div className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-stone-100 h-full flex flex-col">
                       {article.image_url && (
-                        <div className="relative h-48 overflow-hidden bg-stone-100">
+                        <div className="relative w-full aspect-[16/9] overflow-hidden bg-stone-100">
                           <Image
                             src={article.image_url}
                             alt={article.title}
                             fill
-                            unoptimized
                             className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           />
                         </div>
                       )}
