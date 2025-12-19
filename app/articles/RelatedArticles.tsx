@@ -20,24 +20,21 @@ async function getRelatedArticles(articleId: string, tags?: string[]): Promise<A
   const { supabaseServer } = await import('@/lib/supabaseServer');
   const supabase = supabaseServer();
   
-  // אם יש תגיות, נמצא מאמרים עם תגיות דומות
+  // אם יש תגיות, נמצא מאמרים שהשדה tags שלהם מכיל אחת מהתגיות
   if (tags && tags.length > 0) {
-    const { data } = await supabase
+    // נבנה query שיחפש מאמרים שהשדה tags שלהם מכיל אחת מהתגיות
+    let query = supabase
       .from('articles')
-      .select(`
-        id,
-        title,
-        slug,
-        excerpt,
-        image_url,
-        created_date,
-        article_tags!inner(
-          tags!inner(name)
-        )
-      `)
+      .select('id, title, slug, excerpt, image_url, created_date, tags')
       .eq('is_published', true)
-      .neq('id', articleId)
-      .limit(3);
+      .neq('id', articleId);
+    
+    // נחפש מאמרים שיש להם לפחות תגית אחת משותפת
+    // נשתמש ב-LIKE operator עם OR בין התגיות
+    const orConditions = tags.map(tag => `tags.ilike.%${tag}%`).join(',');
+    query = query.or(orConditions);
+    
+    const { data } = await query.limit(3);
     
     if (data && data.length > 0) {
       return data as Article[];

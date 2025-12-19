@@ -35,7 +35,7 @@ export default function Articles() {
 
   useEffect(() => {
     async function fetchData() {
-      // Fetch articles with their tags through the join table
+      // Fetch articles with tags from the tags field
       const { data: articlesData } = await supabase
         .from('articles')
         .select(`
@@ -50,11 +50,7 @@ export default function Articles() {
           views_count,
           created_date,
           is_published,
-          article_tags(
-            tags(
-              name
-            )
-          )
+          tags
         `)
         .eq('is_published', true)
         .order('created_date', { ascending: false });
@@ -63,12 +59,11 @@ export default function Articles() {
         .from('tags')
         .select('id, name');
       
-      // Transform the data to extract tag names
+      // Transform the data to extract tag names from the tags string field
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const transformedArticles = (articlesData || []).map((article: any) => ({
         ...article,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        tag_names: (article.article_tags || []).map((at: any) => at.tags?.name).filter(Boolean)
+        tag_names: article.tags ? article.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : []
       }));
       
       setArticles(transformedArticles as Article[]);
