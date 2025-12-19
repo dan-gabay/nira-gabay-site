@@ -2,17 +2,12 @@ import { supabaseServer } from '../../../lib/supabaseServer';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Calendar, Clock, Heart } from 'lucide-react';
-import dynamic from 'next/dynamic';
+import ArticleInteractions from '../ArticleInteractions';
 import RelatedArticles from '../RelatedArticles';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import JsonLd from '@/components/JsonLd';
 import type { Metadata } from 'next';
-
-const ArticleInteractions = dynamic(() => import('../ArticleInteractions'), {
-  ssr: false,
-  loading: () => <div className="h-48 animate-pulse bg-stone-100 rounded-lg" />
-});
 
 type Props = { params: { slug: string } };
 
