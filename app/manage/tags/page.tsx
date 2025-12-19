@@ -44,22 +44,29 @@ export default function ManageTagsPage() {
 
       if (tagsError) throw tagsError;
 
-      // Count articles per tag
-      const { data: articleTags, error: articleTagsError } = await supabase
-        .from('article_tags')
-        .select('tag_id');
+      // Get all articles with their tags
+      const { data: articles, error: articlesError } = await supabase
+        .from('articles')
+        .select('tags');
 
-      if (articleTagsError) throw articleTagsError;
+      if (articlesError) throw articlesError;
 
-      // Count occurrences
-      const tagCounts = articleTags?.reduce((acc, at) => {
-        acc[at.tag_id] = (acc[at.tag_id] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>) || {};
+      // Count how many times each tag appears in articles
+      const tagCounts: Record<string, number> = {};
+      articles?.forEach(article => {
+        if (article.tags) {
+          const articleTags = article.tags.split(',').map(t => t.trim());
+          articleTags.forEach(tagName => {
+            if (tagName) {
+              tagCounts[tagName] = (tagCounts[tagName] || 0) + 1;
+            }
+          });
+        }
+      });
 
       const tagsWithCounts = (tagsData || []).map(tag => ({
         ...tag,
-        article_count: tagCounts[tag.id] || 0
+        article_count: tagCounts[tag.name] || 0
       }));
 
       setTags(tagsWithCounts);
@@ -120,7 +127,39 @@ export default function ManageTagsPage() {
 
   async function deleteTag(id: string, name: string, articleCount: number) {
     if (articleCount > 0) {
-      if (!confirm(`התגית "${name}" משויכת ל-${articleCount} מאמרים. האם אתה בטוח שברצונך למחוק אותה?`)) {
+      const userConfirmed = confirm(
+        `התגית "${name}" משויכת ל-${articleCount} מאמרים.\n` +
+        `מחיקת התגית תסיר אותה גם מכל המאמרים.\n` +
+        `האם אתה בטוח שברצונך למחוק אותה?`
+      );
+      if (!userConfirmed) return;
+
+      // Remove the tag from all articles
+      try {
+        const { data: articles, error: fetchError } = await supabase
+          .from('articles')
+          .select('id, tags')
+          .like('tags', `%${name}%`);
+
+        if (fetchError) throw fetchError;
+
+        // Update each article to remove this tag
+        for (const article of articles || []) {
+          if (article.tags) {
+            const tagArray = article.tags.split(',').map(t => t.trim());
+            const updatedTags = tagArray.filter(t => t !== name).join(', ');
+            
+            const { error: updateError } = await supabase
+              .from('articles')
+              .update({ tags: updatedTags })
+              .eq('id', article.id);
+
+            if (updateError) throw updateError;
+          }
+        }
+      } catch (error) {
+        console.error('Error removing tag from articles:', error);
+        alert('שגיאה בהסרת התגית מהמאמרים');
         return;
       }
     } else {
@@ -130,14 +169,6 @@ export default function ManageTagsPage() {
     }
 
     try {
-      // Delete article_tags associations first
-      const { error: articleTagsError } = await supabase
-        .from('article_tags')
-        .delete()
-        .eq('tag_id', id);
-
-      if (articleTagsError) throw articleTagsError;
-
       // Delete tag
       const { error } = await supabase
         .from('tags')
