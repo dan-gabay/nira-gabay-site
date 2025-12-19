@@ -264,7 +264,7 @@ export default async function ArticlePage({ params }: Props) {
         <div className="container mx-auto px-4 md:px-8 max-w-4xl">
           {/* Featured Image */}
           {article.image_url && (
-            <div className="mb-12 relative w-full aspect-[2.4/1]">
+            <div className="mb-12 relative w-full aspect-[16/9]">
               <Image
                 src={article.image_url}
                 alt={`תמונת המאמר: ${article.title} - נירה גבאי פסיכותרפיה`}

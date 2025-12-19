@@ -46,7 +46,7 @@ export default function ArticleLoading() {
       {/* Featured Image Skeleton */}
       <section className="py-8">
         <div className="container mx-auto px-4 md:px-8 max-w-4xl">
-          <div className="relative w-full aspect-[2.4/1] bg-stone-200 rounded-2xl animate-pulse overflow-hidden">
+          <div className="relative w-full aspect-[16/9] bg-stone-200 rounded-2xl animate-pulse overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-stone-200 via-stone-100 to-stone-200 animate-shimmer"></div>
           </div>
         </div>
