@@ -122,6 +122,7 @@ export default function NewArticlePage() {
       setSaving(true);
 
       const articleData = {
+        id: crypto.randomUUID(),
         title: formData.title,
         slug: formData.slug,
         excerpt: formData.excerpt || formData.content.substring(0, 200),
