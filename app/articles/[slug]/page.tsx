@@ -296,10 +296,10 @@ export default async function ArticlePage({ params }: Props) {
           {/* Article Content */}
           <article className="prose prose-xl max-w-none prose-stone 
             prose-headings:font-assistant prose-headings:text-stone-900 prose-headings:font-bold 
-            prose-h1:text-4xl prose-h1:mt-20 prose-h1:mb-10 prose-h1:leading-[1.4] prose-h1:pb-4 prose-h1:border-b-2 prose-h1:border-amber-200
-            prose-h2:text-3xl prose-h2:mt-16 prose-h2:mb-8 prose-h2:leading-[1.5]
-            prose-h3:text-2xl prose-h3:mt-12 prose-h3:mb-6 prose-h3:leading-[1.6] prose-h3:text-amber-900
-            prose-p:text-lg prose-p:leading-[1.9] prose-p:mb-6 prose-p:text-stone-700
+            prose-h1:text-4xl prose-h1:mt-24 prose-h1:mb-12 prose-h1:leading-[1.6] prose-h1:pb-6 prose-h1:border-b-2 prose-h1:border-amber-200
+            prose-h2:text-3xl prose-h2:mt-20 prose-h2:mb-10 prose-h2:leading-[1.6]
+            prose-h3:text-2xl prose-h3:mt-16 prose-h3:mb-8 prose-h3:leading-[1.7] prose-h3:text-amber-900
+            prose-p:text-lg prose-p:leading-[2.0] prose-p:mb-8 prose-p:text-stone-700
             prose-a:text-amber-700 prose-a:font-medium prose-a:underline hover:prose-a:text-amber-800
             prose-ul:mr-8 prose-ul:space-y-3 prose-ul:my-8 prose-ul:list-disc
             prose-ol:mr-8 prose-ol:space-y-3 prose-ol:my-8 prose-ol:list-decimal
