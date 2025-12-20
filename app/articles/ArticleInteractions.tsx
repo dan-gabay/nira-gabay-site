@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Heart, MessageCircle, Facebook, Send, User, Mail, Loader2 } from 'lucide-react';
+import { Heart, MessageCircle, Facebook, Send, User, Mail, Loader2, Instagram } from 'lucide-react';
 import { getUserIdentifier } from '@/lib/userIdentifier';
 import { supabase as supabaseClient } from '@/lib/supabaseClient';
 
@@ -174,6 +174,14 @@ export default function ArticleInteractions({
     window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
   }
 
+  function shareOnInstagram() {
+    // Instagram doesn't support direct web sharing with URL
+    // So we'll copy the URL to clipboard and notify the user
+    const url = window.location.href;
+    navigator.clipboard.writeText(url);
+    setToastMessage('הקישור הועתק! פתחו את Instagram והדביקו בפוסט');
+  }
+
   return (
     <>
       {/* Toast Notification */}
@@ -208,6 +216,13 @@ export default function ArticleInteractions({
             aria-label="שתף בוואטסאפ"
           >
             <MessageCircle className="w-5 h-5 text-green-600" />
+          <button
+            onClick={shareOnInstagram}
+            className="p-2 border-2 border-stone-300 rounded-lg hover:border-pink-500 hover:bg-pink-50 transition-all"
+            aria-label="שתף באינסטגרם"
+          >
+            <Instagram className="w-5 h-5 text-pink-600" />
+          </button>
           </button>
           <button
             onClick={shareOnFacebook}
