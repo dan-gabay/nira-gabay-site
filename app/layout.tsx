@@ -49,11 +49,20 @@ export const metadata: Metadata = {
     siteName: 'נירה גבאי - פסיכותרפיה',
     title: 'נירה גבאי - פסיכותרפיה והדרכת הורים',
     description: 'מטפלת בפסיכותרפיה ומדריכת הורים. מלווה מתבגרים, מבוגרים וזוגות בדרכם להגשמה עצמית.',
+    images: [
+      {
+        url: 'https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png',
+        width: 1200,
+        height: 630,
+        alt: 'נירה גבאי - פסיכותרפיה והדרכת הורים',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'נירה גבאי - פסיכותרפיה והדרכת הורים',
     description: 'מטפלת בפסיכותרפיה ומדריכת הורים',
+    images: ['https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png'],
   },
   robots: {
     index: true,
