@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Heart, MessageCircle, Facebook, Send, User, Mail, Loader2, Instagram } from 'lucide-react';
 import { getUserIdentifier } from '@/lib/userIdentifier';
 import { supabase as supabaseClient } from '@/lib/supabaseClient';
+import { trackArticleLike, trackCommentSubmit, trackArticleShare, trackWhatsAppClick } from '@/lib/analytics';
 
 type ArticleInteractionsProps = {
   articleId: string;
@@ -122,6 +123,9 @@ export default function ArticleInteractions({
       setLikesCount(newLikesCount);
       setHasLiked(true);
       setToastMessage('תודה על הלייק! ❤️');
+      
+      // Track conversion
+      trackArticleLike(articleId, document.title);
     } catch (error) {
       console.error('Error liking article:', error);
       setToastMessage('משהו השתבש, נסו שוב');
@@ -153,6 +157,9 @@ export default function ArticleInteractions({
       
       if (error) throw error;
       
+      // Track conversion
+      trackCommentSubmit(articleId);
+      
       setCommentForm({ author_name: '', author_email: '', content: '' });
       setToastMessage('התגובה נשלחה! היא תפורסם לאחר אישור');
     } catch (error) {
@@ -166,17 +173,23 @@ export default function ArticleInteractions({
   function shareOnWhatsApp() {
     const url = window.location.href;
     const text = `קראו את המאמר הזה מאת נירה גבאי`;
+    trackArticleShare('whatsapp', articleId, document.title);
+    trackWhatsAppClick('article_share');
     window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
   }
 
   function shareOnFacebook() {
     const url = window.location.href;
+    trackArticleShare('facebook', articleId, document.title);
     window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
   }
 
   function shareOnInstagram() {
     const url = window.location.href;
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    // Track conversion
+    trackArticleShare('instagram', articleId, document.title);
     
     if (isMobile) {
       // Try to open Instagram app directly

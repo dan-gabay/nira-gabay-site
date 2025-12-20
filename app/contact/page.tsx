@@ -16,6 +16,7 @@ import {
   type LucideIcon
 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
+import { trackContactFormSubmit } from '@/lib/analytics';
 
 type ContactInfoItem = {
   icon: LucideIcon | (() => React.ReactElement);
@@ -106,6 +107,9 @@ export default function Contact() {
         }]);
 
       if (submitError) throw submitError;
+
+      // Track conversion
+      trackContactFormSubmit('contact_page');
 
       setSubmitted(true);
       setFormData({ name: '', email: '', phone: '', message: '' });

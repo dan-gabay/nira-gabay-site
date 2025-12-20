@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Calendar, Clock, Heart } from 'lucide-react';
 import ArticleInteractions from '../ArticleInteractions';
+import ArticleReadTracker from '@/components/ArticleReadTracker';
 import RelatedArticles from '../RelatedArticles';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
@@ -294,6 +295,9 @@ export default async function ArticlePage({ params }: Props) {
           >
             <ReactMarkdown remarkPlugins={[remarkBreaks]}>{article.content}</ReactMarkdown>
           </article>
+
+          {/* Article Read Tracking */}
+          <ArticleReadTracker articleId={article.id} articleTitle={article.title} />
 
           {/* Interactions (Likes, Share, Comments) */}
           <ArticleInteractions 
