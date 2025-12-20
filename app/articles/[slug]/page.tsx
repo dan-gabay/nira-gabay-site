@@ -10,7 +10,6 @@ import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import JsonLd from '@/components/JsonLd';
 import type { Metadata } from 'next';
-import { trackTagClick } from '@/lib/analytics';
 
 type Props = { params: { slug: string } };
 

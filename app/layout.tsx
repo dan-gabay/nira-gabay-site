@@ -5,8 +5,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import JsonLd from "@/components/JsonLd";
-import GoogleAnalytics from "@/components/GoogleAnalytics";
-import { Analytics } from "@vercel/analytics/next";
+import GoogleAnalytics from "@/components/GoogleAnalytics";import ExitIntentTracker from '@/components/ExitIntentTracker';
+import TimeTracker from '@/components/TimeTracker';import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const heebo = Heebo({
@@ -187,6 +187,8 @@ export default function RootLayout({
       </head>
       <body className={`${heebo.variable} ${assistant.variable} antialiased font-heebo`}>
         <GoogleAnalytics />
+        <ExitIntentTracker />
+        <TimeTracker />
         <Header />
         <main className="pt-20">
           {children}

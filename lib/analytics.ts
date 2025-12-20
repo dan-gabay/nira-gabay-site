@@ -135,3 +135,68 @@ export const trackServiceInterest = (serviceName: string) => {
     value: 2,
   });
 };
+
+// Exit Intent
+export const trackExitIntent = (pageUrl: string) => {
+  trackEvent('exit_intent', {
+    event_category: 'Engagement',
+    event_label: pageUrl,
+    value: 3,
+  });
+};
+
+// Copy Contact Info
+export const trackCopyContact = (contactType: 'phone' | 'email', value: string) => {
+  trackEvent('copy_contact_info', {
+    event_category: 'Lead',
+    event_label: contactType,
+    contact_value: value,
+    value: 4,
+  });
+};
+
+// Time Milestones
+export const trackTimeMilestone = (minutes: number, pageUrl: string) => {
+  trackEvent(`time_on_site_${minutes}min`, {
+    event_category: 'Engagement',
+    event_label: pageUrl,
+    minutes: minutes,
+  });
+};
+
+// Social Media Clicks
+export const trackSocialClick = (platform: 'facebook' | 'whatsapp', source: string) => {
+  trackEvent('social_media_click', {
+    event_category: 'Social',
+    event_label: platform,
+    source: source,
+  });
+};
+
+// Hero CTA
+export const trackHeroCTA = (action: string) => {
+  trackEvent('hero_cta_click', {
+    event_category: 'Conversion',
+    event_label: action,
+    value: 5,
+  });
+};
+
+// Returning Visitor
+export const trackReturningVisitor = (visitCount: number) => {
+  trackEvent('returning_visitor', {
+    event_category: 'User',
+    event_label: `visit_${visitCount}`,
+    visit_count: visitCount,
+  });
+};
+
+// Article Completion (100% + time)
+export const trackArticleCompletion = (articleId: string, readTime: number) => {
+  trackEvent('article_completed', {
+    event_category: 'Engagement',
+    event_label: articleId,
+    read_time_seconds: readTime,
+    value: 3,
+  });
+};

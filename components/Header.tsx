@@ -5,7 +5,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Menu, X, Phone, Mail, Facebook, MessageCircle, Home, User, FileText, PhoneCall } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import { trackPageNavigation } from '@/lib/analytics';
 
 const WHATSAPP_NUMBER = '972507936681';
 const WHATSAPP_MESSAGE = 'שלום נירה, אשמח לקבוע פגישה';
@@ -64,7 +63,6 @@ export default function Header() {
                   className={`nav-link text-stone-700 hover:text-stone-900 font-medium relative ${
                     pathname === item.href ? 'active text-stone-900' : ''
                   }`}
-                  onClick={() => trackPageNavigation(item.name, pathname)}
                 >
                   {item.name}
                 </Link>
@@ -83,7 +81,11 @@ export default function Header() {
                   WhatsApp
                 </button>
               </a>
-              <a href="https://www.facebook.com/nira.gabay" target="_blank" rel="noopener noreferrer">
+              <a 
+                href="https://www.facebook.com/nira.gabay" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
                 <button className="border border-stone-300 hover:bg-stone-100 p-2 rounded-lg transition-colors">
                   <Facebook className="w-4 h-4 text-blue-600" />
                 </button>
