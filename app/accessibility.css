@@ -1,0 +1,61 @@
+/* Accessibility Styles - Applied only when user chooses */
+
+/* High Contrast Mode */
+.high-contrast {
+  filter: contrast(1.5);
+}
+
+.high-contrast body {
+  background: white !important;
+  color: black !important;
+}
+
+.high-contrast a {
+  color: #0000EE !important;
+  text-decoration: underline !important;
+}
+
+.high-contrast button {
+  border: 2px solid black !important;
+}
+
+/* Highlight Links */
+.highlight-links a {
+  background-color: #ffff00 !important;
+  text-decoration: underline !important;
+  padding: 2px 4px !important;
+  font-weight: bold !important;
+}
+
+/* Readable Font (Dyslexia-friendly) */
+.readable-font * {
+  font-family: Arial, Helvetica, sans-serif !important;
+  letter-spacing: 0.05em !important;
+  line-height: 1.8 !important;
+}
+
+/* Pause Animations */
+.pause-animations *,
+.pause-animations *::before,
+.pause-animations *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* Grayscale Mode */
+.grayscale {
+  filter: grayscale(100%);
+}
+
+/* Large Cursor */
+.large-cursor,
+.large-cursor * {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewport="0 0 48 48"><circle cx="24" cy="24" r="20" fill="black" fill-opacity="0.8"/><circle cx="24" cy="24" r="16" fill="white"/></svg>') 24 24, auto !important;
+}
+
+.large-cursor a,
+.large-cursor button,
+.large-cursor [role="button"] {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewport="0 0 48 48"><circle cx="24" cy="24" r="20" fill="blue" fill-opacity="0.8"/><circle cx="24" cy="24" r="16" fill="white"/></svg>') 24 24, pointer !important;
+}
