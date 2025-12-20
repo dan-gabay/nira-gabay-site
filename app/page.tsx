@@ -7,6 +7,7 @@ import { ArrowLeft, Calendar, MessageCircle, Users, User, Heart, Baby, HeartHand
 import { supabase } from '../lib/supabaseClient';
 import JsonLd from '@/components/JsonLd';
 import { faqSchema } from '@/lib/faqSchema';
+import { servicesSchema } from '@/lib/servicesSchema';
 
 const services = [
   {
@@ -70,6 +71,7 @@ export default function Home() {
   return (
     <div className="overflow-hidden">
       <JsonLd data={faqSchema} />
+      <JsonLd data={servicesSchema} />
       <style>{`
         @media (max-width: 768px) {
           .hero-bg-image {
