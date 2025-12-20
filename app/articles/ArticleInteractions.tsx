@@ -175,11 +175,24 @@ export default function ArticleInteractions({
   }
 
   function shareOnInstagram() {
-    // Instagram doesn't support direct web sharing with URL
-    // So we'll copy the URL to clipboard and notify the user
     const url = window.location.href;
-    navigator.clipboard.writeText(url);
-    setToastMessage('הקישור הועתק! פתחו את Instagram והדביקו בפוסט');
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // Try to open Instagram app directly
+      const instagramUrl = `instagram://story-camera`;
+      window.location.href = instagramUrl;
+      
+      // Fallback: copy to clipboard after a delay (if app didn't open)
+      setTimeout(() => {
+        navigator.clipboard.writeText(url);
+        setToastMessage('הקישור הועתק! הדביקו אותו בסטורי של Instagram');
+      }, 1000);
+    } else {
+      // Desktop: copy URL and notify
+      navigator.clipboard.writeText(url);
+      setToastMessage('הקישור הועתק! פתחו את Instagram במובייל והדביקו בסטורי');
+    }
   }
 
   return (
