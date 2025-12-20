@@ -1,11 +1,11 @@
 import { MetadataRoute } from 'next'
 import { supabaseServer } from '../lib/supabaseServer'
- 
+
+// Standard sitemap without images (Next.js will use this)
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = supabaseServer()
-  const baseUrl = 'https://niragabay.com'
+  const baseUrl = 'https://www.niragabay.com'
   
-  // Fetch all published articles
   const { data: articles } = await supabase
     .from('articles')
     .select('slug, updated_date, created_date')
@@ -22,25 +22,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       url: baseUrl,
       lastModified: new Date(),
-      changeFrequency: 'monthly',
+      changeFrequency: 'monthly' as const,
       priority: 1,
     },
     {
       url: `${baseUrl}/about`,
       lastModified: new Date(),
-      changeFrequency: 'monthly',
+      changeFrequency: 'monthly' as const,
       priority: 0.9,
     },
     {
       url: `${baseUrl}/articles`,
       lastModified: new Date(),
-      changeFrequency: 'weekly',
+      changeFrequency: 'weekly' as const,
       priority: 0.9,
     },
     {
       url: `${baseUrl}/contact`,
       lastModified: new Date(),
-      changeFrequency: 'monthly',
+      changeFrequency: 'monthly' as const,
       priority: 0.7,
     },
     ...articleUrls,

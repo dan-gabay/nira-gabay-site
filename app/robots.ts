@@ -14,6 +14,9 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/api/', '/manage/'],
       },
     ],
-    sitemap: 'https://niragabay.com/sitemap.xml',
+    sitemap: [
+      'https://www.niragabay.com/sitemap.xml',
+      'https://www.niragabay.com/sitemap-images.xml'
+    ],
   }
 }

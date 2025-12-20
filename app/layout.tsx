@@ -30,7 +30,7 @@ const assistant = Assistant({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://niragabay.com'),
+  metadataBase: new URL('https://www.niragabay.com'),
   title: {
     default: 'נירה גבאי - פסיכותרפיה והדרכת הורים',
     template: '%s | נירה גבאי'
