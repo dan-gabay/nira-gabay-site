@@ -4,11 +4,13 @@ import Image from 'next/image';
 import { ArrowRight, Calendar, Clock, Heart } from 'lucide-react';
 import ArticleInteractions from '../ArticleInteractions';
 import ArticleReadTracker from '@/components/ArticleReadTracker';
+import ArticleTag from '@/components/ArticleTag';
 import RelatedArticles from '../RelatedArticles';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import JsonLd from '@/components/JsonLd';
 import type { Metadata } from 'next';
+import { trackTagClick } from '@/lib/analytics';
 
 type Props = { params: { slug: string } };
 
@@ -210,13 +212,7 @@ export default async function ArticlePage({ params }: Props) {
           {article.tag_names && article.tag_names.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-6">
               {article.tag_names.map((tag, i) => (
-                <Link 
-                  key={i} 
-                  href={`/articles?tag=${encodeURIComponent(tag)}`}
-                  className="inline-flex items-center px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-medium hover:bg-amber-200 transition-colors"
-                >
-                  {tag}
-                </Link>
+                <ArticleTag key={i} tag={tag} articleId={article.id} />
               ))}
             </div>
           )}

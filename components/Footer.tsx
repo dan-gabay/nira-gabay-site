@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Phone, Mail, Facebook, Home, User, FileText, PhoneCall } from 'lucide-react';
+import { trackPhoneClick } from '@/lib/analytics';
 
 export default function Footer() {
   const navItems = [
@@ -44,7 +45,13 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-center gap-3 text-stone-400">
                 <Phone className="w-5 h-5" />
-                <a href="tel:050-7936681" className="hover:text-white transition-colors">050-7936681</a>
+                <a 
+                  href="tel:050-7936681" 
+                  className="hover:text-white transition-colors"
+                  onClick={() => trackPhoneClick('footer')}
+                >
+                  050-7936681
+                </a>
               </li>
               <li className="flex items-center gap-3 text-stone-400">
                 <Mail className="w-5 h-5" />

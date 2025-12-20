@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { trackArticleRead } from '@/lib/analytics';
+import { trackArticleRead, trackArticleScrollDepth } from '@/lib/analytics';
 
 type ArticleReadTrackerProps = {
   articleId: string;
@@ -12,19 +12,26 @@ export default function ArticleReadTracker({ articleId, articleTitle }: ArticleR
   useEffect(() => {
     let hasTracked = false;
     let scrollTimeout: NodeJS.Timeout;
+    const scrollDepthTracked = new Set<number>();
 
     const handleScroll = () => {
-      if (hasTracked) return;
-
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(() => {
         const windowHeight = window.innerHeight;
         const documentHeight = document.documentElement.scrollHeight;
         const scrollTop = window.scrollY;
-        const scrollPercentage = (scrollTop + windowHeight) / documentHeight;
+        const scrollPercentage = Math.round(((scrollTop + windowHeight) / documentHeight) * 100);
+
+        // Track milestones: 25%, 50%, 75%, 100%
+        [25, 50, 75, 100].forEach((milestone) => {
+          if (scrollPercentage >= milestone && !scrollDepthTracked.has(milestone)) {
+            scrollDepthTracked.add(milestone);
+            trackArticleScrollDepth(milestone, articleId);
+          }
+        });
 
         // Track if user scrolled at least 50% of the article
-        if (scrollPercentage >= 0.5) {
+        if (scrollPercentage >= 50 && !hasTracked) {
           trackArticleRead(articleId, articleTitle);
           hasTracked = true;
         }
@@ -40,6 +47,9 @@ export default function ArticleReadTracker({ articleId, articleTitle }: ArticleR
         hasTracked = true;
       }
     }, 30000); // 30 seconds
+
+    // Initial check
+    handleScroll();
 
     return () => {
       window.removeEventListener('scroll', handleScroll);

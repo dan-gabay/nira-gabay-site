@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Menu, X, Phone, Mail, Facebook, MessageCircle, Home, User, FileText, PhoneCall } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { trackPageNavigation } from '@/lib/analytics';
 
 const WHATSAPP_NUMBER = '972507936681';
 const WHATSAPP_MESSAGE = 'שלום נירה, אשמח לקבוע פגישה';
@@ -63,6 +64,7 @@ export default function Header() {
                   className={`nav-link text-stone-700 hover:text-stone-900 font-medium relative ${
                     pathname === item.href ? 'active text-stone-900' : ''
                   }`}
+                  onClick={() => trackPageNavigation(item.name, pathname)}
                 >
                   {item.name}
                 </Link>

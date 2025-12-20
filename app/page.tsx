@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabaseClient';
 import JsonLd from '@/components/JsonLd';
 import { faqSchema } from '@/lib/faqSchema';
 import { servicesSchema } from '@/lib/servicesSchema';
+import { trackServiceInterest } from '@/lib/analytics';
 
 const services = [
   {
@@ -206,7 +207,8 @@ export default function Home() {
               return (
                 <div
                   key={index}
-                  className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-stone-100 group h-full"
+                  className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-stone-100 group h-full cursor-pointer"
+                  onClick={() => trackServiceInterest(service.title)}
                 >
                   <div className="flex items-start gap-4">
                     <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">

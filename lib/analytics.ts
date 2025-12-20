@@ -94,3 +94,44 @@ export const trackBookingIntent = (source: string) => {
     value: 10,
   });
 };
+
+// Navigation & Engagement Events
+export const trackPageNavigation = (pageName: string, fromPage: string) => {
+  trackEvent('navigation_click', {
+    event_category: 'Navigation',
+    event_label: pageName,
+    from_page: fromPage,
+  });
+};
+
+export const trackArticleScrollDepth = (depth: number, articleId: string) => {
+  trackEvent(`scroll_depth_${depth}`, {
+    event_category: 'Engagement',
+    event_label: articleId,
+    scroll_percentage: depth,
+  });
+};
+
+export const trackTagClick = (tagName: string, articleId?: string) => {
+  trackEvent('tag_click', {
+    event_category: 'Navigation',
+    event_label: tagName,
+    article_id: articleId,
+  });
+};
+
+export const trackInternalLinkClick = (linkUrl: string, linkText: string) => {
+  trackEvent('internal_link_click', {
+    event_category: 'Navigation',
+    event_label: linkText,
+    link_url: linkUrl,
+  });
+};
+
+export const trackServiceInterest = (serviceName: string) => {
+  trackEvent('service_interest', {
+    event_category: 'Interest',
+    event_label: serviceName,
+    value: 2,
+  });
+};
