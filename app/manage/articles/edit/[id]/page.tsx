@@ -253,7 +253,7 @@ export default function EditArticlePage() {
                 <div className="mt-3">
                   <img 
                     src={formData.image_url} 
-                    alt="Preview" 
+                    alt={formData.title ? `תמונת מאמר: ${formData.title}` : "תצוגה מקדימה של תמונת המאמר"}
                     className="w-full max-w-md rounded-lg border border-stone-200"
                   />
                 </div>
