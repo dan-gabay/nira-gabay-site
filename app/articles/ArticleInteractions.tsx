@@ -242,13 +242,13 @@ export default function ArticleInteractions({
             aria-label="שתף בוואטסאפ"
           >
             <MessageCircle className="w-5 h-5 text-green-600" />
+          </button>
           <button
             onClick={shareOnInstagram}
             className="p-2 border-2 border-stone-300 rounded-lg hover:border-pink-500 hover:bg-pink-50 transition-all"
             aria-label="שתף באינסטגרם"
           >
             <Instagram className="w-5 h-5 text-pink-600" />
-          </button>
           </button>
           <button
             onClick={shareOnFacebook}
