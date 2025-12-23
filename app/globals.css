@@ -36,8 +36,10 @@ h1, h2, h3, h4, h5, h6 {
 .font-serif {
   font-family: var(--font-assistant), var(--font-heebo), sans-serif !important;
   font-weight: 700;
-}/* Removed font-smoothing from here as it's now on body */
 }
+
+/* Performance optimizations */
+/* Removed font-smoothing from here as it's now on body */
 
 /* Optimize initial page render */
 img,
@@ -46,8 +48,8 @@ video,
 canvas,
 svg {
   display: block;
-  max-width: 100%
-/* Performance optimizations */
+  max-width: 100%;
+}
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

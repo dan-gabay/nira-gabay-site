@@ -190,7 +190,7 @@ export default function Contact() {
                 </div>
 
                 {/* WhatsApp CTA */}
-                <div className=\"bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 mb-8\">
+                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 mb-8">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
                       <MessageCircle className="w-6 h-6 text-white" />
@@ -211,15 +211,10 @@ export default function Contact() {
                       שלחו הודעת WhatsApp
                     </span>
                   </a>
-                </motion.div>
+                </div>
 
                 {/* Additional Info */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.5 }}
-                  className="bg-stone-50 rounded-2xl p-6"
-                >
+                <div className="bg-stone-50 rounded-2xl p-6">
                   <div className="flex items-start gap-4">
                     <Monitor className="w-6 h-6 text-amber-600 flex-shrink-0 mt-1" />
                     <div>

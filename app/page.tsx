@@ -179,7 +179,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Services Section */>
+      {/* Services Section */}
       <section className="py-24 bg-gradient-to-b from-stone-50 to-white">
         <div className="container mx-auto px-4 md:px-8">
           <div className="text-center mb-16">
