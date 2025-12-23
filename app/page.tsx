@@ -97,6 +97,8 @@ export default function Home() {
             alt="נירה גבאי - קליניקה לפסיכותרפיה"
             fill
             priority
+            fetchPriority="high"
+            quality={85}
             className="object-cover hero-bg-image"
             sizes="100vw"
           />
@@ -155,13 +157,7 @@ export default function Home() {
       </motion.section>
 
       {/* Introduction Section */}
-      <motion.section
-        className="py-24 bg-white"
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-      >
+      <section className="py-24 bg-white">
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-stone-800 mb-8">
@@ -181,16 +177,10 @@ export default function Home() {
             </a>
           </div>
         </div>
-      </motion.section>
+      </section>
 
-      {/* Services Section */}
-      <motion.section
-        className="py-24 bg-gradient-to-b from-stone-50 to-white"
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-      >
+      {/* Services Section */>
+      <section className="py-24 bg-gradient-to-b from-stone-50 to-white">
         <div className="container mx-auto px-4 md:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-stone-800 mb-4">
@@ -224,16 +214,10 @@ export default function Home() {
             })}
           </div>
         </div>
-      </motion.section>
+      </section>
 
       {/* Clinic Info */}
-      <motion.section
-        className="py-20 bg-gradient-to-br from-amber-50 to-stone-50"
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-      >
+      <section className="py-20 bg-gradient-to-br from-amber-50 to-stone-50">
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-3xl p-8 md:p-12 shadow-xl">
@@ -244,6 +228,8 @@ export default function Home() {
                       src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/profile.png"
                       alt="חדר טיפולים בקליניקה של נירה גבאי במושב שואבה - סביבה שקטה ומרגיעה לפסיכותרפיה"
                       fill
+                      loading="lazy"
+                      quality={75}
                       className="object-cover rounded-2xl shadow-lg"
                       sizes="(max-width: 768px) 100vw, 33vw"
                     />
@@ -263,17 +249,11 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </motion.section>
+      </section>
 
       {/* Articles Preview */}
       {!loading && articles.length > 0 && (
-        <motion.section
-          className="py-24 bg-white"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
+        <section className="py-24 bg-white">
           <div className="container mx-auto px-4 md:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-stone-800 mb-4">
@@ -286,14 +266,8 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {articles.map((article, index) => (
-                <motion.div
-                  key={article.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
+              {articles.map((article) => (
+                <div key={article.id}>
                   <Link href={`/articles/${article.slug}`}>
                     <div className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-stone-100 h-full flex flex-col">
                       {article.image_url && (
@@ -302,6 +276,7 @@ export default function Home() {
                             src={article.image_url}
                             alt={article.title}
                             fill
+                            loading="lazy"
                             className="object-cover group-hover:scale-105 transition-transform duration-300"
                             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           />
@@ -342,7 +317,7 @@ export default function Home() {
                       </div>
                     </div>
                   </Link>
-                </motion.div>
+                </div>
               ))}
             </div>
 
@@ -355,17 +330,11 @@ export default function Home() {
               </Link>
             </div>
           </div>
-        </motion.section>
+        </section>
       )}
 
       {/* CTA Section */}
-      <motion.section
-        className="py-24 bg-gradient-to-br from-stone-800 to-stone-900 text-white"
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-      >
+      <section className="py-24 bg-gradient-to-br from-stone-800 to-stone-900 text-white">
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
@@ -394,7 +363,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </motion.section>
+      </section>
     </div>
   );
 }

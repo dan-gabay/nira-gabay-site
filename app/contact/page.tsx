@@ -160,11 +160,8 @@ export default function Contact() {
                 
                 <div className="space-y-6 mb-10">
                   {contactInfo.map((info, index) => (
-                    <motion.div
+                    <div
                       key={index}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: index * 0.1 }}
                       className="flex items-center gap-4"
                     >
                       <div className={`w-14 h-14 rounded-2xl bg-stone-100 flex items-center justify-center flex-shrink-0 ${info.color}`}>
@@ -188,17 +185,12 @@ export default function Contact() {
                           <p className="text-lg font-medium text-stone-800">{info.value}</p>
                         )}
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
 
                 {/* WhatsApp CTA */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.4 }}
-                  className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 mb-8"
-                >
+                <div className=\"bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 mb-8\">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
                       <MessageCircle className="w-6 h-6 text-white" />
@@ -237,7 +229,7 @@ export default function Contact() {
                       </p>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               </motion.div>
 
               {/* Contact Form */}
@@ -358,13 +350,7 @@ export default function Contact() {
       {/* Map Section */}
       <section className="py-16 bg-gradient-to-br from-stone-50 to-amber-50">
         <div className="container mx-auto px-4 md:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="max-w-4xl mx-auto text-center"
-          >
+          <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl font-bold text-stone-800 mb-6">הקליניקה שלי</h2>
             <p className="text-lg text-stone-600 mb-8">
               הקליניקה ממוקמת במושב שואבה, באזור ירושלים, במרחב שקט וירוק המאפשר חוויה טיפולית אינטימית ומרגיעה.
@@ -397,7 +383,7 @@ export default function Contact() {
                 </a>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
     </div>

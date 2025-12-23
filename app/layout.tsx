@@ -189,6 +189,8 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com" />
+        <link rel="dns-prefetch" href="https://qtrypzzcjebvfcihiynt.supabase.co" />
         <JsonLd data={organizationSchema} />
       </head>
       <body className={`${heebo.variable} ${assistant.variable} antialiased font-heebo`}>
@@ -196,7 +198,7 @@ export default function RootLayout({
         <ExitIntentTracker />
         <TimeTracker />
         <Header />
-        <main className="pt-20">
+        <main>
           {children}
         </main>
         <Footer />
