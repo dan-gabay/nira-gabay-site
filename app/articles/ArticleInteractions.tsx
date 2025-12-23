@@ -321,7 +321,23 @@ export default function ArticleInteractions({
 
         {/* Comments List */}
         {isLoadingComments ? (
-          <div className="text-center py-8 text-stone-500">טוען תגובות...</div>
+          <div className="space-y-6">
+            {[1, 2].map((i) => (
+              <div key={i} className="bg-stone-50 rounded-xl p-6 animate-pulse">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-stone-200"></div>
+                  <div className="flex-1">
+                    <div className="h-4 bg-stone-200 rounded w-24 mb-2"></div>
+                    <div className="h-3 bg-stone-200 rounded w-32"></div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-stone-200 rounded w-full"></div>
+                  <div className="h-4 bg-stone-200 rounded w-5/6"></div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : comments.length > 0 ? (
           <div className="space-y-6">
             {comments.map((comment) => (
