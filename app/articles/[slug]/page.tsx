@@ -302,7 +302,7 @@ export default async function ArticlePage({ params }: Props) {
           />
 
           {/* Author Box */}
-          <div className="bg-gradient-to-br from-amber-50 to-stone-50 rounded-2xl p-6 md:p-8 my-12" style={{ minHeight: '160px' }}>
+          <div className="bg-gradient-to-br from-amber-50 to-stone-50 rounded-2xl p-6 md:p-8 my-12">
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <Image
                 src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png"

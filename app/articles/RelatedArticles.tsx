@@ -61,7 +61,7 @@ export default async function RelatedArticles({ currentArticleId, tags }: Relate
   }
   
   return (
-    <section className="mt-16 pt-12 border-t border-stone-200" style={{ minHeight: '400px' }}>
+    <section className="mt-16 pt-12 border-t border-stone-200">
       <h3 className="text-2xl font-bold text-stone-800 mb-8 font-serif">
         מאמרים נוספים שעשויים לעניין אתכם
       </h3>
