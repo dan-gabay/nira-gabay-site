@@ -79,6 +79,42 @@ img {
   content-visibility: auto;
 }
 
+/* Prevent layout shifts from images */
+img[width][height] {
+  height: auto;
+}
+
+/* Reserve space for Next.js Image components */
+.next-image-container {
+  position: relative;
+  display: block;
+}
+
+/* Prevent layout shift from lazy-loaded images */
+img[loading="lazy"] {
+  min-height: 1px;
+}
+
+/* Prevent CLS from third-party embeds */
+iframe {
+  display: block;
+}
+
+/* Smooth transitions without layout shifts */
+* {
+  transition-property: opacity, transform, background-color, color, border-color;
+  transition-timing-function: ease-in-out;
+}
+
+/* Prevent text reflow during font loading */
+.font-loading {
+  visibility: hidden;
+}
+
+.fonts-loaded {
+  visibility: visible;
+}
+
 /* Will-change optimization */
 .will-change-transform {
   will-change: transform;

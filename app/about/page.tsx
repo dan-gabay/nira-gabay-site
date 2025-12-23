@@ -39,15 +39,16 @@ const experiences = [
 
 export default function About() {
   return (
-    <div className="overflow-hidden">
+    <div className="overflow-hidden" style={{ paddingTop: '80px' }}>
       {/* Hero Section */}
-      <section className="relative py-32 bg-gradient-to-br from-stone-100 to-amber-50">
+      <section className="relative py-24 bg-gradient-to-br from-stone-100 to-amber-50">
         <div className="container mx-auto px-4 md:px-8">
           <div className="flex flex-col lg:flex-row items-center gap-12">
             {/* Image */}
             <motion.div
-              initial={{ opacity: 0, x: -50 }}
+              initial={{ opacity: 0, x: 0 }}
               animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
               transition={{ duration: 0.8 }}
               className="w-full lg:w-2/5"
             >

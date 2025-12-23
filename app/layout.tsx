@@ -17,16 +17,18 @@ const heebo = Heebo({
   subsets: ["hebrew", "latin"],
   weight: ["300", "400", "500", "700"],
   variable: "--font-heebo",
-  display: "swap",
+  display: "optional",
   preload: true,
+  adjustFontFallback: true,
 });
 
 const assistant = Assistant({
   subsets: ["hebrew", "latin"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-assistant",
-  display: "swap",
+  display: "optional",
   preload: true,
+  adjustFontFallback: true,
 });
 
 export const metadata: Metadata = {

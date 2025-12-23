@@ -70,7 +70,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="overflow-hidden">
+    <div className="overflow-hidden" style={{ paddingTop: '80px' }}>
       <JsonLd data={faqSchema} />
       <JsonLd data={servicesSchema} />
       <style>{`
@@ -84,10 +84,10 @@ export default function Home() {
       
       {/* Hero Section */}
       <motion.section
-        className="relative min-h-[90vh] flex items-center"
-        initial={{ opacity: 0, y: 40 }}
+        className="relative min-h-[85vh] flex items-center"
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
+        transition={{ duration: 0.5 }}
       >
         {/* Background */}
         <div className="absolute inset-0">

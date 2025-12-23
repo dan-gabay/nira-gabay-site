@@ -187,7 +187,7 @@ export default async function ArticlePage({ params }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-stone-50">
+    <div className="min-h-screen bg-gradient-to-br from-white to-stone-50" style={{ paddingTop: '80px' }}>
       <JsonLd data={articleSchema} />
       <JsonLd data={breadcrumbSchema} />
       
@@ -205,7 +205,7 @@ export default async function ArticlePage({ params }: Props) {
       </div>
 
       {/* Header */}
-      <section className="py-12 bg-gradient-to-br from-stone-100 to-amber-50">
+      <section className="py-10 bg-gradient-to-br from-stone-100 to-amber-50">
         <div className="container mx-auto px-4 md:px-8 max-w-4xl">
           {/* Tags */}
           {article.tag_names && article.tag_names.length > 0 && (

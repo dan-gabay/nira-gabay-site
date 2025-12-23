@@ -88,14 +88,14 @@ export default function Articles() {
   });
 
   return (
-    <div className="overflow-hidden">
+    <div className="overflow-hidden" style={{ paddingTop: '80px' }}>
       {/* Hero */}
-      <section className="py-24 bg-gradient-to-br from-stone-100 to-amber-50">
+      <section className="py-20 bg-gradient-to-br from-stone-100 to-amber-50">
         <div className="container mx-auto px-4 md:px-8">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.4 }}
             className="text-center max-w-3xl mx-auto"
           >
             <span className="inline-block px-4 py-2 bg-amber-100 rounded-full text-amber-800 text-sm mb-6">
@@ -112,7 +112,7 @@ export default function Articles() {
       </section>
 
       {/* Search & Filter */}
-      <section className="py-8 bg-white border-b border-stone-100 sticky top-20 z-30">
+      <section className="py-8 bg-white border-b border-stone-100 sticky top-[80px] z-30" style={{ minHeight: '88px' }}>
         <div className="container mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             {/* Search */}
@@ -164,12 +164,12 @@ export default function Articles() {
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-lg animate-pulse">
-                  <div className="h-52 w-full bg-stone-200" />
+                <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-lg">
+                  <div className="relative w-full aspect-[16/9] bg-stone-200 animate-pulse" />
                   <div className="p-6 space-y-4">
-                    <div className="h-6 bg-stone-200 rounded w-3/4" />
-                    <div className="h-4 bg-stone-200 rounded w-full" />
-                    <div className="h-4 bg-stone-200 rounded w-2/3" />
+                    <div className="h-6 bg-stone-200 rounded w-3/4 animate-pulse" />
+                    <div className="h-4 bg-stone-200 rounded w-full animate-pulse" />
+                    <div className="h-4 bg-stone-200 rounded w-2/3 animate-pulse" />
                   </div>
                 </div>
               ))}
@@ -180,9 +180,9 @@ export default function Articles() {
                 <motion.a
                   key={article.id}
                   href={`/articles/${article.slug || article.id}`}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  transition={{ duration: 0.3, delay: Math.min(index * 0.05, 0.3) }}
                   className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
                 >
                   {/* Article Image */}
@@ -194,6 +194,7 @@ export default function Articles() {
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        loading="lazy"
                       />
                     </div>
                   )}
