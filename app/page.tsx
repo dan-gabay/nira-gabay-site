@@ -268,7 +268,7 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {articles.map((article) => (
                 <div key={article.id}>
-                  <Link href={`/articles/${article.slug}`}>
+                  <Link href={`/articles/${article.slug}`} prefetch={true}>
                     <div className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-stone-100 h-full flex flex-col">
                       {article.image_url && (
                         <div className="relative w-full aspect-[16/9] overflow-hidden bg-stone-100">

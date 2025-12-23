@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Search, Filter, FileText } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import Image from 'next/image';
+import Link from 'next/link';
 
 type Article = {
   id: string;
@@ -177,13 +178,11 @@ export default function Articles() {
           ) : filteredArticles.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredArticles.map((article, index) => (
-                <motion.a
+                <Link
                   key={article.id}
                   href={`/articles/${article.slug || article.id}`}
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: Math.min(index * 0.05, 0.3) }}
-                  className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
+                  prefetch={index < 6}
+                  className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow block"
                 >
                   {/* Article Image */}
                   {article.image_url && (
@@ -194,7 +193,8 @@ export default function Articles() {
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        loading="lazy"
+                        loading={index < 6 ? "eager" : "lazy"}
+                        priority={index < 6}
                       />
                     </div>
                   )}
@@ -211,7 +211,7 @@ export default function Articles() {
                     )}
                     <div className="text-amber-700 text-sm font-medium">קרא עוד ←</div>
                   </div>
-                </motion.a>
+                </Link>
               ))}
             </div>
           ) : (
