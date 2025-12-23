@@ -218,7 +218,7 @@ export default function ArticleInteractions({
       )}
 
       {/* Actions Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 border-t border-b border-stone-200" style={{ minHeight: '80px' }}>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 border-t border-b border-stone-200">
         <div className="flex items-center gap-4">
           <button
             onClick={handleLike}
@@ -261,7 +261,7 @@ export default function ArticleInteractions({
       </div>
 
       {/* Comments Section */}
-      <section className="mt-12" style={{ minHeight: '500px' }}>
+      <section className="mt-12 mb-12" style={{ minHeight: 'auto' }}>
         <h3 className="text-2xl font-bold text-stone-800 mb-8 font-serif">
           תגובות ({comments.length})
         </h3>

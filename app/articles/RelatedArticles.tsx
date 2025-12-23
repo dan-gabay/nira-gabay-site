@@ -71,7 +71,7 @@ export default async function RelatedArticles({ currentArticleId, tags }: Relate
           <Link
             key={article.id}
             href={`/articles/${article.slug}`}
-            className="group block bg-white rounded-xl overflow-hidden border border-stone-200 hover:shadow-lg transition-all duration-300"
+            className="group block bg-white rounded-xl overflow-hidden border border-stone-200 hover:shadow-lg transition-all duration-300 h-full flex flex-col"
           >
             {article.image_url && (
               <div className="relative w-full aspect-[16/9] overflow-hidden bg-stone-100">
@@ -86,18 +86,18 @@ export default async function RelatedArticles({ currentArticleId, tags }: Relate
               </div>
             )}
             
-            <div className="p-4">
+            <div className="p-4 flex-1 flex flex-col">
               <h4 className="font-bold text-stone-800 group-hover:text-amber-700 transition-colors line-clamp-2 mb-2">
                 {article.title}
               </h4>
               
               {article.excerpt && (
-                <p className="text-sm text-stone-600 line-clamp-2 mb-3">
+                <p className="text-sm text-stone-600 line-clamp-2 mb-3 flex-1">
                   {article.excerpt}
                 </p>
               )}
               
-              <div className="flex items-center text-amber-700 text-sm font-medium">
+              <div className="flex items-center text-amber-700 text-sm font-medium mt-auto">
                 קראו עוד
                 <ArrowLeft className="w-4 h-4 mr-1 group-hover:translate-x-1 transition-transform" />
               </div>
