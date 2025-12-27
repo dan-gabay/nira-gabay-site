@@ -73,6 +73,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'נירה גבאי' }],
   creator: 'נירה גבאי',
+  applicationName: 'נירה גבאי',
   icons: {
     icon: [
       { url: '/icon.png', sizes: '512x512', type: 'image/png' },
@@ -83,8 +84,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'he_IL',
-    url: 'https://niragabay.com',
-    siteName: 'נירה גבאי - פסיכותרפיה',
+    url: 'https://www.niragabay.com',
+    siteName: 'נירה גבאי',
     title: 'נירה גבאי - פסיכותרפיה והדרכת הורים',
     description: 'מטפלת בפסיכותרפיה ומדריכת הורים. מלווה מתבגרים, מבוגרים וזוגות בדרכם להגשמה עצמית.',
     images: [
@@ -132,7 +133,7 @@ export default function RootLayout({
     '@type': 'Psychologist',
     name: 'נירה גבאי',
     description: 'מטפלת בפסיכותרפיה ומדריכת הורים',
-    url: 'https://niragabay.com',
+    url: 'https://www.niragabay.com',
     logo: 'https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/logo.png',
     image: 'https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png',
     telephone: '+972-50-7936681',
@@ -185,6 +186,30 @@ export default function RootLayout({
     ],
   };
 
+  // WebSite Schema - זה מה שגוגל משתמש בו להציג את שם האתר בתוצאות חיפוש
+  const webSiteSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'נירה גבאי - פסיכותרפיה והדרכת הורים',
+    alternateName: 'נירה גבאי',
+    url: 'https://www.niragabay.com',
+    description: 'מטפלת בפסיכותרפיה ומדריכת הורים. מלווה מתבגרים, מבוגרים וזוגות בדרכם להגשמה עצמית.',
+    inLanguage: 'he-IL',
+    publisher: {
+      '@type': 'Person',
+      name: 'נירה גבאי',
+      url: 'https://www.niragabay.com/about'
+    },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: 'https://www.niragabay.com/articles?search={search_term_string}'
+      },
+      'query-input': 'required name=search_term_string'
+    }
+  };
+
   return (
     <html lang="he" dir="rtl">
       <head>
@@ -193,6 +218,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com" />
         <link rel="dns-prefetch" href="https://qtrypzzcjebvfcihiynt.supabase.co" />
         <JsonLd data={organizationSchema} />
+        <JsonLd data={webSiteSchema} />
       </head>
       <body className={`${heebo.variable} ${assistant.variable} antialiased font-heebo`}>
         <GoogleAnalytics />
