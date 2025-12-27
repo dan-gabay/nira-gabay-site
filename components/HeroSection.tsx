@@ -10,7 +10,7 @@ export default function HeroSection() {
       <style>{`
         @media (max-width: 768px) {
           .hero-bg-image {
-            background-image: url('https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-mobile.png') !important;
+            background-image: url('https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-mobile.webp') !important;
             background-position: left center !important;
           }
         }
@@ -27,7 +27,7 @@ export default function HeroSection() {
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-l from-stone-900/70 via-stone-900/50 to-transparent z-10" />
           <Image
-            src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png"
+            src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.webp"
             alt="נירה גבאי - קליניקה לפסיכותרפיה"
             fill
             priority
