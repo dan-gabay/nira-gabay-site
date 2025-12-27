@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Menu, X, Phone, Mail, Facebook, MessageCircle, Home, User, FileText, PhoneCall } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { trackHeaderNavClick, trackHeaderLogoClick, trackMobileMenuToggle, trackWhatsAppClick, trackSocialClick } from '@/lib/analytics';
 
 const WHATSAPP_NUMBER = '972507936681';
 const WHATSAPP_MESSAGE = 'שלום נירה, אשמח לקבוע פגישה';
@@ -40,7 +41,7 @@ export default function Header() {
         <div className="container mx-auto px-4 md:px-8 h-full">
           <div className="flex items-center justify-between h-full">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-3" onClick={() => trackHeaderLogoClick()}>
               <Image 
                 src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/logo.png"
                 alt="לוגו נירה גבאי - פסיכותרפיה והדרכת הורים"
@@ -61,6 +62,7 @@ export default function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => trackHeaderNavClick(item.name)}
                   className={`nav-link text-stone-700 hover:text-stone-900 font-medium relative ${
                     pathname === item.href ? 'active text-stone-900' : ''
                   }`}
@@ -76,6 +78,7 @@ export default function Header() {
                 href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackWhatsAppClick('header')}
               >
                 <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg hover:shadow-xl transition-all">
                   <MessageCircle className="w-4 h-4" />
@@ -86,6 +89,7 @@ export default function Header() {
                 href="https://www.facebook.com/nira.gabay" 
                 target="_blank" 
                 rel="noopener noreferrer"
+                onClick={() => trackSocialClick('facebook', 'header')}
               >
                 <button className="border border-stone-300 hover:bg-stone-100 p-2 rounded-lg transition-colors">
                   <Facebook className="w-4 h-4 text-blue-600" />
@@ -96,7 +100,11 @@ export default function Header() {
             {/* Mobile Menu Button */}
             <button
               className="lg:hidden p-2 rounded-lg hover:bg-stone-100 transition-colors"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={() => {
+                const newState = !mobileMenuOpen;
+                setMobileMenuOpen(newState);
+                trackMobileMenuToggle(newState ? 'open' : 'close');
+              }}
               aria-label="תפריט"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -112,7 +120,10 @@ export default function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    trackHeaderNavClick(item.name + '_mobile');
+                  }}
                   className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
                     pathname === item.href 
                       ? 'bg-amber-100 text-stone-900' 
@@ -129,13 +140,19 @@ export default function Header() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1"
+                  onClick={() => trackWhatsAppClick('header_mobile')}
                 >
                   <button className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2">
                     <MessageCircle className="w-4 h-4" />
                     WhatsApp
                   </button>
                 </a>
-                <a href="https://www.facebook.com/nira.gabay" target="_blank" rel="noopener noreferrer">
+                <a 
+                  href="https://www.facebook.com/nira.gabay" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  onClick={() => trackSocialClick('facebook', 'header_mobile')}
+                >
                   <button className="border border-stone-300 p-2 rounded-lg">
                     <Facebook className="w-5 h-5 text-blue-600" />
                   </button>

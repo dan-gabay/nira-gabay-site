@@ -6,6 +6,7 @@ import { Search, Filter, FileText } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import Image from 'next/image';
 import Link from 'next/link';
+import { trackArticleFilterChange, trackArticleCardClick, trackCTAClick, trackSearch } from '@/lib/analytics';
 
 type Article = {
   id: string;
@@ -124,6 +125,12 @@ export default function Articles() {
                 placeholder="חיפוש מאמרים..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onBlur={() => {
+                  if (searchQuery) {
+                    trackArticleFilterChange('search', searchQuery);
+                    trackSearch(searchQuery, filteredArticles.length); // GA4 recommended event
+                  }
+                }}
                 className="w-full pr-10 bg-stone-50 border border-stone-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
@@ -132,7 +139,10 @@ export default function Articles() {
             <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
               <Filter className="w-5 h-5 text-stone-400 flex-shrink-0 hidden md:block" />
               <button
-                onClick={() => setSelectedTag(null)}
+                onClick={() => {
+                  setSelectedTag(null);
+                  trackArticleFilterChange('tag', 'all');
+                }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
                   selectedTag === null
                     ? 'bg-stone-800 text-white'
@@ -144,7 +154,10 @@ export default function Articles() {
               {tags.map((tag) => (
                 <button
                   key={tag.id}
-                  onClick={() => setSelectedTag(tag.name)}
+                  onClick={() => {
+                    setSelectedTag(tag.name);
+                    trackArticleFilterChange('tag', tag.name);
+                  }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
                     selectedTag === tag.name
                       ? 'bg-stone-800 text-white'
@@ -183,6 +196,7 @@ export default function Articles() {
                   href={`/articles/${article.slug || article.id}`}
                   prefetch={index < 6}
                   className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow block"
+                  onClick={() => trackArticleCardClick(article.title, article.slug)}
                 >
                   {/* Article Image */}
                   {article.image_url && (
@@ -253,6 +267,7 @@ export default function Articles() {
           <a
             href="/contact"
             className="inline-block px-8 py-3 bg-stone-800 text-white rounded-lg hover:bg-stone-700 transition-colors"
+            onClick={() => trackCTAClick('contact', 'articles_page_cta')}
           >
             צרו קשר
           </a>

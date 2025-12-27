@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import { trackArticleCardClick, trackCTAClick } from '@/lib/analytics';
 
 interface Article {
   id: string;
@@ -56,7 +57,7 @@ export default function ArticlesPreviewClient() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {articles.map((article) => (
             <div key={article.id}>
-              <Link href={`/articles/${article.slug}`} prefetch={true}>
+              <Link href={`/articles/${article.slug}`} prefetch={true} onClick={() => trackArticleCardClick(article.title, article.slug, 'homepage')}>
                 <div className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-stone-100 h-full flex flex-col">
                   {article.image_url && (
                     <div className="relative w-full aspect-[16/9] overflow-hidden bg-stone-100">
@@ -104,7 +105,7 @@ export default function ArticlesPreviewClient() {
         </div>
 
         <div className="text-center mt-12">
-          <Link href="/articles">
+          <Link href="/articles" onClick={() => trackCTAClick('all_articles', 'homepage')}>
             <button className="gap-2 border border-stone-300 hover:bg-stone-50 rounded-xl px-6 py-3 text-stone-800 inline-flex items-center">
               לכל המאמרים
               <ArrowLeft className="w-5 h-5" />

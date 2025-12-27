@@ -2,6 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { trackWhatsAppClick, trackCTAClick } from '@/lib/analytics';
 
 export default function HeroSection() {
   return (
@@ -58,12 +59,13 @@ export default function HeroSection() {
                 href={`https://wa.me/972507936681?text=${encodeURIComponent('שלום נירה, אשמח לקבוע פגישה')}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackWhatsAppClick('hero')}
               >
                 <button className="bg-green-600 hover:bg-green-700 text-white gap-3 px-8 py-4 text-lg rounded-xl shadow-2xl w-full sm:w-auto">
                   שלחו הודעת WhatsApp
                 </button>
               </a>
-              <a href="/contact">
+              <a href="/contact" onClick={() => trackCTAClick('contact', 'hero')}>
                 <button className="border-2 border-white bg-transparent text-white hover:bg-white hover:text-stone-900 gap-3 px-8 py-4 text-lg rounded-xl w-full sm:w-auto">
                   קבעו פגישה
                 </button>

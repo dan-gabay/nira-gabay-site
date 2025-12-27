@@ -16,7 +16,7 @@ import {
   type LucideIcon
 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
-import { trackContactFormSubmit } from '@/lib/analytics';
+import { trackContactFormSubmit, trackContactMethodClick, trackSocialClick, trackWhatsAppClick, trackFormFieldFocus, trackGenerateLead } from '@/lib/analytics';
 
 type ContactInfoItem = {
   icon: LucideIcon | (() => React.ReactElement);
@@ -108,8 +108,9 @@ export default function Contact() {
 
       if (submitError) throw submitError;
 
-      // Track conversion
+      // Track conversion with GA4 recommended event
       trackContactFormSubmit('contact_page');
+      trackGenerateLead('contact_form', 100); // GA4 recommended event
 
       setSubmitted(true);
       setFormData({ name: '', email: '', phone: '', message: '' });
@@ -181,6 +182,12 @@ export default function Contact() {
                             target={info.link.startsWith('http') ? '_blank' : undefined}
                             rel={info.link.startsWith('http') ? 'noopener noreferrer' : undefined}
                             className="text-lg font-medium text-stone-800 hover:text-amber-700 transition-colors"
+                            onClick={() => {
+                              if (info.title === 'טלפון') trackContactMethodClick('phone', 'contact_page');
+                              else if (info.title === 'אימייל') trackContactMethodClick('email', 'contact_page');
+                              else if (info.title === 'פייסבוק') trackSocialClick('facebook', 'contact_page');
+                              else if (info.title === 'אינסטגרם') trackSocialClick('instagram', 'contact_page');
+                            }}
                           >
                             {info.value}
                           </a>
@@ -213,6 +220,7 @@ export default function Contact() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block w-full bg-green-600 hover:bg-green-700 text-white text-center py-3 rounded-lg font-medium transition-colors"
+                    onClick={() => trackWhatsAppClick('contact_page_cta')}
                   >
                     <span className="flex items-center justify-center gap-2">
                       <MessageCircle className="w-5 h-5" />
@@ -286,6 +294,7 @@ export default function Contact() {
                             placeholder="השם שלכם"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            onFocus={() => trackFormFieldFocus('contact_form', 'name')}
                             className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                             required
                           />
@@ -301,6 +310,7 @@ export default function Contact() {
                               placeholder="email@example.com"
                               value={formData.email}
                               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                              onFocus={() => trackFormFieldFocus('contact_form', 'email')}
                               className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                             />
                           </div>
@@ -313,6 +323,7 @@ export default function Contact() {
                               placeholder="050-0000000"
                               value={formData.phone}
                               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                              onFocus={() => trackFormFieldFocus('contact_form', 'phone')}
                               className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                             />
                           </div>
@@ -326,6 +337,7 @@ export default function Contact() {
                             placeholder="במה אוכל לעזור?"
                             value={formData.message}
                             onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                            onFocus={() => trackFormFieldFocus('contact_form', 'message')}
                             className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 min-h-32"
                             required
                           />
@@ -391,6 +403,7 @@ export default function Contact() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-6 py-2 border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors flex items-center gap-2"
+                  onClick={() => trackWhatsAppClick('directions_request')}
                 >
                   <MessageCircle className="w-5 h-5" />
                   בקשו הנחיות הגעה

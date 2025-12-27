@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { ArrowRight, Calendar, Clock, Heart } from 'lucide-react';
 import ArticleInteractions from '../ArticleInteractions';
 import ArticleReadTracker from '@/components/ArticleReadTracker';
+import ArticleViewTracker from '@/components/ArticleViewTracker';
 import ArticleTag from '@/components/ArticleTag';
 import RelatedArticles from '../RelatedArticles';
 import ReactMarkdown from 'react-markdown';
@@ -190,6 +191,11 @@ export default async function ArticlePage({ params }: Props) {
     <div className="min-h-screen bg-gradient-to-br from-white to-stone-50" style={{ paddingTop: '80px' }}>
       <JsonLd data={articleSchema} />
       <JsonLd data={breadcrumbSchema} />
+      <ArticleViewTracker 
+        articleId={article.id} 
+        articleTitle={article.title} 
+        tags={article.tag_names || []}
+      />
       
       {/* Breadcrumb */}
       <div className="bg-stone-50 py-2.5 border-b border-stone-100">

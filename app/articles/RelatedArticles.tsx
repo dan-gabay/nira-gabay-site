@@ -1,6 +1,6 @@
-import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft } from 'lucide-react';
+import TrackedLink from '@/components/TrackedLink';
 
 type Article = {
   id: string;
@@ -68,10 +68,11 @@ export default async function RelatedArticles({ currentArticleId, tags }: Relate
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {articles.map((article) => (
-          <Link
+          <TrackedLink
             key={article.id}
             href={`/articles/${article.slug}`}
             className="group block bg-white rounded-xl overflow-hidden border border-stone-200 hover:shadow-lg transition-all duration-300 h-full flex flex-col"
+            trackingData={{ type: 'related_article', title: article.title, location: 'article_page' }}
           >
             {article.image_url && (
               <div className="relative w-full aspect-[16/9] overflow-hidden bg-stone-100">
@@ -102,7 +103,7 @@ export default async function RelatedArticles({ currentArticleId, tags }: Relate
                 <ArrowLeft className="w-4 h-4 mr-1 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
-          </Link>
+          </TrackedLink>
         ))}
       </div>
     </section>
