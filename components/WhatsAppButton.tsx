@@ -18,7 +18,7 @@ export default function WhatsAppButton() {
         target="_blank"
         rel="noopener noreferrer"
         onClick={handleClick}
-        className="whatsapp-float fixed bottom-6 left-6 z-50 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-2xl transition-all hover:scale-110"
+        className="whatsapp-float fixed bottom-6 left-6 z-50 bg-green-600 hover:bg-green-700 text-white p-4 rounded-full shadow-2xl transition-all hover:scale-110"
         aria-label="שלח הודעה בוואטסאפ"
       >
         <MessageCircle className="w-7 h-7" />

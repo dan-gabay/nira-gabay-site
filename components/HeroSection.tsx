@@ -61,7 +61,7 @@ export default function HeroSection() {
                 rel="noopener noreferrer"
                 onClick={() => trackWhatsAppClick('hero')}
               >
-                <button className="bg-green-600 hover:bg-green-700 text-white gap-3 px-8 py-4 text-lg rounded-xl shadow-2xl w-full sm:w-auto">
+                <button className="bg-green-700 hover:bg-green-800 text-white gap-3 px-8 py-4 text-lg font-medium rounded-xl shadow-2xl w-full sm:w-auto">
                   שלחו הודעת WhatsApp
                 </button>
               </a>

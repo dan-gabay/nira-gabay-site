@@ -98,7 +98,7 @@ export default function Home() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <button className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg rounded-xl shadow-2xl w-full sm:w-auto inline-flex items-center justify-center gap-3">
+                <button className="bg-green-700 hover:bg-green-800 text-white px-8 py-4 text-lg font-medium rounded-xl shadow-2xl w-full sm:w-auto inline-flex items-center justify-center gap-3">
                   <MessageCircle className="w-6 h-6" />
                   שלחו הודעת WhatsApp
                 </button>
