@@ -199,12 +199,12 @@ export default function Articles() {
                     </div>
                   )}
                   
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-stone-800 mb-3 group-hover:text-amber-700 transition-colors">
+                  <div className="p-4 md:p-5">
+                    <h3 className="text-lg font-bold text-stone-800 mb-2 group-hover:text-amber-700 transition-colors line-clamp-2">
                       {article.title}
                     </h3>
                     {article.excerpt && (
-                      <p className="text-stone-600 line-clamp-3 mb-4">{article.excerpt}</p>
+                      <p className="text-stone-600 text-sm line-clamp-2 mb-3">{article.excerpt}</p>
                     )}
                     {!article.slug && (
                       <div className="text-xs text-red-500 mb-2">⚠️ חסר slug - משתמש ב-ID</div>
