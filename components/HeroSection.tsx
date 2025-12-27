@@ -10,7 +10,7 @@ export default function HeroSection() {
       <style>{`
         @media (max-width: 768px) {
           .hero-bg-image {
-            background-image: url('https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-mobile.webp') !important;
+            background-image: url('https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-mobile.png') !important;
             background-position: left center !important;
           }
         }
@@ -27,7 +27,7 @@ export default function HeroSection() {
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-l from-stone-900/70 via-stone-900/50 to-transparent z-10" />
           <Image
-            src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.webp"
+            src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png"
             alt="נירה גבאי - קליניקה לפסיכותרפיה"
             fill
             priority
@@ -61,7 +61,7 @@ export default function HeroSection() {
                 rel="noopener noreferrer"
                 onClick={() => trackWhatsAppClick('hero')}
               >
-                <button className="bg-green-700 hover:bg-green-800 text-white gap-3 px-8 py-4 text-lg font-medium rounded-xl shadow-2xl w-full sm:w-auto">
+                <button className="bg-green-600 hover:bg-green-700 text-white gap-3 px-8 py-4 text-lg rounded-xl shadow-2xl w-full sm:w-auto">
                   שלחו הודעת WhatsApp
                 </button>
               </a>

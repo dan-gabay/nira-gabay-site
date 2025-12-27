@@ -80,7 +80,7 @@ export default function Header() {
                 rel="noopener noreferrer"
                 onClick={() => trackWhatsAppClick('header')}
               >
-                <button className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 font-medium rounded-lg flex items-center gap-2 shadow-lg hover:shadow-xl transition-all">
+                <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg hover:shadow-xl transition-all">
                   <MessageCircle className="w-4 h-4" />
                   WhatsApp
                 </button>
@@ -142,7 +142,7 @@ export default function Header() {
                   className="flex-1"
                   onClick={() => trackWhatsAppClick('header_mobile')}
                 >
-                  <button className="w-full bg-green-700 hover:bg-green-800 text-white px-4 py-2 font-medium rounded-lg flex items-center justify-center gap-2">
+                  <button className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2">
                     <MessageCircle className="w-4 h-4" />
                     WhatsApp
                   </button>
