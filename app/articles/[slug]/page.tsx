@@ -221,14 +221,19 @@ export default async function ArticlePage({ params }: Props) {
           </h1>
           
           {article.excerpt && (
-            <p className="text-base text-stone-600 leading-relaxed mb-4 line-clamp-3">
+            <p className="text-base text-stone-600 leading-relaxed mb-4">
               {article.excerpt}
             </p>
           )}
           
-          {/* Meta - Single compact line */}
+          {/* Meta */}
           <div className="flex flex-wrap items-center gap-4 text-sm text-stone-500">
-            <span className="font-medium text-stone-700">נירה גבאי</span>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-100 to-stone-200 flex items-center justify-center">
+                <span className="text-xs font-bold text-stone-700">נ</span>
+              </div>
+              <span className="font-medium text-stone-700">נירה גבאי</span>
+            </div>
             
             {article.created_date && (
               <span className="flex items-center gap-1">
