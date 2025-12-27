@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "niragabay.com"
+        }
+      ],
+      "destination": "https://www.niragabay.com/:path*",
+      "permanent": true
+    }
+  ]
+}
