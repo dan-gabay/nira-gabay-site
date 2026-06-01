@@ -104,8 +104,10 @@ svg {
   }
 }
 
-/* Image loading optimization */
-img {
+/* Image loading optimization — only for lazy/below-the-fold images.
+   Applying this to eager/priority hero images makes them render late and
+   "stretch" into place on load, so scope it to lazy images only. */
+img[loading="lazy"] {
   content-visibility: auto;
 }
 
