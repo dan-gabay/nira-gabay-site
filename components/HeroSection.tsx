@@ -64,7 +64,8 @@ export default function HeroSection() {
           MOBILE  (< md) — portrait on top, centered copy below
       ──────────────────────────────────────── */}
       <div className="md:hidden">
-        <div className="relative w-full" style={{ height: 'clamp(340px, 46vh, 440px)' }}>
+        {/* height based on vw (not vh) so the mobile URL-bar collapse can't resize it on load */}
+        <div className="relative w-full" style={{ height: 'clamp(340px, 95vw, 460px)' }}>
           <Image
             src="/images/hero-portrait.png"
             alt="נירה גבאי - מטפלת בפסיכותרפיה ומדריכת הורים"
@@ -73,7 +74,7 @@ export default function HeroSection() {
             fetchPriority="high"
             quality={90}
             className="object-cover"
-            style={{ objectPosition: '50% 70%' }}
+            style={{ objectPosition: '50% 65%' }}
             sizes="100vw"
           />
           {/* blend the photo bottom into the teal copy area */}
