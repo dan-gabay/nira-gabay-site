@@ -9,7 +9,6 @@ const WA_HREF = `https://wa.me/972507936681?text=${encodeURIComponent('שלום 
 
 // Teal palette sampled from the photo's wall, deepening for the gradient.
 const TEAL_DEEP = '#16323b';
-const TEAL_MID = '#244a57';
 
 export default function HeroSection() {
   const Pill = (
@@ -118,14 +117,6 @@ export default function HeroSection() {
           sizes="100vw"
         />
 
-        {/* Teal gradient: opaque on the right (RTL text side) → clear over the subject on the left */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(to left, ${TEAL_DEEP} 0%, ${TEAL_DEEP}f2 26%, ${TEAL_MID}b3 46%, ${TEAL_MID}40 62%, transparent 80%)`,
-          }}
-        />
-
         {/* justify-start === physical RIGHT in this RTL section (text side) */}
         <div className="absolute inset-0 flex items-center justify-start">
           <motion.div
@@ -133,6 +124,7 @@ export default function HeroSection() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
             className="w-full max-w-xl px-12 xl:px-20 text-center"
+            style={{ textShadow: '0 1px 14px rgba(0,0,0,0.30)' }}
           >
             <div className="mb-8">{Pill}</div>
             {Copy}
