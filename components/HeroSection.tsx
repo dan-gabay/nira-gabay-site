@@ -73,7 +73,7 @@ export default function HeroSection() {
             fetchPriority="high"
             quality={90}
             className="object-cover"
-            style={{ objectPosition: '50% 52%' }}
+            style={{ objectPosition: '50% 44%' }}
             sizes="100vw"
           />
           {/* blend the photo bottom into the teal copy area */}
@@ -104,7 +104,11 @@ export default function HeroSection() {
       {/* ────────────────────────────────────────
           DESKTOP  (≥ md) — full-width photo, teal gradient overlay, copy on right
       ──────────────────────────────────────── */}
-      <div className="hidden md:block relative min-h-[88vh] w-full overflow-hidden">
+      {/* bg matches the photo's teal wall so there's no dark flash before the image loads */}
+      <div
+        className="hidden md:block relative min-h-[88vh] w-full overflow-hidden"
+        style={{ background: '#4e6c72' }}
+      >
         <Image
           src="/images/hero-landscape.png"
           alt="נירה גבאי - מטפלת בפסיכותרפיה ומדריכת הורים"
