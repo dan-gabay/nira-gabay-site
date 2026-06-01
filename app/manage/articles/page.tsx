@@ -33,7 +33,11 @@ export default function ManageArticlesPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => { loadArticles(); }, []);
+  useEffect(() => {
+    // Silently trigger scheduled publish check on every manage page visit
+    fetch('/api/cron/publish-scheduled').catch(() => {});
+    loadArticles();
+  }, []);
 
   async function loadArticles() {
     try {
