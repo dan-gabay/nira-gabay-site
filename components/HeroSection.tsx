@@ -105,24 +105,25 @@ export default function HeroSection() {
       {/* ────────────────────────────────────────
           DESKTOP  (≥ md) — full-width photo, teal gradient overlay, copy on right
       ──────────────────────────────────────── */}
-      {/* Height is set INLINE (not via a Tailwind class) so it applies on the very first paint,
-          before the stylesheet loads. With a class the parent has no height until CSS arrives,
-          so the fill image starts short and then grows to full height — a visible load jump.
-          Inline height (like the mobile block) eliminates it. bg matches the photo's teal wall. */}
+      {/* The image carries its OWN inline height in vh units. Measured: with `fill` the image's
+          height:100% depends on the parent's resolved height, which is 0 on the first layout pass,
+          so the image rendered at 0 then grew to full height — the visible load jump. A vh height
+          on the <img> itself resolves against the viewport immediately, with no parent dependency. */}
       <div
         className="hidden md:block relative w-full overflow-hidden"
-        style={{ height: '88vh', background: '#4e6c72' }}
+        style={{ background: '#4e6c72' }}
       >
         <Image
           src="/images/hero-landscape.png"
           alt="נירה גבאי - מטפלת בפסיכותרפיה ומדריכת הורים"
-          fill
+          width={1536}
+          height={1024}
           priority
           fetchPriority="high"
           quality={92}
-          className="object-cover"
-          style={{ objectPosition: '30% 50%' }}
           sizes="100vw"
+          className="block"
+          style={{ width: '100%', height: '88vh', objectFit: 'cover', objectPosition: '30% 50%' }}
         />
 
         {/* justify-start === physical RIGHT in this RTL section (text side) */}
