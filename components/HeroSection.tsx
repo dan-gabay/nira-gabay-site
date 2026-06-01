@@ -126,7 +126,8 @@ export default function HeroSection() {
           }}
         />
 
-        <div className="absolute inset-0 flex items-center justify-end">
+        {/* justify-start === physical RIGHT in this RTL section (text side) */}
+        <div className="absolute inset-0 flex items-center justify-start">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
