@@ -105,12 +105,13 @@ export default function HeroSection() {
       {/* ────────────────────────────────────────
           DESKTOP  (≥ md) — full-width photo, teal gradient overlay, copy on right
       ──────────────────────────────────────── */}
-      {/* Definite height (not min-h) so the fill image's height:100% resolves on the first
-          layout pass — min-height leaves the parent height:auto and the image renders short
-          then expands. bg matches the photo's teal wall to avoid a flash before load. */}
+      {/* Height is set INLINE (not via a Tailwind class) so it applies on the very first paint,
+          before the stylesheet loads. With a class the parent has no height until CSS arrives,
+          so the fill image starts short and then grows to full height — a visible load jump.
+          Inline height (like the mobile block) eliminates it. bg matches the photo's teal wall. */}
       <div
-        className="hidden md:block relative h-[88vh] w-full overflow-hidden"
-        style={{ background: '#4e6c72' }}
+        className="hidden md:block relative w-full overflow-hidden"
+        style={{ height: '88vh', background: '#4e6c72' }}
       >
         <Image
           src="/images/hero-landscape.png"
