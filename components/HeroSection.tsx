@@ -19,7 +19,7 @@ export default function HeroSection() {
   );
 
   const Buttons = (
-    <div className="flex flex-col gap-3 w-full max-w-sm mx-auto md:mx-0">
+    <div className="flex flex-col gap-3 w-full max-w-sm mx-auto">
       <a
         href={WA_HREF}
         target="_blank"
@@ -74,7 +74,7 @@ export default function HeroSection() {
             fetchPriority="high"
             quality={90}
             className="object-cover"
-            style={{ objectPosition: '50% 40%' }}
+            style={{ objectPosition: '50% 52%' }}
             sizes="100vw"
           />
           {/* blend the photo bottom into the teal copy area */}
@@ -132,7 +132,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="w-full max-w-xl px-12 xl:px-20 text-right"
+            className="w-full max-w-xl px-12 xl:px-20 text-center"
           >
             <div className="mb-8">{Pill}</div>
             {Copy}
