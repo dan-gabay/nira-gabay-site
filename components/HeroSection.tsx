@@ -105,9 +105,11 @@ export default function HeroSection() {
       {/* ────────────────────────────────────────
           DESKTOP  (≥ md) — full-width photo, teal gradient overlay, copy on right
       ──────────────────────────────────────── */}
-      {/* bg matches the photo's teal wall so there's no dark flash before the image loads */}
+      {/* Definite height (not min-h) so the fill image's height:100% resolves on the first
+          layout pass — min-height leaves the parent height:auto and the image renders short
+          then expands. bg matches the photo's teal wall to avoid a flash before load. */}
       <div
-        className="hidden md:block relative min-h-[88vh] w-full overflow-hidden"
+        className="hidden md:block relative h-[88vh] w-full overflow-hidden"
         style={{ background: '#4e6c72' }}
       >
         <Image
