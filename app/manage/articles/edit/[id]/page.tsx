@@ -4,19 +4,29 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
-import { ArrowRight, Save } from 'lucide-react';
+import { ArrowRight, Save, Copy, Check, ImageOff } from 'lucide-react';
+
+type DraftMetadata = {
+  image_concept: string | null;
+  image_prompt: string | null;
+  negative_prompt: string | null;
+  image_alt: string | null;
+  image_status: string;
+};
 
 export default function EditArticlePage() {
   const router = useRouter();
   const params = useParams();
   const articleId = params.id as string;
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  
+  const [draftMetadata, setDraftMetadata] = useState<DraftMetadata | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
@@ -39,7 +49,7 @@ export default function EditArticlePage() {
         .from('tags')
         .select('name')
         .order('name');
-      
+
       if (error) throw error;
       setAvailableTags(data.map(t => t.name));
     } catch (error) {
@@ -49,17 +59,25 @@ export default function EditArticlePage() {
 
   async function loadArticle() {
     try {
-      const { data, error } = await supabase
-        .from('articles')
-        .select('*')
-        .eq('id', articleId)
-        .single();
+      const [articleRes, metaRes] = await Promise.all([
+        supabase
+          .from('articles')
+          .select('*')
+          .eq('id', articleId)
+          .single(),
+        supabase
+          .from('article_draft_metadata')
+          .select('image_concept, image_prompt, negative_prompt, image_alt, image_status')
+          .eq('article_id', articleId)
+          .maybeSingle(),
+      ]);
 
-      if (error) throw error;
-      
+      if (articleRes.error) throw articleRes.error;
+
+      const data = articleRes.data;
       const tags = data.tags || '';
       const tagsArray = tags ? tags.split(',').map((t: string) => t.trim()) : [];
-      
+
       setFormData({
         title: data.title || '',
         slug: data.slug || '',
@@ -70,8 +88,9 @@ export default function EditArticlePage() {
         is_published: data.is_published || false,
         reading_time: data.reading_time || 5
       });
-      
+
       setSelectedTags(tagsArray);
+      setDraftMetadata(metaRes.data ?? null);
     } catch (error) {
       console.error('Error loading article:', error);
       alert('שגיאה בטעינת המאמר');
@@ -85,13 +104,12 @@ export default function EditArticlePage() {
     const newSelectedTags = selectedTags.includes(tag)
       ? selectedTags.filter(t => t !== tag)
       : [...selectedTags, tag];
-    
+
     setSelectedTags(newSelectedTags);
     setFormData(prev => ({ ...prev, tags: newSelectedTags.join(', ') }));
   }
 
   function calculateReadingTime(text: string): number {
-    // Calculate based on Hebrew text: ~1000 characters per minute
     const charCount = text.length;
     const minutes = Math.max(1, Math.ceil(charCount / 1000));
     return minutes;
@@ -99,11 +117,20 @@ export default function EditArticlePage() {
 
   function handleChange(field: string, value: string | boolean | number) {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Auto-calculate reading time from content
+
     if (field === 'content' && typeof value === 'string') {
       const readingTime = calculateReadingTime(value);
       setFormData(prev => ({ ...prev, reading_time: readingTime }));
+    }
+  }
+
+  async function copyToClipboard(text: string, fieldKey: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(fieldKey);
+      setTimeout(() => setCopiedField(null), 2000);
+    } catch {
+      console.error('Copy failed');
     }
   }
 
@@ -113,10 +140,10 @@ export default function EditArticlePage() {
 
     try {
       setUploading(true);
-      
+
       const formData = new FormData();
       formData.append('file', file);
-      
+
       const response = await fetch('/api/upload-image', {
         method: 'POST',
         body: formData,
@@ -140,7 +167,7 @@ export default function EditArticlePage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    
+
     if (!formData.title || !formData.slug || !formData.content) {
       alert('נא למלא את כל השדות הנדרשים');
       return;
@@ -249,17 +276,102 @@ export default function EditArticlePage() {
                 className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
               />
               {uploading && <p className="text-amber-600 text-sm">מעלה תמונה...</p>}
-              {formData.image_url && (
+              {formData.image_url ? (
                 <div className="mt-3">
-                  <img 
-                    src={formData.image_url} 
+                  <img
+                    src={formData.image_url}
                     alt={formData.title ? `תמונת מאמר: ${formData.title}` : "תצוגה מקדימה של תמונת המאמר"}
                     className="w-full max-w-md rounded-lg border border-stone-200"
                   />
                 </div>
+              ) : (
+                <div className="flex items-center gap-2 text-stone-500 text-sm bg-stone-50 border border-stone-200 rounded-lg px-4 py-3">
+                  <ImageOff className="w-4 h-4 flex-shrink-0" />
+                  אין תמונה ראשית מצורפת עדיין
+                </div>
               )}
             </div>
           </div>
+
+          {/* Image Prompt Metadata - admin only, never shown on public page */}
+          {(draftMetadata || !formData.image_url) && (
+            <div className="bg-amber-50 rounded-xl p-6 shadow-sm border border-amber-100">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-semibold text-stone-800">פרטי תמונה (לשימוש פנימי בלבד)</h2>
+                {draftMetadata?.image_status && (
+                  <span className="text-xs bg-amber-200 text-amber-900 px-2 py-1 rounded-full font-medium">
+                    {draftMetadata.image_status}
+                  </span>
+                )}
+              </div>
+
+              {draftMetadata ? (
+                <div className="space-y-5">
+                  {draftMetadata.image_concept && (
+                    <div>
+                      <p className="text-xs font-semibold text-stone-600 mb-1 uppercase tracking-wide">רעיון לתמונה</p>
+                      <p className="text-sm text-stone-700 bg-white border border-amber-100 rounded-lg px-4 py-3">
+                        {draftMetadata.image_concept}
+                      </p>
+                    </div>
+                  )}
+
+                  {draftMetadata.image_prompt && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs font-semibold text-stone-600 uppercase tracking-wide">פרומפט לתמונה</p>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(draftMetadata.image_prompt!, 'prompt')}
+                          className="flex items-center gap-1.5 text-xs bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg transition-colors"
+                        >
+                          {copiedField === 'prompt' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                          {copiedField === 'prompt' ? 'הועתק!' : 'העתק פרומפט'}
+                        </button>
+                      </div>
+                      <p className="text-sm text-stone-600 bg-white border border-amber-100 rounded-lg px-4 py-3 font-mono leading-relaxed text-left" dir="ltr">
+                        {draftMetadata.image_prompt}
+                      </p>
+                    </div>
+                  )}
+
+                  {draftMetadata.negative_prompt && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs font-semibold text-stone-600 uppercase tracking-wide">פרומפט שלילי</p>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(draftMetadata.negative_prompt!, 'negative')}
+                          className="flex items-center gap-1.5 text-xs bg-stone-500 hover:bg-stone-600 text-white px-3 py-1.5 rounded-lg transition-colors"
+                        >
+                          {copiedField === 'negative' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                          {copiedField === 'negative' ? 'הועתק!' : 'העתק'}
+                        </button>
+                      </div>
+                      <p className="text-xs text-stone-500 bg-white border border-amber-100 rounded-lg px-4 py-3 font-mono leading-relaxed text-left" dir="ltr">
+                        {draftMetadata.negative_prompt}
+                      </p>
+                    </div>
+                  )}
+
+                  {draftMetadata.image_alt && (
+                    <div>
+                      <p className="text-xs font-semibold text-stone-600 mb-1 uppercase tracking-wide">טקסט חלופי לתמונה (alt)</p>
+                      <p className="text-sm text-stone-700 bg-white border border-amber-100 rounded-lg px-4 py-3">
+                        {draftMetadata.image_alt}
+                      </p>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-stone-400 mt-2">
+                    השתמש בפרומפט זה ב-Midjourney, DALL-E, או כלי יצירת תמונות אחר. לאחר יצירת התמונה, העלה אותה בשדה "תמונת ראשית" למעלה.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-stone-500">אין פרטי תמונה שמורים עדיין לטיוטה זו</p>
+              )}
+            </div>
+          )}
 
           {/* Excerpt */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-100">
@@ -288,9 +400,6 @@ export default function EditArticlePage() {
               placeholder="כתוב את המאמר כאן בפורמט Markdown..."
               required
             />
-            <p className="text-stone-500 text-sm mt-2">
-              תומך ב-Markdown: **מודגש**, *נטוי*, # כותרות, - רשימות, [קישור](url)
-            </p>
           </div>
 
           {/* Tags */}
@@ -347,7 +456,7 @@ export default function EditArticlePage() {
               <Save className="w-5 h-5" />
               {saving ? 'שומר...' : 'שמור שינויים'}
             </button>
-            
+
             <Link
               href="/manage/articles"
               className="bg-stone-200 hover:bg-stone-300 text-stone-800 px-8 py-3 rounded-lg font-medium transition-colors inline-flex items-center gap-2"

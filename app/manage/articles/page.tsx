@@ -175,8 +175,8 @@ export default function ManageArticlesPage() {
                 <div key={article.id} className="p-6 hover:bg-stone-50 transition-colors">
                   <div className="flex gap-6">
                     {/* Image */}
-                    {article.image_url && (
-                      <div className="flex-shrink-0">
+                    <div className="flex-shrink-0">
+                      {article.image_url ? (
                         <Image
                           src={article.image_url}
                           alt={article.title}
@@ -185,8 +185,12 @@ export default function ManageArticlesPage() {
                           unoptimized
                           className="rounded-lg object-cover"
                         />
-                      </div>
-                    )}
+                      ) : (
+                        <div className="w-[120px] h-[80px] bg-amber-50 border border-amber-100 rounded-lg flex items-center justify-center">
+                          <span className="text-xs text-amber-600 text-center px-2">ללא תמונה</span>
+                        </div>
+                      )}
+                    </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
