@@ -130,9 +130,10 @@ iframe {
   display: block;
 }
 
-/* Smooth transitions without layout shifts */
-* {
-  transition-property: opacity, transform, background-color, color, border-color;
+/* Smooth transitions — scoped to interactive elements only, not layout/text */
+a, button, [role="button"] {
+  transition-property: background-color, color, border-color, box-shadow, opacity;
+  transition-duration: 150ms;
   transition-timing-function: ease-in-out;
 }
 
@@ -152,6 +153,17 @@ iframe {
 
 .will-change-opacity {
   will-change: opacity;
+}
+
+/* Hebrew RTL body typography */
+body {
+  line-height: 1.75;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+p {
+  line-height: 1.85;
 }
 
 /* Article content spacing overrides */

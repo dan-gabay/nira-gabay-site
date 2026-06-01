@@ -32,11 +32,12 @@ export default function Home() {
             <p className="text-lg text-stone-600 leading-relaxed">
               עם ניסיון של שנים רבות בטיפול במתבגרים, מבוגרים וזוגות, אני מציעה גישה אישית ומותאמת לצרכים הייחודיים של כל מטופל.
             </p>
-            <a href="/about">
-              <button className="mt-8 gap-2 border border-stone-300 hover:bg-stone-50 rounded-xl px-6 py-2 text-stone-800">
-                קראו עוד עליי
-              </button>
-            </a>
+            <Link
+              href="/about"
+              className="mt-8 inline-flex items-center gap-2 border border-stone-300 hover:bg-stone-50 rounded-xl px-6 py-2 text-stone-800 transition-colors"
+            >
+              קראו עוד עליי
+            </Link>
           </div>
         </div>
       </section>

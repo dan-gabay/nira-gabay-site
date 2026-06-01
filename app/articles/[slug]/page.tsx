@@ -120,14 +120,17 @@ export default async function ArticlePage({ params }: Props) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-stone-100 to-amber-50 py-24">
         <div className="container mx-auto px-4 md:px-8 max-w-4xl text-center">
-          <h1 className="text-4xl font-bold text-stone-800 mb-4">המאמר לא נמצא</h1>
-          <p className="text-stone-600 mb-8">אין מאמר עם slug: {slug}</p>
-          <Link 
+          <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <ArrowRight className="w-8 h-8 text-amber-600" />
+          </div>
+          <h1 className="text-3xl font-bold text-stone-800 mb-3">המאמר לא נמצא</h1>
+          <p className="text-stone-500 mb-8">ייתכן שהמאמר הוסר או שהכתובת שגויה</p>
+          <Link
             href="/articles"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-stone-800 text-white rounded-lg hover:bg-stone-700 transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-stone-800 text-white rounded-xl hover:bg-stone-700 transition-colors"
           >
             <ArrowRight className="w-5 h-5" />
-            חזרה למאמרים
+            חזרה לכל המאמרים
           </Link>
         </div>
       </div>

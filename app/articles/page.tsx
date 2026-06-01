@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, FileText } from 'lucide-react';
+import { Search, Filter, FileText, ArrowRight } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -189,41 +189,64 @@ export default function Articles() {
               ))}
             </div>
           ) : filteredArticles.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {filteredArticles.map((article, index) => (
                 <Link
                   key={article.id}
                   href={`/articles/${article.slug || article.id}`}
                   prefetch={index < 6}
-                  className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow block"
+                  className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 block border border-stone-100"
                   onClick={() => trackArticleCardClick(article.title, article.slug)}
                 >
-                  {/* Article Image */}
-                  {article.image_url && (
-                    <div className="relative w-full aspect-[16/9] overflow-hidden bg-stone-100">
+                  {/* Article Image or Warm Placeholder */}
+                  <div className="relative w-full aspect-[16/9] overflow-hidden">
+                    {article.image_url ? (
                       <Image
                         src={article.image_url}
                         alt={article.title}
                         fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         loading={index < 6 ? "eager" : "lazy"}
                         priority={index < 6}
                       />
-                    </div>
-                  )}
-                  
-                  <div className="p-4 md:p-5">
-                    <h3 className="text-lg font-bold text-stone-800 mb-2 group-hover:text-amber-700 transition-colors line-clamp-2">
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-amber-50 via-stone-50 to-amber-100 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center opacity-60">
+                          <FileText className="w-6 h-6 text-amber-600" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-5 md:p-6">
+                    {/* Tags */}
+                    {article.tag_names && article.tag_names.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-3">
+                        {article.tag_names.slice(1, 3).map((tag, i) => (
+                          <span key={i} className="text-xs px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full border border-amber-100">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <h3 className="text-lg font-bold text-stone-800 mb-2 group-hover:text-amber-700 transition-colors line-clamp-2 leading-snug">
                       {article.title}
                     </h3>
                     {article.excerpt && (
-                      <p className="text-stone-600 text-sm line-clamp-2 mb-3">{article.excerpt}</p>
+                      <p className="text-stone-500 text-sm line-clamp-2 mb-4 leading-relaxed">{article.excerpt}</p>
                     )}
-                    {!article.slug && (
-                      <div className="text-xs text-red-500 mb-2">⚠️ חסר slug - משתמש ב-ID</div>
-                    )}
-                    <div className="text-amber-700 text-sm font-medium">קרא עוד ←</div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-stone-400">
+                        {article.reading_time ? `${article.reading_time} דק׳ קריאה` : ''}
+                      </span>
+                      <span className="text-amber-700 text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
+                        קרא עוד
+                        <ArrowRight className="w-4 h-4 rotate-180" />
+                      </span>
+                    </div>
                   </div>
                 </Link>
               ))}

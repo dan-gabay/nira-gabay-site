@@ -25,6 +25,7 @@ type Stats = {
   topArticles: Array<{
     id: string;
     title: string;
+    slug: string;
     views_count: number;
     likes_count: number;
   }>;
@@ -73,7 +74,7 @@ export default function ManagePage() {
       // Top articles
       const { data: topArticles } = await supabase
         .from('articles')
-        .select('id, title, views_count, likes_count')
+        .select('id, title, slug, views_count, likes_count')
         .order('views_count', { ascending: false })
         .limit(5);
 
@@ -226,8 +227,9 @@ export default function ManagePage() {
             <div className="space-y-3">
               {stats?.topArticles.map((article) => (
                 <div key={article.id} className="flex items-center justify-between p-3 bg-stone-50 rounded-lg">
-                  <Link 
-                    href={`/articles/${article.id}`}
+                  <Link
+                    href={`/articles/${article.slug || article.id}`}
+                    target="_blank"
                     className="font-medium text-stone-800 hover:text-amber-600 transition-colors flex-1 truncate"
                   >
                     {article.title}
