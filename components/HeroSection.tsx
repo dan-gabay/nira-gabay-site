@@ -73,7 +73,7 @@ export default function HeroSection() {
             fetchPriority="high"
             quality={90}
             className="object-cover"
-            style={{ objectPosition: '50% 44%' }}
+            style={{ objectPosition: '50% 70%' }}
             sizes="100vw"
           />
           {/* blend the photo bottom into the teal copy area */}
