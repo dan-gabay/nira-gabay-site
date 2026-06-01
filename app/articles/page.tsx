@@ -1,8 +1,8 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, FileText, ArrowRight } from 'lucide-react';
+import { Search, Filter, FileText, ArrowLeft } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -101,13 +101,13 @@ export default function Articles() {
             className="text-center max-w-3xl mx-auto"
           >
             <span className="inline-block px-3 py-1.5 bg-amber-100 rounded-full text-amber-800 text-sm mb-4">
-              מאמרים
+              ׳׳׳׳¨׳™׳
             </span>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-stone-800 mb-3 md:mb-4">
-              ידע ותובנות
+              ׳™׳“׳¢ ׳•׳×׳•׳‘׳ ׳•׳×
             </h1>
             <p className="text-base md:text-lg text-stone-600">
-              מאמרים, טיפים וכלים מעולם הפסיכותרפיה, ההורות והזוגיות
+              ׳׳׳׳¨׳™׳, ׳˜׳™׳₪׳™׳ ׳•׳›׳׳™׳ ׳׳¢׳•׳׳ ׳”׳₪׳¡׳™׳›׳•׳×׳¨׳₪׳™׳”, ׳”׳”׳•׳¨׳•׳× ׳•׳”׳–׳•׳’׳™׳•׳×
             </p>
           </motion.div>
         </div>
@@ -122,7 +122,7 @@ export default function Articles() {
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-stone-400" />
               <input
                 type="text"
-                placeholder="חיפוש מאמרים..."
+                placeholder="׳—׳™׳₪׳•׳© ׳׳׳׳¨׳™׳..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onBlur={() => {
@@ -149,7 +149,7 @@ export default function Articles() {
                     : 'bg-white border border-stone-200 text-stone-700 hover:bg-stone-50'
                 }`}
               >
-                הכל
+                ׳”׳›׳
               </button>
               {tags.map((tag) => (
                 <button
@@ -240,11 +240,11 @@ export default function Articles() {
 
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-stone-400">
-                        {article.reading_time ? `${article.reading_time} דק׳ קריאה` : ''}
+                        {article.reading_time ? `${article.reading_time} ׳“׳§׳³ ׳§׳¨׳™׳׳”` : ''}
                       </span>
                       <span className="text-amber-700 text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
-                        קרא עוד
-                        <ArrowRight className="w-4 h-4 rotate-180" />
+                        ׳§׳¨׳ ׳¢׳•׳“
+                        <ArrowLeft className="w-4 h-4" />
                       </span>
                     </div>
                   </div>
@@ -260,11 +260,11 @@ export default function Articles() {
               <div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <FileText className="w-10 h-10 text-stone-400" />
               </div>
-              <h3 className="text-xl font-bold text-stone-800 mb-2">לא נמצאו מאמרים</h3>
+              <h3 className="text-xl font-bold text-stone-800 mb-2">׳׳ ׳ ׳׳¦׳׳• ׳׳׳׳¨׳™׳</h3>
               <p className="text-stone-600">
                 {searchQuery || selectedTag
-                  ? 'נסו לשנות את החיפוש או הסינון'
-                  : 'מאמרים חדשים יעלו בקרוב'}
+                  ? '׳ ׳¡׳• ׳׳©׳ ׳•׳× ׳׳× ׳”׳—׳™׳₪׳•׳© ׳׳• ׳”׳¡׳™׳ ׳•׳'
+                  : '׳׳׳׳¨׳™׳ ׳—׳“׳©׳™׳ ׳™׳¢׳׳• ׳‘׳§׳¨׳•׳‘'}
               </p>
               {(searchQuery || selectedTag) && (
                 <button
@@ -274,7 +274,7 @@ export default function Articles() {
                   }}
                   className="mt-4 px-6 py-2 border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors"
                 >
-                  נקה סינון
+                  ׳ ׳§׳” ׳¡׳™׳ ׳•׳
                 </button>
               )}
             </motion.div>
@@ -285,17 +285,18 @@ export default function Articles() {
       {/* CTA */}
       <section className="py-16 bg-amber-50">
         <div className="container mx-auto px-4 md:px-8 text-center">
-          <h2 className="text-3xl font-bold text-stone-800 mb-4">מעוניינים בייעוץ אישי?</h2>
-          <p className="text-xl text-stone-600 mb-8">אשמח לעזור לכם במסע שלכם</p>
+          <h2 className="text-3xl font-bold text-stone-800 mb-4">׳׳¢׳•׳ ׳™׳™׳ ׳™׳ ׳‘׳™׳™׳¢׳•׳¥ ׳׳™׳©׳™?</h2>
+          <p className="text-xl text-stone-600 mb-8">׳׳©׳׳— ׳׳¢׳–׳•׳¨ ׳׳›׳ ׳‘׳׳¡׳¢ ׳©׳׳›׳</p>
           <a
             href="/contact"
             className="inline-block px-8 py-3 bg-stone-800 text-white rounded-lg hover:bg-stone-700 transition-colors"
             onClick={() => trackCTAClick('contact', 'articles_page_cta')}
           >
-            צרו קשר
+            ׳¦׳¨׳• ׳§׳©׳¨
           </a>
         </div>
       </section>
     </div>
   );
 }
+

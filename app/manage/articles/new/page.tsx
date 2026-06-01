@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
-import { ArrowRight, Save, Eye, Upload } from 'lucide-react';
+import { ArrowRight, Save, Clock, X } from 'lucide-react';
 
 export default function NewArticlePage() {
   const router = useRouter();
@@ -21,7 +21,8 @@ export default function NewArticlePage() {
     image_url: '',
     tags: '',
     is_published: false,
-    reading_time: 5
+    reading_time: 5,
+    scheduled_publish_at: '',
   });
 
   useEffect(() => {
@@ -61,15 +62,17 @@ export default function NewArticlePage() {
   function handleChange(field: string, value: string | boolean | number) {
     setFormData(prev => ({ ...prev, [field]: value }));
     
-    // Auto-generate slug from title
+    // Auto-generate ASCII slug from title (strip Hebrew - user must type slug for Hebrew titles)
     if (field === 'title' && typeof value === 'string') {
       const slug = value
         .toLowerCase()
-        .replace(/[^\u0590-\u05FFa-z0-9\s-]/g, '')
+        .replace(/[\u0590-\u05FF\u200F\u200E]/g, '') // strip Hebrew characters
+        .replace(/[^a-z0-9\s-]/g, '')
         .replace(/\s+/g, '-')
         .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
         .trim();
-      setFormData(prev => ({ ...prev, slug }));
+      if (slug) setFormData(prev => ({ ...prev, slug }));
     }
     
     // Auto-calculate reading time from content
@@ -121,6 +124,10 @@ export default function NewArticlePage() {
     try {
       setSaving(true);
 
+      const scheduledAt = formData.is_published
+        ? null
+        : (formData.scheduled_publish_at ? new Date(formData.scheduled_publish_at).toISOString() : null);
+
       const articleData = {
         id: crypto.randomUUID(),
         title: formData.title,
@@ -131,6 +138,7 @@ export default function NewArticlePage() {
         tags: formData.tags,
         is_published: formData.is_published,
         reading_time: formData.reading_time,
+        scheduled_publish_at: scheduledAt,
         created_date: new Date().toISOString(),
         updated_date: new Date().toISOString(),
         likes_count: 0,
@@ -256,9 +264,6 @@ export default function NewArticlePage() {
               placeholder="כתוב את המאמר כאן בפורמט Markdown..."
               required
             />
-            <p className="text-stone-500 text-sm mt-2">
-              תומך ב-Markdown: **מודגש**, *נטוי*, # כותרות, - רשימות, [קישור](url)
-            </p>
           </div>
 
           {/* Tags */}
@@ -290,19 +295,58 @@ export default function NewArticlePage() {
           </div>
 
           {/* Publish Status */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-100">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-100 space-y-4">
+            <p className="text-sm font-semibold text-stone-700">סטטוס פרסום</p>
+
             <label className="flex items-center gap-3 cursor-pointer">
               <input
                 type="checkbox"
                 checked={formData.is_published}
-                onChange={(e) => handleChange('is_published', e.target.checked)}
+                onChange={(e) => {
+                  handleChange('is_published', e.target.checked);
+                  if (e.target.checked) handleChange('scheduled_publish_at', '');
+                }}
                 className="w-5 h-5 text-amber-600 border-stone-300 rounded focus:ring-amber-500"
               />
-              <span className="font-medium text-stone-800">פרסם מאמר מיד</span>
+              <span className="font-medium text-stone-800">פרסם עכשיו</span>
             </label>
-            <p className="text-stone-500 text-sm mt-2 mr-8">
-              אם לא מסומן, המאמר יישמר כטיוטה
-            </p>
+
+            {!formData.is_published && (
+              <div className="border-t border-stone-100 pt-4">
+                <p className="text-sm font-medium text-stone-700 mb-2 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-blue-500" />
+                  תזמן פרסום אוטומטי
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="datetime-local"
+                    value={formData.scheduled_publish_at}
+                    onChange={(e) => handleChange('scheduled_publish_at', e.target.value)}
+                    min={new Date().toISOString().slice(0, 16)}
+                    className="flex-1 px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    dir="ltr"
+                  />
+                  {formData.scheduled_publish_at && (
+                    <button
+                      type="button"
+                      onClick={() => handleChange('scheduled_publish_at', '')}
+                      className="p-2 text-stone-400 hover:text-stone-600 rounded-lg hover:bg-stone-100"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+                {formData.scheduled_publish_at && (
+                  <p className="text-xs text-blue-600 mt-2 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    יפורסם ב-{new Date(formData.scheduled_publish_at).toLocaleString('he-IL', { dateStyle: 'long', timeStyle: 'short' })}
+                  </p>
+                )}
+                {!formData.scheduled_publish_at && (
+                  <p className="text-xs text-stone-400 mt-2">השאר ריק כדי לשמור כטיוטה</p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Actions */}
