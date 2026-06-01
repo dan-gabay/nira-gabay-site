@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
-import { ArrowRight, Save, Copy, Check, ImageOff } from 'lucide-react';
+import { ArrowRight, Save, Copy, Check, ImageOff, Clock, X } from 'lucide-react';
 
 type DraftMetadata = {
   image_concept: string | null;
@@ -35,7 +35,8 @@ export default function EditArticlePage() {
     image_url: '',
     tags: '',
     is_published: false,
-    reading_time: 5
+    reading_time: 5,
+    scheduled_publish_at: '',
   });
 
   useEffect(() => {
@@ -78,6 +79,12 @@ export default function EditArticlePage() {
       const tags = data.tags || '';
       const tagsArray = tags ? tags.split(',').map((t: string) => t.trim()) : [];
 
+      // Convert ISO timestamp to datetime-local format (YYYY-MM-DDTHH:mm)
+      const scheduledRaw = data.scheduled_publish_at ?? '';
+      const scheduledLocal = scheduledRaw
+        ? new Date(scheduledRaw).toISOString().slice(0, 16)
+        : '';
+
       setFormData({
         title: data.title || '',
         slug: data.slug || '',
@@ -86,7 +93,8 @@ export default function EditArticlePage() {
         image_url: data.image_url || '',
         tags: tags,
         is_published: data.is_published || false,
-        reading_time: data.reading_time || 5
+        reading_time: data.reading_time || 5,
+        scheduled_publish_at: scheduledLocal,
       });
 
       setSelectedTags(tagsArray);
@@ -176,6 +184,11 @@ export default function EditArticlePage() {
     try {
       setSaving(true);
 
+      // When publishing immediately, clear the schedule
+      const scheduledAt = formData.is_published
+        ? null
+        : (formData.scheduled_publish_at ? new Date(formData.scheduled_publish_at).toISOString() : null);
+
       const { error } = await supabase
         .from('articles')
         .update({
@@ -187,6 +200,7 @@ export default function EditArticlePage() {
           tags: formData.tags,
           is_published: formData.is_published,
           reading_time: formData.reading_time,
+          scheduled_publish_at: scheduledAt,
           updated_date: new Date().toISOString()
         })
         .eq('id', articleId);
@@ -431,19 +445,61 @@ export default function EditArticlePage() {
           </div>
 
           {/* Publish Status */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-100">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-100 space-y-4">
+            <p className="text-sm font-semibold text-stone-700">סטטוס פרסום</p>
+
+            {/* Publish now */}
             <label className="flex items-center gap-3 cursor-pointer">
               <input
                 type="checkbox"
                 checked={formData.is_published}
-                onChange={(e) => handleChange('is_published', e.target.checked)}
+                onChange={(e) => {
+                  handleChange('is_published', e.target.checked);
+                  if (e.target.checked) handleChange('scheduled_publish_at', '');
+                }}
                 className="w-5 h-5 text-amber-600 border-stone-300 rounded focus:ring-amber-500"
               />
-              <span className="font-medium text-stone-800">מאמר מפורסם</span>
+              <span className="font-medium text-stone-800">פרסם עכשיו</span>
             </label>
-            <p className="text-stone-500 text-sm mt-2 mr-8">
-              אם לא מסומן, המאמר יישמר כטיוטה
-            </p>
+
+            {/* Schedule - only when not published */}
+            {!formData.is_published && (
+              <div className="border-t border-stone-100 pt-4">
+                <p className="text-sm font-medium text-stone-700 mb-2 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-blue-500" />
+                  תזמן פרסום אוטומטי
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="datetime-local"
+                    value={formData.scheduled_publish_at}
+                    onChange={(e) => handleChange('scheduled_publish_at', e.target.value)}
+                    min={new Date().toISOString().slice(0, 16)}
+                    className="flex-1 px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    dir="ltr"
+                  />
+                  {formData.scheduled_publish_at && (
+                    <button
+                      type="button"
+                      onClick={() => handleChange('scheduled_publish_at', '')}
+                      className="p-2 text-stone-400 hover:text-stone-600 rounded-lg hover:bg-stone-100 transition-colors"
+                      title="בטל תיזמון"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+                {formData.scheduled_publish_at && (
+                  <p className="text-xs text-blue-600 mt-2 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    יפורסם ב-{new Date(formData.scheduled_publish_at).toLocaleString('he-IL', { dateStyle: 'long', timeStyle: 'short' })}
+  </p>
+                )}
+                {!formData.scheduled_publish_at && (
+                  <p className="text-xs text-stone-400 mt-2">השאר ריק כדי לשמור כטיוטה</p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Actions */}
