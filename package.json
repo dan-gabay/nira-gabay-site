@@ -7,7 +7,17 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "import-tags": "tsx scripts/import-tags.ts"
+    "import-tags": "tsx scripts/import-tags.ts",
+    "discover:source-articles": "tsx scripts/discover-source-articles.ts",
+    "extract:search-urls": "tsx scripts/extract-urls-from-search-results.ts",
+    "extract:source-article": "tsx scripts/extract-one-source-article.ts",
+    "prepare:article-candidate": "tsx scripts/prepare-article-candidate.ts",
+    "prepare:supabase-draft": "tsx scripts/prepare-supabase-article-draft.ts",
+    "prepare:article-image": "tsx scripts/prepare-article-image-asset.ts",
+    "generate:article-image": "tsx scripts/generate-and-upload-article-image.ts",
+    "insert:supabase-draft": "tsx scripts/insert-supabase-article-draft.ts",
+    "run:article-import-pipeline": "tsx scripts/run-article-import-pipeline.ts",
+    "final:check-and-publish": "tsx scripts/final-check-and-publish-first-article.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.87.1",
@@ -27,6 +37,8 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cheerio": "^1.2.0",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
     "tailwindcss": "^4",
