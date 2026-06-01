@@ -4,21 +4,79 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { trackWhatsAppClick, trackCTAClick } from '@/lib/analytics';
 
+const WA_HREF = `https://wa.me/972507936681?text=${encodeURIComponent('שלום נירה, אשמח לקבוע פגישה')}`;
+
 export default function HeroSection() {
   return (
     <>
-      <style>{`
-        @media (max-width: 768px) {
-          .hero-bg-image {
-            background-image: url('https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-mobile.png') !important;
-            background-position: left center !important;
-          }
-        }
-      `}</style>
+      {/* ─── MOBILE: stacked — image top, text below ─── */}
+      <div className="block md:hidden">
+        {/* Portrait photo — no text overlap */}
+        <div className="relative w-full" style={{ height: '72vw', maxHeight: '380px' }}>
+          <Image
+            src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-mobile.png"
+            alt="נירה גבאי - מטפלת בפסיכותרפיה"
+            fill
+            priority
+            fetchPriority="high"
+            quality={85}
+            className="object-cover object-top"
+            sizes="100vw"
+          />
+          {/* soft fade into content section */}
+          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-stone-900 to-transparent" />
+        </div>
 
-      {/* Hero Section */}
+        {/* Text content */}
+        <div className="bg-stone-900 px-6 pt-5 pb-10 text-right">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <span className="inline-block px-3 py-1.5 bg-white/15 backdrop-blur-sm rounded-full text-white/90 text-xs mb-4">
+              פסיכותרפיה ממכון אדלר | CBT
+            </span>
+
+            <h1 className="text-4xl font-bold text-white mb-3 leading-tight">
+              נירה גבאי
+            </h1>
+
+            <p className="text-lg text-white/85 mb-2 font-light leading-relaxed">
+              מטפלת בפסיכותרפיה ומדריכת הורים
+            </p>
+
+            <p className="text-sm text-white/65 mb-7 leading-relaxed">
+              מטפלת במתבגרים, מבוגרים וזוגות, מומחית למיניות בריאה
+              <br />
+              מלווה אתכם בדרך להגשמה עצמית ולחיים מלאים יותר
+            </p>
+
+            <div className="flex flex-col gap-3">
+              <a
+                href={WA_HREF}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackWhatsAppClick('hero')}
+                className="block w-full bg-green-600 hover:bg-green-700 text-white text-center py-4 rounded-xl text-base font-medium transition-colors"
+              >
+                שלחו הודעת WhatsApp
+              </a>
+              <a
+                href="/contact"
+                onClick={() => trackCTAClick('contact', 'hero')}
+                className="block w-full border border-white/40 text-white text-center py-4 rounded-xl text-base font-medium hover:bg-white/10 transition-colors"
+              >
+                קבעו פגישה
+              </a>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* ─── DESKTOP: overlay layout (unchanged) ─── */}
       <motion.section
-        className="relative min-h-[85vh] flex items-center"
+        className="relative hidden md:flex min-h-[85vh] items-center"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -33,10 +91,11 @@ export default function HeroSection() {
             priority
             fetchPriority="high"
             quality={85}
-            className="object-cover hero-bg-image"
+            className="object-cover"
             sizes="100vw"
           />
         </div>
+
         {/* Content */}
         <div className="container mx-auto px-4 md:px-8 relative z-20">
           <div className="max-w-3xl mr-0 md:mr-12 text-right">
@@ -56,7 +115,7 @@ export default function HeroSection() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <a
-                href={`https://wa.me/972507936681?text=${encodeURIComponent('שלום נירה, אשמח לקבוע פגישה')}`}
+                href={WA_HREF}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackWhatsAppClick('hero')}
