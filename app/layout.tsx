@@ -222,7 +222,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com" />
-        <link rel="dns-prefetch" href="https://qtrypzzcjebvfcihiynt.supabase.co" />
+        <link rel="dns-prefetch" href="https://tyrmguosxbmwykfnxcvk.supabase.co" />
         <JsonLd data={organizationSchema} />
         <JsonLd data={webSiteSchema} />
       </head>
