@@ -71,7 +71,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   ].filter(Boolean);
 
   return {
-    title: metaTitle,
+    // A stored meta_title already includes the "| נירה גבאי" brand, so emit it
+    // as `absolute` to bypass the layout's "%s | נירה גבאי" template (otherwise
+    // the brand is appended twice). Pre-pipeline articles fall back to the bare
+    // title and let the template add the brand once.
+    title: article.meta_title ? { absolute: article.meta_title } : article.title,
     description: metaDescription,
     keywords,
     alternates: {
