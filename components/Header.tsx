@@ -51,7 +51,8 @@ export default function Header() {
                 priority
               />
               <div className="hidden sm:block">
-                <h1 className="text-lg font-bold text-stone-800 font-serif">נירה גבאי</h1>
+                {/* Brand label only — not an <h1>, so each page keeps a single, page-specific H1 */}
+                <span className="block text-lg font-bold text-stone-800 font-serif">נירה גבאי</span>
                 <p className="text-xs text-stone-500">פסיכותרפיה והדרכת הורים</p>
               </div>
             </Link>
