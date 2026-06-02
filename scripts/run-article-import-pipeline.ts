@@ -301,6 +301,13 @@ function stripNoisePrefix(title: string): string {
 
 function cleanTitle(raw: string): string {
   let t = raw.trim();
+  // This source renders the H1/og:title as "CATEGORY\n\nTITLE" (a breadcrumb
+  // category line stacked above the headline). Drop the category line and the
+  // embedded newlines so only the real title survives.
+  if (/[\r\n]/.test(t)) {
+    const lines = t.split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean);
+    if (lines.length > 0) t = lines[lines.length - 1];
+  }
   t = stripTitleSuffix(t);
   for (const sep of [' | ', ' - ', ' – ', ' — ']) {
     const parts = t.split(sep);
@@ -430,6 +437,11 @@ const SLUG_KEYWORD_MAP: Array<[string, string]> = [
   ['לדבר עם הילדים', 'talking-to-children'],
   ['המצב במדינה', 'current-events'],
   ['מצב חירום', 'emergency'],
+  ['חופשת פסח', 'passover-break'],
+  ['חופשת קיץ', 'summer-break'],
+  // Subject keyword: a teen-focused piece should slug as the subject, not an
+  // incidental mention of the therapy room. Kept above 'חדר הטיפול' on purpose.
+  ['מתבגר', 'adolescent'],
   ['שפת אהבה', 'love-language'],
   ['שפת האהבה', 'love-language'],
   ['מעגל הדיכאון', 'depression-cycle'],
@@ -450,7 +462,6 @@ const SLUG_KEYWORD_MAP: Array<[string, string]> = [
   ['אחים', 'siblings'],
   ['התמכרות', 'addiction'],
   ['נוער', 'youth'],
-  ['מתבגר', 'adolescent'],
   ['זוגיות', 'couples'],
   ['תקשורת', 'communication'],
   ['גבולות', 'boundaries'],
