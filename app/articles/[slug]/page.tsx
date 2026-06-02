@@ -33,6 +33,7 @@ type Article = {
   canonical_url?: string | null;
   faq?: unknown | null;
   schema_json?: Record<string, unknown> | null;
+  internal_links?: Array<{ slug: string; title?: string; anchor?: string }> | null;
 };
 
 // Dynamic metadata
@@ -372,9 +373,10 @@ export default async function ArticlePage({ params }: Props) {
           </div>
 
           {/* Related Articles */}
-          <RelatedArticles 
+          <RelatedArticles
             currentArticleId={article.id}
             tags={article.tag_names}
+            recommendedSlugs={(article.internal_links || []).map((l) => l.slug).filter(Boolean)}
           />
 
           {/* Back Link */}
