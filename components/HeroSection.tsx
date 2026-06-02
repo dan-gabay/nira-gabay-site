@@ -52,6 +52,8 @@ export default function HeroSection() {
     <>
       <h1 className="text-5xl md:text-6xl xl:text-7xl font-bold text-white leading-[1.05] mb-3">
         נירה גבאי
+        {/* keyword-rich continuation for SEO/crawlers; visually hidden so the design is unchanged */}
+        <span className="sr-only"> - מטפלת בפסיכותרפיה ומדריכת הורים</span>
       </h1>
       <p className="text-lg md:text-xl xl:text-2xl text-white/90 font-light mb-5">
         מטפלת בפסיכותרפיה ומדריכת הורים
