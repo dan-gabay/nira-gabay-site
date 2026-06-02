@@ -441,6 +441,8 @@ const SLUG_KEYWORD_MAP: Array<[string, string]> = [
   ['חופשת קיץ', 'summer-break'],
   ['ארוחת החג', 'holiday-meal'],
   ['לחזור לשגרה', 'back-to-school'],
+  ['חרדת בחינות', 'exam-anxiety'],
+  ['הישגיות', 'achievement'],   // 2nd token for exam-anxiety pieces, before generic 'חרדה'
   // Subject keyword: a teen-focused piece should slug as the subject, not an
   // incidental mention of the therapy room. Kept above 'חדר הטיפול' on purpose.
   ['מתבגר', 'adolescent'],
