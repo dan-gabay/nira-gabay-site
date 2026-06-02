@@ -327,12 +327,24 @@ async function fetchPage(url: string): Promise<string | null> {
   }
 }
 
+// Some source pages serve the magazine's SITE-WIDE og/meta description (its tagline,
+// e.g. "האתר של מגזין בקיצור - המגזין של מטה יהודה") on articles that lack their own.
+// That boilerplate must never become an article excerpt or meta description.
+const BOILERPLATE_DESCRIPTION_MARKERS = ['מטה יהודה', 'מגזין בקיצור', 'האתר של מגזין'];
+function isBoilerplateDescription(text: string | null | undefined): boolean {
+  if (!text) return false;
+  return BOILERPLATE_DESCRIPTION_MARKERS.some((m) => text.includes(m));
+}
+
 function extractContent(html: string, pageUrl: string): ExtractedContent {
   const $ = cheerio.load(html);
 
   const ogTitle = ($('meta[property="og:title"]').attr('content') ?? '').trim();
-  const ogDescription = ($('meta[property="og:description"]').attr('content') ?? '').trim();
-  const metaDescription = ($('meta[name="description"]').attr('content') ?? '').trim();
+  const ogDescriptionRaw = ($('meta[property="og:description"]').attr('content') ?? '').trim();
+  const metaDescriptionRaw = ($('meta[name="description"]').attr('content') ?? '').trim();
+  // Drop site-wide boilerplate so it can't leak into the excerpt.
+  const ogDescription = isBoilerplateDescription(ogDescriptionRaw) ? '' : ogDescriptionRaw;
+  const metaDescription = isBoilerplateDescription(metaDescriptionRaw) ? '' : metaDescriptionRaw;
   const rawPageTitle = ($('title').text() ?? '').trim();
 
   let rawTitle: string | null = null;
@@ -461,7 +473,9 @@ function generateTags(title: string, contentText: string): string {
 }
 
 function generateExcerpt(rawExcerpt: string | null, contentText: string): string {
-  if (rawExcerpt && rawExcerpt.trim().length > 40) return rawExcerpt.replace(/\s+/g, ' ').trim();
+  if (rawExcerpt && !isBoilerplateDescription(rawExcerpt) && rawExcerpt.trim().length > 40) {
+    return rawExcerpt.replace(/\s+/g, ' ').trim();
+  }
   if (!contentText) return '';
   const candidate = contentText.slice(0, 300);
   const lastPeriod = Math.max(candidate.lastIndexOf('.'), candidate.lastIndexOf('?'), candidate.lastIndexOf('!'));
