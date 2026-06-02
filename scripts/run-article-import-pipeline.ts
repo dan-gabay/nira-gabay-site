@@ -427,6 +427,9 @@ function extractContent(html: string, pageUrl: string): ExtractedContent {
 // The generator picks up to 2 matches; dedup is based on the first hyphen-segment.
 const SLUG_KEYWORD_MAP: Array<[string, string]> = [
   // --- Multi-word phrases ---
+  ['לדבר עם הילדים', 'talking-to-children'],
+  ['המצב במדינה', 'current-events'],
+  ['מצב חירום', 'emergency'],
   ['שפת אהבה', 'love-language'],
   ['שפת האהבה', 'love-language'],
   ['מעגל הדיכאון', 'depression-cycle'],
@@ -1223,7 +1226,10 @@ async function processQueueItem(
     const seo = generateAndValidateSeo({
       title,
       content: contentMarkdown,
-      excerpt,
+      // Derive excerpt/meta_description from the REWRITE, not the source - the
+      // source og/meta description can carry claims the rewrite intentionally
+      // removed (e.g. unsubstantiated "research shows" phrasing).
+      excerpt: null,
       tags,
       slug,
       createdDate: new Date().toISOString(),
