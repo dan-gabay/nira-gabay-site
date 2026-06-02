@@ -8,6 +8,13 @@ import { servicesSchema } from '@/lib/servicesSchema';
 import ArticlesPreviewClient from '@/components/ArticlesPreviewClient';
 import HeroSection from '@/components/HeroSection';
 import ServicesSection from '@/components/ServicesSection';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: 'https://www.niragabay.com',
+  },
+};
 
 export default function Home() {
   return (

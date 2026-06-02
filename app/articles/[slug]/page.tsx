@@ -50,14 +50,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: article.title,
     description: article.excerpt || article.content?.substring(0, 160),
     keywords: article.tag_names || [],
+    alternates: {
+      canonical: `https://www.niragabay.com/articles/${slug}`,
+    },
     openGraph: {
       title: article.title,
       description: article.excerpt || article.content?.substring(0, 160),
       type: 'article',
       publishedTime: article.created_date,
       authors: ['נירה גבאי'],
-      url: `https://niragabay.com/articles/${slug}`,
-      siteName: 'נירה גבאי - פסיכולוגית קלינית',
+      url: `https://www.niragabay.com/articles/${slug}`,
+      siteName: 'נירה גבאי - פסיכותרפיה והדרכת הורים',
       locale: 'he_IL',
       images: article.image_url ? [{
         url: article.image_url,
@@ -149,15 +152,15 @@ export default async function ArticlePage({ params }: Props) {
     author: {
       '@type': 'Person',
       name: 'נירה גבאי',
-      jobTitle: 'פסיכולוגית קלינית',
-      url: 'https://niragabay.com/about'
+      jobTitle: 'מטפלת בפסיכותרפיה ומדריכת הורים',
+      url: 'https://www.niragabay.com/about'
     },
     publisher: {
       '@type': 'Organization',
-      name: 'נירה גבאי - פסיכולוגית קלינית',
+      name: 'נירה גבאי - פסיכותרפיה והדרכת הורים',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://niragabay.com/logo.png'
+        url: 'https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/logo.png'
       }
     },
     keywords: article.tag_names?.join(', '),
@@ -173,19 +176,19 @@ export default async function ArticlePage({ params }: Props) {
         '@type': 'ListItem',
         position: 1,
         name: 'דף הבית',
-        item: 'https://niragabay.com'
+        item: 'https://www.niragabay.com'
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: 'מאמרים',
-        item: 'https://niragabay.com/articles'
+        item: 'https://www.niragabay.com/articles'
       },
       {
         '@type': 'ListItem',
         position: 3,
         name: article.title,
-        item: `https://niragabay.com/articles/${article.slug}`
+        item: `https://www.niragabay.com/articles/${article.slug}`
       }
     ]
   };

@@ -5,20 +5,20 @@ export const servicesSchema = {
   "name": "נירה גבאי - פסיכותרפיה והדרכת הורים",
   "alternateName": "Nira Gabay - Psychotherapy and Parenting Counseling",
   "description": "קליניקה לפסיכותרפיה, הדרכת הורים, טיפול זוגי וטיפול קוגניטיבי התנהגותי (CBT). מלווה מתבגרים, מבוגרים וזוגות בדרכם להגשמה עצמית.",
-  "url": "https://niragabay.com",
-  "telephone": "+972-54-4251933",
-  "email": "niragabay@gmail.com",
+  "url": "https://www.niragabay.com",
+  "telephone": "+972-50-7936681",
+  "email": "niraga1123@gmail.com",
   "image": "https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png",
   "address": {
     "@type": "PostalAddress",
     "addressLocality": "שואבה",
-    "addressRegion": "מרכז",
+    "addressRegion": "ירושלים",
     "addressCountry": "IL"
   },
   "geo": {
     "@type": "GeoCoordinates",
-    "latitude": "31.866738",
-    "longitude": "34.899155"
+    "latitude": "31.7907",
+    "longitude": "35.0644"
   },
   "priceRange": "$$",
   "paymentAccepted": "מזומן, העברה בנקאית, אשראי",

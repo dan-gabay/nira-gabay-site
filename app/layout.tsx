@@ -141,7 +141,13 @@ export default function RootLayout({
     address: {
       '@type': 'PostalAddress',
       addressLocality: 'שואבה',
+      addressRegion: 'ירושלים',
       addressCountry: 'IL',
+    },
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: '31.7907',
+      longitude: '35.0644',
     },
     sameAs: [
       'https://www.facebook.com/nira.gabay',
