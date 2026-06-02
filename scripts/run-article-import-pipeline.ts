@@ -30,6 +30,8 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
+import { generateAndValidateSeo, htmlToMarkdown } from '../lib/seo';
+import type { ExistingArticleRef, SeoResult } from '../lib/seo';
 
 dotenv.config({ path: path.join(process.cwd(), '.env.local') });
 
@@ -43,12 +45,19 @@ const CANONICAL_BASE = 'https://www.niragabay.com';
 const CREATED_BY_AGENT = 'article_import_agent';
 const HEBREW_WPM = 200;
 
-// 16 public article columns only - no SEO/migration/private metadata
+// Public article columns + the SEO columns the article page and metadata read.
+// (source_url is intentionally NOT included - old source URLs must never be
+// written to the public articles table.)
 const ALLOWED_COLUMNS = new Set([
+  // base public columns
   'id', 'title', 'slug', 'content', 'excerpt', 'image_url',
   'reading_time', 'likes_count', 'views_count', 'tags',
   'is_published', 'created_date', 'updated_date', 'created_by_id', 'created_by',
   'is_sample',
+  // SEO columns (generated + validated by lib/seo)
+  'meta_title', 'meta_description', 'focus_keyword', 'secondary_keywords',
+  'seo_score', 'canonical_url', 'faq', 'internal_links', 'schema_json',
+  'seo_package', 'status', 'optimized_at', 'imported_at', 'content_hash',
 ]);
 
 const STANDARD_NEGATIVE_PROMPT = [
@@ -73,6 +82,7 @@ const DRY_RUN = !cliArgs.includes('--insert');
 const DO_INSERT = cliArgs.includes('--insert');
 const DO_MARK_QUEUE = cliArgs.includes('--mark-queue');
 const SKIP_AI_REWRITE = cliArgs.includes('--skip-ai-rewrite');
+const SKIP_SEO_VALIDATION = cliArgs.includes('--skip-seo-validation');
 const DO_GENERATE_IMAGE = cliArgs.includes('--generate-image') && !cliArgs.includes('--skip-images');
 const CONTINUE_ON_ERROR = cliArgs.includes('--continue-on-error');
 const EXPECTED_STATUS = (() => {
@@ -172,6 +182,21 @@ interface ArticleInsertPayload {
   updated_date: string;
   created_by_id: null;
   created_by: string;
+  // SEO columns
+  meta_title: string;
+  meta_description: string;
+  focus_keyword: string;
+  secondary_keywords: string[];
+  seo_score: number;
+  canonical_url: string;
+  faq: unknown | null;
+  internal_links: unknown;
+  schema_json: unknown;
+  seo_package: unknown;
+  status: string;
+  optimized_at: string;
+  imported_at: string;
+  content_hash: string;
 }
 
 interface ImagePromptData {
@@ -193,6 +218,10 @@ interface PipelineItemResult {
   image_url: string | null;
   image_prompt_saved: boolean | null;
   duplicate_content_risk: DuplicateContentRisk | null;
+  seo_score: number | null;
+  seo_passed: boolean | null;
+  seo_errors: string[];
+  seo_warnings_count: number | null;
   queue_status: string | null;
   reconciliation: boolean;
   warnings: string[];
@@ -863,8 +892,11 @@ function buildArticlePayload(params: {
   excerpt: string;
   readingTime: number;
   tags: string;
+  seo: SeoResult;
 }): ArticleInsertPayload {
   const now = new Date().toISOString();
+  const { package: pkg, validation } = params.seo;
+  const content_hash = crypto.createHash('sha256').update(params.content).digest('hex');
   return {
     id: crypto.randomUUID(),
     title: params.title,
@@ -882,6 +914,29 @@ function buildArticlePayload(params: {
     updated_date: now,
     created_by_id: null,
     created_by: CREATED_BY_AGENT,
+    // SEO
+    meta_title: pkg.meta_title,
+    meta_description: pkg.meta_description,
+    focus_keyword: pkg.focus_keyword,
+    secondary_keywords: pkg.secondary_keywords,
+    seo_score: validation.score,
+    canonical_url: pkg.canonical_url,
+    faq: pkg.faq_json,
+    internal_links: pkg.internal_links,
+    schema_json: pkg.schema_json,
+    seo_package: {
+      og_title: pkg.og_title,
+      og_description: pkg.og_description,
+      image_alt: pkg.image_alt,
+      image_prompt: pkg.image_prompt,
+      metrics: validation.metrics,
+      findings: validation.findings,
+      generated_at: now,
+    },
+    status: 'draft',
+    optimized_at: now,
+    imported_at: now,
+    content_hash,
   };
 }
 
@@ -933,6 +988,7 @@ async function processQueueItem(
   supabase: any,
   item: QueueItem,
   runResult: PipelineRunResult,
+  existingArticles: ExistingArticleRef[],
 ): Promise<PipelineItemResult> {
   const itemResult: PipelineItemResult = {
     queue_id: item.id,
@@ -946,6 +1002,10 @@ async function processQueueItem(
     image_url: null,
     image_prompt_saved: null,
     duplicate_content_risk: null,
+    seo_score: null,
+    seo_passed: null,
+    seo_errors: [],
+    seo_warnings_count: null,
     queue_status: null,
     reconciliation: false,
     warnings: [],
@@ -1036,10 +1096,11 @@ async function processQueueItem(
         console.log('             -> duplicate_content_risk will be HIGH');
         console.log('             -> recommend: provide Claude Code rewrite via --rewrite-source');
       }
-      console.log('  5. Safety gates (is_published=false, image_url=null)');
-      console.log('  6. Insert into public.articles (16 columns)');
-      console.log('  7. Insert image prompt into article_draft_metadata');
-      console.log('  8. Mark queue as draft_created');
+      console.log('  5. Generate + validate SEO package (blocks insert on hard errors)');
+      console.log('  6. Safety gates (is_published=false, image_url=null)');
+      console.log('  7. Insert into public.articles (public + SEO columns)');
+      console.log('  8. Insert image prompt into article_draft_metadata');
+      console.log('  9. Mark queue as draft_created');
       console.log('');
       console.log('Planned slug:          ', previewSlug);
       console.log('Image concept:         ', imagePrompt.concept);
@@ -1150,9 +1211,55 @@ async function processQueueItem(
 
     itemResult.duplicate_content_risk = rewrite.risk;
 
-    // Build article payload (16 columns)
+    // Normalise the rewritten content to Markdown so it renders correctly
+    // (the article page uses react-markdown) and its heading structure is real.
+    const contentMarkdown = htmlToMarkdown(rewrite.content);
+
+    // Image prompt (also fed into the SEO package for the image alt text).
+    const imagePromptData = generateImagePromptData(title, extracted.contentText);
+
+    // ---- SEO: generate the full package and validate before saving ----
+    console.log('Generating + validating SEO package...');
+    const seo = generateAndValidateSeo({
+      title,
+      content: contentMarkdown,
+      excerpt,
+      tags,
+      slug,
+      createdDate: new Date().toISOString(),
+      imagePrompt: imagePromptData.prompt,
+      imageAlt: imagePromptData.alt,
+      imageConcept: imagePromptData.concept,
+      existingArticles,
+    });
+
+    itemResult.seo_score = seo.validation.score;
+    itemResult.seo_passed = seo.validation.passed;
+    const seoErrors = seo.validation.findings.filter((f) => f.severity === 'error');
+    const seoWarnings = seo.validation.findings.filter((f) => f.severity === 'warn');
+    itemResult.seo_errors = seoErrors.map((f) => f.message);
+    itemResult.seo_warnings_count = seoWarnings.length;
+
+    console.log('SEO score:', seo.validation.score + '/100',
+      '| errors:', seoErrors.length, '| warnings:', seoWarnings.length);
+    for (const f of seoErrors) console.log('  [SEO ERROR]', f.message);
+    for (const f of seoWarnings) console.log('  [SEO warn] ', f.message);
+
+    if (!seo.validation.passed) {
+      if (SKIP_SEO_VALIDATION) {
+        itemResult.warnings.push('SEO validation failed but bypassed via --skip-seo-validation');
+        console.log('[!] SEO errors bypassed via --skip-seo-validation');
+      } else if (CONTINUE_ON_ERROR) {
+        itemResult.warnings.push('SEO validation failed (continued via --continue-on-error): ' + itemResult.seo_errors.join('; '));
+      } else {
+        throw new Error('SEO validation failed: ' + itemResult.seo_errors.join('; ') +
+          ' (fix the article, or pass --skip-seo-validation to override)');
+      }
+    }
+
+    // Build article payload (public columns + validated SEO columns)
     const payload = buildArticlePayload({
-      title, slug, content: rewrite.content, excerpt, readingTime, tags,
+      title, slug, content: contentMarkdown, excerpt: seo.package.excerpt, readingTime, tags, seo,
     });
 
     itemResult.article_id = payload.id;
@@ -1214,7 +1321,6 @@ async function processQueueItem(
 
     // Insert image prompt metadata into article_draft_metadata
     console.log('Saving image prompt metadata...');
-    const imagePromptData = generateImagePromptData(title, extracted.contentText);
     const metaResult = await insertDraftMetadata(supabase, {
       articleId: payload.id,
       queueId: item.id,
@@ -1411,8 +1517,20 @@ async function runPipeline(): Promise<void> {
     console.log('');
   }
 
+  // Existing articles (published + drafts) for SEO cannibalization checks and
+  // internal-link suggestions.
+  const { data: existingRows } = await supabase
+    .from('articles')
+    .select('slug, title, tags, focus_keyword');
+  const existingArticles: ExistingArticleRef[] = (existingRows || []).map((r: any) => ({
+    slug: r.slug,
+    title: r.title ?? '',
+    tags: r.tags ?? '',
+    focus_keyword: r.focus_keyword ?? null,
+  }));
+
   for (const item of queueItems as QueueItem[]) {
-    const itemResult = await processQueueItem(supabase, item, result).catch((err: unknown) => {
+    const itemResult = await processQueueItem(supabase, item, result, existingArticles).catch((err: unknown) => {
       if (CONTINUE_ON_ERROR) {
         const msg = err instanceof Error ? err.message : String(err);
         return {
@@ -1427,6 +1545,10 @@ async function runPipeline(): Promise<void> {
           image_url: null as null,
           image_prompt_saved: null as boolean | null,
           duplicate_content_risk: null,
+          seo_score: null as number | null,
+          seo_passed: null as boolean | null,
+          seo_errors: [] as string[],
+          seo_warnings_count: null as number | null,
           queue_status: 'failed',
           reconciliation: false,
           warnings: [],
@@ -1463,8 +1585,8 @@ async function runPipeline(): Promise<void> {
   console.log('Failed:            ', result.articles_failed);
   console.log('Queue updated:     ', result.queue_updated);
   console.log('');
-  console.log('queue_id | source_title | article_id | slug | is_published | image_url | image_prompt_saved | queue_status | error');
-  console.log('-'.repeat(120));
+  console.log('queue_id | source_title | article_id | slug | is_published | seo_score | seo_ok | image_prompt_saved | queue_status | error');
+  console.log('-'.repeat(130));
   for (const it of result.items) {
     const row = [
       it.queue_id.slice(0, 8) + '...',
@@ -1472,7 +1594,8 @@ async function runPipeline(): Promise<void> {
       it.article_id ? it.article_id.slice(0, 8) + '...' : 'null',
       it.slug ?? 'null',
       String(it.is_published),
-      String(it.image_url),
+      it.seo_score === null ? 'n/a' : it.seo_score + '/100',
+      it.seo_passed === null ? 'n/a' : String(it.seo_passed),
       String(it.image_prompt_saved),
       it.queue_status ?? 'null',
       it.error ? it.error.slice(0, 30) : 'none',

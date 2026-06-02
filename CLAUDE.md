@@ -50,7 +50,8 @@ The goal: the user says "run" and Claude Code handles the entire flow, including
 6. Perform substantial editorial rewrite directly as Claude Code (not via external API)
 7. Save rewrite to `data/rewrite-source.json` keyed by `queue_id`
 8. Run actual batch: `npm.cmd run run:article-import-pipeline -- --limit 5 --insert --mark-queue --skip-images --rewrite-source data/rewrite-source.json`
-9. Report results table: queue_id, source_title, article_id, slug, is_published, image_url, image_prompt_saved, queue_status, error
+   - The pipeline now auto-generates AND validates a full SEO package before each insert (see "SEO generation + validation" below). Inserts are blocked on hard SEO errors unless `--continue-on-error` or `--skip-seo-validation` is passed.
+9. Report results table: queue_id, source_title, article_id, slug, is_published, seo_score, seo_ok, image_prompt_saved, queue_status, error
 
 ---
 
@@ -94,7 +95,7 @@ npm.cmd run dev
 
 - Project ID: `tyrmguosxbmwykfnxcvk` (ap-southeast-2)
 - Main tables: `public.articles`, `article_import_queue`, `article_draft_metadata`
-- Articles insert: 16 public columns only (no SEO/migration fields)
+- Articles insert: public columns + validated SEO columns (`meta_title`, `meta_description`, `focus_keyword`, `secondary_keywords`, `seo_score`, `canonical_url`, `faq`, `internal_links`, `schema_json`, `seo_package`, `status`, `imported_at`, `optimized_at`, `content_hash`). `source_url` is NEVER written to `articles` (old source URLs stay out of the public table).
 - Image prompts: stored in `article_draft_metadata`, shown in `/manage/articles/edit/[id]`
 
 ---
@@ -121,6 +122,21 @@ Target duplicate-content-risk profile:
   "sentence_by_sentence_paraphrase": false
 }
 ```
+
+---
+
+## SEO generation + validation
+
+The conversion flow generates and validates all SEO fields before saving, via `lib/seo/`:
+
+- `lib/seo/generate.ts` - `buildSeoPackage()` produces: `seo_title`/`meta_title`, `meta_description`, `slug`, `excerpt`, `tags`, `focus_keyword`, `secondary_keywords`, `image_prompt`, `image_alt`, `og_title`, `og_description`, `faq_json` (from question-style headings + their own text, never fabricated), `schema_json` (BlogPosting), `internal_links` (from existing articles by shared tags + title overlap), `canonical_url`.
+- `lib/seo/validate.ts` - `validateSeoPackage()` checks title/description lengths, H1/H2 structure, Hebrew RTL readability, cannibalization vs existing articles, internal-link opportunities, image-alt quality, schema validity, E-E-A-T depth, GEO/AI readiness. Returns findings (`error`/`warn`/`info`), a 0-100 `seo_score`, and content metrics.
+- `lib/seo/htmlToMarkdown.ts` - rewrite HTML (`<h2>`/`<p>`) is converted to Markdown before saving so it renders (the article page uses react-markdown) and its heading structure is real.
+- Pipeline integration: after the rewrite, the pipeline generates + validates, blocks insert on any `error` finding (override with `--continue-on-error` or `--skip-seo-validation`), and maps the package onto the article SEO columns (full package + report stored in `seo_package` jsonb).
+- Rendering: `app/articles/[slug]/page.tsx` prefers `meta_title` / `meta_description` / `canonical_url` / `schema_json` / `faq`, with fallbacks for pre-pipeline articles. The `/manage` edit page shows the SEO score, findings, internal-link suggestions, and editable `meta_title` / `meta_description` / `focus_keyword`.
+- Sitemap (`app/sitemap.ts`, `app/sitemap-images.xml`) and robots only include `is_published = true` articles.
+
+Flags: `--skip-seo-validation` (bypass the SEO gate), `--continue-on-error` (record errors, do not stop the batch).
 
 ---
 

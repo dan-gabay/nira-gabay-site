@@ -37,7 +37,21 @@ export default function EditArticlePage() {
     is_published: false,
     reading_time: 5,
     scheduled_publish_at: '',
+    meta_title: '',
+    meta_description: '',
+    focus_keyword: '',
   });
+
+  type SeoFinding = { id: string; severity: 'error' | 'warn' | 'info'; message: string };
+  type InternalLink = { slug: string; title: string; anchor?: string; reason?: string };
+  const [seoReview, setSeoReview] = useState<{
+    score: number | null;
+    findings: SeoFinding[];
+    internalLinks: InternalLink[];
+    faqCount: number;
+    secondaryKeywords: string[];
+    canonicalUrl: string | null;
+  } | null>(null);
 
   useEffect(() => {
     loadArticle();
@@ -95,6 +109,21 @@ export default function EditArticlePage() {
         is_published: data.is_published || false,
         reading_time: data.reading_time || 5,
         scheduled_publish_at: scheduledLocal,
+        meta_title: data.meta_title || '',
+        meta_description: data.meta_description || '',
+        focus_keyword: data.focus_keyword || '',
+      });
+
+      // SEO review (read-only) from the generated package + validation.
+      const pkg = data.seo_package || {};
+      const faqEntries = data.faq?.mainEntity;
+      setSeoReview({
+        score: typeof data.seo_score === 'number' ? data.seo_score : null,
+        findings: Array.isArray(pkg.findings) ? pkg.findings : [],
+        internalLinks: Array.isArray(data.internal_links) ? data.internal_links : [],
+        faqCount: Array.isArray(faqEntries) ? faqEntries.length : 0,
+        secondaryKeywords: Array.isArray(data.secondary_keywords) ? data.secondary_keywords : [],
+        canonicalUrl: data.canonical_url || null,
       });
 
       setSelectedTags(tagsArray);
@@ -201,6 +230,9 @@ export default function EditArticlePage() {
           is_published: formData.is_published,
           reading_time: formData.reading_time,
           scheduled_publish_at: scheduledAt,
+          meta_title: formData.meta_title || null,
+          meta_description: formData.meta_description || null,
+          focus_keyword: formData.focus_keyword || null,
           updated_date: new Date().toISOString()
         })
         .eq('id', articleId);
@@ -399,6 +431,130 @@ export default function EditArticlePage() {
               rows={3}
               placeholder="תקציר קצר של המאמר..."
             />
+          </div>
+
+          {/* SEO */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-100">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-stone-800">SEO</h2>
+              {seoReview?.score !== null && seoReview?.score !== undefined && (
+                <span
+                  className={`text-sm font-bold px-3 py-1 rounded-full ${
+                    seoReview.score >= 80
+                      ? 'bg-green-100 text-green-800'
+                      : seoReview.score >= 60
+                      ? 'bg-amber-100 text-amber-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}
+                >
+                  ציון SEO: {seoReview.score}/100
+                </span>
+              )}
+            </div>
+
+            {/* Meta title */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-stone-700">כותרת SEO (meta title)</label>
+                <span className={`text-xs ${formData.meta_title.length > 60 ? 'text-red-600' : 'text-stone-400'}`}>
+                  {formData.meta_title.length}/60
+                </span>
+              </div>
+              <input
+                type="text"
+                value={formData.meta_title}
+                onChange={(e) => handleChange('meta_title', e.target.value)}
+                className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                placeholder="כותרת לתוצאות החיפוש..."
+              />
+            </div>
+
+            {/* Meta description */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-stone-700">תיאור SEO (meta description)</label>
+                <span
+                  className={`text-xs ${
+                    formData.meta_description.length > 158 || (formData.meta_description.length > 0 && formData.meta_description.length < 120)
+                      ? 'text-amber-600'
+                      : 'text-stone-400'
+                  }`}
+                >
+                  {formData.meta_description.length}/158
+                </span>
+              </div>
+              <textarea
+                value={formData.meta_description}
+                onChange={(e) => handleChange('meta_description', e.target.value)}
+                className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                rows={2}
+                placeholder="תיאור קצר לתוצאות החיפוש (120-158 תווים)..."
+              />
+            </div>
+
+            {/* Focus keyword */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-stone-700 mb-1">מילת מפתח ראשית</label>
+              <input
+                type="text"
+                value={formData.focus_keyword}
+                onChange={(e) => handleChange('focus_keyword', e.target.value)}
+                className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                placeholder="לדוגמה: הדרכת הורים"
+              />
+              {seoReview && seoReview.secondaryKeywords.length > 0 && (
+                <p className="text-xs text-stone-500 mt-2">
+                  מילות מפתח משניות: {seoReview.secondaryKeywords.join(', ')}
+                </p>
+              )}
+              {seoReview?.canonicalUrl && (
+                <p className="text-xs text-stone-400 mt-1 text-left" dir="ltr">canonical: {seoReview.canonicalUrl}</p>
+              )}
+            </div>
+
+            {/* Validation findings */}
+            {seoReview && seoReview.findings.length > 0 && (
+              <div className="mt-2 border-t border-stone-100 pt-4">
+                <p className="text-xs font-semibold text-stone-600 mb-2 uppercase tracking-wide">בדיקות SEO</p>
+                <ul className="space-y-1.5">
+                  {seoReview.findings
+                    .filter((f) => f.severity !== 'info')
+                    .map((f, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm">
+                        <span
+                          className={`mt-0.5 inline-block w-2 h-2 rounded-full flex-shrink-0 ${
+                            f.severity === 'error' ? 'bg-red-500' : 'bg-amber-400'
+                          }`}
+                        />
+                        <span className={f.severity === 'error' ? 'text-red-700' : 'text-stone-600'}>
+                          {f.message}
+                        </span>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Internal link suggestions */}
+            {seoReview && seoReview.internalLinks.length > 0 && (
+              <div className="mt-4 border-t border-stone-100 pt-4">
+                <p className="text-xs font-semibold text-stone-600 mb-2 uppercase tracking-wide">הצעות לקישור פנימי</p>
+                <ul className="space-y-1">
+                  {seoReview.internalLinks.map((l, i) => (
+                    <li key={i} className="text-sm">
+                      <Link href={`/articles/${l.slug}`} target="_blank" className="text-amber-700 hover:text-amber-800 underline">
+                        {l.anchor || l.title}
+                      </Link>
+                      {l.reason && <span className="text-stone-400 text-xs"> — {l.reason}</span>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {seoReview && seoReview.faqCount > 0 && (
+              <p className="text-xs text-stone-500 mt-4">FAQ: {seoReview.faqCount} שאלות נשמרו עבור מאמר זה (יוצגו כ-schema).</p>
+            )}
           </div>
 
           {/* Content */}
