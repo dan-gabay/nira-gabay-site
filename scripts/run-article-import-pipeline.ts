@@ -440,6 +440,7 @@ const SLUG_KEYWORD_MAP: Array<[string, string]> = [
   ['חופשת פסח', 'passover-break'],
   ['חופשת קיץ', 'summer-break'],
   ['ארוחת החג', 'holiday-meal'],
+  ['לחזור לשגרה', 'back-to-school'],
   // Subject keyword: a teen-focused piece should slug as the subject, not an
   // incidental mention of the therapy room. Kept above 'חדר הטיפול' on purpose.
   ['מתבגר', 'adolescent'],
@@ -466,6 +467,7 @@ const SLUG_KEYWORD_MAP: Array<[string, string]> = [
   ['זוגיות', 'couples'],
   ['תקשורת', 'communication'],
   ['גבולות', 'boundaries'],
+  ['שגרה', 'routine'],   // 'back-to-routine' pieces: routine as 2nd token, before anxiety
   ['חרדה', 'anxiety'],
   ['רגשות', 'emotions'],
   ['הורים', 'parenting'],
