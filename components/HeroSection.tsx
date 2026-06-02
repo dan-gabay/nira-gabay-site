@@ -82,7 +82,7 @@ export default function HeroSection() {
             fill
             priority
             fetchPriority="high"
-            quality={80}
+            quality={90}
             placeholder="blur"
             blurDataURL={BLUR_PORTRAIT}
             className="object-cover"
@@ -132,7 +132,7 @@ export default function HeroSection() {
           height={1024}
           priority
           fetchPriority="high"
-          quality={80}
+          quality={92}
           placeholder="blur"
           blurDataURL={BLUR_LANDSCAPE}
           sizes="100vw"
