@@ -10,6 +10,14 @@ const WA_HREF = `https://wa.me/972507936681?text=${encodeURIComponent('שלום 
 // Teal palette sampled from the photo's wall, deepening for the gradient.
 const TEAL_DEEP = '#16323b';
 
+// Inlined low-res blurs of the actual photos (generated from the source images).
+// They fill the hero box with the full composition instantly, so the heavy image
+// just sharpens in place instead of streaming in over a flat placeholder.
+const BLUR_LANDSCAPE =
+  'data:image/webp;base64,UklGRmYAAABXRUJQVlA4IFoAAAAQAgCdASoQAAsAA4BaJbACdAEWNtQiDLUAAP7au1XUAlLihMxrtMSyBfuZJKus8P2EBut2KsaJ9xzGEmqkU0vFKCj9JJNxgRicefRyl7IQCZuUj91i38oloAA=';
+const BLUR_PORTRAIT =
+  'data:image/webp;base64,UklGRrQAAABXRUJQVlA4IKgAAAAQBQCdASoQACMAPu1qrlCppaQiqqgBMB2JbACdMoRwAGSLDsd89Wjoou2zcB54ctgAAP6rZ7Y+kFSAofZOhtWCU5ffD5bRdLDwbsUClSHrhtcSazhFBGDOyQ9lpT36GWFTxV0y9LNizfw6wdfG4GEInIPwEvLYtOcUiWjT1Q9geIFiWcGie+PFL8tmxccXJXkM/zdQsPQe4kzwLHEu5zCxdVOGfOsAAAA=';
+
 export default function HeroSection() {
   const Pill = (
     <span className="inline-block px-4 py-1.5 rounded-full text-white/75 text-xs tracking-wide border border-white/25">
@@ -73,6 +81,8 @@ export default function HeroSection() {
             priority
             fetchPriority="high"
             quality={90}
+            placeholder="blur"
+            blurDataURL={BLUR_PORTRAIT}
             className="object-cover"
             style={{ objectPosition: '50% 65%' }}
             sizes="100vw"
@@ -121,6 +131,8 @@ export default function HeroSection() {
           priority
           fetchPriority="high"
           quality={92}
+          placeholder="blur"
+          blurDataURL={BLUR_LANDSCAPE}
           sizes="100vw"
           className="block"
           style={{ width: '100%', height: '88vh', objectFit: 'cover', objectPosition: '30% 50%' }}
