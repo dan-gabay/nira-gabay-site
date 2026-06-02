@@ -439,6 +439,7 @@ const SLUG_KEYWORD_MAP: Array<[string, string]> = [
   ['מצב חירום', 'emergency'],
   ['חופשת פסח', 'passover-break'],
   ['חופשת קיץ', 'summer-break'],
+  ['ארוחת החג', 'holiday-meal'],
   // Subject keyword: a teen-focused piece should slug as the subject, not an
   // incidental mention of the therapy room. Kept above 'חדר הטיפול' on purpose.
   ['מתבגר', 'adolescent'],
