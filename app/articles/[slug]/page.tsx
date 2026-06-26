@@ -342,7 +342,7 @@ export default async function ArticlePage({ params }: Props) {
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <Image
                 src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png"
-                alt="נירה גבאי - מטפלת בפסיכותרפיה ומדריכת הורים, בעלת תואר M.A ממכון אדלר"
+                alt="נירה גבאי - מטפלת בפסיכותרפיה ומדריכת הורים"
                 width={96}
                 height={96}
                 className="rounded-full object-cover shadow-lg"

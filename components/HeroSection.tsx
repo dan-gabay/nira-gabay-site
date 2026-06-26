@@ -21,7 +21,7 @@ const BLUR_PORTRAIT =
 export default function HeroSection() {
   const Pill = (
     <span className="inline-block px-4 py-1.5 rounded-full text-white/75 text-xs tracking-wide border border-white/25">
-      פסיכותרפיה ממכון אדלר | CBT
+      פסיכותרפיה | CBT
     </span>
   );
 

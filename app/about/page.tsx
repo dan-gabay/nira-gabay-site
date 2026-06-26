@@ -56,7 +56,7 @@ export default function About() {
                 <div className="relative w-full h-[500px]">
                   <Image
                     src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png"
-                    alt="נירה גבאי - מטפלת בפסיכותרפיה, בעלת תואר שני M.A ממכון אדלר, מומחית למיניות בריאה וטיפול CBT"
+                    alt="נירה גבאי - מטפלת בפסיכותרפיה ומדריכת הורים, מומחית למיניות בריאה וטיפול CBT"
                     fill
                     priority
                     className="rounded-3xl shadow-2xl object-cover"
@@ -83,7 +83,7 @@ export default function About() {
                 מטפלת בפסיכותרפיה ומדריכת הורים
               </p>
               <p className="text-lg text-stone-500">
-                פסיכותרפיה ממכון אדלר | CBT | מומחית למיניות בריאה
+                פסיכותרפיה | CBT | מומחית למיניות בריאה
               </p>
             </motion.div>
           </div>
@@ -136,7 +136,7 @@ export default function About() {
               <div className="prose prose-lg max-w-none text-stone-600 leading-relaxed space-y-6">
                 <p>
                   הדרך שלי לפסיכותרפיה התחילה מתוך סקרנות אמיתית לעולם הנפשי של האדם ומתוך רצון 
-                  עמוק לעזור לאחרים. למדתי במכון אדלר, שם רכשתי את הבסיס התיאורטי והמעשי לעבודה 
+                  עמוק לעזור לאחרים. רכשתי את הבסיס התיאורטי והמעשי לעבודה
                   טיפולית, והמשכתי להתמקצע בתחומים נוספים לאורך השנים.
                 </p>
                 <p>
