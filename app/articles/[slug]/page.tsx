@@ -92,18 +92,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: canonical,
       siteName: 'נירה גבאי - פסיכותרפיה והדרכת הורים',
       locale: 'he_IL',
-      images: article.image_url ? [{
-        url: article.image_url,
+      images: [{
+        url: article.image_url || 'https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png',
         width: 1200,
         height: 630,
         alt: article.title,
-      }] : [],
+      }],
     },
     twitter: {
       card: 'summary_large_image',
       title: ogTitle,
       description: ogDescription,
-      images: article.image_url ? [article.image_url] : [],
+      images: [article.image_url || 'https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png'],
     },
   };
 }
