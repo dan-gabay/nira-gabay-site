@@ -1,8 +1,28 @@
+import type { Metadata } from 'next';
 import { supabaseServer } from '../../lib/supabaseServer';
 import ArticlesBrowser, { type ArticleListItem, type Tag } from './ArticlesBrowser';
 
 // Revalidate the article list every 5 minutes (ISR)
 export const revalidate = 300;
+
+// Metadata lives on the page (not a layout) so it applies to the index route
+// only. A layout here would shadow the root title template ('%s | נירה גבאי')
+// for the [slug] child route, leaving articles without meta_title unbranded.
+export const metadata: Metadata = {
+  title: { absolute: 'מאמרים - נירה גבאי | פסיכותרפיה, הורות וזוגיות' },
+  description:
+    'מאמרים מאת נירה גבאי, מטפלת בפסיכותרפיה ומדריכת הורים, על פסיכותרפיה, הדרכת הורים, זוגיות, CBT והתמודדות רגשית.',
+  alternates: {
+    canonical: 'https://www.niragabay.com/articles',
+  },
+  openGraph: {
+    title: 'מאמרים - נירה גבאי | פסיכותרפיה, הורות וזוגיות',
+    description:
+      'מאמרים על פסיכותרפיה, הדרכת הורים, זוגיות, CBT והתמודדות רגשית.',
+    url: 'https://www.niragabay.com/articles',
+    type: 'website',
+  },
+};
 
 type SearchParams = Promise<{ search?: string; tag?: string }>;
 
