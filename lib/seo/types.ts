@@ -76,6 +76,7 @@ export interface ExistingArticleRef {
   title: string;
   tags: string; // comma-separated, as stored
   focus_keyword: string | null;
+  is_published: boolean;
 }
 
 export interface SeoGenerateInput {

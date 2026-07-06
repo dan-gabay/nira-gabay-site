@@ -91,7 +91,13 @@ export function validateSeoPackage(
     }
     const overlap = tokenOverlap(myTitleTokens, contentTokens(a.title));
     if (overlap >= 0.6) {
-      add('title_cannibalization', 'warn', `חפיפת כותרת גבוהה (${(overlap * 100).toFixed(0)}%) עם /articles/${a.slug}`, a.slug);
+      // High overlap with a PUBLISHED article is a blocking error - this is how
+      // duplicate "twin" imports of already-published articles slip through.
+      if (a.is_published) {
+        add('title_cannibalization', 'error', `חפיפת כותרת גבוהה (${(overlap * 100).toFixed(0)}%) עם מאמר מפורסם /articles/${a.slug}`, a.slug);
+      } else {
+        add('title_cannibalization_draft', 'warn', `חפיפת כותרת גבוהה (${(overlap * 100).toFixed(0)}%) עם טיוטה /articles/${a.slug}`, a.slug);
+      }
       cannibal = true;
     }
   }

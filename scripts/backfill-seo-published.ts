@@ -53,6 +53,7 @@ async function main() {
     title: a.title,
     tags: a.tags ?? '',
     focus_keyword: a.focus_keyword ?? null,
+    is_published: true, // query above filters to is_published = true
   }));
 
   console.log(`Mode: ${APPLY ? 'APPLY (writing)' : 'DRY-RUN (no writes)'} | ${articles.length} published articles\n`);

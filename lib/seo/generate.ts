@@ -143,7 +143,10 @@ function suggestInternalLinks(
   const myTokens = contentTokens(title + ' ' + plain);
   const myTags = new Set(tags.map((t) => t.trim()).filter(Boolean));
 
+  // Only published articles are valid link targets - the article page filters
+  // unpublished slugs at render time anyway, so suggesting drafts wastes slots.
   const scored = existing
+    .filter((a) => a.is_published)
     .map((a) => {
       const theirTags = (a.tags || '').split(',').map((t) => t.trim()).filter(Boolean);
       const sharedTags = theirTags.filter((t) => myTags.has(t)).length;
