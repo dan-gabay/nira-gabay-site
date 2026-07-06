@@ -194,3 +194,10 @@ p {
   line-height: 2.0 !important;
 }
 
+
+/* Site-wide visible keyboard focus (WCAG 2.4.7) */
+:focus-visible {
+  outline: 3px solid #d97706;
+  outline-offset: 2px;
+  border-radius: 4px;
+}

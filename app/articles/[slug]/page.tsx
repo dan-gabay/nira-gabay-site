@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { supabaseServer } from '../../../lib/supabaseServer';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -8,12 +9,16 @@ import ArticleReadTracker from '@/components/ArticleReadTracker';
 import ArticleViewTracker from '@/components/ArticleViewTracker';
 import ArticleTag from '@/components/ArticleTag';
 import RelatedArticles from '../RelatedArticles';
-import ReactMarkdown from 'react-markdown';
+import NewsletterSignup from '@/components/NewsletterSignup';
+import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import JsonLd from '@/components/JsonLd';
 import type { Metadata } from 'next';
 
-type Props = { params: { slug: string } };
+type Props = { params: Promise<{ slug: string }> };
+
+// Revalidate article pages every hour (ISR)
+export const revalidate = 3600;
 
 type Article = {
   id: string;
@@ -34,20 +39,99 @@ type Article = {
   canonical_url?: string | null;
   faq?: unknown | null;
   schema_json?: Record<string, unknown> | null;
-  internal_links?: Array<{ slug: string; title?: string; anchor?: string }> | null;
+  internal_links?: Array<{ slug: string; title?: string; anchor?: string; reason?: string }> | null;
+  seo_package?: { og_title?: string; og_description?: string } | null;
+  focus_keyword?: string | null;
+  secondary_keywords?: string[] | null;
 };
+
+// Pre-render all published article pages at build time
+export async function generateStaticParams() {
+  try {
+    const supabase = supabaseServer();
+    const { data } = await supabase
+      .from('articles')
+      .select('slug')
+      .eq('is_published', true);
+
+    return (data || [])
+      .filter((row): row is { slug: string } => Boolean(row.slug))
+      .map(({ slug }) => ({ slug }));
+  } catch {
+    // Supabase env vars unavailable at build time (e.g. local build without
+    // SUPABASE_URL) - fall back to on-demand rendering with ISR caching.
+    return [];
+  }
+}
+
+// Fetch the article once per request (shared between generateMetadata and the page)
+const getArticle = cache(async (slug: string): Promise<Article | null> => {
+  const supabase = supabaseServer();
+
+  // First try by slug
+  let { data: row } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('slug', slug)
+    .eq('is_published', true)
+    .single();
+
+  // If not found by slug, try by ID
+  if (!row) {
+    const { data: rowById } = await supabase
+      .from('articles')
+      .select('*')
+      .eq('id', slug)
+      .eq('is_published', true)
+      .single();
+    row = rowById;
+  }
+
+  if (!row) return null;
+
+  const tags = row.tags
+    ? row.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
+    : [];
+
+  return { ...row, tag_names: tags } as Article;
+});
+
+// Verify which of the given slugs are published (cached per request).
+// Keyed by a comma-joined string so React.cache can dedupe the call.
+const getPublishedSlugs = cache(async (slugsKey: string): Promise<Set<string>> => {
+  if (!slugsKey) return new Set();
+  const supabase = supabaseServer();
+  const { data } = await supabase
+    .from('articles')
+    .select('slug')
+    .in('slug', slugsKey.split(','))
+    .eq('is_published', true);
+
+  return new Set((data || []).map((r: { slug: string }) => r.slug));
+});
+
+// Split markdown content at the third "## " heading, so a contextual aside can
+// be placed in the body. Returns null when there are fewer than 3 H2 headings.
+function splitAtThirdH2(content: string): [string, string] | null {
+  let idx = -1;
+  let from = 0;
+  for (let count = 0; count < 3; count++) {
+    idx = content.indexOf('\n## ', from);
+    if (idx === -1) return null;
+    from = idx + 4;
+  }
+  return [content.slice(0, idx), content.slice(idx)];
+}
+
+// The page renders its own <h1>, so demote any stray "# " heading in the
+// markdown content to <h2> for a valid heading hierarchy.
+const markdownComponents: Components = { h1: 'h2' };
 
 // Dynamic metadata
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const supabase = supabaseServer();
-  
-  const { data: article } = await supabase
-    .from('articles')
-    .select('*')
-    .eq('slug', slug)
-    .single();
-  
+  const article = await getArticle(slug);
+
   if (!article) {
     return {
       title: 'מאמר לא נמצא',
@@ -70,7 +154,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     article.focus_keyword,
     ...secondaryKeywords,
     ...(article.tag_names || []),
-  ].filter(Boolean);
+  ].filter((k): k is string => Boolean(k));
 
   return {
     // A stored meta_title already includes the "| נירה גבאי" brand, so emit it
@@ -109,49 +193,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ArticlePage({ params }: Props) {
-  const { slug } = await params; // Next.js 15: params is a Promise!
-  const supabase = supabaseServer();
+  const { slug } = await params; // Next.js 15+: params is a Promise!
 
-  // Try to fetch by slug first, then by ID
-  let article: Article | null = null;
-  let error = null;
+  // Cached fetch (deduped with generateMetadata): by slug first, then by ID
+  const article = await getArticle(slug);
 
-  // First try by slug
-  const { data: articleBySlug, error: slugError } = await supabase
-    .from('articles')
-    .select('*')
-    .eq('slug', slug)
-    .eq('is_published', true)
-    .single();
-
-  if (articleBySlug) {
-    const tags = articleBySlug.tags ? articleBySlug.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [];
-    article = {
-      ...articleBySlug,
-      tag_names: tags
-    } as Article;
-  } else {
-    // If not found by slug, try by ID
-    const { data: articleById, error: idError } = await supabase
-      .from('articles')
-      .select('*')
-      .eq('id', slug)
-      .eq('is_published', true)
-      .single();
-    
-    if (articleById) {
-      const tags = articleById.tags ? articleById.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [];
-      article = {
-        ...articleById,
-        tag_names: tags
-      } as Article;
-    }
-    error = idError;
-  }
-
-  if (error || !article) {
+  if (!article) {
     // Real 404 (renders not-found.tsx) instead of a 200 soft-404.
     notFound();
+  }
+
+  // In-body "recommended reading" aside: placed before the third H2 heading.
+  // Only rendered when the content has at least 3 H2s and the linked articles
+  // are verified as published.
+  const splitContent = article.content ? splitAtThirdH2(article.content) : null;
+  let inlineLinks: Array<{ slug: string; title?: string; anchor?: string }> = [];
+  if (splitContent && Array.isArray(article.internal_links) && article.internal_links.length > 0) {
+    const candidates = article.internal_links.filter(
+      (l) => l?.slug && l.slug !== article.slug
+    );
+    if (candidates.length > 0) {
+      const publishedSlugs = await getPublishedSlugs(
+        candidates.map((l) => l.slug).join(',')
+      );
+      inlineLinks = candidates
+        .filter((l) => publishedSlugs.has(l.slug))
+        .slice(0, 2);
+    }
   }
 
   // Structured Data - prefer the generated/validated schema, fall back to a
@@ -324,7 +392,35 @@ export default async function ArticlePage({ params }: Props) {
             prose-blockquote:border-r-4 prose-blockquote:border-amber-500 prose-blockquote:pr-6 prose-blockquote:py-4 prose-blockquote:my-8 prose-blockquote:italic prose-blockquote:bg-amber-50/50
             mb-12"
           >
-            <ReactMarkdown remarkPlugins={[remarkBreaks]}>{article.content}</ReactMarkdown>
+            {splitContent && inlineLinks.length > 0 ? (
+              <>
+                <ReactMarkdown remarkPlugins={[remarkBreaks]} components={markdownComponents}>
+                  {splitContent[0]}
+                </ReactMarkdown>
+                <aside className="not-prose bg-amber-50 border border-amber-200 rounded-2xl p-5 md:p-6 my-8">
+                  <p className="font-bold text-stone-800 mb-3">מומלץ לקרוא גם:</p>
+                  <ul className="space-y-2">
+                    {inlineLinks.map((link) => (
+                      <li key={link.slug}>
+                        <Link
+                          href={`/articles/${link.slug}`}
+                          className="text-amber-700 font-medium underline hover:text-amber-800 transition-colors"
+                        >
+                          {link.anchor || link.title || link.slug}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </aside>
+                <ReactMarkdown remarkPlugins={[remarkBreaks]} components={markdownComponents}>
+                  {splitContent[1]}
+                </ReactMarkdown>
+              </>
+            ) : (
+              <ReactMarkdown remarkPlugins={[remarkBreaks]} components={markdownComponents}>
+                {article.content}
+              </ReactMarkdown>
+            )}
           </article>
 
           {/* Article Read Tracking */}
@@ -336,6 +432,9 @@ export default async function ArticlePage({ params }: Props) {
             initialLikesCount={article.likes_count || 0}
             initialViewsCount={article.views_count || 0}
           />
+
+          {/* Newsletter Signup */}
+          <NewsletterSignup source="article" />
 
           {/* Author Box */}
           <div className="bg-gradient-to-br from-amber-50 to-stone-50 rounded-2xl p-6 md:p-8 my-12">

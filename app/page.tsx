@@ -6,6 +6,7 @@ import JsonLd from '@/components/JsonLd';
 import { faqSchema } from '@/lib/faqSchema';
 import { servicesSchema } from '@/lib/servicesSchema';
 import ArticlesPreviewClient from '@/components/ArticlesPreviewClient';
+import FaqSection from '@/components/FaqSection';
 import HeroSection from '@/components/HeroSection';
 import ServicesSection from '@/components/ServicesSection';
 import type { Metadata } from 'next';
@@ -89,6 +90,9 @@ export default function Home() {
 
       {/* Articles Preview (client) */}
       <ArticlesPreviewClient />
+
+      {/* FAQ - same content as the FAQPage JSON-LD, now visible to humans */}
+      <FaqSection />
 
       {/* CTA Section */}
       <section className="py-24 bg-gradient-to-br from-stone-800 to-stone-900 text-white">

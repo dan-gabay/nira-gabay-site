@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Heart, MessageCircle, Facebook, Send, User, Mail, Loader2, Instagram } from 'lucide-react';
+import { Heart, MessageCircle, Facebook, Send, User, Mail, Loader2, Instagram, Share2, Link2 } from 'lucide-react';
 import { getUserIdentifier } from '@/lib/userIdentifier';
 import { supabase as supabaseClient } from '@/lib/supabaseClient';
 import { trackArticleLike, trackCommentSubmit, trackArticleShare, trackWhatsAppClick } from '@/lib/analytics';
@@ -32,6 +32,7 @@ export default function ArticleInteractions({
   const [isLoadingComments, setIsLoadingComments] = useState(true);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [canNativeShare, setCanNativeShare] = useState(false);
   
   const [commentForm, setCommentForm] = useState({
     author_name: '',
@@ -44,6 +45,8 @@ export default function ArticleInteractions({
     checkUserLike();
     loadComments();
     incrementViewCount();
+    // navigator.share is only known on the client (avoid hydration mismatch)
+    setCanNativeShare(typeof navigator !== 'undefined' && !!navigator.share);
   }, [articleId]);
 
   // הצגת toast
@@ -85,11 +88,18 @@ export default function ArticleInteractions({
     const today = new Date().toDateString();
     
     if (lastViewed !== today) {
-      await supabaseClient
-        .from('articles')
-        .update({ views_count: initialViewsCount + 1 })
-        .eq('id', articleId);
-      
+      // Atomic increment via RPC; fall back to the old read-modify-write
+      // update if the function doesn't exist yet in the DB.
+      const { error: rpcError } = await supabaseClient
+        .rpc('increment_article_views', { aid: articleId });
+
+      if (rpcError) {
+        await supabaseClient
+          .from('articles')
+          .update({ views_count: initialViewsCount + 1 })
+          .eq('id', articleId);
+      }
+
       localStorage.setItem(lastViewedKey, today);
     }
   }
@@ -112,14 +122,20 @@ export default function ArticleInteractions({
         });
       
       if (likeError) throw likeError;
-      
-      // עדכון מונה הלייקים
+
+      // עדכון מונה הלייקים - atomic increment via RPC; fall back to the old
+      // read-modify-write update if the function doesn't exist yet in the DB.
       const newLikesCount = likesCount + 1;
-      await supabaseClient
-        .from('articles')
-        .update({ likes_count: newLikesCount })
-        .eq('id', articleId);
-      
+      const { error: rpcError } = await supabaseClient
+        .rpc('increment_article_likes', { aid: articleId });
+
+      if (rpcError) {
+        await supabaseClient
+          .from('articles')
+          .update({ likes_count: newLikesCount })
+          .eq('id', articleId);
+      }
+
       setLikesCount(newLikesCount);
       setHasLiked(true);
       setToastMessage('תודה על הלייק! ❤️');
@@ -167,6 +183,25 @@ export default function ArticleInteractions({
       setToastMessage('משהו השתבש, נסו שוב');
     } finally {
       setIsSubmittingComment(false);
+    }
+  }
+
+  async function shareNative() {
+    trackArticleShare('native', articleId, document.title);
+    try {
+      await navigator.share({ title: document.title, url: window.location.href });
+    } catch {
+      // User cancelled the share sheet - nothing to do
+    }
+  }
+
+  async function copyLink() {
+    trackArticleShare('copy_link', articleId, document.title);
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setToastMessage('הקישור הועתק!');
+    } catch {
+      setToastMessage('משהו השתבש, נסו שוב');
     }
   }
 
@@ -234,8 +269,26 @@ export default function ArticleInteractions({
           </button>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-center">
           <span className="text-stone-500 text-sm">שתפו:</span>
+          {canNativeShare && (
+            <button
+              onClick={shareNative}
+              className="flex items-center gap-1.5 px-3 py-2 border-2 border-stone-300 rounded-lg text-stone-700 text-sm font-medium hover:border-amber-500 hover:bg-amber-50 transition-all"
+              aria-label="שיתוף"
+            >
+              <Share2 className="w-5 h-5 text-amber-700" />
+              שיתוף
+            </button>
+          )}
+          <button
+            onClick={copyLink}
+            className="flex items-center gap-1.5 px-3 py-2 border-2 border-stone-300 rounded-lg text-stone-700 text-sm font-medium hover:border-amber-500 hover:bg-amber-50 transition-all"
+            aria-label="העתקת קישור"
+          >
+            <Link2 className="w-5 h-5 text-amber-700" />
+            העתקת קישור
+          </button>
           <button
             onClick={shareOnWhatsApp}
             className="p-2 border-2 border-stone-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all"
@@ -272,8 +325,12 @@ export default function ArticleInteractions({
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div className="relative">
+              <label htmlFor="comment-author-name" className="sr-only">
+                שם
+              </label>
               <User className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-stone-400" />
               <input
+                id="comment-author-name"
                 type="text"
                 placeholder="שם *"
                 value={commentForm.author_name}
@@ -282,8 +339,12 @@ export default function ArticleInteractions({
               />
             </div>
             <div className="relative">
+              <label htmlFor="comment-author-email" className="sr-only">
+                אימייל (לא יפורסם)
+              </label>
               <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-stone-400" />
               <input
+                id="comment-author-email"
                 type="email"
                 placeholder="אימייל (לא יפורסם)"
                 value={commentForm.author_email}
@@ -293,7 +354,11 @@ export default function ArticleInteractions({
             </div>
           </div>
           
+          <label htmlFor="comment-content" className="sr-only">
+            התגובה שלכם
+          </label>
           <textarea
+            id="comment-content"
             placeholder="התגובה שלכם *"
             value={commentForm.content}
             onChange={(e) => setCommentForm({ ...commentForm, content: e.target.value })}

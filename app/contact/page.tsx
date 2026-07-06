@@ -15,8 +15,8 @@ import {
   CheckCircle,
   type LucideIcon
 } from 'lucide-react';
-import { supabase } from '../../lib/supabaseClient';
 import { trackContactFormSubmit, trackContactMethodClick, trackSocialClick, trackWhatsAppClick, trackFormFieldFocus, trackGenerateLead } from '@/lib/analytics';
+import FaqSection from '@/components/FaqSection';
 
 type ContactInfoItem = {
   icon: LucideIcon | (() => React.ReactElement);
@@ -84,9 +84,9 @@ export default function Contact() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.name || !formData.message) {
-      setError('נא למלא את כל השדות הנדרשים');
+
+    if (!formData.name || !formData.message || !formData.phone) {
+      setError('נא למלא שם, טלפון והודעה');
       return;
     }
 
@@ -94,19 +94,16 @@ export default function Contact() {
     setError('');
 
     try {
-      const { error: submitError } = await supabase
-        .from('contact_messages')
-        .insert([{
-          id: crypto.randomUUID(),
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          message: formData.message,
-          is_read: false,
-          created_date: new Date().toISOString()
-        }]);
-
-      if (submitError) throw submitError;
+      const honeypot = (document.getElementById('contact-website') as HTMLInputElement | null)?.value || '';
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, website: honeypot }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'submit failed');
+      }
 
       // Track conversion with GA4 recommended event
       trackContactFormSubmit('contact_page');
@@ -285,11 +282,22 @@ export default function Contact() {
                       )}
                       
                       <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Honeypot - hidden from real users */}
+                        <input
+                          type="text"
+                          id="contact-website"
+                          name="website"
+                          tabIndex={-1}
+                          autoComplete="off"
+                          className="hidden"
+                          aria-hidden="true"
+                        />
                         <div>
-                          <label className="block text-sm font-medium text-stone-700 mb-2">
+                          <label htmlFor="contact-name" className="block text-sm font-medium text-stone-700 mb-2">
                             שם מלא *
                           </label>
                           <input
+                            id="contact-name"
                             type="text"
                             placeholder="השם שלכם"
                             value={formData.name}
@@ -299,41 +307,48 @@ export default function Contact() {
                             required
                           />
                         </div>
-                        
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-stone-700 mb-2">
+                            <label htmlFor="contact-email" className="block text-sm font-medium text-stone-700 mb-2">
                               אימייל
                             </label>
                             <input
+                              id="contact-email"
                               type="email"
+                              dir="ltr"
                               placeholder="email@example.com"
                               value={formData.email}
                               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                               onFocus={() => trackFormFieldFocus('contact_form', 'email')}
-                              className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                              className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-left"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-stone-700 mb-2">
-                              טלפון
+                            <label htmlFor="contact-phone" className="block text-sm font-medium text-stone-700 mb-2">
+                              טלפון *
                             </label>
                             <input
+                              id="contact-phone"
                               type="tel"
+                              dir="ltr"
+                              inputMode="tel"
                               placeholder="050-0000000"
                               value={formData.phone}
                               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                               onFocus={() => trackFormFieldFocus('contact_form', 'phone')}
-                              className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                              className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-left"
+                              required
                             />
                           </div>
                         </div>
-                        
+
                         <div>
-                          <label className="block text-sm font-medium text-stone-700 mb-2">
+                          <label htmlFor="contact-message" className="block text-sm font-medium text-stone-700 mb-2">
                             הודעה *
                           </label>
                           <textarea
+                            id="contact-message"
                             placeholder="במה אוכל לעזור?"
                             value={formData.message}
                             onChange={(e) => setFormData({ ...formData, message: e.target.value })}
@@ -413,6 +428,9 @@ export default function Contact() {
           </motion.div>
         </div>
       </section>
+
+      {/* FAQ - answers common objections at the point of decision */}
+      <FaqSection />
     </div>
   );
 }

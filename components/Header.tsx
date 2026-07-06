@@ -92,8 +92,11 @@ export default function Header() {
                 rel="noopener noreferrer"
                 onClick={() => trackSocialClick('facebook', 'header')}
               >
-                <button className="border border-stone-300 hover:bg-stone-100 p-2 rounded-lg transition-colors">
-                  <Facebook className="w-4 h-4 text-blue-600" />
+                <button
+                  aria-label="העמוד של נירה גבאי בפייסבוק"
+                  className="border border-stone-300 hover:bg-stone-100 p-2 rounded-lg transition-colors"
+                >
+                  <Facebook className="w-4 h-4 text-blue-600" aria-hidden="true" />
                 </button>
               </a>
             </div>
@@ -107,6 +110,8 @@ export default function Header() {
                 trackMobileMenuToggle(newState ? 'open' : 'close');
               }}
               aria-label="תפריט"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -115,7 +120,7 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden bg-white/95 backdrop-blur-md border-t border-stone-200">
+          <div id="mobile-menu" className="lg:hidden bg-white/95 backdrop-blur-md border-t border-stone-200">
             <nav className="container mx-auto px-4 py-6 space-y-2">
               {navItems.map((item) => (
                 <Link
@@ -154,8 +159,11 @@ export default function Header() {
                   rel="noopener noreferrer"
                   onClick={() => trackSocialClick('facebook', 'header_mobile')}
                 >
-                  <button className="border border-stone-300 p-2 rounded-lg">
-                    <Facebook className="w-5 h-5 text-blue-600" />
+                  <button
+                    aria-label="העמוד של נירה גבאי בפייסבוק"
+                    className="border border-stone-300 p-2 rounded-lg"
+                  >
+                    <Facebook className="w-5 h-5 text-blue-600" aria-hidden="true" />
                   </button>
                 </a>
               </div>

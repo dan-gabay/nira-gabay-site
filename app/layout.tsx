@@ -227,12 +227,18 @@ export default function RootLayout({
         <JsonLd data={webSiteSchema} />
       </head>
       <body className={`${heebo.variable} ${assistant.variable} antialiased font-heebo`}>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:right-2 focus:z-[100] focus:bg-white focus:text-stone-900 focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg"
+        >
+          דלגו לתוכן הראשי
+        </a>
         <GoogleAnalytics />
         <AnalyticsProvider>
           <ExitIntentTracker />
           <TimeTracker />
           <Header />
-          <main>
+          <main id="main-content">
             {children}
           </main>
           <Footer />
