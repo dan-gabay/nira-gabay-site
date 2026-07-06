@@ -6,6 +6,7 @@ import { Search, Filter, FileText, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { trackArticleFilterChange, trackArticleCardClick, trackCTAClick, trackSearch } from '@/lib/analytics';
+import { topicPathForTag } from '@/lib/topics';
 
 export type ArticleListItem = {
   id: string;
@@ -121,22 +122,37 @@ export default function ArticlesBrowser({
               >
                 הכל
               </button>
-              {allTags.map((tag) => (
-                <button
-                  key={tag.id}
-                  onClick={() => {
-                    setSelectedTag(tag.name);
-                    trackArticleFilterChange('tag', tag.name);
-                  }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
-                    selectedTag === tag.name
-                      ? 'bg-stone-800 text-white'
-                      : 'bg-white border border-stone-200 text-stone-700 hover:bg-stone-50'
-                  }`}
-                >
-                  {tag.name}
-                </button>
-              ))}
+              {/* Tag chips are crawlable links to the topic hub pages; tags
+                  without a hub fall back to the legacy ?tag= client filter. */}
+              {allTags.map((tag) => {
+                const hubPath = topicPathForTag(tag.name);
+                const chipClass = `px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
+                  selectedTag === tag.name
+                    ? 'bg-stone-800 text-white'
+                    : 'bg-white border border-stone-200 text-stone-700 hover:bg-stone-50'
+                }`;
+                return hubPath ? (
+                  <Link
+                    key={tag.id}
+                    href={hubPath}
+                    className={chipClass}
+                    onClick={() => trackArticleFilterChange('tag', tag.name)}
+                  >
+                    {tag.name}
+                  </Link>
+                ) : (
+                  <button
+                    key={tag.id}
+                    onClick={() => {
+                      setSelectedTag(tag.name);
+                      trackArticleFilterChange('tag', tag.name);
+                    }}
+                    className={chipClass}
+                  >
+                    {tag.name}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

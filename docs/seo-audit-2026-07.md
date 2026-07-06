@@ -182,13 +182,13 @@ Remaining recommendations:
 | P0-1 | ~~Backfill meta_title for all 26 published articles~~ **DONE 2026-07-06** | 22 keyword-first branded titles written to DB (existing meta_descriptions kept). Verify live `<title>` after ISR refresh (~1h) |
 | P0-2 | ~~SEO package for `depression-cycle-parenting`~~ **DONE 2026-07-06** | focus_keyword='יציאה מדיכאון', meta_description (139 chars), canonical set. schema_json/internal_links still null - page fallbacks cover it; full pipeline regen optional |
 | P0-3 | ~~Quarantine 4 draft twins~~ **DONE 2026-07-06** | 4 twins marked status='superseded' (+ai_notes); 10 internal_links entries across 5 articles rewired to the published equivalents (not just removed); pipeline gate added: title overlap >=0.6 vs a published article is now a blocking error, drafts still warn, superseded rows excluded from checks and link suggestions (lib/seo/validate.ts, generate.ts, types.ts, pipeline + backfill scripts). Verified with targeted test |
-| P0-4 | Diagnose title-template bug | Why root `%s | נירה גבאי` doesn't apply on article pages (check `app/articles/layout.tsx` metadata cascade). Moot for backfilled pages but fixes future fallbacks |
+| P0-4 | ~~Diagnose title-template bug~~ **DONE 2026-07-07** | Root cause: `app/articles/layout.tsx` set `title.absolute`, shadowing the root template for the [slug] child route. Metadata moved onto the (server-component) index page, layout deleted. Verified live: 404 article title now renders 'מאמר לא נמצא \| נירה גבאי' |
 | P0-5 | Confirm GSC property + submit sitemap | Add verification meta if not DNS-verified |
 
 ### P1 - structural wins (2-4 weeks)
 | # | Task | Detail |
 |---|------|--------|
-| P1-1 | Normalize tag taxonomy | Canonical set (§4); migration script over `tags` column; drop brand-name tag |
+| P1-1 | ~~Normalize tag taxonomy~~ **DONE 2026-07-07** | 29 non-superseded articles retagged to the canonical set (primary tag first = future hub): core חרדה/הורות/מתבגרים/משפחה/זוגיות/טיפול רגשי + secondary CBT/מיניות בריאה. `tags` table synced (מיניות renamed to מיניות בריאה, התמודדות+רגשות deleted, CBT added). Brand-name tag gone. Verified: every article tag value has an exact chip match. Note: tag "משפחה" stays short for chips; the hub page (P1-2) can use the fuller "משפחה ומעברים" as its H1 |
 | P1-2 | Topic hub pages | `/articles/topic/[slug]` server-rendered, unique meta/H1/intro/FAQ/CTA; add to sitemap; tag chips -> real links |
 | P1-3 | Regenerate internal_links post-taxonomy | Published-only targets, descriptive anchors, hub links |
 | P1-4 | Visible FAQ accordion on article pages | Render existing `faq.mainEntity`; keep JSON-LD 1:1 |
