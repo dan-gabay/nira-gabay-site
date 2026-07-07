@@ -33,7 +33,7 @@ function client() {
 }
 
 const SELECT =
-  'id, title, slug, content, excerpt, tags, created_date, focus_keyword, secondary_keywords, ' +
+  'id, title, meta_title, slug, content, excerpt, tags, created_date, focus_keyword, secondary_keywords, ' +
   'canonical_url, faq, internal_links, schema_json, seo_score, seo_package';
 
 async function main() {

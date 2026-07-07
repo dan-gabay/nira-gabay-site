@@ -77,6 +77,7 @@ export interface ExistingArticleRef {
   tags: string; // comma-separated, as stored
   focus_keyword: string | null;
   is_published: boolean;
+  meta_title?: string | null; // used to derive descriptive link anchors
 }
 
 export interface SeoGenerateInput {

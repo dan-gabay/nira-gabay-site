@@ -189,8 +189,8 @@ Remaining recommendations:
 | # | Task | Detail |
 |---|------|--------|
 | P1-1 | ~~Normalize tag taxonomy~~ **DONE 2026-07-07** | 29 non-superseded articles retagged to the canonical set (primary tag first = future hub): core חרדה/הורות/מתבגרים/משפחה/זוגיות/טיפול רגשי + secondary CBT/מיניות בריאה. `tags` table synced (מיניות renamed to מיניות בריאה, התמודדות+רגשות deleted, CBT added). Brand-name tag gone. Verified: every article tag value has an exact chip match. Note: tag "משפחה" stays short for chips; the hub page (P1-2) can use the fuller "משפחה ומעברים" as its H1 |
-| P1-2 | Topic hub pages | `/articles/topic/[slug]` server-rendered, unique meta/H1/intro/FAQ/CTA; add to sitemap; tag chips -> real links |
-| P1-3 | Regenerate internal_links post-taxonomy | Published-only targets, descriptive anchors, hub links |
+| P1-2 | ~~Topic hub pages~~ **DONE 2026-07-07** | `/articles/topic/[slug]` live for all 8 tags: unique meta/H1, Hebrew intro copy, article grid, breadcrumbs + CollectionPage JSON-LD, cross-topic links, CTA. Thin-hub guard (<2 published -> noindex + out of sitemap; only healthy-sexuality today). Tag chips on index + articles link to hubs. Deployed via preview -> promoted -> main fast-forwarded |
+| P1-3 | ~~Regenerate internal_links post-taxonomy~~ **DONE 2026-07-07** | scripts/regenerate-internal-links.ts (links-only, dry-run default): 29/29 articles rescored with clean tags, published-only targets, descriptive anchors derived from meta_title keyword phrases (deriveAnchor in lib/seo/generate.ts, also used by the pipeline for future articles). Verified: zero links to unpublished/superseded targets. In-body hub links deferred to the P1-4 deploy |
 | P1-4 | Visible FAQ accordion on article pages | Render existing `faq.mainEntity`; keep JSON-LD 1:1 |
 | P1-5 | Homepage "latest articles" section | 3 newest published, server-rendered |
 | P1-6 | Recalibrate validator | Fail generic 1-word keywords; thin-content threshold 600 words; re-score all |

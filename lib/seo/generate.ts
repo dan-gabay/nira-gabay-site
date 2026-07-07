@@ -134,7 +134,19 @@ function faqToSchema(entries: FaqEntry[]): FaqSchema | null {
   };
 }
 
-function suggestInternalLinks(
+// Descriptive anchor for a link target: prefer the keyword phrase from the
+// hand-written meta_title (brand suffix stripped, pre-colon part when long
+// enough) over the full editorial title.
+export function deriveAnchor(a: ExistingArticleRef): string {
+  const mt = (a.meta_title || '').replace(/\s*\|\s*נירה גבאי\s*$/u, '').trim();
+  if (mt) {
+    const beforeColon = mt.split(':')[0].trim();
+    return beforeColon.length >= 8 ? beforeColon : mt;
+  }
+  return a.title;
+}
+
+export function suggestInternalLinks(
   title: string,
   plain: string,
   tags: string[],
@@ -156,7 +168,7 @@ function suggestInternalLinks(
         sharedTags > 0
           ? `${sharedTags} תגיות משותפות`
           : 'חפיפה נושאית בכותרת';
-      return { slug: a.slug, title: a.title, anchor: a.title, reason, score };
+      return { slug: a.slug, title: a.title, anchor: deriveAnchor(a), reason, score };
     })
     .filter((s) => s.score > 0.5)
     .sort((a, b) => b.score - a.score);
