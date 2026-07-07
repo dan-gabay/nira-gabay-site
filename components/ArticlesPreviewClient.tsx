@@ -1,12 +1,11 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, Calendar } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient';
 import { trackArticleCardClick, trackCTAClick } from '@/lib/analytics';
 
-interface Article {
+export interface HomeArticlePreview {
   id: string;
   slug: string;
   title: string;
@@ -17,33 +16,11 @@ interface Article {
   tag_names?: string[];
 }
 
-export default function ArticlesPreviewClient() {
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchArticles() {
-      const { data } = await supabase
-        .from('articles')
-        .select('*')
-        .eq('is_published', true)
-        .order('created_date', { ascending: false })
-        .limit(3);
-
-      if (data) {
-        const articlesWithTags = data.map((article: Article) => ({
-          ...article,
-          tag_names: article.tags ? article.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : []
-        }));
-        setArticles(articlesWithTags);
-      }
-      setLoading(false);
-    }
-
-    fetchArticles();
-  }, []);
-
-  if (loading || articles.length === 0) return null;
+// Articles are fetched server-side (app/page.tsx) and passed as props so the
+// links are in the initial HTML for crawlers - this stays a client component
+// only for the analytics onClick handlers.
+export default function ArticlesPreviewClient({ articles }: { articles: HomeArticlePreview[] }) {
+  if (articles.length === 0) return null;
 
   return (
     <section className="py-24 bg-white">

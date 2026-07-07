@@ -8,8 +8,10 @@ import ArticleInteractions from '../ArticleInteractions';
 import ArticleReadTracker from '@/components/ArticleReadTracker';
 import ArticleViewTracker from '@/components/ArticleViewTracker';
 import ArticleTag from '@/components/ArticleTag';
+import ArticleFaq from '@/components/ArticleFaq';
 import RelatedArticles from '../RelatedArticles';
 import NewsletterSignup from '@/components/NewsletterSignup';
+import { TOPIC_BY_TAG } from '@/lib/topics';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import JsonLd from '@/components/JsonLd';
@@ -258,30 +260,30 @@ export default async function ArticlePage({ params }: Props) {
       ? article.faq
       : null;
 
+  // Topic hub for the article's primary (first) tag - adds a hub level to the
+  // breadcrumb so the article sits under its cluster, not flat under /articles.
+  const primaryTopic = article.tag_names?.length
+    ? TOPIC_BY_TAG.get(article.tag_names[0]) ?? null
+    : null;
+
   // Breadcrumb Schema
+  const breadcrumbTrail = [
+    { name: 'דף הבית', item: 'https://www.niragabay.com' },
+    { name: 'מאמרים', item: 'https://www.niragabay.com/articles' },
+    ...(primaryTopic
+      ? [{ name: primaryTopic.tag, item: `https://www.niragabay.com/articles/topic/${primaryTopic.slug}` }]
+      : []),
+    { name: article.title, item: `https://www.niragabay.com/articles/${article.slug}` },
+  ];
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: 'דף הבית',
-        item: 'https://www.niragabay.com'
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'מאמרים',
-        item: 'https://www.niragabay.com/articles'
-      },
-      {
-        '@type': 'ListItem',
-        position: 3,
-        name: article.title,
-        item: `https://www.niragabay.com/articles/${article.slug}`
-      }
-    ]
+    itemListElement: breadcrumbTrail.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: c.name,
+      item: c.item,
+    })),
   };
 
   return (
@@ -302,6 +304,14 @@ export default async function ArticlePage({ params }: Props) {
             <Link href="/" className="hover:text-stone-800">דף הבית</Link>
             <span>/</span>
             <Link href="/articles" className="hover:text-stone-800">מאמרים</Link>
+            {primaryTopic && (
+              <>
+                <span>/</span>
+                <Link href={`/articles/topic/${primaryTopic.slug}`} className="hover:text-stone-800">
+                  {primaryTopic.tag}
+                </Link>
+              </>
+            )}
             <span>/</span>
             <span className="text-stone-800 truncate max-w-xs">{article.title}</span>
           </nav>
@@ -435,6 +445,9 @@ export default async function ArticlePage({ params }: Props) {
 
           {/* Newsletter Signup */}
           <NewsletterSignup source="article" />
+
+          {/* Visible FAQ - same content as the FAQPage JSON-LD above */}
+          <ArticleFaq faq={article.faq} />
 
           {/* Author Box */}
           <div className="bg-gradient-to-br from-amber-50 to-stone-50 rounded-2xl p-6 md:p-8 my-12">

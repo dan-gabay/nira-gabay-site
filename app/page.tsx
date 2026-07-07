@@ -5,11 +5,15 @@ import { Calendar, MessageCircle } from 'lucide-react';
 import JsonLd from '@/components/JsonLd';
 import { faqSchema } from '@/lib/faqSchema';
 import { servicesSchema } from '@/lib/servicesSchema';
-import ArticlesPreviewClient from '@/components/ArticlesPreviewClient';
+import ArticlesPreviewClient, { type HomeArticlePreview } from '@/components/ArticlesPreviewClient';
 import FaqSection from '@/components/FaqSection';
 import HeroSection from '@/components/HeroSection';
 import ServicesSection from '@/components/ServicesSection';
+import { supabaseServer } from '@/lib/supabaseServer';
 import type { Metadata } from 'next';
+
+// Refresh the latest-articles section every 5 minutes (ISR)
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   alternates: {
@@ -17,7 +21,30 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
+// Server-side fetch so the latest-article links are in the initial HTML
+// (they used to load client-side and were invisible to crawlers).
+async function getLatestArticles(): Promise<HomeArticlePreview[]> {
+  try {
+    const supabase = supabaseServer();
+    const { data } = await supabase
+      .from('articles')
+      .select('id, slug, title, excerpt, image_url, created_date, tags')
+      .eq('is_published', true)
+      .order('created_date', { ascending: false })
+      .limit(3);
+    return (data || []).map((a) => ({
+      ...a,
+      tag_names: a.tags
+        ? a.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
+        : [],
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export default async function Home() {
+  const latestArticles = await getLatestArticles();
   return (
     <div className="overflow-hidden" style={{ paddingTop: '80px' }}>
       <JsonLd data={faqSchema} />
@@ -88,8 +115,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Articles Preview (client) */}
-      <ArticlesPreviewClient />
+      {/* Articles Preview (server-fetched, links in initial HTML) */}
+      <ArticlesPreviewClient articles={latestArticles} />
 
       {/* FAQ - same content as the FAQPage JSON-LD, now visible to humans */}
       <FaqSection />
