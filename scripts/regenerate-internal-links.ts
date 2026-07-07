@@ -41,6 +41,7 @@ async function main() {
     .from('articles')
     .select('id, slug, title, meta_title, tags, focus_keyword, is_published, status, content, internal_links')
     .neq('status', 'superseded')
+    .neq('status', 'redirected')
     .order('created_date', { ascending: true });
   if (error) throw error;
   const articles = (data ?? []) as Record<string, any>[];

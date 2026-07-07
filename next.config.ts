@@ -26,6 +26,18 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
+
+  async redirects() {
+    return [
+      // Birth-order consolidation (SEO audit P1-8): two published articles
+      // competed for the same topic; the shorter one 301s into the richer one.
+      {
+        source: '/articles/birth-order-family-dynamics',
+        destination: '/articles/family-birth-order-meaning-and-impact',
+        permanent: true,
+      },
+    ];
+  },
   
   // Experimental features for better performance
   experimental: {

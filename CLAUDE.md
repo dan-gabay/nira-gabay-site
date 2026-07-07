@@ -140,8 +140,10 @@ Flags: `--skip-seo-validation` (bypass the SEO gate), `--continue-on-error` (rec
 
 ---
 
-## Published articles (do not modify)
+## Consolidated articles (do not republish)
 
-- `id`: `08179042-70f6-4f60-a6ab-de388d729a10`
-- `slug`: `birth-order-family-dynamics`
-- Do not re-insert, do not change `is_published`, do not change content
+- `slug`: `birth-order-family-dynamics` (`id`: `08179042-70f6-4f60-a6ab-de388d729a10`)
+- Owner-approved consolidation (2026-07-07, SEO audit P1-8): unpublished with
+  `status = 'redirected'`; its URL 301s to
+  `/articles/family-birth-order-meaning-and-impact` (see `next.config.ts`).
+- Do not republish, do not remove the redirect, do not reuse the slug.

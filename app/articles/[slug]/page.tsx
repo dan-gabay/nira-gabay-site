@@ -33,6 +33,7 @@ type Article = {
   likes_count?: number;
   views_count?: number;
   created_date?: string;
+  updated_date?: string;
   is_published?: boolean;
   tag_names?: string[];
   // SEO fields (populated by the import pipeline)
@@ -174,6 +175,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: ogDescription,
       type: 'article',
       publishedTime: article.created_date,
+      modifiedTime: article.updated_date || article.created_date,
       authors: ['נירה גבאי'],
       url: canonical,
       siteName: 'נירה גבאי - פסיכותרפיה והדרכת הורים',
@@ -226,14 +228,19 @@ export default async function ArticlePage({ params }: Props) {
 
   // Structured Data - prefer the generated/validated schema, fall back to a
   // locally-built BlogPosting for articles imported before the SEO pipeline.
-  const articleSchema = article.schema_json ?? {
+  // dateModified always comes from the live updated_date (the stored
+  // schema_json freezes it at insert time and goes stale on every edit).
+  const dateModified = article.updated_date || article.created_date;
+  const articleSchema = article.schema_json
+    ? { ...article.schema_json, dateModified }
+    : {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: article.title,
     description: article.meta_description || article.excerpt,
     image: article.image_url,
     datePublished: article.created_date,
-    dateModified: article.created_date,
+    dateModified,
     author: {
       '@type': 'Person',
       name: 'נירה גבאי',

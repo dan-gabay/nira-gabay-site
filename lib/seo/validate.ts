@@ -16,6 +16,14 @@ const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 // Deduction weights per severity, applied to a 100 baseline.
 const PENALTY = { error: 22, warn: 8, info: 0 } as const;
 
+// Broad head terms that are useless as a focus keyword for a small site.
+// Specific one-word terms (e.g. "פרפקציוניזם", "CBT") remain allowed.
+const GENERIC_KEYWORDS = new Set([
+  'ילדים', 'ילד', 'הורים', 'הורות', 'מתבגרים', 'מתבגר', 'נוער', 'מבוגרים',
+  'משפחה', 'זוגיות', 'חרדה', 'דיכאון', 'רגשות', 'שגרה', 'טיפול', 'קשר',
+  'אהבה', 'תקשורת', 'יחסים', 'התמודדות',
+]);
+
 export function validateSeoPackage(
   pkg: SeoPackage,
   content: string,
@@ -64,8 +72,23 @@ export function validateSeoPackage(
   if (eLen < 50) add('excerpt_short', 'warn', `תקציר קצר (${eLen} תווים)`, eLen);
   else if (eLen > 320) add('excerpt_long', 'warn', `תקציר ארוך (${eLen} תווים)`, eLen);
 
-  // 5. H1/H2 structure
-  if (h1s.length > 0) add('content_has_h1', 'error', `התוכן מכיל H1 (${h1s.length}); ה-H1 שמור לכותרת המאמר - השתמש ב-H2`, h1s.length);
+  // 4b. Focus keyword quality - a generic one-word head term (e.g. "ילדים")
+  // is unrankable for a small site and previously scored 100/100.
+  const fk = (pkg.focus_keyword || '').trim();
+  if (!fk) {
+    add('focus_missing', 'error', 'חסרה מילת מפתח ראשית');
+  } else if (GENERIC_KEYWORDS.has(fk)) {
+    add('focus_generic', 'error', `מילת מפתח גנרית מדי ("${fk}") - נדרש ביטוי ספציפי של 2+ מילים`, fk);
+  } else if (!fk.includes(' ') && fk.length < 4) {
+    add('focus_weak', 'warn', `מילת מפתח קצרה מאוד ("${fk}")`, fk);
+  } else {
+    add('focus_ok', 'info', `מילת מפתח: "${fk}"`, fk);
+  }
+
+  // 5. H1/H2 structure. Body H1s are demoted to H2 at render time
+  // (app/articles/[slug] markdownComponents), so live pages keep a single H1 -
+  // this flags the fragile source markdown, not a live SEO defect.
+  if (h1s.length > 0) add('content_has_h1', 'warn', `התוכן מכיל H1 (${h1s.length}) - מומרות ל-H2 בתצוגה, אך עדיף לתקן במקור`, h1s.length);
   if (h2s.length === 0) add('no_h2', 'warn', 'אין כותרות H2 בתוכן - מומלץ לפחות 2 לקריאות וסריקה');
   else if (h2s.length < 2) add('few_h2', 'warn', `מעט כותרות H2 (${h2s.length})`, h2s.length);
   else add('h2_ok', 'info', `${h2s.length} כותרות H2`, h2s.length);
@@ -125,8 +148,10 @@ export function validateSeoPackage(
   if (missing.length > 0) add('schema_missing', 'error', `schema_json חסר שדות: ${missing.join(', ')}`);
   else add('schema_ok', 'info', 'schema BlogPosting תקין');
 
-  // 11. E-E-A-T signals
-  if (words < 300) add('thin_content', 'warn', `תוכן דק (${words} מילים, יעד 300+)`, words);
+  // 11. E-E-A-T signals - mental health is YMYL, so depth matters more:
+  // under 300 words blocks, under 600 flags.
+  if (words < 300) add('thin_content', 'error', `תוכן דק מאוד (${words} מילים, מינימום 300)`, words);
+  else if (words < 600) add('shallow_content', 'warn', `תוכן קצר לנושא YMYL (${words} מילים, יעד 600+)`, words);
   else add('content_depth_ok', 'info', `${words} מילים`, words);
 
   // 12. GEO / AI search readiness

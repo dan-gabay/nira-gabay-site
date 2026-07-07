@@ -1540,12 +1540,13 @@ async function runPipeline(): Promise<void> {
   }
 
   // Existing articles (published + drafts) for SEO cannibalization checks and
-  // internal-link suggestions. Superseded drafts are excluded entirely - they
-  // are dead duplicates of published articles and must not influence either.
+  // internal-link suggestions. Superseded/redirected articles are excluded
+  // entirely - they are dead duplicates and must not influence either.
   const { data: existingRows } = await supabase
     .from('articles')
     .select('slug, title, meta_title, tags, focus_keyword, is_published, status')
-    .neq('status', 'superseded');
+    .neq('status', 'superseded')
+    .neq('status', 'redirected');
   const existingArticles: ExistingArticleRef[] = (existingRows || []).map((r: any) => ({
     slug: r.slug,
     title: r.title ?? '',
