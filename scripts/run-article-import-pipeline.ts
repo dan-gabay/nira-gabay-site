@@ -106,6 +106,14 @@ interface ExternalRewrite {
   // page, which for some source templates is a messy "column-name\nreal
   // title" string (see docs/seo-audit-2026-07.md) - a poor SEO title.
   title?: string;
+  // Optional hand-written excerpt/meta description. Without these, both are
+  // mechanically built from the rewritten body (whole sentences only, see
+  // lib/seo/text.ts buildSummary) - but a purpose-written 1-2 sentence
+  // summary always reads better than anything derived from where the intro
+  // paragraph happens to run out of room. Prefer supplying these directly
+  // when writing a substantial editorial rewrite.
+  excerpt?: string;
+  metaDescription?: string;
   risk_level?: string;
   rewrite_depth?: string;
   new_intro_added?: boolean;
@@ -1262,10 +1270,13 @@ async function processQueueItem(
     const seo = generateAndValidateSeo({
       title,
       content: contentMarkdown,
-      // Derive excerpt/meta_description from the REWRITE, not the source - the
-      // source og/meta description can carry claims the rewrite intentionally
-      // removed (e.g. unsubstantiated "research shows" phrasing).
-      excerpt: null,
+      // Prefer a hand-written excerpt/meta description from the rewrite
+      // source (see ExternalRewrite) - falls back to building whole-sentence
+      // summaries from the REWRITE body, not the source (the source og/meta
+      // description can carry claims the rewrite intentionally removed, e.g.
+      // unsubstantiated "research shows" phrasing).
+      excerpt: REWRITE_SOURCE_MAP[item.id]?.excerpt ?? null,
+      metaDescription: REWRITE_SOURCE_MAP[item.id]?.metaDescription ?? null,
       tags,
       slug,
       createdDate: new Date().toISOString(),

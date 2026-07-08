@@ -9,6 +9,7 @@ import {
 import {
   stripToPlainText,
   truncateAtBoundary,
+  buildSummary,
   extractHeadings,
   isQuestionHeading,
   contentTokens,
@@ -105,10 +106,10 @@ function buildSeoTitle(title: string): string {
 function buildMetaDescription(excerpt: string | null, plain: string): string {
   const clean = (excerpt ?? '').replace(/\s+/g, ' ').trim();
   if (clean.length >= DESC_MIN && clean.length <= DESC_MAX + 12) {
-    return truncateAtBoundary(clean, DESC_MAX);
+    return buildSummary(clean, DESC_MAX);
   }
-  // Build from the article body.
-  const built = truncateAtBoundary(plain, DESC_MAX);
+  // Build from the article body - whole sentences only, never a mid-clause cut.
+  const built = buildSummary(plain, DESC_MAX);
   if (built.length >= 60) return built;
   // Last resort: whatever excerpt we had.
   return clean || built;
@@ -231,7 +232,9 @@ export function buildSeoPackage(input: SeoGenerateInput): SeoPackage {
 
   const { focus, secondary } = pickKeywords(input.title, plain);
   const seo_title = buildSeoTitle(input.title);
-  const meta_description = buildMetaDescription(input.excerpt, plain);
+  // A hand-written meta description (e.g. from Claude Code's editorial
+  // rewrite) always wins - it reads better than anything derived mechanically.
+  const meta_description = (input.metaDescription ?? '').trim() || buildMetaDescription(input.excerpt, plain);
   const canonical_url = `${CANONICAL_BASE}/articles/${input.slug}`;
 
   const faqEntries = buildFaq(input.content);
@@ -249,7 +252,7 @@ export function buildSeoPackage(input: SeoGenerateInput): SeoPackage {
 
   const internal_links = suggestInternalLinks(input.title, plain, tags, input.existingArticles);
 
-  const excerpt = (input.excerpt ?? '').trim() || truncateAtBoundary(plain, 220);
+  const excerpt = (input.excerpt ?? '').trim() || buildSummary(plain, 220);
 
   return {
     seo_title,

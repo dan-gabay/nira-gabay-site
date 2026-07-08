@@ -134,6 +134,41 @@ export function truncateAtBoundary(text: string, max: number): string {
   return base.trim().replace(/[,:;-]+\s*$/, '').trim() + ELLIPSIS;
 }
 
+// Build an excerpt/meta description from whole sentences, never cutting one
+// in half. Greedily accumulates complete sentences up to `max` chars - the
+// result always reads as finished prose, unlike a character-count slice
+// (which can land mid-clause even with an ellipsis appended). Falls back to
+// truncateAtBoundary only in the rare case where a single sentence alone
+// exceeds the whole budget (one long run-on with no earlier punctuation).
+export function buildSummary(text: string, max: number): string {
+  const clean = text.replace(/\s+/g, ' ').trim();
+  if (clean.length <= max) return clean;
+
+  // Split into sentences on '.', '?', '!' (keeping the terminator, and an
+  // optional trailing quote mark for patterns like '..."').
+  const sentences = clean.match(/[^.?!]+[.?!]+(?:["'׳״])?/g) ?? [clean];
+
+  const acc: string[] = [];
+  let total = 0;
+  for (const raw of sentences) {
+    // A quoted sentence right after another (e.g. two rhetorical questions
+    // in a row, '"...?", "...?"') splits with the separating comma stuck to
+    // the front of the next match - strip leading punctuation before it's
+    // mistaken for the start of a new "sentence".
+    const sentence = raw.trim().replace(/^[,;:]\s*/, '');
+    if (!sentence) continue;
+    const joinLen = acc.length > 0 ? 1 : 0; // space between accumulated sentences
+    const nextTotal = total + joinLen + sentence.length;
+    if (nextTotal > max) break;
+    acc.push(sentence);
+    total = nextTotal;
+  }
+
+  if (acc.length > 0) return acc.join(' ');
+  // Even the first sentence alone doesn't fit - last resort, mark it as cut.
+  return truncateAtBoundary(clean, max);
+}
+
 // Tokenize Hebrew/Latin words for overlap scoring, dropping short stopwords.
 const STOPWORDS = new Set([
   'של', 'את', 'על', 'עם', 'אל', 'כי', 'גם', 'כל', 'לא', 'הוא', 'היא', 'הם', 'הן',

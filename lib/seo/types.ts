@@ -84,6 +84,10 @@ export interface SeoGenerateInput {
   title: string;
   content: string; // markdown (preferred) or HTML
   excerpt: string | null;
+  // Optional hand-written meta description override (e.g. from Claude Code's
+  // editorial rewrite). Takes priority over the derived-from-excerpt/body
+  // logic - see buildSeoPackage in generate.ts.
+  metaDescription?: string | null;
   tags: string; // comma-separated, as the pipeline produces
   slug: string;
   createdDate: string; // ISO
