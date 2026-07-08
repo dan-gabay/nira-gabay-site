@@ -112,6 +112,9 @@ export function longestParagraphChars(content: string): number {
 }
 
 // Truncate to a max length at the last sentence or word boundary, no mid-word cut.
+// When no sentence end falls within reach, the cut is a mid-sentence word
+// boundary - append an ellipsis so it reads as an intentional trim (like a
+// search-result snippet) instead of looking like broken/missing text.
 export function truncateAtBoundary(text: string, max: number): string {
   const clean = text.replace(/\s+/g, ' ').trim();
   if (clean.length <= max) return clean;
@@ -122,8 +125,13 @@ export function truncateAtBoundary(text: string, max: number): string {
     slice.lastIndexOf('! '),
   );
   if (lastSentence >= max * 0.6) return slice.slice(0, lastSentence + 1).trim();
-  const lastSpace = slice.lastIndexOf(' ');
-  return (lastSpace > 0 ? slice.slice(0, lastSpace) : slice).trim();
+  const ELLIPSIS = '…';
+  const shortSlice = clean.slice(0, Math.max(max - ELLIPSIS.length, 0));
+  const lastSpace = shortSlice.lastIndexOf(' ');
+  const base = lastSpace > 0 ? shortSlice.slice(0, lastSpace) : shortSlice;
+  // Drop a trailing comma/colon/semicolon/dash so it doesn't collide with
+  // the ellipsis (",…" or "-…" reads worse than a clean word plus "…").
+  return base.trim().replace(/[,:;-]+\s*$/, '').trim() + ELLIPSIS;
 }
 
 // Tokenize Hebrew/Latin words for overlap scoring, dropping short stopwords.
