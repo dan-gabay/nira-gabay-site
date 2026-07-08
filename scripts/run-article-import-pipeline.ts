@@ -101,6 +101,11 @@ const LIMIT = (() => {
 
 interface ExternalRewrite {
   content: string;
+  // Optional editorial title override. Without this, the article's title
+  // (and H1) defaults to the raw extracted <h1>/og:title from the source
+  // page, which for some source templates is a messy "column-name\nreal
+  // title" string (see docs/seo-audit-2026-07.md) - a poor SEO title.
+  title?: string;
   risk_level?: string;
   rewrite_depth?: string;
   new_intro_added?: boolean;
@@ -247,7 +252,11 @@ interface PipelineRunResult {
 
 const NOISE_PREFIXES = ['הורים וילדים', 'מטה יהודה', 'בקיצור מטה יהודה'];
 const TITLE_SUFFIX_TOKENS = ['| m-y-net', '- m-y-net', 'm-y-net |', 'm-y-net -', '| מטה יהודה', '- מטה יהודה'];
-const SOFT_404_STRINGS = ['page not found', 'הדף לא נמצא', 'לא נמצא'];
+// Bare 'לא נמצא' ("not found") is too broad - it's ordinary Hebrew grammar
+// ("X לא נמצא ב-Y" = "X is not in Y") and false-positives on real article
+// content (e.g. "העובדה שטל לא נמצא בזוגיות"). Only match phrases that
+// specifically say the PAGE/content itself is missing.
+const SOFT_404_STRINGS = ['page not found', 'הדף לא נמצא', 'העמוד לא נמצא', 'התוכן המבוקש לא נמצא', '404 not found'];
 
 const CONTENT_SELECTORS = [
   '#content section', '#content', '.entry-content', '.post-content',
@@ -439,6 +448,8 @@ const SLUG_KEYWORD_MAP: Array<[string, string]> = [
   ['מצב חירום', 'emergency'],
   ['חופשת פסח', 'passover-break'],
   ['חופשת קיץ', 'summer-break'],
+  ['חוסר ודאות', 'uncertainty'],
+  ['אישיות נרקיסיסטית', 'narcissistic-personality'],
   ['ארוחת החג', 'holiday-meal'],
   ['לחזור לשגרה', 'back-to-school'],
   ['חרדת בחינות', 'exam-anxiety'],
@@ -469,6 +480,7 @@ const SLUG_KEYWORD_MAP: Array<[string, string]> = [
   ['זוגיות', 'couples'],
   ['תקשורת', 'communication'],
   ['גבולות', 'boundaries'],
+  ['פינוק', 'spoiling'],
   ['שגרה', 'routine'],   // 'back-to-routine' pieces: routine as 2nd token, before anxiety
   ['חרדה', 'anxiety'],
   ['רגשות', 'emotions'],
@@ -482,18 +494,19 @@ const SLUG_KEYWORD_MAP: Array<[string, string]> = [
   ['קשר', 'relationship'],
 ];
 
+// Canonical tag set (see docs/seo-audit-2026-07.md P1-1 / lib/topics.ts).
+// Keep this list in sync with lib/topics.ts TOPICS - each tag here should be
+// a valid topic hub tag, or new articles will silently miss hub assignment.
 const TAG_POOL: Array<{ tag: string; keywords: string[] }> = [
-  { tag: 'הורים וילדים', keywords: ['הורים', 'ילדים', 'הורות'] },
-  { tag: 'משפחה', keywords: ['משפחה', 'משפחתי', 'אחים', 'בכור', 'מערך'] },
-  { tag: 'זוגיות', keywords: ['זוגיות', 'זוגי', 'בני זוג', 'אהבה'] },
-  { tag: 'טיפול רגשי', keywords: ['טיפול', 'מטופל', 'קליניקה', 'פסיכותרפיה', 'אדלר'] },
-  { tag: 'יחסים', keywords: ['יחסים', 'קשר', 'מערכת יחסים'] },
-  { tag: 'תקשורת', keywords: ['תקשורת', 'שיחה', 'דיאלוג'] },
-  { tag: 'התפתחות אישית', keywords: ['התפתחות', 'צמיחה', 'שינוי', 'עצמי'] },
-  { tag: 'התמכרות', keywords: ['התמכרות', 'נוער', 'מבוגרים'] },
+  { tag: 'חרדה', keywords: ['חרדה', 'חרדות', 'דאגה', 'פאניקה', 'התקף חרדה'] },
+  { tag: 'מתבגרים', keywords: ['מתבגר', 'מתבגרים', 'מתבגרת', 'נוער', 'תיכון', 'גיל ההתבגרות'] },
+  { tag: 'הורות', keywords: ['הורים', 'הורה', 'הורות', 'ילד', 'ילדים', 'גבולות', 'הדרכת הורים'] },
+  { tag: 'משפחה', keywords: ['משפחה', 'משפחתי', 'אחים', 'בכור', 'גירושין', 'הורות משותפת'] },
+  { tag: 'זוגיות', keywords: ['זוגיות', 'זוגי', 'בני זוג', 'בן זוג', 'בת זוג', 'נישואין'] },
+  { tag: 'טיפול רגשי', keywords: ['טיפול', 'מטופל', 'קליניקה', 'פסיכותרפיה', 'אדלר', 'דיכאון', 'רגשי', 'אשמה'] },
+  { tag: 'CBT', keywords: ['CBT', 'קוגניטיבי התנהגותי', 'קוגניטיבית התנהגותית'] },
+  { tag: 'מיניות בריאה', keywords: ['מיניות', 'מיני', 'יציאה מהארון', 'זהות מינית'] },
 ];
-
-const AUTHOR_NAME = 'נירה גבאי';
 
 function generateSlug(title: string, contentText: string): string {
   const combined = title + ' ' + contentText.slice(0, 600);
@@ -512,10 +525,13 @@ function generateSlug(title: string, contentText: string): string {
 
 function generateTags(title: string, contentText: string): string {
   const combined = title + ' ' + contentText;
-  const selected: string[] = [AUTHOR_NAME];
+  // No brand-name tag - see docs/seo-audit-2026-07.md P1-1 (a prior version
+  // of this function seeded every article with AUTHOR_NAME as a tag, which
+  // is what polluted the taxonomy the audit had to clean up).
+  const selected: string[] = [];
   for (const { tag, keywords } of TAG_POOL) {
     if (keywords.some(kw => combined.includes(kw))) selected.push(tag);
-    if (selected.length >= 5) break;
+    if (selected.length >= 3) break;
   }
   return selected.join(',');
 }
@@ -1168,14 +1184,18 @@ async function processQueueItem(
       throw new Error('Content too short: ' + (extracted.contentText?.length ?? 0) + ' chars');
     }
 
-    const title = extracted.title ?? item.source_title ?? '';
+    const title = REWRITE_SOURCE_MAP[item.id]?.title ?? extracted.title ?? item.source_title ?? '';
     if (!title) throw new Error('Could not determine article title');
 
     const cleanedHtml = cleanContentHtml(extracted.contentHtml);
     const contentText = htmlToPlainText(cleanedHtml);
     const excerpt = generateExcerpt(extracted.excerpt, contentText);
-    const slug = generateSlug(title, extracted.contentText);
-    const tags = generateTags(title, extracted.contentText);
+    // Use the bio-stripped contentText, not extracted.contentText - the raw
+    // extraction still carries Nira's trailing bio signature ("...טיפול זוגי
+    // ומנחה למיניות בריאה"), which previously leaked a spurious 'זוגיות' tag
+    // and skewed slugs/keywords on articles that have nothing to do with it.
+    const slug = generateSlug(title, contentText);
+    const tags = generateTags(title, contentText);
     const readingTime = estimateReadingTime(contentText);
 
     console.log('Title:    ', title);

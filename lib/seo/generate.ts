@@ -14,6 +14,7 @@ import {
   contentTokens,
   tokenOverlap,
 } from './text';
+import { GENERIC_KEYWORDS } from './validate';
 
 export const BRAND = 'נירה גבאי';
 export const CANONICAL_BASE = 'https://www.niragabay.com';
@@ -32,6 +33,8 @@ const HEBREW_TOPIC_TERMS = [
   'הדרכת הורים', 'טיפול זוגי', 'טיפול מיני', 'מיניות בריאה', 'ביטחון עצמי',
   'תקשורת זוגית', 'משבר זוגי', 'סדר לידה', 'דינמיקה משפחתית', 'ארוחת החג', 'שגרה',
   'חרדת בחינות', 'הורות',
+  'פינוק ילדים', 'רגשות אשמה', 'אישיות נרקיסיסטית', 'נרקיסיזם',
+  'קושי למצוא זוגיות', 'מפחדים להתחפש',
   'פסיכותרפיה', 'טיפול רגשי', 'גבולות', 'התבגרות', 'מתבגרים', 'התמכרות',
   'חרדה', 'דיכאון', 'זוגיות', 'תקשורת', 'יחסים', 'משפחה', 'הורים', 'ילדים',
   'אחים', 'בכור', 'רגשות', 'שינוי', 'אהבה', 'קשר', 'CBT', 'אדלר',
@@ -63,11 +66,24 @@ function pickKeywords(title: string, plain: string): { focus: string; secondary:
     .sort((a, b) => b.score - a.score || b.term.length - a.term.length);
 
   // De-duplicate substrings (e.g. keep "הדרכת הורים", drop bare "הורים").
+  // Bare generic head terms (see GENERIC_KEYWORDS) are high-frequency in
+  // almost any article on this site and would otherwise dominate by sheer
+  // word count - they're only allowed to fill a slot once every specific
+  // term has already been placed, so they never win the primary (focus)
+  // slot unless literally nothing else matched.
   const chosen: string[] = [];
   for (const { term } of scored) {
+    if (GENERIC_KEYWORDS.has(term)) continue;
     if (chosen.some((c) => c.includes(term) || term.includes(c))) continue;
     chosen.push(term);
     if (chosen.length >= 4) break;
+  }
+  if (chosen.length < 4) {
+    for (const { term } of scored) {
+      if (chosen.length >= 4) break;
+      if (chosen.some((c) => c.includes(term) || term.includes(c))) continue;
+      chosen.push(term);
+    }
   }
 
   if (chosen.length === 0) {

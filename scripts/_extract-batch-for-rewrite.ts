@@ -13,11 +13,11 @@ const DATA_DIR = path.join(process.cwd(), 'data');
 const OUTPUT = path.join(DATA_DIR, 'article-extracts.json');
 
 const ARTICLES = [
-  { queue_id: '6b95fa9ab2752e35b9bbf6fcb46b62fb', source_title: 'באיזו שפת אהבה אנו מדברים?',                        target_slug: 'love-language',              source_url: 'https://www.m-y-net.co.il/%D7%9E%D7%98%D7%94-%D7%99%D7%94%D7%95%D7%93%D7%94/%D7%94%D7%95%D7%A8%D7%99%D7%9D-%D7%95%D7%99%D7%9C%D7%93%D7%99%D7%9D-%D7%91%D7%90%D7%99%D7%96%D7%95-%D7%A9%D7%A4%D7%AA-%D7%90%D7%94%D7%91%D7%94-%D7%90%D7%A0%D7%95-%D7%9E%D7%93%D7%91%D7%A8%D7%99%D7%9D/' },
-  { queue_id: '90678e5babdad68d1bb08c88f722adfe', source_title: 'כיצד יוצאים ממעגל הדיכאון',                         target_slug: 'depression-cycle',           source_url: 'https://www.m-y-net.co.il/%D7%9E%D7%98%D7%94-%D7%99%D7%94%D7%95%D7%93%D7%94/%D7%94%D7%95%D7%A8%D7%99%D7%9D-%D7%95%D7%99%D7%9C%D7%93%D7%99%D7%9D-%D7%9B%D7%99%D7%A6%D7%93-%D7%99%D7%95%D7%A6%D7%90%D7%99%D7%9D-%D7%9E%D7%9E%D7%A2%D7%92%D7%9C-%D7%94%D7%93%D7%99%D7%9B%D7%90%D7%95%D7%9F/' },
-  { queue_id: '0fc6f4de6f9cb584e35802813b4e5f7b', source_title: 'שימוש בזיכרונות ילדות בחדר הטיפול',                  target_slug: 'childhood-memories-therapy', source_url: 'https://www.m-y-net.co.il/%D7%9E%D7%98%D7%94-%D7%99%D7%94%D7%95%D7%93%D7%94/%D7%94%D7%95%D7%A8%D7%99%D7%9D-%D7%95%D7%99%D7%9C%D7%93%D7%99%D7%9D-%D7%A9%D7%99%D7%9E%D7%95%D7%A9-%D7%91%D7%96%D7%99%D7%9B%D7%A8%D7%95%D7%A0%D7%95%D7%AA-%D7%99%D7%9C%D7%93%D7%95%D7%AA-%D7%91%D7%97%D7%93%D7%A8-%D7%94%D7%98%D7%99%D7%A4%D7%95%D7%9C/' },
-  { queue_id: 'cf0bd721de5da8b130a750766a9d0620', source_title: 'תיאום ציפיות כאמצעי להתמודדות עם החופש הגדול',       target_slug: 'summer-break-expectations',  source_url: 'https://www.m-y-net.co.il/%D7%9E%D7%98%D7%94-%D7%99%D7%94%D7%95%D7%93%D7%94/%D7%94%D7%95%D7%A8%D7%99%D7%9D-%D7%95%D7%99%D7%9C%D7%93%D7%99%D7%9D-%D7%AA%D7%99%D7%90%D7%95%D7%9D-%D7%A6%D7%99%D7%A4%D7%99%D7%95%D7%AA-%D7%9B%D7%90%D7%9E%D7%A6%D7%A2%D7%99-%D7%9C%D7%94%D7%AA%D7%9E%D7%95%D7%93%D7%93%D7%95%D7%AA-%D7%A2%D7%9D-%D7%94%D7%97%D7%95%D7%A4%D7%A9-%D7%94%D7%92%D7%93%D7%95%D7%9C-r-n/' },
-  { queue_id: '57c6580e33e6262f90828767c53144e9', source_title: 'איך מתמודדים עם יציאה מהארון ?',                    target_slug: 'coming-out',                 source_url: 'https://www.m-y-net.co.il/%D7%9E%D7%98%D7%94-%D7%99%D7%94%D7%95%D7%93%D7%94/%D7%94%D7%95%D7%A8%D7%99%D7%9D-%D7%95%D7%99%D7%9C%D7%93%D7%99%D7%9D-r-n%D7%90%D7%99%D7%9A-%D7%9E%D7%AA%D7%9E%D7%95%D7%93%D7%93%D7%99%D7%9D-%D7%A2%D7%9D-%D7%99%D7%A6%D7%99%D7%90%D7%94-%D7%9E%D7%94%D7%90%D7%A8%D7%95%D7%9F/' },
+  { queue_id: 'c5bf620e2bf85cd96074257206549bdf', source_title: 'על הנזק שגורם פינוק',                 target_slug: 'spoiling',                   source_url: 'https://www.m-y-net.co.il/%D7%9E%D7%98%D7%94-%D7%99%D7%94%D7%95%D7%93%D7%94/%D7%94%D7%95%D7%A8%D7%99%D7%9D-%D7%95%D7%99%D7%9C%D7%93%D7%99%D7%9D-%D7%A2%D7%9C-%D7%94%D7%A0%D7%96%D7%A7-%D7%A9%D7%92%D7%95%D7%A8%D7%9D-%D7%A4%D7%99%D7%A0%D7%95%D7%A7-r-n/' },
+  { queue_id: '7cb4fa6b513e58efaca317189f0e252a', source_title: 'רגשות האשם כהורים – האם זה הכרחי?',     target_slug: 'emotions-parenting',         source_url: 'https://www.m-y-net.co.il/%D7%9E%D7%98%D7%94-%D7%99%D7%94%D7%95%D7%93%D7%94/%D7%94%D7%95%D7%A8%D7%99%D7%9D-%D7%95%D7%99%D7%9C%D7%93%D7%99%D7%9D-%D7%A8%D7%92%D7%A9%D7%95%D7%AA-%D7%94%D7%90%D7%A9%D7%9D-%D7%9B%D7%94%D7%95%D7%A8%D7%99%D7%9D-%D7%94%D7%90%D7%9D-%D7%96%D7%94-%D7%94%D7%9B%D7%A8%D7%97%D7%99/' },
+  { queue_id: 'bfeef2aa0f8ca3cb6f032e4150c24a38', source_title: 'לחיות לצד אישיות נרקיסיסטית',           target_slug: 'narcissistic-personality',   source_url: 'https://www.m-y-net.co.il/%D7%9E%D7%98%D7%94-%D7%99%D7%94%D7%95%D7%93%D7%94/%D7%94%D7%95%D7%A8%D7%99%D7%9D-%D7%95%D7%99%D7%9C%D7%93%D7%99%D7%9D-r-n%D7%9C%D7%97%D7%99%D7%95%D7%AA-%D7%9C%D7%A6%D7%93-%D7%90%D7%99%D7%A9%D7%99%D7%95%D7%AA-%D7%A0%D7%A8%D7%A7%D7%99%D7%A1%D7%99%D7%A1%D7%98%D7%99%D7%AA-r-n/' },
+  { queue_id: '8a49a7b75d2de63e161469aa2633dcf0', source_title: 'זוג או פרד',                            target_slug: 'together-or-split',          source_url: 'https://www.m-y-net.co.il/%D7%9E%D7%98%D7%94-%D7%99%D7%94%D7%95%D7%93%D7%94/%D7%94%D7%95%D7%A8%D7%99%D7%9D-%D7%95%D7%99%D7%9C%D7%93%D7%99%D7%9D-r-n%D7%96%D7%95%D7%92-%D7%90%D7%95-%D7%A4%D7%A8%D7%93-r-n/' },
+  { queue_id: 'a39afa405b72b61adfb74e680872b914', source_title: 'הילדים שמפחדים להתחפש',                 target_slug: 'children-afraid-costumes',   source_url: 'https://www.m-y-net.co.il/%D7%9E%D7%98%D7%94-%D7%99%D7%94%D7%95%D7%93%D7%94/%D7%94%D7%95%D7%A8%D7%99%D7%9D-%D7%95%D7%99%D7%9C%D7%93%D7%99%D7%9D-r-n%D7%94%D7%99%D7%9C%D7%93%D7%99%D7%9D-%D7%A9%D7%9E%D7%A4%D7%97%D7%93%D7%99%D7%9D-%D7%9C%D7%94%D7%AA%D7%97%D7%A4%D7%A9-r-n/' },
 ];
 
 const BOILERPLATE = [
@@ -36,12 +36,18 @@ const BIO = ['יועצת חינוכית','ממכון אדלר','email-protection
 async function fetchPage(url: string): Promise<string | null> {
   try {
     const r = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0', Accept: 'text/html', 'Accept-Language': 'he-IL,he' },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'he-IL,he;q=0.9,en;q=0.8',
+      },
       signal: AbortSignal.timeout(20_000),
     });
     return r.ok ? r.text() : null;
   } catch { return null; }
 }
+
+const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
 function extract(html: string): { title: string; contentText: string; excerpt: string } {
   const $ = cheerio.load(html);
@@ -80,6 +86,7 @@ function extract(html: string): { title: string; contentText: string; excerpt: s
 async function main() {
   const results: any[] = [];
   for (const art of ARTICLES) {
+    if (results.length > 0) await sleep(3000); // avoid Cloudflare WAF burst-rate flagging
     console.log('Fetching:', art.target_slug, '...');
     const html = await fetchPage(art.source_url);
     if (!html) {

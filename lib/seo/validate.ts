@@ -18,7 +18,10 @@ const PENALTY = { error: 22, warn: 8, info: 0 } as const;
 
 // Broad head terms that are useless as a focus keyword for a small site.
 // Specific one-word terms (e.g. "פרפקציוניזם", "CBT") remain allowed.
-const GENERIC_KEYWORDS = new Set([
+// Exported so lib/seo/generate.ts's keyword picker can avoid choosing these
+// as the primary focus keyword in the first place, instead of relying on
+// this validator to catch it after the fact.
+export const GENERIC_KEYWORDS = new Set([
   'ילדים', 'ילד', 'הורים', 'הורות', 'מתבגרים', 'מתבגר', 'נוער', 'מבוגרים',
   'משפחה', 'זוגיות', 'חרדה', 'דיכאון', 'רגשות', 'שגרה', 'טיפול', 'קשר',
   'אהבה', 'תקשורת', 'יחסים', 'התמודדות',
