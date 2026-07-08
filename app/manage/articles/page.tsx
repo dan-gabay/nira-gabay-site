@@ -230,7 +230,15 @@ export default function ManageArticlesPage() {
                           <Link href={`/manage/articles/edit/${article.id}`} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
                             <Edit className="w-4 h-4" /> עריכה
                           </Link>
-                          <Link href={`/articles/${article.slug}`} target="_blank" className="bg-stone-200 hover:bg-stone-300 text-stone-800 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
+                          <Link
+                            href={
+                              status === 'published'
+                                ? `/articles/${article.slug}`
+                                : `/api/preview?secret=${process.env.NEXT_PUBLIC_PREVIEW_SECRET}&slug=${article.slug}`
+                            }
+                            target="_blank"
+                            className="bg-stone-200 hover:bg-stone-300 text-stone-800 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+                          >
                             <Eye className="w-4 h-4" /> תצוגה מקדימה
                           </Link>
                           {status === 'scheduled' ? (

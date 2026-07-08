@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import { draftMode } from 'next/headers';
 import { supabaseServer } from '../../../lib/supabaseServer';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -67,26 +68,23 @@ export async function generateStaticParams() {
   }
 }
 
-// Fetch the article once per request (shared between generateMetadata and the page)
-const getArticle = cache(async (slug: string): Promise<Article | null> => {
+// Fetch the article once per request (shared between generateMetadata and the
+// page). In Draft Mode (enabled via /api/preview, used by the /manage
+// "preview" button) the is_published filter is skipped so unpublished
+// drafts render through the exact same template instead of 404ing.
+const getArticle = cache(async (slug: string, isPreview: boolean): Promise<Article | null> => {
   const supabase = supabaseServer();
 
   // First try by slug
-  let { data: row } = await supabase
-    .from('articles')
-    .select('*')
-    .eq('slug', slug)
-    .eq('is_published', true)
-    .single();
+  let query = supabase.from('articles').select('*').eq('slug', slug);
+  if (!isPreview) query = query.eq('is_published', true);
+  let { data: row } = await query.single();
 
   // If not found by slug, try by ID
   if (!row) {
-    const { data: rowById } = await supabase
-      .from('articles')
-      .select('*')
-      .eq('id', slug)
-      .eq('is_published', true)
-      .single();
+    let queryById = supabase.from('articles').select('*').eq('id', slug);
+    if (!isPreview) queryById = queryById.eq('is_published', true);
+    const { data: rowById } = await queryById.single();
     row = rowById;
   }
 
@@ -133,7 +131,8 @@ const markdownComponents: Components = { h1: 'h2' };
 // Dynamic metadata
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const article = await getArticle(slug);
+  const { isEnabled: isPreview } = await draftMode();
+  const article = await getArticle(slug, isPreview);
 
   if (!article) {
     return {
@@ -141,7 +140,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       robots: { index: false, follow: false },
     };
   }
-  
+
+  // A previewed draft's metadata is otherwise generated normally (so you can
+  // see exactly how the real title/description will look) - only robots is
+  // forced noindex, as a defense-in-depth belt (a real crawler never has the
+  // draft-mode cookie in the first place, so this shouldn't ever matter).
+  const isUnpublishedPreview = isPreview && !article.is_published;
+
   // Prefer the generated/validated SEO fields, falling back to the basics.
   const seoPkg = article.seo_package || {};
   const metaTitle = article.meta_title || article.title;
@@ -193,14 +198,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: ogDescription,
       images: [article.image_url || 'https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png'],
     },
+    ...(isUnpublishedPreview ? { robots: { index: false, follow: false } } : {}),
   };
 }
 
 export default async function ArticlePage({ params }: Props) {
   const { slug } = await params; // Next.js 15+: params is a Promise!
+  const { isEnabled: isPreview } = await draftMode();
 
   // Cached fetch (deduped with generateMetadata): by slug first, then by ID
-  const article = await getArticle(slug);
+  const article = await getArticle(slug, isPreview);
 
   if (!article) {
     // Real 404 (renders not-found.tsx) instead of a 200 soft-404.
@@ -295,15 +302,25 @@ export default async function ArticlePage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-stone-50" style={{ paddingTop: '80px' }}>
+      {isPreview && !article.is_published && (
+        <div className="bg-amber-500 text-stone-900 text-sm font-medium py-2 px-4 flex items-center justify-center gap-3">
+          <span>תצוגה מקדימה - המאמר עדיין לא פורסם</span>
+          <a href="/api/preview/disable" className="underline hover:no-underline">
+            יציאה מתצוגה מקדימה
+          </a>
+        </div>
+      )}
       <JsonLd data={articleSchema} />
       <JsonLd data={breadcrumbSchema} />
       {faqSchema && <JsonLd data={faqSchema} />}
-      <ArticleViewTracker 
-        articleId={article.id} 
-        articleTitle={article.title} 
-        tags={article.tag_names || []}
-      />
-      
+      {!isPreview && (
+        <ArticleViewTracker
+          articleId={article.id}
+          articleTitle={article.title}
+          tags={article.tag_names || []}
+        />
+      )}
+
       {/* Breadcrumb */}
       <div className="bg-stone-50 py-2.5 border-b border-stone-100">
         <div className="container mx-auto px-4 md:px-8 max-w-4xl">
