@@ -9,7 +9,6 @@ import AccessibilityMenu from "@/components/AccessibilityMenu";
 import JsonLd from "@/components/JsonLd";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import ExitIntentTracker from '@/components/ExitIntentTracker';
-import TimeTracker from '@/components/TimeTracker';
 import AnalyticsProvider from '@/components/AnalyticsProvider';
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -236,7 +235,6 @@ export default function RootLayout({
         <GoogleAnalytics />
         <AnalyticsProvider>
           <ExitIntentTracker />
-          <TimeTracker />
           <Header />
           <main id="main-content">
             {children}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { trackArticleRead, trackArticleScrollDepth, trackArticleCompletion } from '@/lib/analytics';
+import { trackArticleRead, trackArticleCompletion } from '@/lib/analytics';
 
 type ArticleReadTrackerProps = {
   articleId: string;
@@ -13,9 +13,10 @@ export default function ArticleReadTracker({ articleId, articleTitle }: ArticleR
     let hasTracked = false;
     let hasCompleted = false;
     let scrollTimeout: NodeJS.Timeout;
-    const scrollDepthTracked = new Set<number>();
     const startTime = Date.now();
 
+    // Generic scroll-depth events fire from AnalyticsProvider for every page;
+    // this tracker only adds the article-specific signals (read/completed).
     const handleScroll = () => {
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(() => {
@@ -23,14 +24,6 @@ export default function ArticleReadTracker({ articleId, articleTitle }: ArticleR
         const documentHeight = document.documentElement.scrollHeight;
         const scrollTop = window.scrollY;
         const scrollPercentage = Math.round(((scrollTop + windowHeight) / documentHeight) * 100);
-
-        // Track milestones: 25%, 50%, 75%, 100%
-        [25, 50, 75, 100].forEach((milestone) => {
-          if (scrollPercentage >= milestone && !scrollDepthTracked.has(milestone)) {
-            scrollDepthTracked.add(milestone);
-            trackArticleScrollDepth(milestone, articleId);
-          }
-        });
 
         // Track article completion: 100% scroll + at least 2 minutes
         if (scrollPercentage >= 100 && !hasCompleted) {

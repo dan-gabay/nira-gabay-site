@@ -66,12 +66,22 @@ export const trackUserInterest = (interest: string) => {
 
 // ===== GA4 RECOMMENDED EVENTS =====
 
-// generate_lead - When a user submits a form (contact, booking, etc.)
+// generate_lead - a real therapy/parent-guidance inquiry (contact form).
+// Do NOT fire this for newsletter signups - that's trackSignUp - or the
+// lead KPI stops meaning "someone asked about therapy".
 export const trackGenerateLead = (leadSource: string, value?: number) => {
   trackEvent('generate_lead', {
     currency: 'ILS',
     value: value || 100, // Estimated lead value
     lead_source: leadSource,
+  });
+};
+
+// sign_up - GA4 recommended event for newsletter/mailing-list signups
+export const trackSignUp = (source: string) => {
+  trackEvent('sign_up', {
+    method: 'newsletter',
+    source: source,
   });
 };
 
@@ -195,14 +205,6 @@ export const trackPageNavigation = (pageName: string, fromPage: string) => {
   });
 };
 
-export const trackArticleScrollDepth = (depth: number, articleId: string) => {
-  trackEvent(`scroll_depth_${depth}`, {
-    event_category: 'Engagement',
-    event_label: articleId,
-    scroll_percentage: depth,
-  });
-};
-
 export const trackTagClick = (tagName: string, articleId?: string) => {
   trackEvent('tag_click', {
     event_category: 'Navigation',
@@ -246,15 +248,6 @@ export const trackCopyContact = (contactType: 'phone' | 'email', value: string) 
   });
 };
 
-// Time Milestones
-export const trackTimeMilestone = (minutes: number, pageUrl: string) => {
-  trackEvent(`time_on_site_${minutes}min`, {
-    event_category: 'Engagement',
-    event_label: pageUrl,
-    minutes: minutes,
-  });
-};
-
 // Social Media Clicks
 export const trackSocialClick = (platform: 'facebook' | 'whatsapp' | 'instagram', source: string) => {
   trackEvent('social_media_click', {
@@ -270,15 +263,6 @@ export const trackHeroCTA = (action: string) => {
     event_category: 'Conversion',
     event_label: action,
     value: 5,
-  });
-};
-
-// Returning Visitor
-export const trackReturningVisitor = (visitCount: number) => {
-  trackEvent('returning_visitor', {
-    event_category: 'User',
-    event_label: `visit_${visitCount}`,
-    visit_count: visitCount,
   });
 };
 
@@ -359,12 +343,18 @@ export const trackBreadcrumbClick = (breadcrumbName: string) => {
   });
 };
 
-// Contact Page
+// Contact methods - each fires its own event NAME (contact_phone,
+// contact_email, ...) because GA4 key events are designated per event name;
+// a shared contact_method_click with a method param could never make "phone
+// clicks" a conversion on its own.
 export const trackContactMethodClick = (method: 'whatsapp' | 'phone' | 'email' | 'facebook', location: string) => {
-  trackEvent('contact_method_click', {
+  if (method === 'facebook') {
+    trackSocialClick('facebook', location);
+    return;
+  }
+  trackEvent(`contact_${method}`, {
     event_category: 'Contact',
-    event_label: method,
-    location: location,
+    event_label: location,
     value: 5,
   });
 };

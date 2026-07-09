@@ -16,7 +16,8 @@
  *   2. APIs & Services > OAuth consent screen > Data Access > Add or remove
  *      scopes > add https://www.googleapis.com/auth/analytics.readonly > Save
  *
- *   npx tsx scripts/ga-auth.ts
+ *   npx tsx scripts/ga-auth.ts          # read-only (reporting)
+ *   npx tsx scripts/ga-auth.ts --edit   # + Admin API writes (scripts/ga-setup.ts)
  */
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
@@ -35,7 +36,12 @@ if (!CLIENT_ID || !CLIENT_SECRET) throw new Error('Missing GSC_CLIENT_ID / GSC_C
 // back to the Cloud Console to register a second one.
 const PORT = 53682;
 const REDIRECT_URI = `http://localhost:${PORT}`;
-const SCOPE = 'https://www.googleapis.com/auth/analytics.readonly';
+// --edit adds the config-write scope needed once by scripts/ga-setup.ts
+// (key events, custom dimensions, data retention). readonly stays in the
+// grant either way so the same token keeps working for ga-query.ts.
+const SCOPE = process.argv.includes('--edit')
+  ? 'https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/analytics.edit'
+  : 'https://www.googleapis.com/auth/analytics.readonly';
 
 const authUrl =
   'https://accounts.google.com/o/oauth2/v2/auth' +

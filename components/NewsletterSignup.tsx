@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Mail, Loader2, CheckCircle2 } from 'lucide-react';
-import { trackGenerateLead } from '@/lib/analytics';
+import { trackSignUp } from '@/lib/analytics';
 
 export default function NewsletterSignup({ source = 'article' }: { source?: string }) {
   const [email, setEmail] = useState('');
@@ -22,7 +22,8 @@ export default function NewsletterSignup({ source = 'article' }: { source?: stri
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'failed');
-      trackGenerateLead('newsletter', 20);
+      // sign_up, not generate_lead - leads mean therapy inquiries only
+      trackSignUp(source);
       setStatus('done');
     } catch (err) {
       setStatus('error');
