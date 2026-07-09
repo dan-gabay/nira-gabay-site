@@ -324,20 +324,22 @@ export default async function ArticlePage({ params }: Props) {
       {/* Breadcrumb */}
       <div className="bg-stone-50 py-2.5 border-b border-stone-100">
         <div className="container mx-auto px-4 md:px-8 max-w-4xl">
+          {/* Fixed crumbs must not shrink or the flex layout squeezes them and
+              Hebrew words break mid-word on mobile; only the title flexes. */}
           <nav className="flex items-center gap-2 text-sm text-stone-500">
-            <Link href="/" className="hover:text-stone-800">דף הבית</Link>
-            <span>/</span>
-            <Link href="/articles" className="hover:text-stone-800">מאמרים</Link>
+            <Link href="/" className="hover:text-stone-800 shrink-0 whitespace-nowrap">דף הבית</Link>
+            <span className="shrink-0">/</span>
+            <Link href="/articles" className="hover:text-stone-800 shrink-0 whitespace-nowrap">מאמרים</Link>
             {primaryTopic && (
               <>
-                <span>/</span>
-                <Link href={`/articles/topic/${primaryTopic.slug}`} className="hover:text-stone-800">
+                <span className="shrink-0">/</span>
+                <Link href={`/articles/topic/${primaryTopic.slug}`} className="hover:text-stone-800 shrink-0 whitespace-nowrap">
                   {primaryTopic.tag}
                 </Link>
               </>
             )}
-            <span>/</span>
-            <span className="text-stone-800 truncate max-w-xs">{article.title}</span>
+            <span className="shrink-0">/</span>
+            <span className="text-stone-800 truncate min-w-0">{article.title}</span>
           </nav>
         </div>
       </div>
