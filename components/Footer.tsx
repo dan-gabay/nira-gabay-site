@@ -8,6 +8,9 @@ export default function Footer() {
   const navItems = [
     { name: 'דף הבית', href: '/' },
     { name: 'קצת עליי', href: '/about' },
+    { name: 'הדרכת הורים', href: '/services/parent-guidance' },
+    { name: 'טיפול רגשי לילדים', href: '/services/child-therapy' },
+    { name: 'טיפול במתבגרים', href: '/services/teen-therapy' },
     { name: 'מאמרים', href: '/articles' },
     { name: 'צרו קשר', href: '/contact' },
   ];

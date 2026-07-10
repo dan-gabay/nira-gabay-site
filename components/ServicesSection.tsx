@@ -1,13 +1,23 @@
 "use client";
 import React from 'react';
-import { Users, User, Heart, Baby, HeartHandshake, Brain } from 'lucide-react';
+import Link from 'next/link';
+import { Users, User, Heart, Baby, HeartHandshake, Brain, Smile, ArrowLeft } from 'lucide-react';
 import { trackServiceInterest } from '@/lib/analytics';
 
+// Cards with an href link to their service landing page; the rest stay
+// informational until their pages exist.
 const services = [
   {
     icon: Users,
     title: 'טיפול במתבגרים',
-    description: 'ליווי מקצועי ורגיש בתקופה מאתגרת של התבגרות, עם דגש על בניית ביטחון עצמי וכלים להתמודדות.'
+    description: 'ליווי מקצועי ורגיש בתקופה מאתגרת של התבגרות, עם דגש על בניית ביטחון עצמי וכלים להתמודדות.',
+    href: '/services/teen-therapy'
+  },
+  {
+    icon: Smile,
+    title: 'טיפול רגשי לילדים',
+    description: 'מרחב בטוח לילדים מגיל 8 לבטא את מה שקשה, בשיתוף פעולה קרוב עם ההורים.',
+    href: '/services/child-therapy'
   },
   {
     icon: User,
@@ -22,7 +32,8 @@ const services = [
   {
     icon: Baby,
     title: 'הדרכת הורים',
-    description: 'כלים מעשיים להורות מיטבית, הבנת עולמם של הילדים ובניית קשר משפחתי בריא.'
+    description: 'כלים מעשיים להורות מיטבית, הבנת עולמם של הילדים ובניית קשר משפחתי בריא.',
+    href: '/services/parent-guidance'
   },
   {
     icon: HeartHandshake,
@@ -52,9 +63,8 @@ export default function ServicesSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {services.map((service, index) => {
             const IconComponent = service.icon;
-            return (
+            const card = (
               <div
-                key={index}
                 className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-stone-100 group h-full cursor-pointer"
                 onClick={() => trackServiceInterest(service.title)}
               >
@@ -65,9 +75,22 @@ export default function ServicesSection() {
                   <div className="flex-1">
                     <h3 className="text-lg font-bold text-stone-800 mb-2">{service.title}</h3>
                     <p className="text-stone-600 text-sm leading-relaxed">{service.description}</p>
+                    {service.href && (
+                      <span className="inline-flex items-center gap-1 text-amber-700 text-sm font-medium mt-3 group-hover:gap-2 transition-all">
+                        קראו עוד
+                        <ArrowLeft className="w-4 h-4" />
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
+            );
+            return service.href ? (
+              <Link key={index} href={service.href} className="block h-full">
+                {card}
+              </Link>
+            ) : (
+              <div key={index}>{card}</div>
             );
           })}
         </div>
