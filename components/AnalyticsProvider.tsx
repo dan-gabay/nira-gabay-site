@@ -9,6 +9,7 @@ import {
   trackPagePerformance,
   trackFunnelStage,
 } from '@/lib/analytics';
+import { captureAttribution } from '@/lib/attribution';
 
 // Determine page type from pathname
 const getPageType = (pathname: string): string => {
@@ -43,6 +44,13 @@ export default function AnalyticsProvider({ children }: { children: React.ReactN
   const timeThresholdsReached = useRef<Set<number>>(new Set());
   const startTime = useRef<number>(Date.now());
   const engagementInterval = useRef<NodeJS.Timeout | null>(null);
+
+  // Capture lead attribution (utm/gclid/landing page) once per full page
+  // load - mount = start of visit; SPA navigations don't re-run this.
+  useEffect(() => {
+    captureAttribution();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Identify visitor type on mount
   useEffect(() => {
