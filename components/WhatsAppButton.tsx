@@ -1,12 +1,14 @@
 'use client';
 
 import { MessageCircle } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import { trackWhatsAppClick } from '@/lib/analytics';
-
-const WHATSAPP_NUMBER = '972507936681';
-const WHATSAPP_MESSAGE = 'שלום נירה, אשמח לקבוע פגישה';
+import { whatsappHref, whatsappMessageForPath } from '@/lib/whatsapp';
 
 export default function WhatsAppButton() {
+  // Prefill names the service the visitor is reading about (see lib/whatsapp.ts)
+  const pathname = usePathname();
+
   const handleClick = () => {
     trackWhatsAppClick('floating_button');
   };
@@ -14,7 +16,7 @@ export default function WhatsAppButton() {
   return (
     <>
       <a
-        href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`}
+        href={whatsappHref(whatsappMessageForPath(pathname))}
         target="_blank"
         rel="noopener noreferrer"
         onClick={handleClick}
@@ -28,7 +30,7 @@ export default function WhatsAppButton() {
         .whatsapp-float {
           animation: pulse 2s infinite;
         }
-        
+
         @keyframes pulse {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.05); }
