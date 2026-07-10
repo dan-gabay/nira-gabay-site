@@ -10,6 +10,7 @@ import ArticleReadTracker from '@/components/ArticleReadTracker';
 import ArticleViewTracker from '@/components/ArticleViewTracker';
 import ArticleTag from '@/components/ArticleTag';
 import ArticleFaq from '@/components/ArticleFaq';
+import ServiceCtaBanner from '@/components/services/ServiceCtaBanner';
 import RelatedArticles from '../RelatedArticles';
 import NewsletterSignup from '@/components/NewsletterSignup';
 import { TOPIC_BY_TAG } from '@/lib/topics';
@@ -474,6 +475,9 @@ export default async function ArticlePage({ params }: Props) {
 
           {/* Visible FAQ - same content as the FAQPage JSON-LD above */}
           <ArticleFaq faq={article.faq} />
+
+          {/* Article -> matching service page (internal link + soft CTA) */}
+          <ServiceCtaBanner tags={article.tag_names || []} />
 
           {/* Author Box */}
           <div className="bg-gradient-to-br from-amber-50 to-stone-50 rounded-2xl p-6 md:p-8 my-12">

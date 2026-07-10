@@ -239,3 +239,18 @@ export const SERVICES: ServiceConfig[] = [
 export function getService(slug: string): ServiceConfig | undefined {
   return SERVICES.find((s) => s.slug === slug);
 }
+
+// Article -> service mapping by tag, most specific audience first (a child
+// anxiety article tagged both חרדה and הורות should point at child therapy,
+// not parent guidance).
+const TAG_PRIORITY = ['מתבגרים', 'חרדה', 'הורות'];
+
+export function serviceForTags(tags: string[]): ServiceConfig | undefined {
+  for (const tag of TAG_PRIORITY) {
+    if (tags.includes(tag)) {
+      const match = SERVICES.find((s) => s.topicTag === tag);
+      if (match) return match;
+    }
+  }
+  return undefined;
+}
