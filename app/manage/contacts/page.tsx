@@ -21,7 +21,40 @@ type ContactMessage = {
   message: string;
   is_read: boolean;
   created_date: string;
+  // Attribution (nullable - only present on leads captured after the
+  // Google Ads tracking work)
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
+  utm_term?: string | null;
+  gclid?: string | null;
+  landing_page?: string | null;
+  referrer?: string | null;
+  source_page?: string | null;
 };
+
+// Compact "where did this lead come from" line for the admin card.
+function attributionSummary(m: ContactMessage): string | null {
+  const parts: string[] = [];
+  if (m.utm_source || m.utm_medium) {
+    parts.push(`מקור: ${[m.utm_source, m.utm_medium].filter(Boolean).join(' / ')}`);
+  } else if (m.gclid) {
+    parts.push('מקור: Google Ads');
+  } else if (m.referrer) {
+    try {
+      parts.push(`הפניה: ${new URL(m.referrer).hostname}`);
+    } catch {
+      parts.push(`הפניה: ${m.referrer}`);
+    }
+  }
+  if (m.utm_campaign) parts.push(`קמפיין: ${m.utm_campaign}`);
+  if (m.utm_term) parts.push(`מילת חיפוש: ${m.utm_term}`);
+  if (m.landing_page) parts.push(`דף נחיתה: ${m.landing_page}`);
+  if (m.source_page && m.source_page !== m.landing_page) {
+    parts.push(`נשלח מ: ${m.source_page}`);
+  }
+  return parts.length ? parts.join(' · ') : null;
+}
 
 export default function ManageContactsPage() {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
@@ -223,6 +256,13 @@ export default function ManageContactsPage() {
                     <p className="text-stone-800 whitespace-pre-wrap flex-1">{message.message}</p>
                   </div>
                 </div>
+
+                {/* Attribution - where this lead came from */}
+                {attributionSummary(message) && (
+                  <p className="text-xs text-stone-500 bg-stone-50 rounded-lg px-3 py-2 mb-4" dir="rtl">
+                    {attributionSummary(message)}
+                  </p>
+                )}
 
                 {/* Footer */}
                 <div className="flex items-center justify-between">
