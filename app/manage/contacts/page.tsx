@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import { 
   ArrowRight,
@@ -35,13 +34,10 @@ export default function ManageContactsPage() {
 
   async function loadMessages() {
     try {
-      const { data, error } = await supabase
-        .from('contact_messages')
-        .select('*')
-        .order('created_date', { ascending: false });
-
-      if (error) throw error;
-      setMessages(data || []);
+      const res = await fetch('/api/manage/contacts');
+      if (!res.ok) throw new Error(`load failed (${res.status})`);
+      const data = await res.json();
+      setMessages(data.messages || []);
     } catch (error) {
       console.error('Error loading messages:', error);
     } finally {
@@ -49,53 +45,36 @@ export default function ManageContactsPage() {
     }
   }
 
-  async function markAsRead(id: string) {
+  async function setReadState(id: string, is_read: boolean) {
     try {
-      const { error } = await supabase
-        .from('contact_messages')
-        .update({ is_read: true })
-        .eq('id', id);
+      const res = await fetch('/api/manage/contacts', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, is_read }),
+      });
+      if (!res.ok) throw new Error(`update failed (${res.status})`);
 
-      if (error) throw error;
-      
-      setMessages(messages.map(m => 
-        m.id === id ? { ...m, is_read: true } : m
+      setMessages(messages.map(m =>
+        m.id === id ? { ...m, is_read } : m
       ));
     } catch (error) {
-      console.error('Error marking as read:', error);
+      console.error('Error updating read state:', error);
       alert('שגיאה בעדכון הסטטוס');
     }
   }
 
-  async function markAsUnread(id: string) {
-    try {
-      const { error } = await supabase
-        .from('contact_messages')
-        .update({ is_read: false })
-        .eq('id', id);
-
-      if (error) throw error;
-      
-      setMessages(messages.map(m => 
-        m.id === id ? { ...m, is_read: false } : m
-      ));
-    } catch (error) {
-      console.error('Error marking as unread:', error);
-      alert('שגיאה בעדכון הסטטוס');
-    }
-  }
+  const markAsRead = (id: string) => setReadState(id, true);
+  const markAsUnread = (id: string) => setReadState(id, false);
 
   async function deleteMessage(id: string) {
     if (!confirm('האם אתה בטוח שברצונך למחוק את הפנייה?')) return;
 
     try {
-      const { error } = await supabase
-        .from('contact_messages')
-        .delete()
-        .eq('id', id);
+      const res = await fetch(`/api/manage/contacts?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error(`delete failed (${res.status})`);
 
-      if (error) throw error;
-      
       setMessages(messages.filter(m => m.id !== id));
       alert('הפנייה נמחקה בהצלחה');
     } catch (error) {

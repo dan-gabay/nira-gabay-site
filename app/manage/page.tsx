@@ -65,11 +65,20 @@ export default function ManagePage() {
         .select('*', { count: 'exact', head: true })
         .eq('is_approved', false);
 
-      // Unread messages
-      const { count: unreadMessages } = await supabase
-        .from('contact_messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_read', false);
+      // Unread messages - contact_messages is RLS-locked (lead PII), so the
+      // count comes from the authenticated manage API, not the anon client.
+      let unreadMessages = 0;
+      try {
+        const res = await fetch('/api/manage/contacts');
+        if (res.ok) {
+          const data = await res.json();
+          unreadMessages = (data.messages || []).filter(
+            (m: { is_read: boolean }) => !m.is_read
+          ).length;
+        }
+      } catch {
+        // dashboard stays usable even if the contacts API is unreachable
+      }
 
       // Top articles
       const { data: topArticles } = await supabase
