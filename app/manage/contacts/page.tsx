@@ -13,6 +13,8 @@ import {
   Trash2
 } from 'lucide-react';
 
+type LeadStatus = 'new' | 'spoke' | 'started_therapy' | 'ongoing' | 'irrelevant';
+
 type ContactMessage = {
   id: string;
   name: string;
@@ -21,6 +23,9 @@ type ContactMessage = {
   message: string;
   is_read: boolean;
   created_date: string;
+  status?: LeadStatus;
+  heard_from?: string | null;
+  channel?: string | null;
   // Attribution (nullable - only present on leads captured after the
   // Google Ads tracking work)
   utm_source?: string | null;
@@ -31,6 +36,23 @@ type ContactMessage = {
   landing_page?: string | null;
   referrer?: string | null;
   source_page?: string | null;
+};
+
+// Lead lifecycle - the quality signal campaign optimization is judged by.
+const STATUS_LABELS: Record<LeadStatus, string> = {
+  new: 'חדש',
+  spoke: 'דיברנו',
+  started_therapy: 'התחיל טיפול',
+  ongoing: 'מטופל קבוע',
+  irrelevant: 'לא רלוונטי',
+};
+
+const CHANNEL_LABELS: Record<string, string> = {
+  form: 'טופס האתר',
+  whatsapp: 'וואטסאפ',
+  phone: 'טלפון',
+  email: 'אימייל',
+  other: 'אחר',
 };
 
 // Compact "where did this lead come from" line for the admin card.
@@ -60,6 +82,15 @@ export default function ManageContactsPage() {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('unread');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [isAddingLead, setIsAddingLead] = useState(false);
+  const [newLead, setNewLead] = useState({
+    name: '',
+    phone: '',
+    channel: 'whatsapp',
+    heard_from: '',
+    message: '',
+  });
 
   useEffect(() => {
     loadMessages();
@@ -98,6 +129,45 @@ export default function ManageContactsPage() {
 
   const markAsRead = (id: string) => setReadState(id, true);
   const markAsUnread = (id: string) => setReadState(id, false);
+
+  async function updateLead(id: string, patch: { status?: LeadStatus; heard_from?: string }) {
+    try {
+      const res = await fetch('/api/manage/contacts', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...patch }),
+      });
+      if (!res.ok) throw new Error(`update failed (${res.status})`);
+      setMessages(messages.map(m => (m.id === id ? { ...m, ...patch } : m)));
+    } catch (error) {
+      console.error('Error updating lead:', error);
+      alert('שגיאה בעדכון הליד');
+    }
+  }
+
+  async function addManualLead() {
+    if (!newLead.name || !newLead.phone) {
+      alert('נא למלא שם וטלפון');
+      return;
+    }
+    setIsAddingLead(true);
+    try {
+      const res = await fetch('/api/manage/contacts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newLead),
+      });
+      if (!res.ok) throw new Error(`insert failed (${res.status})`);
+      setNewLead({ name: '', phone: '', channel: 'whatsapp', heard_from: '', message: '' });
+      setShowAddForm(false);
+      await loadMessages();
+    } catch (error) {
+      console.error('Error adding lead:', error);
+      alert('שגיאה בהוספת הליד');
+    } finally {
+      setIsAddingLead(false);
+    }
+  }
 
   async function deleteMessage(id: string) {
     if (!confirm('האם אתה בטוח שברצונך למחוק את הפנייה?')) return;
@@ -145,7 +215,71 @@ export default function ManageContactsPage() {
             <ArrowRight className="w-4 h-4" />
             חזרה ללוח בקרה
           </Link>
-          <h1 className="text-3xl font-bold text-stone-800 mb-4">פניות צור קשר</h1>
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <h1 className="text-3xl font-bold text-stone-800">פניות צור קשר</h1>
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="bg-stone-800 hover:bg-stone-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              {showAddForm ? 'סגירה' : '+ פנייה חדשה (טלפון/וואטסאפ)'}
+            </button>
+          </div>
+
+          {/* Manual lead entry - phone/WhatsApp inquiries that never touch the form */}
+          {showAddForm && (
+            <div className="bg-stone-50 border border-stone-200 rounded-xl p-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+                <input
+                  type="text"
+                  placeholder="שם *"
+                  value={newLead.name}
+                  onChange={(e) => setNewLead({ ...newLead, name: e.target.value })}
+                  className="px-3 py-2 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+                <input
+                  type="tel"
+                  dir="ltr"
+                  placeholder="טלפון *"
+                  value={newLead.phone}
+                  onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
+                  className="px-3 py-2 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-left"
+                />
+                <select
+                  value={newLead.channel}
+                  onChange={(e) => setNewLead({ ...newLead, channel: e.target.value })}
+                  className="px-3 py-2 border border-stone-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="whatsapp">וואטסאפ</option>
+                  <option value="phone">טלפון</option>
+                  <option value="email">אימייל</option>
+                  <option value="other">אחר</option>
+                </select>
+                <input
+                  type="text"
+                  placeholder="איך הגיעו אליי? (גוגל, המלצה...)"
+                  value={newLead.heard_from}
+                  onChange={(e) => setNewLead({ ...newLead, heard_from: e.target.value })}
+                  className="px-3 py-2 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  placeholder="הערה (לא חובה)"
+                  value={newLead.message}
+                  onChange={(e) => setNewLead({ ...newLead, message: e.target.value })}
+                  className="flex-1 px-3 py-2 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+                <button
+                  onClick={addManualLead}
+                  disabled={isAddingLead}
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  {isAddingLead ? 'שומר...' : 'שמירה'}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Filter Tabs */}
           <div className="flex gap-2">
@@ -263,6 +397,42 @@ export default function ManageContactsPage() {
                     {attributionSummary(message)}
                   </p>
                 )}
+
+                {/* Lead pipeline: status + heard-from */}
+                <div className="flex items-center gap-3 mb-4 flex-wrap">
+                  <label className="text-sm text-stone-500">סטטוס:</label>
+                  <select
+                    value={message.status || 'new'}
+                    onChange={(e) => updateLead(message.id, { status: e.target.value as LeadStatus })}
+                    className={`px-3 py-1.5 rounded-lg border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+                      message.status === 'ongoing' || message.status === 'started_therapy'
+                        ? 'bg-green-50 border-green-200 text-green-800'
+                        : message.status === 'irrelevant'
+                        ? 'bg-stone-100 border-stone-200 text-stone-500'
+                        : 'bg-white border-stone-200 text-stone-800'
+                    }`}
+                  >
+                    {(Object.keys(STATUS_LABELS) as LeadStatus[]).map((s) => (
+                      <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+                    ))}
+                  </select>
+                  {message.channel && message.channel !== 'form' && (
+                    <span className="text-xs bg-stone-100 text-stone-600 px-2 py-1 rounded-full">
+                      {CHANNEL_LABELS[message.channel] || message.channel}
+                    </span>
+                  )}
+                  <input
+                    type="text"
+                    placeholder="איך הגיעו אליי?"
+                    defaultValue={message.heard_from || ''}
+                    onBlur={(e) => {
+                      if (e.target.value !== (message.heard_from || '')) {
+                        updateLead(message.id, { heard_from: e.target.value });
+                      }
+                    }}
+                    className="px-3 py-1.5 rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 flex-1 min-w-40"
+                  />
+                </div>
 
                 {/* Footer */}
                 <div className="flex items-center justify-between">
