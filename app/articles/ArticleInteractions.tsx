@@ -216,7 +216,19 @@ export default function ArticleInteractions({
   function shareOnFacebook() {
     const url = window.location.href;
     trackArticleShare('facebook', articleId, document.title);
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+    // On mobile, iOS/Android hand facebook.com universal links to the FB app,
+    // which opens its home feed instead of the sharer composer (why "it just
+    // opens Facebook"). The native share sheet reliably posts the real URL, so
+    // prefer it when available and only fall back to the web sharer on desktop.
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({ title: document.title, url }).catch(() => {});
+      return;
+    }
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+      '_blank',
+      'noopener,noreferrer',
+    );
   }
 
   function shareOnInstagram() {
@@ -253,62 +265,66 @@ export default function ArticleInteractions({
       )}
 
       {/* Actions Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 border-t border-b border-stone-200">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handleLike}
-            disabled={hasLiked || isLiking}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-              hasLiked 
-                ? 'bg-rose-500 text-white' 
-                : 'border-2 border-stone-300 text-stone-700 hover:border-rose-500 hover:text-rose-500'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
-          >
-            <Heart className={`w-5 h-5 ${hasLiked ? 'fill-white' : ''}`} />
-            {hasLiked ? 'אהבתי!' : 'לייק'} ({likesCount})
-          </button>
-        </div>
-        
-        <div className="flex items-center gap-2 flex-wrap justify-center">
-          <span className="text-stone-500 text-sm">שתפו:</span>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-5 py-6 border-t border-b border-stone-200">
+        <button
+          onClick={handleLike}
+          disabled={hasLiked || isLiking}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium transition-all ${
+            hasLiked
+              ? 'bg-rose-500 text-white'
+              : 'border-2 border-stone-300 text-stone-700 hover:border-rose-500 hover:text-rose-500'
+          } disabled:opacity-50 disabled:cursor-not-allowed`}
+        >
+          <Heart className={`w-5 h-5 ${hasLiked ? 'fill-white' : ''}`} />
+          {hasLiked ? 'אהבתי!' : 'לייק'} ({likesCount})
+        </button>
+
+        {/* Uniform circular icon buttons in one row - the old mix of
+            text-labelled and icon-only buttons wrapped to two ragged rows
+            on mobile. */}
+        <div className="flex items-center gap-2.5">
+          <span className="text-stone-500 text-sm ml-1">שתפו:</span>
           {canNativeShare && (
             <button
               onClick={shareNative}
-              className="flex items-center gap-1.5 px-3 py-2 border-2 border-stone-300 rounded-lg text-stone-700 text-sm font-medium hover:border-amber-500 hover:bg-amber-50 transition-all"
               aria-label="שיתוף"
+              title="שיתוף"
+              className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-stone-200 text-amber-700 hover:border-amber-500 hover:bg-amber-50 transition-all"
             >
-              <Share2 className="w-5 h-5 text-amber-700" />
-              שיתוף
+              <Share2 className="w-5 h-5" />
             </button>
           )}
           <button
-            onClick={copyLink}
-            className="flex items-center gap-1.5 px-3 py-2 border-2 border-stone-300 rounded-lg text-stone-700 text-sm font-medium hover:border-amber-500 hover:bg-amber-50 transition-all"
-            aria-label="העתקת קישור"
-          >
-            <Link2 className="w-5 h-5 text-amber-700" />
-            העתקת קישור
-          </button>
-          <button
             onClick={shareOnWhatsApp}
-            className="p-2 border-2 border-stone-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all"
-            aria-label="שתף בוואטסאפ"
+            aria-label="שיתוף בוואטסאפ"
+            title="וואטסאפ"
+            className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-stone-200 text-green-600 hover:border-green-500 hover:bg-green-50 transition-all"
           >
-            <MessageCircle className="w-5 h-5 text-green-600" />
-          </button>
-          <button
-            onClick={shareOnInstagram}
-            className="p-2 border-2 border-stone-300 rounded-lg hover:border-pink-500 hover:bg-pink-50 transition-all"
-            aria-label="שתף באינסטגרם"
-          >
-            <Instagram className="w-5 h-5 text-pink-600" />
+            <MessageCircle className="w-5 h-5" />
           </button>
           <button
             onClick={shareOnFacebook}
-            className="p-2 border-2 border-stone-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all"
-            aria-label="שתף בפייסבוק"
+            aria-label="שיתוף בפייסבוק"
+            title="פייסבוק"
+            className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-stone-200 text-blue-600 hover:border-blue-500 hover:bg-blue-50 transition-all"
           >
-            <Facebook className="w-5 h-5 text-blue-600" />
+            <Facebook className="w-5 h-5" />
+          </button>
+          <button
+            onClick={shareOnInstagram}
+            aria-label="שיתוף באינסטגרם"
+            title="אינסטגרם"
+            className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-stone-200 text-pink-600 hover:border-pink-500 hover:bg-pink-50 transition-all"
+          >
+            <Instagram className="w-5 h-5" />
+          </button>
+          <button
+            onClick={copyLink}
+            aria-label="העתקת קישור"
+            title="העתקת קישור"
+            className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-stone-200 text-stone-600 hover:border-amber-500 hover:bg-amber-50 transition-all"
+          >
+            <Link2 className="w-5 h-5" />
           </button>
         </div>
       </div>
