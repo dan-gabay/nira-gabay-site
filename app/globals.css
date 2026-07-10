@@ -104,12 +104,11 @@ svg {
   }
 }
 
-/* Image loading optimization — only for lazy/below-the-fold images.
-   Applying this to eager/priority hero images makes them render late and
-   "stretch" into place on load, so scope it to lazy images only. */
-img[loading="lazy"] {
-  content-visibility: auto;
-}
+/* NOTE: do not add content-visibility: auto to lazy images. It made iOS
+   Safari jump/drift mid-scroll every time a below-the-fold image activated
+   (WebKit recalculates layout at activation and there is no scroll
+   anchoring) - reported on the related-articles section of article pages.
+   The paint-skipping benefit is negligible for a page this size. */
 
 /* Prevent layout shifts from images */
 img[width][height] {
