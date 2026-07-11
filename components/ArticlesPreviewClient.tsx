@@ -2,6 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import { trackArticleCardClick, trackCTAClick } from '@/lib/analytics';
 
@@ -25,15 +26,27 @@ export default function ArticlesPreviewClient({ articles }: { articles: HomeArti
   return (
     <section className="py-24 bg-white">
       <div className="container mx-auto px-4 md:px-8">
-        <div className="text-center mb-16">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.35, ease: 'easeOut' }}
+          className="text-center mb-16"
+        >
           <h2 className="text-3xl md:text-4xl font-bold text-stone-800 mb-4">מאמרים אחרונים</h2>
           <p className="text-lg text-stone-600 max-w-2xl mx-auto">תובנות, כלים וידע מעולם הפסיכותרפיה וההורות</p>
           <div className="w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mt-6 mx-auto" />
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {articles.map((article) => (
-            <div key={article.id}>
+          {articles.map((article, index) => (
+            <motion.div
+              key={article.id}
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.3, ease: 'easeOut', delay: (index % 3) * 0.06 }}
+            >
               <Link href={`/articles/${article.slug}`} prefetch={true} onClick={() => trackArticleCardClick(article.title, article.slug, 'homepage')}>
                 <div className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-stone-100 h-full flex flex-col">
                   {article.image_url && (
@@ -77,7 +90,7 @@ export default function ArticlesPreviewClient({ articles }: { articles: HomeArti
                   </div>
                 </div>
               </Link>
-            </div>
+            </motion.div>
           ))}
         </div>
 

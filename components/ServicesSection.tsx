@@ -1,6 +1,7 @@
 "use client";
 import React from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { Users, User, Heart, Baby, HeartHandshake, Brain, ArrowLeft } from 'lucide-react';
 import { trackServiceInterest } from '@/lib/analytics';
 
@@ -49,7 +50,13 @@ export default function ServicesSection() {
   return (
     <section className="py-24 bg-gradient-to-b from-stone-50 to-white">
       <div className="container mx-auto px-4 md:px-8">
-        <div className="text-center mb-16">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.35, ease: 'easeOut' }}
+          className="text-center mb-16"
+        >
           <h2 className="text-3xl md:text-4xl font-bold text-stone-800 mb-4">
             תחומי ההתמחות שלי
           </h2>
@@ -57,7 +64,7 @@ export default function ServicesSection() {
             מגוון שירותי טיפול והדרכה מותאמים לצרכים שלכם
           </p>
           <div className="w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mt-6 mx-auto" />
-        </div>
+        </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {services.map((service, index) => {
             const IconComponent = service.icon;
@@ -83,12 +90,23 @@ export default function ServicesSection() {
                 </div>
               </div>
             );
-            return service.href ? (
-              <Link key={index} href={service.href} className="block h-full">
-                {card}
-              </Link>
-            ) : (
-              <div key={index}>{card}</div>
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.3, ease: 'easeOut', delay: (index % 3) * 0.06 }}
+                className="h-full"
+              >
+                {service.href ? (
+                  <Link href={service.href} className="block h-full">
+                    {card}
+                  </Link>
+                ) : (
+                  card
+                )}
+              </motion.div>
             );
           })}
         </div>

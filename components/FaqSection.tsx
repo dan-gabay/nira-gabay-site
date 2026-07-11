@@ -1,4 +1,5 @@
 import { faqSchema } from '@/lib/faqSchema';
+import FadeIn from '@/components/FadeIn';
 
 // Visible FAQ built from the same content that already feeds the FAQPage
 // JSON-LD - one source of truth for humans and crawlers.
@@ -12,7 +13,7 @@ export default function FaqSection() {
   return (
     <section className="py-20 bg-stone-50" aria-labelledby="faq-heading">
       <div className="container mx-auto px-4 md:px-8">
-        <div className="max-w-3xl mx-auto">
+        <FadeIn className="max-w-3xl mx-auto">
           <h2 id="faq-heading" className="text-3xl md:text-4xl font-bold text-stone-800 mb-10 text-center">
             שאלות נפוצות
           </h2>
@@ -35,7 +36,7 @@ export default function FaqSection() {
               </details>
             ))}
           </div>
-        </div>
+        </FadeIn>
       </div>
     </section>
   );
