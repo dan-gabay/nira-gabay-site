@@ -1,7 +1,7 @@
 "use client";
 import React from 'react';
 import Link from 'next/link';
-import { Users, User, Heart, Baby, HeartHandshake, Brain, Smile, ArrowLeft } from 'lucide-react';
+import { Users, User, Heart, Baby, HeartHandshake, Brain, ArrowLeft } from 'lucide-react';
 import { trackServiceInterest } from '@/lib/analytics';
 
 // Cards with an href link to their service landing page; the rest stay
@@ -14,10 +14,10 @@ const services = [
     href: '/services/teen-therapy'
   },
   {
-    icon: Smile,
-    title: 'טיפול רגשי לילדים',
-    description: 'מרחב בטוח לילדים מגיל 8 לבטא את מה שקשה, בשיתוף פעולה קרוב עם ההורים.',
-    href: '/services/child-therapy'
+    icon: Baby,
+    title: 'הדרכת הורים וטיפול בילדים',
+    description: 'כלים מעשיים להורים, וטיפול רגשי אישי לילדים מגיל 8 בשיתוף פעולה קרוב עם ההורים.',
+    href: '/services/parent-guidance'
   },
   {
     icon: User,
@@ -28,12 +28,6 @@ const services = [
     icon: Heart,
     title: 'טיפול זוגי',
     description: 'חיזוק הקשר הזוגי, שיפור התקשורת והתמודדות עם משברים מתוך הבנה ואמפתיה.'
-  },
-  {
-    icon: Baby,
-    title: 'הדרכת הורים',
-    description: 'כלים מעשיים להורות מיטבית, הבנת עולמם של הילדים ובניית קשר משפחתי בריא.',
-    href: '/services/parent-guidance'
   },
   {
     icon: HeartHandshake,
