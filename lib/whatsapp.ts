@@ -8,10 +8,16 @@ export const WHATSAPP_NUMBER = '972507936681';
 export const DEFAULT_WHATSAPP_MESSAGE = 'שלום נירה, אשמח לקבוע פגישה';
 
 // Per-path prefills; longest prefix wins so /services/* pages can share one.
+// Deliberately NO prefill for /services/sex-therapy - a prefilled message
+// naming that service violates the visitor's privacy expectation; it falls
+// back to the neutral default.
 const PATH_PREFILLS: Array<{ prefix: string; message: string }> = [
   { prefix: '/services/parent-guidance', message: 'שלום נירה, אשמח לשיחת היכרות בנושא הדרכת הורים' },
   { prefix: '/services/child-therapy', message: 'שלום נירה, אשמח לשיחת היכרות בנושא טיפול רגשי לילדים' },
   { prefix: '/services/teen-therapy', message: 'שלום נירה, אשמח לשיחת היכרות בנושא טיפול למתבגרים' },
+  { prefix: '/services/adult-therapy', message: 'שלום נירה, אשמח לשיחת היכרות בנושא טיפול אישי' },
+  { prefix: '/services/couples-therapy', message: 'שלום נירה, אשמח לשיחת היכרות בנושא טיפול זוגי' },
+  { prefix: '/services/cbt-therapy', message: 'שלום נירה, אשמח לשיחת היכרות בנושא טיפול CBT' },
 ];
 
 export function whatsappMessageForPath(pathname: string): string {

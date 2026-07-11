@@ -11,6 +11,10 @@ export default function Footer() {
     { name: 'הדרכת הורים', href: '/services/parent-guidance' },
     { name: 'טיפול רגשי לילדים', href: '/services/child-therapy' },
     { name: 'טיפול במתבגרים', href: '/services/teen-therapy' },
+    { name: 'טיפול במבוגרים', href: '/services/adult-therapy' },
+    { name: 'טיפול זוגי', href: '/services/couples-therapy' },
+    { name: 'טיפול CBT', href: '/services/cbt-therapy' },
+    { name: 'טיפול מיני', href: '/services/sex-therapy' },
     { name: 'מאמרים', href: '/articles' },
     { name: 'צרו קשר', href: '/contact' },
   ];
