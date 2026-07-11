@@ -94,11 +94,11 @@ export default function ServicePageTemplate({ service, relatedArticles }: Servic
       </section>
 
       {/* Free intro call banner */}
-      <section className="bg-stone-800 text-white">
+      <section className="bg-amber-100/70 border-y border-amber-200">
         <div className="container mx-auto px-4 md:px-8 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 text-center sm:text-right">
-            <PhoneCall className="w-6 h-6 text-amber-400 flex-shrink-0" />
-            <p className="text-lg">
+            <PhoneCall className="w-6 h-6 text-amber-700 flex-shrink-0" />
+            <p className="text-lg text-stone-800">
               <strong>שיחת היכרות טלפונית של 15 דקות, ללא עלות וללא התחייבות</strong>
               {' '}- נכיר, תשאלו כל שאלה, ונבדוק יחד אם זה מתאים לכם.
             </p>
@@ -254,15 +254,15 @@ export default function ServicePageTemplate({ service, relatedArticles }: Servic
       )}
 
       {/* Contact */}
-      <section className="py-20 bg-gradient-to-br from-stone-800 to-stone-900 text-white">
+      <section className="py-20 bg-gradient-to-br from-amber-50 to-stone-100">
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-10">
-              <h2 className="text-3xl font-bold mb-4">מוכנים לצעד הראשון?</h2>
-              <p className="text-xl text-white/90 mb-8">
+              <h2 className="text-3xl font-bold text-stone-800 mb-4">מוכנים לצעד הראשון?</h2>
+              <p className="text-xl text-stone-600 mb-8">
                 שלחו הודעה או התקשרו, ונקבע שיחת היכרות קצרה ללא עלות.
               </p>
-              <ServiceCtas whatsappMessage={service.whatsappMessage} sourceId={service.sourceId} light />
+              <ServiceCtas whatsappMessage={service.whatsappMessage} sourceId={service.sourceId} />
             </div>
             <div className="max-w-xl mx-auto">
               <ContactForm

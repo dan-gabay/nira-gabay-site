@@ -7,11 +7,10 @@ import { whatsappHref } from '@/lib/whatsapp';
 type ServiceCtasProps = {
   whatsappMessage: string;
   sourceId: string; // e.g. 'service_parent_guidance'
-  light?: boolean; // buttons on a dark background
 };
 
 // The two primary conversion actions (owner priority: WhatsApp, then phone).
-export default function ServiceCtas({ whatsappMessage, sourceId, light = false }: ServiceCtasProps) {
+export default function ServiceCtas({ whatsappMessage, sourceId }: ServiceCtasProps) {
   return (
     <div className="flex flex-col sm:flex-row gap-3 justify-center">
       <a
@@ -27,11 +26,7 @@ export default function ServiceCtas({ whatsappMessage, sourceId, light = false }
       <a
         href="tel:050-7936681"
         onClick={() => trackContactMethodClick('phone', sourceId)}
-        className={`inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl text-lg font-medium transition-colors border-2 ${
-          light
-            ? 'border-white/60 text-white hover:bg-white hover:text-stone-900'
-            : 'border-stone-300 text-stone-800 hover:bg-stone-50'
-        }`}
+        className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl text-lg font-medium transition-colors border-2 border-stone-300 bg-white/70 text-stone-800 hover:bg-stone-50"
       >
         <Phone className="w-5 h-5 flex-shrink-0" />
         050-7936681
