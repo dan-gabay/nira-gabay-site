@@ -7,6 +7,12 @@ import { supabaseServer } from '@/lib/supabaseServer';
 // Article links refresh hourly; the page copy itself is static config.
 export const revalidate = 3600;
 
+// The service list is compile-time config - unknown slugs must 404 at the
+// router level. (Next 16 serves prerendered fallback shells with HTTP 200
+// even when the page calls notFound(), so dynamicParams=true would leave
+// soft-404s; the articles route still has that variant open.)
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return SERVICES.map((s) => ({ slug: s.slug }));
 }
