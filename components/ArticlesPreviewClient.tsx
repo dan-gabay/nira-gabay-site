@@ -23,15 +23,15 @@ export default function ArticlesPreviewClient({ articles }: { articles: HomeArti
   if (articles.length === 0) return null;
 
   return (
-    <section className="py-24 bg-white">
+    <section className="py-12 md:py-24 bg-white">
       <div className="container mx-auto px-4 md:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-stone-800 mb-4">מאמרים אחרונים</h2>
-          <p className="text-lg text-stone-600 max-w-2xl mx-auto">תובנות, כלים וידע מעולם הפסיכותרפיה וההורות</p>
+        <div className="text-center mb-8 md:mb-16">
+          <h2 className="text-xl md:text-4xl font-bold text-stone-800 mb-3 md:mb-4">מאמרים אחרונים</h2>
+          <p className="text-sm md:text-lg text-stone-600 max-w-2xl mx-auto">תובנות, כלים וידע מעולם הפסיכותרפיה וההורות</p>
           <div className="w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mt-6 mx-auto" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
           {articles.map((article) => (
             <div key={article.id}>
               <Link href={`/articles/${article.slug}`} prefetch={true} onClick={() => trackArticleCardClick(article.title, article.slug, 'homepage')}>
@@ -49,7 +49,7 @@ export default function ArticlesPreviewClient({ articles }: { articles: HomeArti
                     </div>
                   )}
 
-                  <div className="p-6 flex-1 flex flex-col">
+                  <div className="p-4 md:p-6 flex-1 flex flex-col">
                     {article.tag_names && article.tag_names.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-3">
                         {article.tag_names.slice(0, 2).map((tag: string, i: number) => (
@@ -58,13 +58,13 @@ export default function ArticlesPreviewClient({ articles }: { articles: HomeArti
                       </div>
                     )}
 
-                    <h3 className="text-xl font-bold text-stone-800 mb-3 group-hover:text-amber-700 transition-colors line-clamp-2">{article.title}</h3>
+                    <h3 className="text-base md:text-xl font-bold text-stone-800 mb-2 md:mb-3 group-hover:text-amber-700 transition-colors line-clamp-2">{article.title}</h3>
 
                     {article.excerpt && (
-                      <p className="text-stone-600 text-sm leading-relaxed mb-4 line-clamp-3 flex-1">{article.excerpt}</p>
+                      <p className="text-stone-600 text-xs md:text-sm leading-relaxed mb-3 md:mb-4 line-clamp-3 flex-1">{article.excerpt}</p>
                     )}
 
-                    <div className="flex items-center justify-between text-sm text-stone-500 pt-4 border-t border-stone-100">
+                    <div className="flex items-center justify-between text-xs md:text-sm text-stone-500 pt-3 md:pt-4 border-t border-stone-100">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
                         {article.created_date && new Date(article.created_date).toLocaleDateString('he-IL')}
@@ -81,9 +81,9 @@ export default function ArticlesPreviewClient({ articles }: { articles: HomeArti
           ))}
         </div>
 
-        <div className="text-center mt-12">
+        <div className="text-center mt-8 md:mt-12">
           <Link href="/articles" onClick={() => trackCTAClick('all_articles', 'homepage')}>
-            <button className="gap-2 border border-stone-300 hover:bg-stone-50 rounded-xl px-6 py-3 text-stone-800 inline-flex items-center">
+            <button className="gap-2 min-h-[44px] border border-stone-300 hover:bg-stone-50 rounded-xl px-6 py-3 text-sm md:text-base text-stone-800 inline-flex items-center">
               לכל המאמרים
               <ArrowLeft className="w-5 h-5" />
             </button>
