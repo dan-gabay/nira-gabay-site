@@ -63,7 +63,14 @@ export default function ServicesSection() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.4, delay: reduceMotion ? 0 : index * 0.05 }}
-                className="bg-white rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-stone-100 group h-full cursor-pointer"
+                // transition-shadow, not transition-all: the card's only hover
+                // effect is the shadow, but transition-all also had CSS
+                // transitioning opacity and transform - the two properties
+                // framer-motion rewrites every frame. The browser eased toward
+                // each frame's value on its own 300ms curve, so the card
+                // stuttered its way in. The icon keeps its own transform
+                // transition; it isn't the animated element.
+                className="bg-white rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-stone-100 group h-full cursor-pointer"
                 onClick={() => trackServiceInterest(service.title)}
               >
                 <div className="flex items-start gap-3 md:gap-4">
