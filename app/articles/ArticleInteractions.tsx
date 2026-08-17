@@ -216,19 +216,24 @@ export default function ArticleInteractions({
   function shareOnFacebook() {
     const url = window.location.href;
     trackArticleShare('facebook', articleId, document.title);
-    // On mobile, iOS/Android hand facebook.com universal links to the FB app,
-    // which opens its home feed instead of the sharer composer (why "it just
-    // opens Facebook"). The native share sheet reliably posts the real URL, so
-    // prefer it when available and only fall back to the web sharer on desktop.
-    if (typeof navigator !== 'undefined' && navigator.share) {
-      navigator.share({ title: document.title, url }).catch(() => {});
-      return;
-    }
-    window.open(
-      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-      '_blank',
-      'noopener,noreferrer',
-    );
+
+    // This button must actually go to Facebook. It used to hand off to the OS
+    // share sheet whenever navigator.share existed, which meant tapping the
+    // Facebook icon on a phone opened a generic sheet - and did exactly the
+    // same thing as the share button sitting next to it.
+    //
+    // The official Share Dialog opens the real composer, in-app included, but
+    // it needs an app id. Set NEXT_PUBLIC_FACEBOOK_APP_ID to use it. Without
+    // one we fall back to sharer.php: correct on desktop and on mobile
+    // browsers without the Facebook app installed, though iOS/Android hand
+    // facebook.com universal links to the app, which lands on its feed.
+    const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID;
+    const target = appId
+      ? `https://www.facebook.com/dialog/share?app_id=${encodeURIComponent(appId)}` +
+        `&display=popup&href=${encodeURIComponent(url)}&redirect_uri=${encodeURIComponent(url)}`
+      : `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+
+    window.open(target, '_blank', 'noopener,noreferrer');
   }
 
   function shareOnInstagram() {
