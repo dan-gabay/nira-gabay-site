@@ -2,25 +2,21 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Search,
-  FileText,
-  ArrowLeft,
-  Clock,
-  ChevronDown,
-  Calendar,
-  MessageCircle,
-} from 'lucide-react';
+import { Search, FileText, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import {
-  trackArticleFilterChange,
-  trackArticleCardClick,
-  trackCTAClick,
-  trackSearch,
-  trackWhatsAppClick,
-} from '@/lib/analytics';
+import { trackArticleFilterChange, trackSearch } from '@/lib/analytics';
 import { topicPathForTag } from '@/lib/topics';
+import ArticleRow from '@/components/ArticleRow';
+import ArticleCtaBanner from '@/components/ArticleCtaBanner';
+import {
+  TEAL_DARK,
+  MINT,
+  ARTICLES_HERO_BG,
+  CHIP_BASE,
+  CHIP_IDLE,
+  CHIP_ACTIVE,
+} from '@/lib/palette';
 
 export type ArticleListItem = {
   id: string;
@@ -47,19 +43,6 @@ type ArticlesBrowserProps = {
   initialSearch?: string;
   initialTag?: string;
 };
-
-// Page palette: deep teal ground with a mint accent.
-const TEAL_DARK = '#1A4A44';
-const MINT = '#3FC195';
-
-// Background artwork. Both files already carry the leaf line-art and their own
-// gradient; the solid colours below stay as the paint-in/fallback layer.
-const HERO_BG = '/images/articles-hero.webp';
-const CTA_BG = '/images/articles-cta.webp';
-
-const WA_HREF = `https://wa.me/972507936681?text=${encodeURIComponent(
-  'שלום נירה, אשמח לקבוע פגישה',
-)}`;
 
 const PAGE_SIZE = 6;
 
@@ -101,13 +84,6 @@ export default function ArticlesBrowser({
     trackArticleFilterChange('tag', tag ?? 'all');
   }
 
-  // 40px on mobile keeps the row close to the design while still clearing the
-  // WCAG 2.5.8 target size; md and up gets the full 44px.
-  const chipBase =
-    'px-4 md:px-5 min-h-[40px] md:min-h-[44px] inline-flex items-center rounded-full text-xs md:text-sm font-medium whitespace-nowrap flex-shrink-0 transition-colors';
-  const chipIdle =
-    'bg-white text-emerald-900 border border-emerald-200 hover:bg-emerald-50';
-  const chipActive = 'text-white shadow-sm';
 
   return (
     <div style={{ paddingTop: '80px' }}>
@@ -115,7 +91,7 @@ export default function ArticlesBrowser({
       <section className="relative overflow-hidden" style={{ background: TEAL_DARK }}>
         {/* Anchored left so the artwork's leaf survives the crop on narrow screens */}
         <Image
-          src={HERO_BG}
+          src={ARTICLES_HERO_BG}
           alt=""
           fill
           priority
@@ -189,7 +165,7 @@ export default function ArticlesBrowser({
           <button
             onClick={() => applyTag(null)}
             aria-pressed={selectedTag === null}
-            className={`${chipBase} ${selectedTag === null ? chipActive : chipIdle}`}
+            className={`${CHIP_BASE} ${selectedTag === null ? CHIP_ACTIVE : CHIP_IDLE}`}
             style={selectedTag === null ? { background: MINT } : undefined}
           >
             הכל
@@ -199,7 +175,7 @@ export default function ArticlesBrowser({
           {allTags.map((tag) => {
             const hubPath = topicPathForTag(tag.name);
             const isActive = selectedTag === tag.name;
-            const chipClass = `${chipBase} ${isActive ? chipActive : chipIdle}`;
+            const chipClass = `${CHIP_BASE} ${isActive ? CHIP_ACTIVE : CHIP_IDLE}`;
             const chipStyle = isActive ? { background: MINT } : undefined;
             return hubPath ? (
               <Link
@@ -233,60 +209,7 @@ export default function ArticlesBrowser({
             <>
               <div className="max-w-3xl mx-auto space-y-3 md:space-y-4">
                 {visibleArticles.map((article, index) => (
-                  <Link
-                    key={article.id}
-                    href={`/articles/${article.slug || article.id}`}
-                    prefetch={index < 4}
-                    onClick={() => trackArticleCardClick(article.title, article.slug)}
-                    className="group flex items-stretch gap-3 md:gap-4 bg-white rounded-2xl p-2.5 md:p-4 shadow-sm hover:shadow-lg border border-stone-100 transition-shadow"
-                  >
-                    {/* Text first: in RTL this sits on the right, image on the left */}
-                    <div className="flex-1 min-w-0 flex flex-col">
-                      <h2 className="text-base md:text-xl font-bold text-stone-800 leading-snug line-clamp-2 mb-1 md:mb-1.5 group-hover:text-emerald-700 transition-colors">
-                        {article.title}
-                      </h2>
-                      {article.excerpt && (
-                        <p className="text-xs md:text-sm text-stone-500 leading-relaxed line-clamp-2">
-                          {article.excerpt}
-                        </p>
-                      )}
-                      <div className="mt-auto pt-2 md:pt-3 flex items-center justify-between gap-3">
-                        <span className="flex items-center gap-1.5 text-[11px] md:text-xs text-stone-400">
-                          {article.reading_time ? (
-                            <>
-                              <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" aria-hidden="true" />
-                              {article.reading_time} דק׳ קריאה
-                            </>
-                          ) : null}
-                        </span>
-                        <span
-                          className="text-xs md:text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all"
-                          style={{ color: MINT }}
-                        >
-                          קרא עוד
-                          <ArrowLeft className="w-3.5 h-3.5 md:w-4 md:h-4" aria-hidden="true" />
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="relative w-24 md:w-40 flex-shrink-0 self-stretch min-h-[86px] md:min-h-[104px] rounded-xl overflow-hidden bg-stone-100">
-                      {article.image_url ? (
-                        <Image
-                          src={article.image_url}
-                          alt={article.title}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-500"
-                          sizes="(max-width: 768px) 96px, 160px"
-                          loading={index < 4 ? 'eager' : 'lazy'}
-                          priority={index < 4}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-50 to-stone-100">
-                          <FileText className="w-6 h-6 text-emerald-600/60" aria-hidden="true" />
-                        </div>
-                      )}
-                    </div>
-                  </Link>
+                  <ArticleRow key={article.id} article={article} index={index} />
                 ))}
               </div>
 
@@ -333,58 +256,7 @@ export default function ArticlesBrowser({
         </div>
       </section>
 
-      {/* ───────── CTA banner ───────── */}
-      <section className="pb-10 md:pb-12 px-4 md:px-8 bg-stone-50">
-        <div className="container mx-auto">
-          <div
-            className="relative overflow-hidden rounded-3xl"
-            style={{ background: `linear-gradient(115deg, ${MINT} 0%, #1F7A63 100%)` }}
-          >
-            <Image
-              src={CTA_BG}
-              alt=""
-              fill
-              loading="lazy"
-              className="object-cover"
-              sizes="(max-width: 1280px) 100vw, 1280px"
-            />
-
-            <div className="relative px-4 py-6 md:px-12 md:py-14 flex flex-row items-center justify-between gap-3 md:gap-8">
-              <div className="min-w-0 text-right">
-                <h2 className="text-lg md:text-3xl font-bold text-white mb-1.5 md:mb-3">
-                  מוכנים לעשות שינוי?
-                </h2>
-                <p className="text-xs md:text-base text-white/90 leading-relaxed">
-                  אני כאן כדי ללוות אתכם בדרך
-                  <br />
-                  להגשמה עצמית וחיים מלאים יותר
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-2.5 md:gap-3 flex-shrink-0">
-                <Link
-                  href="/contact"
-                  onClick={() => trackCTAClick('contact', 'articles_page_cta')}
-                  className="inline-flex items-center justify-center gap-2 min-h-[40px] md:min-h-[44px] px-3.5 md:px-7 rounded-full border border-white/70 text-white text-xs md:text-base font-medium whitespace-nowrap hover:bg-white/15 transition-colors"
-                >
-                  <Calendar className="w-3.5 h-3.5 md:w-5 md:h-5 flex-shrink-0" aria-hidden="true" />
-                  קבעו פגישה
-                </Link>
-                <a
-                  href={WA_HREF}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => trackWhatsAppClick('articles_page_cta')}
-                  className="inline-flex items-center justify-center gap-2 min-h-[40px] md:min-h-[44px] px-3.5 md:px-7 rounded-full border border-white/70 text-white text-xs md:text-base font-medium whitespace-nowrap hover:bg-white/15 transition-colors"
-                >
-                  <MessageCircle className="w-3.5 h-3.5 md:w-5 md:h-5 flex-shrink-0" aria-hidden="true" />
-                  שלחו הודעת WhatsApp
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <ArticleCtaBanner source="articles_page_cta" />
     </div>
   );
 }
