@@ -9,6 +9,7 @@ import ArticlesPreviewClient, { type HomeArticlePreview } from '@/components/Art
 import FaqSection from '@/components/FaqSection';
 import HeroSection from '@/components/HeroSection';
 import ServicesSection from '@/components/ServicesSection';
+import Reveal from '@/components/Reveal';
 import { supabaseServer } from '@/lib/supabaseServer';
 import type { Metadata } from 'next';
 
@@ -56,7 +57,7 @@ export default async function Home() {
       {/* Introduction Section */}
       <section className="py-12 md:py-24 bg-white">
         <div className="container mx-auto px-4 md:px-8">
-          <div className="max-w-4xl mx-auto text-center">
+          <Reveal className="max-w-4xl mx-auto text-center">
             <h2 className="text-xl md:text-4xl font-bold text-stone-800 mb-5 md:mb-8">
               ברוכים הבאים למרחב הטיפולי שלי
             </h2>
@@ -73,7 +74,7 @@ export default async function Home() {
             >
               קראו עוד עליי
             </Link>
-          </div>
+          </Reveal>
         </div>
       </section>
 
@@ -83,7 +84,7 @@ export default async function Home() {
       {/* Clinic Info */}
       <section className="py-10 md:py-20 bg-gradient-to-br from-amber-50 to-stone-50">
         <div className="container mx-auto px-4 md:px-8">
-          <div className="max-w-4xl mx-auto">
+          <Reveal className="max-w-4xl mx-auto">
             <div className="bg-white rounded-3xl p-5 md:p-12 shadow-xl">
               <div className="flex flex-col md:flex-row items-center gap-5 md:gap-8">
                 <div className="w-full md:w-1/3">
@@ -111,7 +112,7 @@ export default async function Home() {
                 </div>
               </div>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
@@ -124,7 +125,7 @@ export default async function Home() {
       {/* CTA Section */}
       <section className="py-12 md:py-24 bg-gradient-to-br from-stone-800 to-stone-900 text-white">
         <div className="container mx-auto px-4 md:px-8">
-          <div className="max-w-4xl mx-auto text-center">
+          <Reveal className="max-w-4xl mx-auto text-center">
             <h2 className="text-xl md:text-4xl font-bold mb-4 md:mb-6">
               מוכנים לצעד הראשון?
             </h2>
@@ -149,7 +150,7 @@ export default async function Home() {
                 </button>
               </Link>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
     </div>

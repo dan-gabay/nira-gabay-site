@@ -1,7 +1,9 @@
 "use client";
 import React from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Users, User, Heart, Baby, HeartHandshake, Brain } from 'lucide-react';
 import { trackServiceInterest } from '@/lib/analytics';
+import Reveal from '@/components/Reveal';
 
 const services = [
   {
@@ -37,10 +39,12 @@ const services = [
 ];
 
 export default function ServicesSection() {
+  const reduceMotion = useReducedMotion();
+
   return (
     <section className="py-12 md:py-24 bg-gradient-to-b from-stone-50 to-white">
       <div className="container mx-auto px-4 md:px-8">
-        <div className="text-center mb-8 md:mb-16">
+        <Reveal className="text-center mb-8 md:mb-16">
           <h2 className="text-xl md:text-4xl font-bold text-stone-800 mb-3 md:mb-4">
             תחומי ההתמחות שלי
           </h2>
@@ -48,13 +52,17 @@ export default function ServicesSection() {
             מגוון שירותי טיפול והדרכה מותאמים לצרכים שלכם
           </p>
           <div className="w-16 md:w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mt-4 md:mt-6 mx-auto" />
-        </div>
+        </Reveal>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
           {services.map((service, index) => {
             const IconComponent = service.icon;
             return (
-              <div
+              <motion.div
                 key={index}
+                initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.4, delay: reduceMotion ? 0 : index * 0.05 }}
                 className="bg-white rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-stone-100 group h-full cursor-pointer"
                 onClick={() => trackServiceInterest(service.title)}
               >
@@ -67,7 +75,7 @@ export default function ServicesSection() {
                     <p className="text-stone-600 text-xs md:text-sm leading-relaxed">{service.description}</p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
