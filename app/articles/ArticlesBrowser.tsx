@@ -2,10 +2,24 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, FileText, ArrowLeft } from 'lucide-react';
+import {
+  Search,
+  FileText,
+  ArrowLeft,
+  Clock,
+  ChevronDown,
+  Calendar,
+  MessageCircle,
+} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { trackArticleFilterChange, trackArticleCardClick, trackCTAClick, trackSearch } from '@/lib/analytics';
+import {
+  trackArticleFilterChange,
+  trackArticleCardClick,
+  trackCTAClick,
+  trackSearch,
+  trackWhatsAppClick,
+} from '@/lib/analytics';
 import { topicPathForTag } from '@/lib/topics';
 
 export type ArticleListItem = {
@@ -34,6 +48,42 @@ type ArticlesBrowserProps = {
   initialTag?: string;
 };
 
+// Page palette: deep teal ground with a mint accent.
+const TEAL_DARK = '#1A4A44';
+const MINT = '#3FC195';
+
+// Background artwork slots. Drop the files into public/images/ and point these
+// at them - the gradient underneath stays as the base layer either way.
+const HERO_BG: string = '';
+const CTA_BG: string = '';
+
+const WA_HREF = `https://wa.me/972507936681?text=${encodeURIComponent(
+  'שלום נירה, אשמח לקבוע פגישה',
+)}`;
+
+const PAGE_SIZE = 6;
+
+// Decorative line-art branch, used as a watermark in the hero and CTA banner.
+function LeafMark({ className = '' }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 200 200"
+      fill="none"
+      aria-hidden="true"
+      className={className}
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    >
+      <path d="M26 182C26 182 42 98 96 54c30-24 62-30 62-30" />
+      <path d="M92 120c-22 7-43-1-53-17 16-13 39-13 55 1" />
+      <path d="M110 88c-21 3-37-7-43-23 18-9 39-3 51 11" />
+      <path d="M127 58c-18-1-31-13-33-29 18-3 34 7 43 21" />
+      <path d="M70 152c-19 5-35-3-43-17 14-11 33-10 47 2" />
+    </svg>
+  );
+}
+
 export default function ArticlesBrowser({
   articles,
   allTags,
@@ -42,6 +92,7 @@ export default function ArticlesBrowser({
 }: ArticlesBrowserProps) {
   const [searchQuery, setSearchQuery] = useState(initialSearch || '');
   const [selectedTag, setSelectedTag] = useState<string | null>(initialTag || null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const filteredArticles = articles.filter((article) => {
     const matchesSearch =
@@ -56,174 +107,229 @@ export default function ArticlesBrowser({
     return matchesSearch && matchesTag;
   });
 
+  const visibleArticles = filteredArticles.slice(0, visibleCount);
+  const hasMore = filteredArticles.length > visibleCount;
+
+  // Any filter change restarts the list from the first page.
+  function applySearch(value: string) {
+    setSearchQuery(value);
+    setVisibleCount(PAGE_SIZE);
+  }
+
+  function applyTag(tag: string | null) {
+    setSelectedTag(tag);
+    setVisibleCount(PAGE_SIZE);
+    trackArticleFilterChange('tag', tag ?? 'all');
+  }
+
+  const chipBase =
+    'px-5 min-h-[44px] inline-flex items-center rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 transition-colors';
+  const chipIdle =
+    'bg-white text-emerald-900 border border-emerald-200 hover:bg-emerald-50';
+  const chipActive = 'text-white shadow-sm';
+
   return (
-    <div className="overflow-hidden" style={{ paddingTop: '80px' }}>
-      {/* Hero */}
-      <section className="py-10 md:py-16 bg-gradient-to-br from-stone-100 to-amber-50">
-        <div className="container mx-auto px-4 md:px-8">
+    <div style={{ paddingTop: '80px' }}>
+      {/* ───────── Hero ───────── */}
+      <section className="relative overflow-hidden" style={{ background: TEAL_DARK }}>
+        {HERO_BG && (
+          <Image
+            src={HERO_BG}
+            alt=""
+            fill
+            priority
+            className="object-cover opacity-40"
+            sizes="100vw"
+          />
+        )}
+        {/* keeps the copy legible whatever artwork sits behind it */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(180deg, ${TEAL_DARK}e6 0%, ${TEAL_DARK}cc 55%, ${TEAL_DARK}f2 100%)`,
+          }}
+        />
+        <LeafMark className="absolute -left-10 top-4 w-48 h-48 text-white/[0.09] pointer-events-none" />
+        <LeafMark className="absolute -right-12 bottom-0 w-40 h-40 text-white/[0.06] scale-x-[-1] pointer-events-none" />
+
+        <div className="relative container mx-auto px-4 md:px-8 pt-10 pb-24 md:pt-14 md:pb-28">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="text-center max-w-3xl mx-auto"
+            className="text-center max-w-2xl mx-auto"
           >
-            <span className="inline-block px-3 py-1.5 bg-amber-100 rounded-full text-amber-800 text-sm mb-4">
+            <span
+              className="block w-12 h-px mx-auto mb-6"
+              style={{ background: 'rgba(255,255,255,0.35)' }}
+            />
+            <h1
+              className="text-5xl md:text-6xl font-bold mb-4 leading-tight"
+              style={{ color: MINT }}
+            >
               מאמרים
-            </span>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-stone-800 mb-3 md:mb-4">
-              ידע ותובנות
             </h1>
-            <p className="text-base md:text-lg text-stone-600">
-              מאמרים, טיפים וכלים מעולם הפסיכותרפיה, ההורות והזוגיות
+            <p className="text-base md:text-lg text-white/80 leading-relaxed">
+              ידע מקצועי, תובנות וכלים מעשיים
+              <br />
+              לחיים מלאים ומאוזנים יותר
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Search & Filter */}
-      <section className="py-8 bg-white border-b border-stone-100 sticky top-[80px] z-30" style={{ minHeight: '88px' }}>
-        <div className="container mx-auto px-4 md:px-8">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            {/* Search */}
-            <div className="relative w-full md:w-96">
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-stone-400" />
-              <label htmlFor="articles-search" className="sr-only">
-                חיפוש מאמרים
-              </label>
-              <input
-                id="articles-search"
-                type="text"
-                placeholder="חיפוש מאמרים..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onBlur={() => {
-                  if (searchQuery) {
-                    trackArticleFilterChange('search', searchQuery);
-                    trackSearch(searchQuery, filteredArticles.length); // GA4 recommended event
-                  }
-                }}
-                className="w-full pr-10 bg-stone-50 border border-stone-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
-              />
-            </div>
-
-            {/* Tags - horizontal scroll on mobile */}
-            <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-              <Filter className="w-5 h-5 text-stone-400 flex-shrink-0 hidden md:block" />
-              <button
-                onClick={() => {
-                  setSelectedTag(null);
-                  trackArticleFilterChange('tag', 'all');
-                }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
-                  selectedTag === null
-                    ? 'bg-stone-800 text-white'
-                    : 'bg-white border border-stone-200 text-stone-700 hover:bg-stone-50'
-                }`}
-              >
-                הכל
-              </button>
-              {/* Tag chips are crawlable links to the topic hub pages; tags
-                  without a hub fall back to the legacy ?tag= client filter. */}
-              {allTags.map((tag) => {
-                const hubPath = topicPathForTag(tag.name);
-                const chipClass = `px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
-                  selectedTag === tag.name
-                    ? 'bg-stone-800 text-white'
-                    : 'bg-white border border-stone-200 text-stone-700 hover:bg-stone-50'
-                }`;
-                return hubPath ? (
-                  <Link
-                    key={tag.id}
-                    href={hubPath}
-                    className={chipClass}
-                    onClick={() => trackArticleFilterChange('tag', tag.name)}
-                  >
-                    {tag.name}
-                  </Link>
-                ) : (
-                  <button
-                    key={tag.id}
-                    onClick={() => {
-                      setSelectedTag(tag.name);
-                      trackArticleFilterChange('tag', tag.name);
-                    }}
-                    className={chipClass}
-                  >
-                    {tag.name}
-                  </button>
-                );
-              })}
-            </div>
+      {/* ───────── Search (straddles the hero's bottom edge) ───────── */}
+      <div className="relative z-20 container mx-auto px-4 md:px-8 -mt-9">
+        <div className="max-w-2xl mx-auto">
+          <label htmlFor="articles-search" className="sr-only">
+            חיפוש מאמרים
+          </label>
+          <div className="relative">
+            <Search
+              className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400 pointer-events-none"
+              aria-hidden="true"
+            />
+            <input
+              id="articles-search"
+              type="search"
+              placeholder="חיפוש מאמרים..."
+              value={searchQuery}
+              onChange={(e) => applySearch(e.target.value)}
+              onBlur={() => {
+                if (searchQuery) {
+                  trackArticleFilterChange('search', searchQuery);
+                  trackSearch(searchQuery, filteredArticles.length); // GA4 recommended event
+                }
+              }}
+              className="w-full bg-white rounded-full shadow-xl shadow-stone-900/10 border border-stone-100 py-4 pr-6 pl-14 text-base text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Articles Grid */}
-      <section className="py-8 md:py-12 bg-gradient-to-b from-white to-stone-50">
+      {/* ───────── Topic chips ───────── */}
+      <div className="container mx-auto px-4 md:px-8 pt-6">
+        <div
+          className="flex items-center gap-2.5 overflow-x-auto scrollbar-hide pb-1 md:justify-center"
+          role="group"
+          aria-label="סינון לפי נושא"
+        >
+          <button
+            onClick={() => applyTag(null)}
+            aria-pressed={selectedTag === null}
+            className={`${chipBase} ${selectedTag === null ? chipActive : chipIdle}`}
+            style={selectedTag === null ? { background: MINT } : undefined}
+          >
+            הכל
+          </button>
+          {/* Tag chips are crawlable links to the topic hub pages; tags
+              without a hub fall back to the legacy ?tag= client filter. */}
+          {allTags.map((tag) => {
+            const hubPath = topicPathForTag(tag.name);
+            const isActive = selectedTag === tag.name;
+            const chipClass = `${chipBase} ${isActive ? chipActive : chipIdle}`;
+            const chipStyle = isActive ? { background: MINT } : undefined;
+            return hubPath ? (
+              <Link
+                key={tag.id}
+                href={hubPath}
+                className={chipClass}
+                style={chipStyle}
+                onClick={() => trackArticleFilterChange('tag', tag.name)}
+              >
+                {tag.name}
+              </Link>
+            ) : (
+              <button
+                key={tag.id}
+                onClick={() => applyTag(tag.name)}
+                aria-pressed={isActive}
+                className={chipClass}
+                style={chipStyle}
+              >
+                {tag.name}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ───────── Article list ───────── */}
+      <section className="py-8 md:py-10 bg-gradient-to-b from-white to-stone-50">
         <div className="container mx-auto px-4 md:px-8">
-          {filteredArticles.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-              {filteredArticles.map((article, index) => (
-                <Link
-                  key={article.id}
-                  href={`/articles/${article.slug || article.id}`}
-                  prefetch={index < 6}
-                  className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 block border border-stone-100"
-                  onClick={() => trackArticleCardClick(article.title, article.slug)}
-                >
-                  {/* Article Image or Warm Placeholder */}
-                  <div className="relative w-full aspect-[16/9] overflow-hidden">
-                    {article.image_url ? (
-                      <Image
-                        src={article.image_url}
-                        alt={article.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        loading={index < 6 ? "eager" : "lazy"}
-                        priority={index < 6}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-amber-50 via-stone-50 to-amber-100 flex items-center justify-center">
-                        <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center opacity-60">
-                          <FileText className="w-6 h-6 text-amber-600" />
-                        </div>
+          {visibleArticles.length > 0 ? (
+            <>
+              <div className="max-w-3xl mx-auto space-y-4">
+                {visibleArticles.map((article, index) => (
+                  <Link
+                    key={article.id}
+                    href={`/articles/${article.slug || article.id}`}
+                    prefetch={index < 4}
+                    onClick={() => trackArticleCardClick(article.title, article.slug)}
+                    className="group flex items-stretch gap-4 bg-white rounded-2xl p-3 md:p-4 shadow-sm hover:shadow-lg border border-stone-100 transition-shadow"
+                  >
+                    {/* Text first: in RTL this sits on the right, image on the left */}
+                    <div className="flex-1 min-w-0 flex flex-col">
+                      <h2 className="text-lg md:text-xl font-bold text-stone-800 leading-snug line-clamp-2 mb-1.5 group-hover:text-emerald-700 transition-colors">
+                        {article.title}
+                      </h2>
+                      {article.excerpt && (
+                        <p className="text-sm text-stone-500 leading-relaxed line-clamp-2">
+                          {article.excerpt}
+                        </p>
+                      )}
+                      <div className="mt-auto pt-3 flex items-center justify-between gap-3">
+                        <span className="flex items-center gap-1.5 text-xs text-stone-400">
+                          {article.reading_time ? (
+                            <>
+                              <Clock className="w-3.5 h-3.5" aria-hidden="true" />
+                              {article.reading_time} דק׳ קריאה
+                            </>
+                          ) : null}
+                        </span>
+                        <span
+                          className="text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all"
+                          style={{ color: MINT }}
+                        >
+                          קרא עוד
+                          <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+                        </span>
                       </div>
-                    )}
-                  </div>
-
-                  <div className="p-5 md:p-6">
-                    {/* Tags */}
-                    {article.tag_names && article.tag_names.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-3">
-                        {article.tag_names.slice(0, 3).map((tag, i) => (
-                          <span key={i} className="text-xs px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full border border-amber-100">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    <h3 className="text-lg font-bold text-stone-800 mb-2 group-hover:text-amber-700 transition-colors line-clamp-2 leading-snug">
-                      {article.title}
-                    </h3>
-                    {article.excerpt && (
-                      <p className="text-stone-500 text-sm line-clamp-2 mb-4 leading-relaxed">{article.excerpt}</p>
-                    )}
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-stone-400">
-                        {article.reading_time ? `${article.reading_time} דק׳ קריאה` : ''}
-                      </span>
-                      <span className="text-amber-700 text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
-                        קרא עוד
-                        <ArrowLeft className="w-4 h-4" />
-                      </span>
                     </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+
+                    <div className="relative w-28 md:w-40 flex-shrink-0 self-stretch min-h-[104px] rounded-xl overflow-hidden bg-stone-100">
+                      {article.image_url ? (
+                        <Image
+                          src={article.image_url}
+                          alt={article.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          sizes="(max-width: 768px) 112px, 160px"
+                          loading={index < 4 ? 'eager' : 'lazy'}
+                          priority={index < 4}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-50 to-stone-100">
+                          <FileText className="w-6 h-6 text-emerald-600/60" aria-hidden="true" />
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              {hasMore && (
+                <div className="flex justify-center mt-8">
+                  <button
+                    onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                    className="inline-flex items-center gap-2 px-7 min-h-[44px] rounded-full border border-emerald-300 text-emerald-800 bg-white hover:bg-emerald-50 font-medium transition-colors"
+                  >
+                    טען עוד מאמרים
+                    <ChevronDown className="w-4 h-4" aria-hidden="true" />
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <motion.div
               initial={{ opacity: 0 }}
@@ -231,9 +337,9 @@ export default function ArticlesBrowser({
               className="text-center py-20"
             >
               <div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FileText className="w-10 h-10 text-stone-400" />
+                <FileText className="w-10 h-10 text-stone-400" aria-hidden="true" />
               </div>
-              <h3 className="text-xl font-bold text-stone-800 mb-2">לא נמצאו מאמרים</h3>
+              <h2 className="text-xl font-bold text-stone-800 mb-2">לא נמצאו מאמרים</h2>
               <p className="text-stone-600">
                 {searchQuery || selectedTag
                   ? 'נסו לשנות את החיפוש או הסינון'
@@ -242,10 +348,10 @@ export default function ArticlesBrowser({
               {(searchQuery || selectedTag) && (
                 <button
                   onClick={() => {
-                    setSearchQuery('');
-                    setSelectedTag(null);
+                    applySearch('');
+                    applyTag(null);
                   }}
-                  className="mt-4 px-6 py-2 border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors"
+                  className="mt-4 px-6 min-h-[44px] border border-stone-200 rounded-full hover:bg-stone-50 transition-colors"
                 >
                   נקה סינון
                 </button>
@@ -255,18 +361,52 @@ export default function ArticlesBrowser({
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-16 bg-amber-50">
-        <div className="container mx-auto px-4 md:px-8 text-center">
-          <h2 className="text-3xl font-bold text-stone-800 mb-4">מעוניינים בייעוץ אישי?</h2>
-          <p className="text-xl text-stone-600 mb-8">אשמח לעזור לכם במסע שלכם</p>
-          <a
-            href="/contact"
-            className="inline-block px-8 py-3 bg-stone-800 text-white rounded-lg hover:bg-stone-700 transition-colors"
-            onClick={() => trackCTAClick('contact', 'articles_page_cta')}
+      {/* ───────── CTA banner ───────── */}
+      <section className="pb-12 px-4 md:px-8 bg-stone-50">
+        <div className="container mx-auto">
+          <div
+            className="relative overflow-hidden rounded-3xl"
+            style={{ background: `linear-gradient(115deg, ${MINT} 0%, #1F7A63 100%)` }}
           >
-            צרו קשר
-          </a>
+            {CTA_BG && (
+              <Image src={CTA_BG} alt="" fill className="object-cover opacity-25" sizes="100vw" />
+            )}
+            <LeafMark className="absolute -left-8 -bottom-8 w-44 h-44 text-white/15 pointer-events-none" />
+
+            <div className="relative px-5 py-8 md:px-12 md:py-14 flex flex-row items-center justify-between gap-4 md:gap-8">
+              <div className="min-w-0 text-right">
+                <h2 className="text-xl md:text-3xl font-bold text-white mb-2 md:mb-3">
+                  מוכנים לעשות שינוי?
+                </h2>
+                <p className="text-sm md:text-base text-white/90 leading-relaxed">
+                  אני כאן כדי ללוות אתכם בדרך
+                  <br />
+                  להגשמה עצמית וחיים מלאים יותר
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 flex-shrink-0">
+                <Link
+                  href="/contact"
+                  onClick={() => trackCTAClick('contact', 'articles_page_cta')}
+                  className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 md:px-7 rounded-full border border-white/70 text-white text-sm md:text-base font-medium whitespace-nowrap hover:bg-white/15 transition-colors"
+                >
+                  <Calendar className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" aria-hidden="true" />
+                  קבעו פגישה
+                </Link>
+                <a
+                  href={WA_HREF}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackWhatsAppClick('articles_page_cta')}
+                  className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 md:px-7 rounded-full border border-white/70 text-white text-sm md:text-base font-medium whitespace-nowrap hover:bg-white/15 transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" aria-hidden="true" />
+                  שלחו הודעת WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </div>
