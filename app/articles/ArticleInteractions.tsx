@@ -5,6 +5,7 @@ import { Heart, MessageCircle, Facebook, Send, User, Mail, Loader2, Instagram, S
 import { getUserIdentifier } from '@/lib/userIdentifier';
 import { supabase as supabaseClient } from '@/lib/supabaseClient';
 import { trackArticleLike, trackCommentSubmit, trackArticleShare, trackWhatsAppClick } from '@/lib/analytics';
+import { FACEBOOK_APP_ID } from '@/lib/facebook';
 
 type ArticleInteractionsProps = {
   articleId: string;
@@ -222,18 +223,19 @@ export default function ArticleInteractions({
     // Facebook icon on a phone opened a generic sheet - and did exactly the
     // same thing as the share button sitting next to it.
     //
-    // The official Share Dialog opens the real composer, in-app included, but
-    // it needs an app id. Set NEXT_PUBLIC_FACEBOOK_APP_ID to use it. Without
-    // one we fall back to sharer.php: correct on desktop and on mobile
-    // browsers without the Facebook app installed, though iOS/Android hand
-    // facebook.com universal links to the app, which lands on its feed.
-    const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID;
+    // The official Share Dialog opens the real composer, in-app included.
+    // Falls back to sharer.php if the app id is ever cleared: correct on
+    // desktop and on mobile browsers without the Facebook app installed,
+    // though iOS/Android hand facebook.com links to the app, which lands on
+    // its feed.
+    const appId = FACEBOOK_APP_ID;
     const target = appId
       ? `https://www.facebook.com/dialog/share?app_id=${encodeURIComponent(appId)}` +
         `&display=popup&href=${encodeURIComponent(url)}&redirect_uri=${encodeURIComponent(url)}`
       : `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
 
-    window.open(target, '_blank', 'noopener,noreferrer');
+    // Window features belong in the third argument - window.open takes three.
+    window.open(target, '_blank', 'noopener,noreferrer,width=600,height=600');
   }
 
   function shareOnInstagram() {

@@ -1,3 +1,4 @@
+import { FACEBOOK_APP_ID } from '@/lib/facebook';
 import type { Metadata } from "next";
 import { Heebo, Assistant } from "next/font/google";
 import "./globals.css";
@@ -222,6 +223,10 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com" />
         <link rel="dns-prefetch" href="https://tyrmguosxbmwykfnxcvk.supabase.co" />
+        {/* Associates shares with the Facebook app behind the article Share
+            Dialog. Emitted here rather than via metadata.other, which renders
+            name= while Facebook documents property=. */}
+        <meta property="fb:app_id" content={FACEBOOK_APP_ID} />
         <JsonLd data={organizationSchema} />
         <JsonLd data={webSiteSchema} />
       </head>
