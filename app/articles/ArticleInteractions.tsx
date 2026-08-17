@@ -265,81 +265,81 @@ export default function ArticleInteractions({
       )}
 
       {/* Actions Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-5 py-6 border-t border-b border-stone-200">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 md:gap-5 py-4 md:py-6 border-t border-b border-stone-200">
         <button
           onClick={handleLike}
           disabled={hasLiked || isLiking}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium transition-all ${
+          className={`flex items-center gap-2 px-4 md:px-5 py-2 md:py-2.5 rounded-full text-sm md:text-base font-medium transition-all ${
             hasLiked
               ? 'bg-rose-500 text-white'
               : 'border-2 border-stone-300 text-stone-700 hover:border-rose-500 hover:text-rose-500'
           } disabled:opacity-50 disabled:cursor-not-allowed`}
         >
-          <Heart className={`w-5 h-5 ${hasLiked ? 'fill-white' : ''}`} />
+          <Heart className={`w-4 h-4 md:w-5 md:h-5 ${hasLiked ? 'fill-white' : ''}`} />
           {hasLiked ? 'אהבתי!' : 'לייק'} ({likesCount})
         </button>
 
         {/* Uniform circular icon buttons in one row - the old mix of
             text-labelled and icon-only buttons wrapped to two ragged rows
             on mobile. */}
-        <div className="flex items-center gap-2.5">
-          <span className="text-stone-500 text-sm ml-1">שתפו:</span>
+        <div className="flex items-center gap-2 md:gap-2.5">
+          <span className="text-stone-500 text-xs md:text-sm ml-1">שתפו:</span>
           {canNativeShare && (
             <button
               onClick={shareNative}
               aria-label="שיתוף"
               title="שיתוף"
-              className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-stone-200 text-amber-700 hover:border-amber-500 hover:bg-amber-50 transition-all"
+              className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full border-2 border-stone-200 text-amber-700 hover:border-amber-500 hover:bg-amber-50 transition-all"
             >
-              <Share2 className="w-5 h-5" />
+              <Share2 className="w-4 h-4 md:w-5 md:h-5" />
             </button>
           )}
           <button
             onClick={shareOnWhatsApp}
             aria-label="שיתוף בוואטסאפ"
             title="וואטסאפ"
-            className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-stone-200 text-green-600 hover:border-green-500 hover:bg-green-50 transition-all"
+            className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full border-2 border-stone-200 text-green-600 hover:border-green-500 hover:bg-green-50 transition-all"
           >
-            <MessageCircle className="w-5 h-5" />
+            <MessageCircle className="w-4 h-4 md:w-5 md:h-5" />
           </button>
           <button
             onClick={shareOnFacebook}
             aria-label="שיתוף בפייסבוק"
             title="פייסבוק"
-            className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-stone-200 text-blue-600 hover:border-blue-500 hover:bg-blue-50 transition-all"
+            className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full border-2 border-stone-200 text-blue-600 hover:border-blue-500 hover:bg-blue-50 transition-all"
           >
-            <Facebook className="w-5 h-5" />
+            <Facebook className="w-4 h-4 md:w-5 md:h-5" />
           </button>
           <button
             onClick={shareOnInstagram}
             aria-label="שיתוף באינסטגרם"
             title="אינסטגרם"
-            className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-stone-200 text-pink-600 hover:border-pink-500 hover:bg-pink-50 transition-all"
+            className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full border-2 border-stone-200 text-pink-600 hover:border-pink-500 hover:bg-pink-50 transition-all"
           >
-            <Instagram className="w-5 h-5" />
+            <Instagram className="w-4 h-4 md:w-5 md:h-5" />
           </button>
           <button
             onClick={copyLink}
             aria-label="העתקת קישור"
             title="העתקת קישור"
-            className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-stone-200 text-stone-600 hover:border-amber-500 hover:bg-amber-50 transition-all"
+            className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full border-2 border-stone-200 text-stone-600 hover:border-amber-500 hover:bg-amber-50 transition-all"
           >
-            <Link2 className="w-5 h-5" />
+            <Link2 className="w-4 h-4 md:w-5 md:h-5" />
           </button>
         </div>
       </div>
 
       {/* Comments Section */}
-      <section className="mt-12 mb-12" style={{ minHeight: 'auto' }}>
+      <section className="mt-8 mb-8 md:mt-12 md:mb-12" style={{ minHeight: 'auto' }}>
         <h3 className="text-lg md:text-2xl font-bold text-stone-800 mb-4 md:mb-8 font-serif">
           תגובות ({comments.length})
         </h3>
 
         {/* Comment Form */}
-        <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg border border-stone-100 mb-8">
-          <h4 className="text-lg font-bold text-stone-800 mb-4">השאירו תגובה</h4>
+        <div className="bg-white rounded-2xl p-4 md:p-8 shadow-lg border border-stone-100 mb-6 md:mb-8">
+          <h4 className="text-base md:text-lg font-bold text-stone-800 mb-3 md:mb-4">השאירו תגובה</h4>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-3 md:mb-4">
             <div className="relative">
               <label htmlFor="comment-author-name" className="sr-only">
                 שם
@@ -381,18 +381,18 @@ export default function ArticleInteractions({
             className="w-full px-4 py-3 border-2 border-stone-200 rounded-lg focus:border-amber-500 focus:outline-none transition-colors mb-4 min-h-24 resize-y"
           />
           
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-stone-500">התגובה תפורסם לאחר אישור</p>
+          <div className="flex justify-between items-center gap-3">
+            <p className="text-[11px] md:text-sm text-stone-500">התגובה תפורסם לאחר אישור</p>
             <button
               onClick={handleSubmitComment}
               disabled={!commentForm.author_name || !commentForm.content || isSubmittingComment}
-              className="flex items-center gap-2 bg-stone-800 hover:bg-stone-900 text-white px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 flex-shrink-0 bg-stone-800 hover:bg-stone-900 text-white px-4 md:px-6 py-2.5 md:py-3 rounded-lg text-sm md:text-base font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmittingComment ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  <Send className="w-5 h-5" />
+                  <Send className="w-4 h-4 md:w-5 md:h-5" />
                   שליחה
                 </>
               )}
@@ -405,32 +405,32 @@ export default function ArticleInteractions({
             a taller skeleton collapsed on load and yanked the related-articles
             section up mid-scroll on mobile (iOS has no scroll anchoring). */}
         {isLoadingComments ? (
-          <p className="text-center text-stone-400 py-8 animate-pulse">
+          <p className="text-center text-sm md:text-base text-stone-400 py-6 md:py-8 animate-pulse">
             טוען תגובות...
           </p>
         ) : comments.length > 0 ? (
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             {comments.map((comment) => (
-              <div key={comment.id} className="bg-stone-50 rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-200 to-stone-200 flex items-center justify-center">
+              <div key={comment.id} className="bg-stone-50 rounded-xl p-4 md:p-6">
+                <div className="flex items-center gap-2.5 md:gap-3 mb-2.5 md:mb-3">
+                  <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-amber-200 to-stone-200 flex items-center justify-center">
                     <span className="text-sm font-bold text-stone-700">
                       {comment.author_name?.[0]?.toUpperCase()}
                     </span>
                   </div>
                   <div>
-                    <p className="font-medium text-stone-800">{comment.author_name}</p>
+                    <p className="text-sm md:text-base font-medium text-stone-800">{comment.author_name}</p>
                     <p className="text-xs text-stone-500">
                       {new Date(comment.created_date).toLocaleDateString('he-IL')}
                     </p>
                   </div>
                 </div>
-                <p className="text-stone-600 leading-relaxed">{comment.content}</p>
+                <p className="text-sm md:text-base text-stone-600 leading-relaxed">{comment.content}</p>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-center text-stone-500 py-8">
+          <p className="text-center text-sm md:text-base text-stone-500 py-6 md:py-8">
             אין תגובות עדיין. היו הראשונים להגיב!
           </p>
         )}
