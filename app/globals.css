@@ -167,30 +167,142 @@ p {
   line-height: 1.85;
 }
 
-/* Article content spacing overrides */
+/* ── Article body typography ──────────────────────────────────────────────
+   @tailwindcss/typography is NOT installed, so `prose-*` utilities generate
+   nothing and Tailwind's preflight resets headings to `font-size: inherit`.
+   Everything the article body needs is therefore declared here.
+   Phone-first: the roomier desktop scale returns at the md breakpoint. */
+
+.prose h1,
+.prose h2,
+.prose h3 {
+  color: #1c1917; /* stone-900 */
+  font-weight: 700;
+}
+
 .prose h1 {
-  margin-top: 3rem !important;
-  margin-bottom: 1.5rem !important;
-  line-height: 1.6 !important;
-  padding-bottom: 1rem !important;
+  font-size: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  line-height: 1.45;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #fde68a; /* amber-200 */
 }
 
 .prose h2 {
-  margin-top: 2.5rem !important;
-  margin-bottom: 1.25rem !important;
-  line-height: 1.6 !important;
+  font-size: 1.25rem;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.45;
 }
 
 .prose h3 {
-  margin-top: 2rem !important;
-  margin-bottom: 1rem !important;
-  line-height: 1.7 !important;
+  font-size: 1.125rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.625rem;
+  line-height: 1.5;
+  color: #78350f; /* amber-900 */
 }
 
 .prose p {
-  margin-top: 1rem !important;
-  margin-bottom: 1rem !important;
-  line-height: 2.0 !important;
+  font-size: 1rem;
+  margin-top: 0.875rem;
+  margin-bottom: 0.875rem;
+  line-height: 1.8;
+  color: #44403c; /* stone-700 */
+}
+
+.prose a {
+  color: #b45309; /* amber-700 */
+  font-weight: 500;
+  text-decoration: underline;
+}
+.prose a:hover {
+  color: #92400e; /* amber-800 */
+}
+
+.prose ul,
+.prose ol {
+  margin: 1.25rem 0;
+  padding-inline-start: 1.25rem;
+}
+.prose ul {
+  list-style: disc;
+}
+.prose ol {
+  list-style: decimal;
+}
+.prose li {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #44403c;
+  margin-bottom: 0.375rem;
+}
+
+.prose strong {
+  color: #1c1917;
+  font-weight: 700;
+}
+.prose em {
+  color: #57534e; /* stone-600 */
+  font-style: italic;
+}
+
+.prose blockquote {
+  border-inline-start: 4px solid #f59e0b; /* amber-500 */
+  padding-inline-start: 1rem;
+  padding-block: 0.75rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  background: rgb(255 251 235 / 0.5); /* amber-50/50 */
+}
+
+@media (min-width: 768px) {
+  .prose h1 {
+    font-size: 2.25rem;
+    margin-top: 3rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+    padding-bottom: 1rem;
+  }
+
+  .prose h2 {
+    font-size: 1.875rem;
+    margin-top: 2.5rem;
+    margin-bottom: 1.25rem;
+    line-height: 1.6;
+  }
+
+  .prose h3 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    line-height: 1.7;
+  }
+
+  .prose p {
+    font-size: 1.125rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    line-height: 2;
+  }
+
+  .prose ul,
+  .prose ol {
+    margin: 2rem 0;
+    padding-inline-start: 2rem;
+  }
+
+  .prose li {
+    font-size: 1.125rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .prose blockquote {
+    padding-inline-start: 1.5rem;
+    padding-block: 1rem;
+    margin: 2rem 0;
+  }
 }
 
 

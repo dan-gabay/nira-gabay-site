@@ -326,7 +326,7 @@ export default async function ArticlePage({ params }: Props) {
         <div className="container mx-auto px-4 md:px-8 max-w-4xl">
           {/* Fixed crumbs must not shrink or the flex layout squeezes them and
               Hebrew words break mid-word on mobile; only the title flexes. */}
-          <nav className="flex items-center gap-2 text-sm text-stone-500">
+          <nav className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm text-stone-500">
             <Link href="/" className="hover:text-stone-800 shrink-0 whitespace-nowrap">דף הבית</Link>
             <span className="shrink-0">/</span>
             <Link href="/articles" className="hover:text-stone-800 shrink-0 whitespace-nowrap">מאמרים</Link>
@@ -345,11 +345,11 @@ export default async function ArticlePage({ params }: Props) {
       </div>
 
       {/* Header */}
-      <section className="py-5 md:py-6 bg-gradient-to-br from-stone-100 to-amber-50">
+      <section className="py-4 md:py-6 bg-gradient-to-br from-stone-100 to-amber-50">
         <div className="container mx-auto px-4 md:px-8 max-w-4xl">
           {/* Tags */}
           {article.tag_names && article.tag_names.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
+            <div className="flex flex-wrap gap-1.5 md:gap-2 mb-2.5 md:mb-3">
               {article.tag_names.map((tag, i) => (
                 <ArticleTag key={i} tag={tag} articleId={article.id} />
               ))}
@@ -361,15 +361,15 @@ export default async function ArticlePage({ params }: Props) {
           </h1>
           
           {article.excerpt && (
-            <p className="text-base text-stone-600 leading-relaxed mb-4">
+            <p className="text-sm md:text-base text-stone-600 leading-relaxed mb-3 md:mb-4">
               {article.excerpt}
             </p>
           )}
           
           {/* Meta */}
-          <div className="flex flex-wrap items-center gap-4 text-sm text-stone-500">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 md:gap-4 text-xs md:text-sm text-stone-500">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-100 to-stone-200 flex items-center justify-center">
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-amber-100 to-stone-200 flex items-center justify-center">
                 <span className="text-xs font-bold text-stone-700">נ</span>
               </div>
               <span className="font-medium text-stone-700">נירה גבאי</span>
@@ -396,11 +396,11 @@ export default async function ArticlePage({ params }: Props) {
       </section>
 
       {/* Content */}
-      <section className="pt-5 pb-12 md:pt-6 md:pb-16">
+      <section className="pt-4 pb-10 md:pt-6 md:pb-16">
         <div className="container mx-auto px-4 md:px-8 max-w-4xl">
           {/* Featured Image */}
           {article.image_url && (
-            <div className="mb-8 md:mb-12 relative w-full aspect-[16/9] rounded-xl overflow-hidden shadow-lg">
+            <div className="mb-5 md:mb-12 relative w-full aspect-[16/9] rounded-xl overflow-hidden shadow-lg">
               <Image
                 src={article.image_url}
                 alt={`תמונת המאמר: ${article.title} - נירה גבאי פסיכותרפיה`}
@@ -413,29 +413,19 @@ export default async function ArticlePage({ params }: Props) {
           )}
           
           {/* Article Content */}
-          <article className="prose prose-xl max-w-none prose-stone 
-            prose-headings:font-assistant prose-headings:text-stone-900 prose-headings:font-bold 
-            prose-h1:text-4xl prose-h1:mt-24 prose-h1:mb-12 prose-h1:leading-[1.6] prose-h1:pb-6 prose-h1:border-b-2 prose-h1:border-amber-200
-            prose-h2:text-3xl prose-h2:mt-20 prose-h2:mb-10 prose-h2:leading-[1.6]
-            prose-h3:text-2xl prose-h3:mt-16 prose-h3:mb-8 prose-h3:leading-[1.7] prose-h3:text-amber-900
-            prose-p:text-lg prose-p:leading-[2.0] prose-p:mb-8 prose-p:text-stone-700
-            prose-a:text-amber-700 prose-a:font-medium prose-a:underline hover:prose-a:text-amber-800
-            prose-ul:mr-8 prose-ul:space-y-3 prose-ul:my-8 prose-ul:list-disc
-            prose-ol:mr-8 prose-ol:space-y-3 prose-ol:my-8 prose-ol:list-decimal
-            prose-li:text-lg prose-li:leading-relaxed prose-li:text-stone-700 prose-li:mb-2
-            prose-strong:text-stone-900 prose-strong:font-bold
-            prose-em:text-stone-600 prose-em:italic
-            prose-blockquote:border-r-4 prose-blockquote:border-amber-500 prose-blockquote:pr-6 prose-blockquote:py-4 prose-blockquote:my-8 prose-blockquote:italic prose-blockquote:bg-amber-50/50
-            mb-12"
-          >
+          {/* `prose` is a plain hook for the article-body rules in
+              globals.css - @tailwindcss/typography is not installed, so
+              prose-* utilities would generate nothing. Sizes and spacing
+              (including the mobile/desktop scale) all live in that stylesheet. */}
+          <article className="prose max-w-none font-assistant mb-8 md:mb-12">
             {splitContent && inlineLinks.length > 0 ? (
               <>
                 <ReactMarkdown remarkPlugins={[remarkBreaks]} components={markdownComponents}>
                   {splitContent[0]}
                 </ReactMarkdown>
-                <aside className="not-prose bg-amber-50 border border-amber-200 rounded-2xl p-5 md:p-6 my-8">
-                  <p className="font-bold text-stone-800 mb-3">מומלץ לקרוא גם:</p>
-                  <ul className="space-y-2">
+                <aside className="not-prose bg-amber-50 border border-amber-200 rounded-2xl p-4 md:p-6 my-6 md:my-8">
+                  <p className="font-bold text-stone-800 text-sm md:text-base mb-2 md:mb-3">מומלץ לקרוא גם:</p>
+                  <ul className="space-y-1.5 md:space-y-2 text-sm md:text-base">
                     {inlineLinks.map((link) => (
                       <li key={link.slug}>
                         <Link
@@ -476,8 +466,8 @@ export default async function ArticlePage({ params }: Props) {
           <ArticleFaq faq={article.faq} />
 
           {/* Author Box */}
-          <div className="bg-gradient-to-br from-amber-50 to-stone-50 rounded-2xl p-6 md:p-8 my-12">
-            <div className="flex flex-col sm:flex-row items-center gap-6">
+          <div className="bg-gradient-to-br from-amber-50 to-stone-50 rounded-2xl p-5 md:p-8 my-8 md:my-12">
+            <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-6">
               <Image
                 src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png"
                 alt="נירה גבאי - מטפלת בפסיכותרפיה ומדריכת הורים"
@@ -487,8 +477,8 @@ export default async function ArticlePage({ params }: Props) {
                 loading="lazy"
               />
               <div className="text-center sm:text-right">
-                <h3 className="text-xl font-bold text-stone-800 mb-2 font-serif">נירה גבאי</h3>
-                <p className="text-stone-600 text-sm mb-4">
+                <h3 className="text-lg md:text-xl font-bold text-stone-800 mb-1.5 md:mb-2 font-serif">נירה גבאי</h3>
+                <p className="text-stone-600 text-xs md:text-sm mb-3 md:mb-4">
                   מטפלת בפסיכותרפיה ומדריכת הורים. מלווה מתבגרים, מבוגרים וזוגות בדרכם להגשמה עצמית.
                 </p>
                 <Link href="/about">
@@ -508,7 +498,7 @@ export default async function ArticlePage({ params }: Props) {
           />
 
           {/* Back Link */}
-          <div className="mt-12 pt-8 border-t border-stone-200">
+          <div className="mt-8 md:mt-12 pt-6 md:pt-8 border-t border-stone-200">
             <Link href="/articles">
               <button className="inline-flex items-center gap-2 px-6 py-3 border-2 border-stone-300 text-stone-700 rounded-lg hover:border-stone-400 hover:bg-stone-50 transition-all">
                 <ArrowRight className="w-5 h-5" />
@@ -520,10 +510,10 @@ export default async function ArticlePage({ params }: Props) {
       </section>
 
       {/* CTA */}
-      <section className="py-16 bg-gradient-to-br from-amber-50 to-stone-100">
+      <section className="py-10 md:py-16 bg-gradient-to-br from-amber-50 to-stone-100">
         <div className="container mx-auto px-4 md:px-8 max-w-4xl text-center">
-          <h2 className="text-3xl font-bold text-stone-800 mb-4">מעוניינים בייעוץ אישי?</h2>
-          <p className="text-xl text-stone-600 mb-8">אשמח לעזור לכם במסע שלכם</p>
+          <h2 className="text-xl md:text-3xl font-bold text-stone-800 mb-3 md:mb-4">מעוניינים בייעוץ אישי?</h2>
+          <p className="text-sm md:text-xl text-stone-600 mb-6 md:mb-8">אשמח לעזור לכם במסע שלכם</p>
           <Link
             href="/contact"
             className="inline-block px-8 py-3 bg-stone-800 text-white rounded-lg hover:bg-stone-700 transition-colors"
