@@ -10,6 +10,12 @@ const WA_HREF = `https://wa.me/972507936681?text=${encodeURIComponent('שלום 
 // Teal palette sampled from the photo's wall, deepening for the gradient.
 const TEAL_DEEP = '#16323b';
 
+// Mobile hero photo. Kept as its own file so the shot can be swapped without
+// touching this component - just replace public/images/hero-mobile.png.
+// objectPosition frames the face inside the square crop.
+const MOBILE_HERO_SRC = '/images/hero-mobile.png';
+const MOBILE_HERO_POSITION = '50% 44%';
+
 // Inlined low-res blurs of the actual photos (generated from the source images).
 // They fill the hero box with the full composition instantly, so the heavy image
 // just sharpens in place instead of streaming in over a flat placeholder.
@@ -50,7 +56,7 @@ export default function HeroSection() {
 
   const Copy = (
     <>
-      <h1 className="text-5xl md:text-6xl xl:text-7xl font-bold text-white leading-[1.05] mb-3">
+      <h1 className="text-4xl md:text-6xl xl:text-7xl font-bold text-white leading-[1.05] mb-3">
         נירה גבאי
         {/* keyword-rich continuation for SEO/crawlers; visually hidden so the design is unchanged */}
         <span className="sr-only"> - מטפלת בפסיכותרפיה ומדריכת הורים</span>
@@ -74,10 +80,10 @@ export default function HeroSection() {
           MOBILE  (< md) — portrait on top, centered copy below
       ──────────────────────────────────────── */}
       <div className="md:hidden">
-        {/* height based on vw (not vh) so the mobile URL-bar collapse can't resize it on load */}
-        <div className="relative w-full" style={{ height: 'clamp(340px, 95vw, 460px)' }}>
+        {/* Square photo block with a clean bottom edge (no fade into the copy). */}
+        <div className="relative w-full aspect-square overflow-hidden">
           <Image
-            src="/images/hero-portrait.png"
+            src={MOBILE_HERO_SRC}
             alt="נירה גבאי - מטפלת בפסיכותרפיה ומדריכת הורים"
             fill
             priority
@@ -86,15 +92,8 @@ export default function HeroSection() {
             placeholder="blur"
             blurDataURL={BLUR_PORTRAIT}
             className="object-cover"
-            style={{ objectPosition: '50% 65%' }}
+            style={{ objectPosition: MOBILE_HERO_POSITION }}
             sizes="100vw"
-          />
-          {/* blend the photo bottom into the teal copy area */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `linear-gradient(to top, ${TEAL_DEEP} 2%, ${TEAL_DEEP}cc 18%, ${TEAL_DEEP}33 42%, transparent 70%)`,
-            }}
           />
         </div>
 
@@ -102,14 +101,10 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45 }}
-          className="px-6 pb-10 -mt-16 relative z-10 text-center"
+          className="px-6 pt-8 pb-10 text-center"
         >
           <div className="mb-5">{Pill}</div>
           {Copy}
-          <div
-            className="w-16 h-px mx-auto mb-6"
-            style={{ background: 'rgba(255,255,255,0.25)' }}
-          />
           {Buttons}
         </motion.div>
       </div>
