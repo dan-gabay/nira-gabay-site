@@ -15,15 +15,19 @@ export default function ArticleRow({
   index,
   headingLevel = 2,
   trackAs = 'card',
+  trackLocation,
 }: {
   article: ArticleListItem;
   index: number;
   // The index page has no section heading above the list, so its cards are h2.
-  // Topic hubs and the related rail sit under a section h2, so theirs are h3.
+  // Topic hubs, the homepage rail and the related rail sit under a section
+  // heading, so theirs are h3/h4.
   headingLevel?: 2 | 3 | 4;
   // Keeps the related-articles rail on its existing analytics event rather
   // than folding it into the generic card-click metric.
   trackAs?: 'card' | 'related';
+  // Attribution for the card-click event (defaults to 'articles_page').
+  trackLocation?: string;
 }) {
   const Heading = headingLevel === 4 ? 'h4' : headingLevel === 3 ? 'h3' : 'h2';
 
@@ -31,7 +35,7 @@ export default function ArticleRow({
     if (trackAs === 'related') {
       trackReadMoreClick('related_article', article.title, 'article_page');
     } else {
-      trackArticleCardClick(article.title, article.slug);
+      trackArticleCardClick(article.title, article.slug, trackLocation);
     }
   };
 

@@ -28,7 +28,7 @@ async function getLatestArticles(): Promise<HomeArticlePreview[]> {
     const supabase = supabaseServer();
     const { data } = await supabase
       .from('articles')
-      .select('id, slug, title, excerpt, image_url, created_date, tags')
+      .select('id, slug, title, excerpt, image_url, reading_time, created_date, tags')
       .eq('is_published', true)
       .order('created_date', { ascending: false })
       .limit(3);

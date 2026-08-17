@@ -1,9 +1,9 @@
 "use client";
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { ArrowLeft, Calendar } from 'lucide-react';
-import { trackArticleCardClick, trackCTAClick } from '@/lib/analytics';
+import { ArrowLeft } from 'lucide-react';
+import { trackCTAClick } from '@/lib/analytics';
+import ArticleRow from '@/components/ArticleRow';
 
 export interface HomeArticlePreview {
   id: string;
@@ -11,6 +11,7 @@ export interface HomeArticlePreview {
   title: string;
   excerpt?: string;
   image_url?: string;
+  reading_time?: number;
   created_date?: string;
   tags?: string;
   tag_names?: string[];
@@ -28,56 +29,19 @@ export default function ArticlesPreviewClient({ articles }: { articles: HomeArti
         <div className="text-center mb-8 md:mb-16">
           <h2 className="text-xl md:text-4xl font-bold text-stone-800 mb-3 md:mb-4">מאמרים אחרונים</h2>
           <p className="text-sm md:text-lg text-stone-600 max-w-2xl mx-auto">תובנות, כלים וידע מעולם הפסיכותרפיה וההורות</p>
-          <div className="w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mt-6 mx-auto" />
+          <div className="w-16 md:w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mt-4 md:mt-6 mx-auto" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-          {articles.map((article) => (
-            <div key={article.id}>
-              <Link href={`/articles/${article.slug}`} prefetch={true} onClick={() => trackArticleCardClick(article.title, article.slug, 'homepage')}>
-                <div className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-stone-100 h-full flex flex-col">
-                  {article.image_url && (
-                    <div className="relative w-full aspect-[16/9] overflow-hidden bg-stone-100">
-                      <Image
-                        src={article.image_url}
-                        alt={article.title}
-                        fill
-                        loading="lazy"
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      />
-                    </div>
-                  )}
-
-                  <div className="p-4 md:p-6 flex-1 flex flex-col">
-                    {article.tag_names && article.tag_names.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {article.tag_names.slice(0, 2).map((tag: string, i: number) => (
-                          <span key={i} className="inline-block px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-medium">{tag}</span>
-                        ))}
-                      </div>
-                    )}
-
-                    <h3 className="text-base md:text-xl font-bold text-stone-800 mb-2 md:mb-3 group-hover:text-amber-700 transition-colors line-clamp-2">{article.title}</h3>
-
-                    {article.excerpt && (
-                      <p className="text-stone-600 text-xs md:text-sm leading-relaxed mb-3 md:mb-4 line-clamp-3 flex-1">{article.excerpt}</p>
-                    )}
-
-                    <div className="flex items-center justify-between text-xs md:text-sm text-stone-500 pt-3 md:pt-4 border-t border-stone-100">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        {article.created_date && new Date(article.created_date).toLocaleDateString('he-IL')}
-                      </div>
-                      <span className="text-amber-700 font-medium group-hover:gap-2 flex items-center transition-all">
-                        קראו עוד
-                        <ArrowLeft className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            </div>
+        {/* Same horizontal card as /articles, the topic hubs and the related rail */}
+        <div className="max-w-3xl mx-auto space-y-3 md:space-y-4">
+          {articles.map((article, index) => (
+            <ArticleRow
+              key={article.id}
+              article={article}
+              index={index}
+              headingLevel={3}
+              trackLocation="homepage"
+            />
           ))}
         </div>
 
@@ -85,7 +49,7 @@ export default function ArticlesPreviewClient({ articles }: { articles: HomeArti
           <Link href="/articles" onClick={() => trackCTAClick('all_articles', 'homepage')}>
             <button className="gap-2 min-h-[44px] border border-stone-300 hover:bg-stone-50 rounded-xl px-6 py-3 text-sm md:text-base text-stone-800 inline-flex items-center">
               לכל המאמרים
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
             </button>
           </Link>
         </div>
