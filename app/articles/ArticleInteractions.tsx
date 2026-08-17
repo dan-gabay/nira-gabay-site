@@ -331,7 +331,7 @@ export default function ArticleInteractions({
 
       {/* Comments Section */}
       <section className="mt-12 mb-12" style={{ minHeight: 'auto' }}>
-        <h3 className="text-2xl font-bold text-stone-800 mb-8 font-serif">
+        <h3 className="text-lg md:text-2xl font-bold text-stone-800 mb-4 md:mb-8 font-serif">
           תגובות ({comments.length})
         </h3>
 

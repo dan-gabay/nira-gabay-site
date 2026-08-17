@@ -3,30 +3,43 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { FileText, ArrowLeft, Clock } from 'lucide-react';
-import { trackArticleCardClick } from '@/lib/analytics';
+import { trackArticleCardClick, trackReadMoreClick } from '@/lib/analytics';
 import { MINT } from '@/lib/palette';
 import type { ArticleListItem } from '@/app/articles/ArticlesBrowser';
 
 // One horizontal article card: copy on the right, thumbnail on the left (RTL).
-// Shared by the /articles index and the topic hubs so the two stay identical.
+// Shared by the /articles index, the topic hubs and the related-articles rail
+// so they cannot drift apart.
 export default function ArticleRow({
   article,
   index,
   headingLevel = 2,
+  trackAs = 'card',
 }: {
   article: ArticleListItem;
   index: number;
   // The index page has no section heading above the list, so its cards are h2.
-  // Topic hubs sit under a "מאמרים בנושא X" h2, so theirs are h3.
-  headingLevel?: 2 | 3;
+  // Topic hubs and the related rail sit under a section h2, so theirs are h3.
+  headingLevel?: 2 | 3 | 4;
+  // Keeps the related-articles rail on its existing analytics event rather
+  // than folding it into the generic card-click metric.
+  trackAs?: 'card' | 'related';
 }) {
-  const Heading = headingLevel === 3 ? 'h3' : 'h2';
+  const Heading = headingLevel === 4 ? 'h4' : headingLevel === 3 ? 'h3' : 'h2';
+
+  const handleClick = () => {
+    if (trackAs === 'related') {
+      trackReadMoreClick('related_article', article.title, 'article_page');
+    } else {
+      trackArticleCardClick(article.title, article.slug);
+    }
+  };
 
   return (
     <Link
       href={`/articles/${article.slug || article.id}`}
       prefetch={index < 4}
-      onClick={() => trackArticleCardClick(article.title, article.slug)}
+      onClick={handleClick}
       className="group flex items-stretch gap-3 md:gap-4 bg-white rounded-2xl p-2.5 md:p-4 shadow-sm hover:shadow-lg border border-stone-100 transition-shadow"
     >
       {/* Text first: in RTL this sits on the right, image on the left */}

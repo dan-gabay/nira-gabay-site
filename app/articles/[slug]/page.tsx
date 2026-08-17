@@ -473,7 +473,7 @@ export default async function ArticlePage({ params }: Props) {
                 alt="נירה גבאי - מטפלת בפסיכותרפיה ומדריכת הורים"
                 width={96}
                 height={96}
-                className="rounded-full object-cover shadow-lg"
+                className="w-16 h-16 md:w-24 md:h-24 rounded-full object-cover shadow-lg flex-shrink-0"
                 loading="lazy"
               />
               <div className="text-center sm:text-right">
