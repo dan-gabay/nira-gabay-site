@@ -108,7 +108,7 @@ export default function ContactForm({
           <p className="text-sm md:text-base text-stone-500 mb-6 md:mb-8">{subtitle}</p>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+            <div className="mb-4 md:mb-6 p-3.5 md:p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-xs md:text-sm">
               {error}
             </div>
           )}
@@ -125,7 +125,7 @@ export default function ContactForm({
               aria-hidden="true"
             />
             <div>
-              <label htmlFor={`contact-name-${sourceId}`} className="block text-sm font-medium text-stone-700 mb-2">
+              <label htmlFor={`contact-name-${sourceId}`} className="block text-xs md:text-sm font-medium text-stone-700 mb-1.5 md:mb-2">
                 שם מלא *
               </label>
               <input
@@ -135,14 +135,14 @@ export default function ContactForm({
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 onFocus={() => trackFormFieldFocus('contact_form', 'name')}
-                className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3.5 md:px-4 py-2.5 md:py-3 bg-stone-50 border border-stone-200 rounded-lg text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-amber-500"
                 required
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
               <div>
-                <label htmlFor={`contact-email-${sourceId}`} className="block text-sm font-medium text-stone-700 mb-2">
+                <label htmlFor={`contact-email-${sourceId}`} className="block text-xs md:text-sm font-medium text-stone-700 mb-1.5 md:mb-2">
                   אימייל
                 </label>
                 <input
@@ -153,11 +153,11 @@ export default function ContactForm({
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   onFocus={() => trackFormFieldFocus('contact_form', 'email')}
-                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-left"
+                  className="w-full px-3.5 md:px-4 py-2.5 md:py-3 bg-stone-50 border border-stone-200 rounded-lg text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-amber-500 text-left"
                 />
               </div>
               <div>
-                <label htmlFor={`contact-phone-${sourceId}`} className="block text-sm font-medium text-stone-700 mb-2">
+                <label htmlFor={`contact-phone-${sourceId}`} className="block text-xs md:text-sm font-medium text-stone-700 mb-1.5 md:mb-2">
                   טלפון *
                 </label>
                 <input
@@ -169,14 +169,14 @@ export default function ContactForm({
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   onFocus={() => trackFormFieldFocus('contact_form', 'phone')}
-                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-left"
+                  className="w-full px-3.5 md:px-4 py-2.5 md:py-3 bg-stone-50 border border-stone-200 rounded-lg text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-amber-500 text-left"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor={`contact-message-${sourceId}`} className="block text-sm font-medium text-stone-700 mb-2">
+              <label htmlFor={`contact-message-${sourceId}`} className="block text-xs md:text-sm font-medium text-stone-700 mb-1.5 md:mb-2">
                 הודעה *
               </label>
               <textarea
@@ -185,7 +185,7 @@ export default function ContactForm({
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 onFocus={() => trackFormFieldFocus('contact_form', 'message')}
-                className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 min-h-32"
+                className="w-full px-3.5 md:px-4 py-2.5 md:py-3 bg-stone-50 border border-stone-200 rounded-lg text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-amber-500 min-h-24 md:min-h-32"
                 required
               />
             </div>
@@ -193,13 +193,13 @@ export default function ContactForm({
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-stone-800 hover:bg-stone-900 text-white py-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-stone-800 hover:bg-stone-900 text-white py-3 md:py-4 rounded-lg text-sm md:text-base font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" />
               ) : (
                 <>
-                  <Send className="w-5 h-5" />
+                  <Send className="w-4 h-4 md:w-5 md:h-5" />
                   שליחה
                 </>
               )}

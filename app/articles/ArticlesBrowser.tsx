@@ -229,7 +229,7 @@ export default function ArticlesBrowser({
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-20"
+              className="text-center py-12 md:py-20"
             >
               <div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <FileText className="w-10 h-10 text-stone-400" aria-hidden="true" />
