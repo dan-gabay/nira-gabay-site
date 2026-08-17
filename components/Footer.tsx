@@ -12,8 +12,11 @@ export default function Footer() {
     { name: 'צרו קשר', href: '/contact' },
   ];
 
+  // No top margin on the footer: it exposed the white page background as a
+  // band above it on every page. Each page's last section carries its own
+  // bottom padding, so the footer sits flush.
   return (
-    <footer className="bg-stone-800 text-stone-200 mt-10 md:mt-20">
+    <footer className="bg-stone-800 text-stone-200">
       <div className="container mx-auto px-4 md:px-8 py-8 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12">
           {/* About */}
