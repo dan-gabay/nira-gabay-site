@@ -41,9 +41,9 @@ export default function About() {
   return (
     <div className="overflow-hidden" style={{ paddingTop: '80px' }}>
       {/* Hero Section */}
-      <section className="relative py-24 bg-gradient-to-br from-stone-100 to-amber-50">
+      <section className="relative py-12 md:py-24 bg-gradient-to-br from-stone-100 to-amber-50">
         <div className="container mx-auto px-4 md:px-8">
-          <div className="flex flex-col lg:flex-row items-center gap-12">
+          <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-12">
             {/* Image */}
             <motion.div
               initial={{ opacity: 0, x: 0 }}
@@ -52,8 +52,8 @@ export default function About() {
               className="w-full lg:w-2/5"
             >
               <div className="relative">
-                <div className="absolute -top-4 -right-4 w-full h-full bg-gradient-to-br from-amber-200 to-stone-200 rounded-3xl" />
-                <div className="relative w-full h-[500px]">
+                <div className="absolute -top-3 -right-3 md:-top-4 md:-right-4 w-full h-full bg-gradient-to-br from-amber-200 to-stone-200 rounded-3xl" />
+                <div className="relative w-full h-[300px] md:h-[500px]">
                   <Image
                     src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png"
                     alt="נירה גבאי - מטפלת בפסיכותרפיה ומדריכת הורים, מומחית למיניות בריאה וטיפול CBT"
@@ -73,16 +73,16 @@ export default function About() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="w-full lg:w-3/5 text-center lg:text-right"
             >
-              <span className="inline-block px-4 py-2 bg-amber-100 rounded-full text-amber-800 text-sm mb-6">
+              <span className="inline-block px-4 py-1.5 md:py-2 bg-amber-100 rounded-full text-amber-800 text-xs md:text-sm mb-4 md:mb-6">
                 קצת עליי
               </span>
-              <h1 className="text-4xl md:text-5xl font-bold text-stone-800 mb-6">
+              <h1 className="text-2xl md:text-5xl font-bold text-stone-800 mb-3 md:mb-6">
                 נירה גבאי
               </h1>
-              <p className="text-xl text-stone-600 mb-4">
+              <p className="text-sm md:text-xl text-stone-600 mb-2 md:mb-4">
                 מטפלת בפסיכותרפיה ומדריכת הורים
               </p>
-              <p className="text-lg text-stone-500">
+              <p className="text-xs md:text-lg text-stone-500">
                 פסיכותרפיה | CBT | מומחית למיניות בריאה
               </p>
             </motion.div>
@@ -91,7 +91,7 @@ export default function About() {
       </section>
 
       {/* Main Content */}
-      <section className="py-24 bg-white">
+      <section className="py-12 md:py-24 bg-white">
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-4xl mx-auto">
             {/* Philosophy Section */}
@@ -100,12 +100,12 @@ export default function About() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="mb-16"
+              className="mb-8 md:mb-16"
             >
-              <h2 className="text-3xl font-bold text-stone-800 mb-8 text-center">
+              <h2 className="text-xl md:text-3xl font-bold text-stone-800 mb-5 md:mb-8 text-center">
                 הגישה הטיפולית שלי
               </h2>
-              <div className="prose prose-lg max-w-none text-stone-600 leading-relaxed space-y-6">
+              <div className="max-w-none text-sm md:text-lg text-stone-600 leading-relaxed space-y-4 md:space-y-6">
                 <p>
                   אני מאמינה שכל אדם נושא בתוכו את הפוטנציאל לצמיחה, ריפוי ושינוי. תפקידי כמטפלת הוא ליצור 
                   מרחב בטוח ומכיל, שבו תוכלו לחקור את עצמכם, להבין את הדפוסים שמעכבים אתכם, ולמצוא 
@@ -120,7 +120,7 @@ export default function About() {
             </motion.div>
 
             {/* Divider */}
-            <div className="w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mx-auto mb-16" />
+            <div className="w-16 md:w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mx-auto mb-8 md:mb-16" />
 
             {/* Personal Story */}
             <motion.div
@@ -128,12 +128,12 @@ export default function About() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="mb-16"
+              className="mb-8 md:mb-16"
             >
-              <h2 className="text-3xl font-bold text-stone-800 mb-8 text-center">
+              <h2 className="text-xl md:text-3xl font-bold text-stone-800 mb-5 md:mb-8 text-center">
                 הסיפור שלי
               </h2>
-              <div className="prose prose-lg max-w-none text-stone-600 leading-relaxed space-y-6">
+              <div className="max-w-none text-sm md:text-lg text-stone-600 leading-relaxed space-y-4 md:space-y-6">
                 <p>
                   הדרך שלי לפסיכותרפיה התחילה מתוך סקרנות אמיתית לעולם הנפשי של האדם ומתוך רצון 
                   עמוק לעזור לאחרים. רכשתי את הבסיס התיאורטי והמעשי לעבודה
@@ -158,13 +158,13 @@ export default function About() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="bg-gradient-to-br from-amber-50 to-stone-50 rounded-3xl p-8 md:p-12 mb-16"
+              className="bg-gradient-to-br from-amber-50 to-stone-50 rounded-3xl p-5 md:p-12 mb-8 md:mb-16"
             >
-              <div className="flex items-start gap-4 mb-6">
-                <Heart className="w-8 h-8 text-rose-400 flex-shrink-0 mt-1" />
+              <div className="flex items-start gap-3 md:gap-4 mb-4 md:mb-6">
+                <Heart className="w-6 h-6 md:w-8 md:h-8 text-rose-400 flex-shrink-0 mt-0.5 md:mt-1" />
                 <div>
-                  <h3 className="text-2xl font-bold text-stone-800 mb-4">ברמה האישית</h3>
-                  <p className="text-stone-600 leading-relaxed">
+                  <h3 className="text-lg md:text-2xl font-bold text-stone-800 mb-3 md:mb-4">ברמה האישית</h3>
+                  <p className="text-sm md:text-base text-stone-600 leading-relaxed">
                     אני אמא לשלושה ילדים וסבתא גאה. החוויות האישיות שלי כאמא וכסבתא מעשירות את 
                     ההבנה שלי את המשפחה, ההורות והאתגרים השונים שמגיעים בכל שלב בחיים. אני מביאה 
                     לטיפול לא רק ידע מקצועי, אלא גם ניסיון חיים אמיתי.
@@ -177,18 +177,18 @@ export default function About() {
       </section>
 
       {/* Milestones */}
-      <section className="py-24 bg-gradient-to-b from-stone-50 to-white">
+      <section className="py-12 md:py-24 bg-gradient-to-b from-stone-50 to-white">
         <div className="container mx-auto px-4 md:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-stone-800 mb-4">
+          <div className="text-center mb-7 md:mb-12">
+            <h2 className="text-xl md:text-4xl font-bold text-stone-800 mb-3 md:mb-4">
               הכשרה וניסיון
             </h2>
             <p className="text-lg text-stone-600 max-w-2xl mx-auto">
               הרקע המקצועי שמאפשר לי ללוות אתכם
             </p>
-            <div className="w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mt-6 mx-auto" />
+            <div className="w-16 md:w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mt-4 md:mt-6 mx-auto" />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 max-w-5xl mx-auto">
             {milestones.map((milestone, index) => (
               <motion.div
                 key={index}
@@ -196,13 +196,13 @@ export default function About() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white rounded-2xl p-8 shadow-lg border border-stone-100"
+                className="bg-white rounded-2xl p-5 md:p-8 shadow-lg border border-stone-100"
               >
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center mb-6">
-                  <milestone.icon className="w-7 h-7 text-stone-700" />
+                <div className="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center mb-4 md:mb-6">
+                  <milestone.icon className="w-5 h-5 md:w-7 md:h-7 text-stone-700" />
                 </div>
-                <h3 className="text-xl font-bold text-stone-800 mb-3">{milestone.title}</h3>
-                <p className="text-stone-600 leading-relaxed">{milestone.description}</p>
+                <h3 className="text-base md:text-xl font-bold text-stone-800 mb-2 md:mb-3">{milestone.title}</h3>
+                <p className="text-sm md:text-base text-stone-600 leading-relaxed">{milestone.description}</p>
               </motion.div>
             ))}
           </div>
@@ -210,19 +210,19 @@ export default function About() {
       </section>
 
       {/* Experience List */}
-      <section className="py-24 bg-white">
+      <section className="py-12 md:py-24 bg-white">
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-stone-800 mb-4">
+            <div className="text-center mb-7 md:mb-12">
+              <h2 className="text-xl md:text-4xl font-bold text-stone-800 mb-3 md:mb-4">
                 מסגרות עבודה
               </h2>
-              <p className="text-lg text-stone-600 max-w-2xl mx-auto">
+              <p className="text-sm md:text-lg text-stone-600 max-w-2xl mx-auto">
                 הניסיון המגוון שצברתי לאורך השנים
               </p>
-              <div className="w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mt-6 mx-auto" />
+              <div className="w-16 md:w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mt-4 md:mt-6 mx-auto" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 md:gap-4">
               {experiences.map((exp, index) => (
                 <motion.div
                   key={index}
@@ -230,10 +230,10 @@ export default function About() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: index * 0.05 }}
-                  className="flex items-center gap-3 bg-stone-50 rounded-xl p-4"
+                  className="flex items-center gap-3 bg-stone-50 rounded-xl p-3 md:p-4"
                 >
                   <div className="w-2 h-2 rounded-full bg-amber-400" />
-                  <span className="text-stone-700">{exp}</span>
+                  <span className="text-sm md:text-base text-stone-700">{exp}</span>
                 </motion.div>
               ))}
             </div>
@@ -242,10 +242,10 @@ export default function About() {
       </section>
 
       {/* Clinic Section */}
-      <section className="py-24 bg-gradient-to-br from-stone-800 to-stone-900 text-white">
+      <section className="py-12 md:py-24 bg-gradient-to-br from-stone-800 to-stone-900 text-white">
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-5xl mx-auto">
-            <div className="flex flex-col lg:flex-row items-center gap-12">
+            <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-12">
               <motion.div
                 initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -271,19 +271,19 @@ export default function About() {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="w-full lg:w-1/2"
               >
-                <div className="flex items-center gap-3 mb-6">
-                  <MapPin className="w-6 h-6 text-amber-400" />
-                  <h2 className="text-3xl font-bold">הקליניקה שלי</h2>
+                <div className="flex items-center gap-3 mb-4 md:mb-6">
+                  <MapPin className="w-5 h-5 md:w-6 md:h-6 text-amber-400" />
+                  <h2 className="text-xl md:text-3xl font-bold">הקליניקה שלי</h2>
                 </div>
-                <p className="text-stone-300 leading-relaxed mb-6">
+                <p className="text-sm md:text-base text-stone-300 leading-relaxed mb-4 md:mb-6">
                   הקליניקה ממוקמת במושב שואבה, באזור ירושלים. המרחב מעוצב ליצירת אווירה חמה, 
                   מכילה ושלווה - סביבה אידיאלית לתהליך טיפולי עמוק ומשמעותי.
                 </p>
-                <div className="flex items-start gap-3 bg-white/10 rounded-xl p-4">
-                  <Monitor className="w-6 h-6 text-amber-400 flex-shrink-0 mt-1" />
+                <div className="flex items-start gap-3 bg-white/10 rounded-xl p-3.5 md:p-4">
+                  <Monitor className="w-5 h-5 md:w-6 md:h-6 text-amber-400 flex-shrink-0 mt-0.5 md:mt-1" />
                   <div>
-                    <h4 className="font-semibold mb-2">אפשרות לטיפול מרחוק</h4>
-                    <p className="text-stone-400 text-sm">
+                    <h4 className="text-sm md:text-base font-semibold mb-1.5 md:mb-2">אפשרות לטיפול מרחוק</h4>
+                    <p className="text-stone-400 text-xs md:text-sm">
                       קיימת גם אופציה לטיפולים בזום או ייעוץ טלפוני - מתאים במיוחד למי שמתגורר 
                       רחוק או מעדיף טיפול מהנוחות של הבית.
                     </p>

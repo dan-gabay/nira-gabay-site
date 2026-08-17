@@ -83,29 +83,29 @@ export default function ContactForm({
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl border border-stone-100 p-8 md:p-10">
+    <div className="bg-white rounded-3xl shadow-xl border border-stone-100 p-5 md:p-10">
       {submitted ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center py-12"
+          className="text-center py-8 md:py-12"
         >
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-10 h-10 text-green-600" />
+          <div className="w-16 h-16 md:w-20 md:h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6">
+            <CheckCircle className="w-8 h-8 md:w-10 md:h-10 text-green-600" />
           </div>
-          <h3 className="text-2xl font-bold text-stone-800 mb-4">תודה על פנייתכם!</h3>
-          <p className="text-stone-600 mb-6">קיבלתי את ההודעה ואחזור אליכם בהקדם האפשרי.</p>
+          <h3 className="text-lg md:text-2xl font-bold text-stone-800 mb-3 md:mb-4">תודה על פנייתכם!</h3>
+          <p className="text-sm md:text-base text-stone-600 mb-5 md:mb-6">קיבלתי את ההודעה ואחזור אליכם בהקדם האפשרי.</p>
           <button
             onClick={() => setSubmitted(false)}
-            className="px-6 py-2 border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors"
+            className="px-6 min-h-[44px] border border-stone-200 rounded-lg hover:bg-stone-50 text-sm md:text-base transition-colors"
           >
             שליחת הודעה נוספת
           </button>
         </motion.div>
       ) : (
         <>
-          <h2 className="text-2xl font-bold text-stone-800 mb-2">{title}</h2>
-          <p className="text-stone-500 mb-8">{subtitle}</p>
+          <h2 className="text-lg md:text-2xl font-bold text-stone-800 mb-1.5 md:mb-2">{title}</h2>
+          <p className="text-sm md:text-base text-stone-500 mb-6 md:mb-8">{subtitle}</p>
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
@@ -113,7 +113,7 @@ export default function ContactForm({
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
             {/* Honeypot - hidden from real users */}
             <input
               type="text"

@@ -73,7 +73,7 @@ export default function Contact() {
   return (
     <div className="overflow-hidden" style={{ paddingTop: '80px' }}>
       {/* Hero */}
-      <section className="py-20 bg-gradient-to-br from-stone-100 to-amber-50">
+      <section className="py-10 md:py-20 bg-gradient-to-br from-stone-100 to-amber-50">
         <div className="container mx-auto px-4 md:px-8">
           <motion.div
             initial={{ opacity: 0, y: 5 }}
@@ -81,13 +81,13 @@ export default function Contact() {
             transition={{ duration: 0.3 }}
             className="text-center max-w-3xl mx-auto"
           >
-            <span className="inline-block px-4 py-2 bg-amber-100 rounded-full text-amber-800 text-sm mb-6">
+            <span className="inline-block px-4 py-1.5 md:py-2 bg-amber-100 rounded-full text-amber-800 text-xs md:text-sm mb-4 md:mb-6">
               צרו קשר
             </span>
-            <h1 className="text-4xl md:text-5xl font-bold text-stone-800 mb-6">
+            <h1 className="text-2xl md:text-5xl font-bold text-stone-800 mb-3 md:mb-6">
               בואו נדבר
             </h1>
-            <p className="text-xl text-stone-600 leading-relaxed">
+            <p className="text-sm md:text-xl text-stone-600 leading-relaxed">
               אתם מוזמנים לשלוח אליי שאלות למאמרים, לקבוע טיפול, הדרכת הורים, ייעוץ, טיפול זוגי או סדנאות
             </p>
           </motion.div>
@@ -95,19 +95,19 @@ export default function Contact() {
       </section>
 
       {/* Main Content */}
-      <section className="py-16 bg-white">
+      <section className="py-8 md:py-16 bg-white">
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
               {/* Contact Info */}
               <motion.div
                 initial={{ opacity: 0, x: -15 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <h2 className="text-2xl font-bold text-stone-800 mb-8">פרטי התקשרות</h2>
+                <h2 className="text-lg md:text-2xl font-bold text-stone-800 mb-5 md:mb-8">פרטי התקשרות</h2>
                 
-                <div className="space-y-6 mb-10">
+                <div className="space-y-4 md:space-y-6 mb-7 md:mb-10">
                   {contactInfo.map((info, index) => (
                     <motion.div
                       key={index}
@@ -116,20 +116,20 @@ export default function Contact() {
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       className="flex items-center gap-4"
                     >
-                      <div className={`w-14 h-14 rounded-2xl bg-stone-100 flex items-center justify-center flex-shrink-0 ${info.color}`}>
+                      <div className={`w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-stone-100 flex items-center justify-center flex-shrink-0 ${info.color}`}>
                         {typeof info.icon === 'function' ? 
                           React.createElement(info.icon) : 
                           React.createElement(info.icon, { className: 'w-6 h-6' })
                         }
                       </div>
                       <div>
-                        <p className="text-sm text-stone-500">{info.title}</p>
+                        <p className="text-xs md:text-sm text-stone-500">{info.title}</p>
                         {info.link ? (
                           <a 
                             href={info.link} 
                             target={info.link.startsWith('http') ? '_blank' : undefined}
                             rel={info.link.startsWith('http') ? 'noopener noreferrer' : undefined}
-                            className="text-lg font-medium text-stone-800 hover:text-amber-700 transition-colors"
+                            className="text-sm md:text-lg font-medium text-stone-800 hover:text-amber-700 transition-colors"
                             onClick={() => {
                               if (info.title === 'טלפון') trackContactMethodClick('phone', 'contact_page');
                               else if (info.title === 'אימייל') trackContactMethodClick('email', 'contact_page');
@@ -140,7 +140,7 @@ export default function Contact() {
                             {info.value}
                           </a>
                         ) : (
-                          <p className="text-lg font-medium text-stone-800">{info.value}</p>
+                          <p className="text-sm md:text-lg font-medium text-stone-800">{info.value}</p>
                         )}
                       </div>
                     </motion.div>
@@ -152,22 +152,22 @@ export default function Contact() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.3 }}
-                  className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 mb-8"
+                  className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-4 md:p-6 mb-6 md:mb-8"
                 >
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
-                      <MessageCircle className="w-6 h-6 text-white" />
+                  <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                      <MessageCircle className="w-5 h-5 md:w-6 md:h-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-stone-800">הדרך המהירה ביותר</h3>
-                      <p className="text-sm text-stone-600">שלחו הודעה בוואטסאפ</p>
+                      <h3 className="text-sm md:text-base font-bold text-stone-800">הדרך המהירה ביותר</h3>
+                      <p className="text-xs md:text-sm text-stone-600">שלחו הודעה בוואטסאפ</p>
                     </div>
                   </div>
                   <a
                     href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block w-full bg-green-600 hover:bg-green-700 text-white text-center py-3 rounded-lg font-medium transition-colors"
+                    className="block w-full bg-green-600 hover:bg-green-700 text-white text-center py-3 rounded-lg text-sm md:text-base font-medium transition-colors"
                     onClick={() => trackWhatsAppClick('contact_page_cta')}
                   >
                     <span className="flex items-center justify-center gap-2">
@@ -182,13 +182,13 @@ export default function Contact() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.35 }}
-                  className="bg-stone-50 rounded-2xl p-6"
+                  className="bg-stone-50 rounded-2xl p-4 md:p-6"
                 >
-                  <div className="flex items-start gap-4">
-                    <Monitor className="w-6 h-6 text-amber-600 flex-shrink-0 mt-1" />
+                  <div className="flex items-start gap-3 md:gap-4">
+                    <Monitor className="w-5 h-5 md:w-6 md:h-6 text-amber-600 flex-shrink-0 mt-0.5 md:mt-1" />
                     <div>
-                      <h4 className="font-bold text-stone-800 mb-2">טיפול מרחוק</h4>
-                      <p className="text-stone-600 text-sm">
+                      <h4 className="text-sm md:text-base font-bold text-stone-800 mb-1.5 md:mb-2">טיפול מרחוק</h4>
+                      <p className="text-stone-600 text-xs md:text-sm">
                         קיימת גם אופציה לטיפולים בזום או ייעוץ טלפוני - מתאים במיוחד למי שמתגורר רחוק או מעדיף טיפול מהנוחות של הבית.
                       </p>
                     </div>
@@ -210,7 +210,7 @@ export default function Contact() {
       </section>
 
       {/* Map Section */}
-      <section className="py-16 bg-gradient-to-br from-stone-50 to-amber-50">
+      <section className="py-10 md:py-16 bg-gradient-to-br from-stone-50 to-amber-50">
         <div className="container mx-auto px-4 md:px-8">
           <motion.div
             initial={{ opacity: 0, y: 15 }}
@@ -219,13 +219,13 @@ export default function Contact() {
             transition={{ duration: 0.4 }}
             className="max-w-4xl mx-auto text-center"
           >
-            <h2 className="text-3xl font-bold text-stone-800 mb-6">הקליניקה שלי</h2>
-            <p className="text-lg text-stone-600 mb-8">
+            <h2 className="text-xl md:text-3xl font-bold text-stone-800 mb-4 md:mb-6">הקליניקה שלי</h2>
+            <p className="text-sm md:text-lg text-stone-600 mb-6 md:mb-8">
               הקליניקה ממוקמת במושב שואבה, באזור ירושלים, במרחב שקט וירוק המאפשר חוויה טיפולית אינטימית ומרגיעה.
             </p>
             
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              <div className="relative w-full h-64">
+              <div className="relative w-full h-44 md:h-64">
                 <Image
                   src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/profile.png"
                   alt="חדר טיפולים בקליניקה של נירה גבאי במושב שואבה"
@@ -235,19 +235,19 @@ export default function Contact() {
                   sizes="(max-width: 768px) 100vw, 800px"
                 />
               </div>
-              <div className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="p-4 md:p-6 flex flex-col sm:flex-row items-center justify-between gap-3 md:gap-4">
                 <div className="flex items-center gap-3">
-                  <MapPin className="w-6 h-6 text-rose-500" />
-                  <span className="text-lg font-medium text-stone-800">מושב שואבה</span>
+                  <MapPin className="w-5 h-5 md:w-6 md:h-6 text-rose-500" />
+                  <span className="text-sm md:text-lg font-medium text-stone-800">מושב שואבה</span>
                 </div>
                 <a
                   href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('שלום נירה, אשמח לקבל הנחיות הגעה לקליניקה')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-6 py-2 border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors flex items-center gap-2"
+                  className="px-6 min-h-[44px] border border-stone-200 rounded-lg hover:bg-stone-50 text-sm md:text-base transition-colors flex items-center gap-2"
                   onClick={() => trackWhatsAppClick('directions_request')}
                 >
-                  <MessageCircle className="w-5 h-5" />
+                  <MessageCircle className="w-4 h-4 md:w-5 md:h-5" />
                   בקשו הנחיות הגעה
                 </a>
               </div>
