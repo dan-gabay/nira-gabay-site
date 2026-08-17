@@ -101,8 +101,10 @@ export default function ArticlesBrowser({
     trackArticleFilterChange('tag', tag ?? 'all');
   }
 
+  // 40px on mobile keeps the row close to the design while still clearing the
+  // WCAG 2.5.8 target size; md and up gets the full 44px.
   const chipBase =
-    'px-5 min-h-[44px] inline-flex items-center rounded-full text-sm font-medium whitespace-nowrap flex-shrink-0 transition-colors';
+    'px-4 md:px-5 min-h-[40px] md:min-h-[44px] inline-flex items-center rounded-full text-xs md:text-sm font-medium whitespace-nowrap flex-shrink-0 transition-colors';
   const chipIdle =
     'bg-white text-emerald-900 border border-emerald-200 hover:bg-emerald-50';
   const chipActive = 'text-white shadow-sm';
@@ -122,7 +124,7 @@ export default function ArticlesBrowser({
           sizes="100vw"
         />
 
-        <div className="relative container mx-auto px-4 md:px-8 pt-10 pb-24 md:pt-14 md:pb-28">
+        <div className="relative container mx-auto px-4 md:px-8 pt-6 pb-16 md:pt-14 md:pb-28">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -130,16 +132,16 @@ export default function ArticlesBrowser({
             className="text-center max-w-2xl mx-auto"
           >
             <span
-              className="block w-12 h-px mx-auto mb-6"
+              className="block w-10 md:w-12 h-px mx-auto mb-4 md:mb-6"
               style={{ background: 'rgba(255,255,255,0.35)' }}
             />
             <h1
-              className="text-5xl md:text-6xl font-bold mb-4 leading-tight"
+              className="text-3xl md:text-6xl font-bold mb-2 md:mb-4 leading-tight"
               style={{ color: MINT }}
             >
               מאמרים
             </h1>
-            <p className="text-base md:text-lg text-white/80 leading-relaxed">
+            <p className="text-sm md:text-lg text-white/80 leading-relaxed">
               ידע מקצועי, תובנות וכלים מעשיים
               <br />
               לחיים מלאים ומאוזנים יותר
@@ -149,14 +151,14 @@ export default function ArticlesBrowser({
       </section>
 
       {/* ───────── Search (straddles the hero's bottom edge) ───────── */}
-      <div className="relative z-20 container mx-auto px-4 md:px-8 -mt-9">
+      <div className="relative z-20 container mx-auto px-4 md:px-8 -mt-6 md:-mt-9">
         <div className="max-w-2xl mx-auto">
           <label htmlFor="articles-search" className="sr-only">
             חיפוש מאמרים
           </label>
           <div className="relative">
             <Search
-              className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400 pointer-events-none"
+              className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-stone-400 pointer-events-none"
               aria-hidden="true"
             />
             <input
@@ -171,16 +173,16 @@ export default function ArticlesBrowser({
                   trackSearch(searchQuery, filteredArticles.length); // GA4 recommended event
                 }
               }}
-              className="w-full bg-white rounded-full shadow-xl shadow-stone-900/10 border border-stone-100 py-4 pr-6 pl-14 text-base text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              className="w-full bg-white rounded-full shadow-xl shadow-stone-900/10 border border-stone-100 py-3 md:py-4 pr-5 md:pr-6 pl-11 md:pl-14 text-sm md:text-base text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
             />
           </div>
         </div>
       </div>
 
       {/* ───────── Topic chips ───────── */}
-      <div className="container mx-auto px-4 md:px-8 pt-6">
+      <div className="container mx-auto px-4 md:px-8 pt-4 md:pt-6">
         <div
-          className="flex items-center gap-2.5 overflow-x-auto scrollbar-hide pb-1 md:justify-center"
+          className="flex items-center gap-2 md:gap-2.5 overflow-x-auto scrollbar-hide pb-1 md:justify-center"
           role="group"
           aria-label="סינון לפי נושא"
         >
@@ -225,56 +227,56 @@ export default function ArticlesBrowser({
       </div>
 
       {/* ───────── Article list ───────── */}
-      <section className="py-8 md:py-10 bg-gradient-to-b from-white to-stone-50">
+      <section className="py-5 md:py-10 bg-gradient-to-b from-white to-stone-50">
         <div className="container mx-auto px-4 md:px-8">
           {visibleArticles.length > 0 ? (
             <>
-              <div className="max-w-3xl mx-auto space-y-4">
+              <div className="max-w-3xl mx-auto space-y-3 md:space-y-4">
                 {visibleArticles.map((article, index) => (
                   <Link
                     key={article.id}
                     href={`/articles/${article.slug || article.id}`}
                     prefetch={index < 4}
                     onClick={() => trackArticleCardClick(article.title, article.slug)}
-                    className="group flex items-stretch gap-4 bg-white rounded-2xl p-3 md:p-4 shadow-sm hover:shadow-lg border border-stone-100 transition-shadow"
+                    className="group flex items-stretch gap-3 md:gap-4 bg-white rounded-2xl p-2.5 md:p-4 shadow-sm hover:shadow-lg border border-stone-100 transition-shadow"
                   >
                     {/* Text first: in RTL this sits on the right, image on the left */}
                     <div className="flex-1 min-w-0 flex flex-col">
-                      <h2 className="text-lg md:text-xl font-bold text-stone-800 leading-snug line-clamp-2 mb-1.5 group-hover:text-emerald-700 transition-colors">
+                      <h2 className="text-base md:text-xl font-bold text-stone-800 leading-snug line-clamp-2 mb-1 md:mb-1.5 group-hover:text-emerald-700 transition-colors">
                         {article.title}
                       </h2>
                       {article.excerpt && (
-                        <p className="text-sm text-stone-500 leading-relaxed line-clamp-2">
+                        <p className="text-xs md:text-sm text-stone-500 leading-relaxed line-clamp-2">
                           {article.excerpt}
                         </p>
                       )}
-                      <div className="mt-auto pt-3 flex items-center justify-between gap-3">
-                        <span className="flex items-center gap-1.5 text-xs text-stone-400">
+                      <div className="mt-auto pt-2 md:pt-3 flex items-center justify-between gap-3">
+                        <span className="flex items-center gap-1.5 text-[11px] md:text-xs text-stone-400">
                           {article.reading_time ? (
                             <>
-                              <Clock className="w-3.5 h-3.5" aria-hidden="true" />
+                              <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" aria-hidden="true" />
                               {article.reading_time} דק׳ קריאה
                             </>
                           ) : null}
                         </span>
                         <span
-                          className="text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all"
+                          className="text-xs md:text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all"
                           style={{ color: MINT }}
                         >
                           קרא עוד
-                          <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+                          <ArrowLeft className="w-3.5 h-3.5 md:w-4 md:h-4" aria-hidden="true" />
                         </span>
                       </div>
                     </div>
 
-                    <div className="relative w-28 md:w-40 flex-shrink-0 self-stretch min-h-[104px] rounded-xl overflow-hidden bg-stone-100">
+                    <div className="relative w-24 md:w-40 flex-shrink-0 self-stretch min-h-[86px] md:min-h-[104px] rounded-xl overflow-hidden bg-stone-100">
                       {article.image_url ? (
                         <Image
                           src={article.image_url}
                           alt={article.title}
                           fill
                           className="object-cover group-hover:scale-105 transition-transform duration-500"
-                          sizes="(max-width: 768px) 112px, 160px"
+                          sizes="(max-width: 768px) 96px, 160px"
                           loading={index < 4 ? 'eager' : 'lazy'}
                           priority={index < 4}
                         />
@@ -289,10 +291,10 @@ export default function ArticlesBrowser({
               </div>
 
               {hasMore && (
-                <div className="flex justify-center mt-8">
+                <div className="flex justify-center mt-6 md:mt-8">
                   <button
                     onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-                    className="inline-flex items-center gap-2 px-7 min-h-[44px] rounded-full border border-emerald-300 text-emerald-800 bg-white hover:bg-emerald-50 font-medium transition-colors"
+                    className="inline-flex items-center gap-2 px-6 md:px-7 min-h-[40px] md:min-h-[44px] rounded-full border border-emerald-300 text-emerald-800 bg-white hover:bg-emerald-50 text-sm md:text-base font-medium transition-colors"
                   >
                     טען עוד מאמרים
                     <ChevronDown className="w-4 h-4" aria-hidden="true" />
@@ -332,7 +334,7 @@ export default function ArticlesBrowser({
       </section>
 
       {/* ───────── CTA banner ───────── */}
-      <section className="pb-12 px-4 md:px-8 bg-stone-50">
+      <section className="pb-10 md:pb-12 px-4 md:px-8 bg-stone-50">
         <div className="container mx-auto">
           <div
             className="relative overflow-hidden rounded-3xl"
@@ -347,25 +349,25 @@ export default function ArticlesBrowser({
               sizes="(max-width: 1280px) 100vw, 1280px"
             />
 
-            <div className="relative px-5 py-8 md:px-12 md:py-14 flex flex-row items-center justify-between gap-4 md:gap-8">
+            <div className="relative px-4 py-6 md:px-12 md:py-14 flex flex-row items-center justify-between gap-3 md:gap-8">
               <div className="min-w-0 text-right">
-                <h2 className="text-xl md:text-3xl font-bold text-white mb-2 md:mb-3">
+                <h2 className="text-lg md:text-3xl font-bold text-white mb-1.5 md:mb-3">
                   מוכנים לעשות שינוי?
                 </h2>
-                <p className="text-sm md:text-base text-white/90 leading-relaxed">
+                <p className="text-xs md:text-base text-white/90 leading-relaxed">
                   אני כאן כדי ללוות אתכם בדרך
                   <br />
                   להגשמה עצמית וחיים מלאים יותר
                 </p>
               </div>
 
-              <div className="flex flex-col gap-3 flex-shrink-0">
+              <div className="flex flex-col gap-2.5 md:gap-3 flex-shrink-0">
                 <Link
                   href="/contact"
                   onClick={() => trackCTAClick('contact', 'articles_page_cta')}
-                  className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 md:px-7 rounded-full border border-white/70 text-white text-sm md:text-base font-medium whitespace-nowrap hover:bg-white/15 transition-colors"
+                  className="inline-flex items-center justify-center gap-2 min-h-[40px] md:min-h-[44px] px-3.5 md:px-7 rounded-full border border-white/70 text-white text-xs md:text-base font-medium whitespace-nowrap hover:bg-white/15 transition-colors"
                 >
-                  <Calendar className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" aria-hidden="true" />
+                  <Calendar className="w-3.5 h-3.5 md:w-5 md:h-5 flex-shrink-0" aria-hidden="true" />
                   קבעו פגישה
                 </Link>
                 <a
@@ -373,9 +375,9 @@ export default function ArticlesBrowser({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => trackWhatsAppClick('articles_page_cta')}
-                  className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 md:px-7 rounded-full border border-white/70 text-white text-sm md:text-base font-medium whitespace-nowrap hover:bg-white/15 transition-colors"
+                  className="inline-flex items-center justify-center gap-2 min-h-[40px] md:min-h-[44px] px-3.5 md:px-7 rounded-full border border-white/70 text-white text-xs md:text-base font-medium whitespace-nowrap hover:bg-white/15 transition-colors"
                 >
-                  <MessageCircle className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" aria-hidden="true" />
+                  <MessageCircle className="w-3.5 h-3.5 md:w-5 md:h-5 flex-shrink-0" aria-hidden="true" />
                   שלחו הודעת WhatsApp
                 </a>
               </div>
