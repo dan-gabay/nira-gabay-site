@@ -11,18 +11,19 @@ const WA_HREF = `https://wa.me/972507936681?text=${encodeURIComponent('שלום 
 const TEAL_DEEP = '#16323b';
 
 // Mobile hero photo. Kept as its own file so the shot can be swapped without
-// touching this component - just replace public/images/hero-mobile.png.
-// objectPosition frames the face inside the square crop.
-const MOBILE_HERO_SRC = '/images/hero-mobile.png';
-const MOBILE_HERO_POSITION = '50% 44%';
+// touching this component - just replace public/images/hero-mobile.jpg.
+// The photo is already a tight 495x505 headshot, so the square crop is a
+// near-exact fit and needs no repositioning.
+const MOBILE_HERO_SRC = '/images/hero-mobile.jpg';
+const MOBILE_HERO_POSITION = '50% 50%';
+const BLUR_MOBILE =
+  'data:image/webp;base64,UklGRrQAAABXRUJQVlA4IKgAAAAQBACdASoQABEAPt1apkyopSOiMAgBEBuJbACdMoMjbDHGPtxllet2SAD+Ctj7ntfZfZ1cHNhRCfPQBFkcDHx4UGZB7i6eko08IMLx8h/bIB7ukkzdgTAUrmW0EDN3qqXgCaaTF8D9qmEtrg2wrHoaR5SE7YSgppgZU5mdnewB61nYx4h3OiCCb9da/P0oRv8m7XWvz9KEb/JvmhJmo3lovC+icpoAAAA=';
 
 // Inlined low-res blurs of the actual photos (generated from the source images).
 // They fill the hero box with the full composition instantly, so the heavy image
 // just sharpens in place instead of streaming in over a flat placeholder.
 const BLUR_LANDSCAPE =
   'data:image/webp;base64,UklGRmYAAABXRUJQVlA4IFoAAAAQAgCdASoQAAsAA4BaJbACdAEWNtQiDLUAAP7au1XUAlLihMxrtMSyBfuZJKus8P2EBut2KsaJ9xzGEmqkU0vFKCj9JJNxgRicefRyl7IQCZuUj91i38oloAA=';
-const BLUR_PORTRAIT =
-  'data:image/webp;base64,UklGRrQAAABXRUJQVlA4IKgAAAAQBQCdASoQACMAPu1qrlCppaQiqqgBMB2JbACdMoRwAGSLDsd89Wjoou2zcB54ctgAAP6rZ7Y+kFSAofZOhtWCU5ffD5bRdLDwbsUClSHrhtcSazhFBGDOyQ9lpT36GWFTxV0y9LNizfw6wdfG4GEInIPwEvLYtOcUiWjT1Q9geIFiWcGie+PFL8tmxccXJXkM/zdQsPQe4kzwLHEu5zCxdVOGfOsAAAA=';
 
 export default function HeroSection() {
   const Pill = (
@@ -90,7 +91,7 @@ export default function HeroSection() {
             fetchPriority="high"
             quality={90}
             placeholder="blur"
-            blurDataURL={BLUR_PORTRAIT}
+            blurDataURL={BLUR_MOBILE}
             className="object-cover"
             style={{ objectPosition: MOBILE_HERO_POSITION }}
             sizes="100vw"
