@@ -12,6 +12,7 @@ import ArticleTag from '@/components/ArticleTag';
 import ArticleFaq from '@/components/ArticleFaq';
 import RelatedArticles from '../RelatedArticles';
 import NewsletterSignup from '@/components/NewsletterSignup';
+import ArticleCtaBanner from '@/components/ArticleCtaBanner';
 import { TOPIC_BY_TAG } from '@/lib/topics';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
@@ -497,31 +498,20 @@ export default async function ArticlePage({ params }: Props) {
             recommendedSlugs={(article.internal_links || []).map((l) => l.slug).filter(Boolean)}
           />
 
-          {/* Back Link */}
-          <div className="mt-8 md:mt-12 pt-6 md:pt-8 border-t border-stone-200">
-            <Link href="/articles">
-              <button className="inline-flex items-center gap-2 px-6 py-3 border-2 border-stone-300 text-stone-700 rounded-lg hover:border-stone-400 hover:bg-stone-50 transition-all">
-                <ArrowRight className="w-5 h-5" />
-                חזרה לכל המאמרים
-              </button>
+          {/* Back Link - a single anchor, not a button nested inside one */}
+          <div className="mt-8 md:mt-12 pt-6 md:pt-8 border-t border-stone-200 flex justify-center">
+            <Link
+              href="/articles"
+              className="inline-flex items-center gap-2 min-h-[44px] px-5 md:px-6 rounded-full border border-stone-300 text-stone-700 text-sm md:text-base hover:border-stone-400 hover:bg-stone-50 transition-colors"
+            >
+              <ArrowRight className="w-4 h-4 md:w-5 md:h-5" aria-hidden="true" />
+              חזרה לכל המאמרים
             </Link>
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-10 md:py-16 bg-gradient-to-br from-amber-50 to-stone-100">
-        <div className="container mx-auto px-4 md:px-8 max-w-4xl text-center">
-          <h2 className="text-xl md:text-3xl font-bold text-stone-800 mb-3 md:mb-4">מעוניינים בייעוץ אישי?</h2>
-          <p className="text-sm md:text-xl text-stone-600 mb-6 md:mb-8">אשמח לעזור לכם במסע שלכם</p>
-          <Link
-            href="/contact"
-            className="inline-block px-8 py-3 bg-stone-800 text-white rounded-lg hover:bg-stone-700 transition-colors"
-          >
-            צרו קשר
-          </Link>
-        </div>
-      </section>
+      <ArticleCtaBanner source="article_page_cta" />
     </div>
   );
 }
