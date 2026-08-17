@@ -52,37 +52,16 @@ type ArticlesBrowserProps = {
 const TEAL_DARK = '#1A4A44';
 const MINT = '#3FC195';
 
-// Background artwork slots. Drop the files into public/images/ and point these
-// at them - the gradient underneath stays as the base layer either way.
-const HERO_BG: string = '';
-const CTA_BG: string = '';
+// Background artwork. Both files already carry the leaf line-art and their own
+// gradient; the solid colours below stay as the paint-in/fallback layer.
+const HERO_BG = '/images/articles-hero.webp';
+const CTA_BG = '/images/articles-cta.webp';
 
 const WA_HREF = `https://wa.me/972507936681?text=${encodeURIComponent(
   'שלום נירה, אשמח לקבוע פגישה',
 )}`;
 
 const PAGE_SIZE = 6;
-
-// Decorative line-art branch, used as a watermark in the hero and CTA banner.
-function LeafMark({ className = '' }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 200 200"
-      fill="none"
-      aria-hidden="true"
-      className={className}
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    >
-      <path d="M26 182C26 182 42 98 96 54c30-24 62-30 62-30" />
-      <path d="M92 120c-22 7-43-1-53-17 16-13 39-13 55 1" />
-      <path d="M110 88c-21 3-37-7-43-23 18-9 39-3 51 11" />
-      <path d="M127 58c-18-1-31-13-33-29 18-3 34 7 43 21" />
-      <path d="M70 152c-19 5-35-3-43-17 14-11 33-10 47 2" />
-    </svg>
-  );
-}
 
 export default function ArticlesBrowser({
   articles,
@@ -132,25 +111,16 @@ export default function ArticlesBrowser({
     <div style={{ paddingTop: '80px' }}>
       {/* ───────── Hero ───────── */}
       <section className="relative overflow-hidden" style={{ background: TEAL_DARK }}>
-        {HERO_BG && (
-          <Image
-            src={HERO_BG}
-            alt=""
-            fill
-            priority
-            className="object-cover opacity-40"
-            sizes="100vw"
-          />
-        )}
-        {/* keeps the copy legible whatever artwork sits behind it */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(180deg, ${TEAL_DARK}e6 0%, ${TEAL_DARK}cc 55%, ${TEAL_DARK}f2 100%)`,
-          }}
+        {/* Anchored left so the artwork's leaf survives the crop on narrow screens */}
+        <Image
+          src={HERO_BG}
+          alt=""
+          fill
+          priority
+          className="object-cover"
+          style={{ objectPosition: 'left center' }}
+          sizes="100vw"
         />
-        <LeafMark className="absolute -left-10 top-4 w-48 h-48 text-white/[0.09] pointer-events-none" />
-        <LeafMark className="absolute -right-12 bottom-0 w-40 h-40 text-white/[0.06] scale-x-[-1] pointer-events-none" />
 
         <div className="relative container mx-auto px-4 md:px-8 pt-10 pb-24 md:pt-14 md:pb-28">
           <motion.div
@@ -368,10 +338,14 @@ export default function ArticlesBrowser({
             className="relative overflow-hidden rounded-3xl"
             style={{ background: `linear-gradient(115deg, ${MINT} 0%, #1F7A63 100%)` }}
           >
-            {CTA_BG && (
-              <Image src={CTA_BG} alt="" fill className="object-cover opacity-25" sizes="100vw" />
-            )}
-            <LeafMark className="absolute -left-8 -bottom-8 w-44 h-44 text-white/15 pointer-events-none" />
+            <Image
+              src={CTA_BG}
+              alt=""
+              fill
+              loading="lazy"
+              className="object-cover"
+              sizes="(max-width: 1280px) 100vw, 1280px"
+            />
 
             <div className="relative px-5 py-8 md:px-12 md:py-14 flex flex-row items-center justify-between gap-4 md:gap-8">
               <div className="min-w-0 text-right">
