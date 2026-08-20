@@ -155,34 +155,34 @@ export default function ManageCommentsPage() {
           <h1 className="text-xl md:text-3xl font-bold text-stone-800 mb-3 md:mb-4">ניהול תגובות</h1>
 
           {/* Filter Tabs */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-0.5">
             <button
               onClick={() => setFilter('pending')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-4 min-h-[40px] rounded-full text-xs md:text-sm font-medium whitespace-nowrap flex-shrink-0 border transition-colors ${
                 filter === 'pending'
-                  ? 'bg-amber-600 text-white'
-                  : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-              }`}
+                  ? 'bg-stone-800 text-white border-stone-800'
+                  : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50'
+                }`}
             >
               ממתינות לאישור ({pendingCount})
             </button>
             <button
               onClick={() => setFilter('approved')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-4 min-h-[40px] rounded-full text-xs md:text-sm font-medium whitespace-nowrap flex-shrink-0 border transition-colors ${
                 filter === 'approved'
-                  ? 'bg-amber-600 text-white'
-                  : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-              }`}
+                  ? 'bg-stone-800 text-white border-stone-800'
+                  : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50'
+                }`}
             >
               מאושרות ({approvedCount})
             </button>
             <button
               onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-4 min-h-[40px] rounded-full text-xs md:text-sm font-medium whitespace-nowrap flex-shrink-0 border transition-colors ${
                 filter === 'all'
-                  ? 'bg-amber-600 text-white'
-                  : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-              }`}
+                  ? 'bg-stone-800 text-white border-stone-800'
+                  : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50'
+                }`}
             >
               הכל ({comments.length})
             </button>
@@ -192,11 +192,11 @@ export default function ManageCommentsPage() {
 
       <div>
         {/* Comments List */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {filteredComments.length === 0 ? (
             <div className="bg-white rounded-xl shadow-sm border border-stone-100 p-8 md:p-12 text-center">
-              <MessageSquare className="w-16 h-16 text-stone-300 mx-auto mb-4" />
-              <p className="text-stone-600">
+              <MessageSquare className="w-10 h-10 text-stone-300 mx-auto mb-3" aria-hidden="true" />
+              <p className="text-sm md:text-base text-stone-600">
                 {filter === 'pending' && 'אין תגובות ממתינות לאישור'}
                 {filter === 'approved' && 'אין תגובות מאושרות'}
                 {filter === 'all' && 'אין תגובות עדיין'}
@@ -206,22 +206,22 @@ export default function ManageCommentsPage() {
             filteredComments.map((comment) => (
               <div
                 key={comment.id}
-                className={`bg-white rounded-xl shadow-sm border-2 p-6 ${
+                className={`bg-white rounded-2xl border p-3.5 md:p-5 ${
                   comment.is_approved 
-                    ? 'border-green-200' 
-                    : 'border-amber-200'
+                    ? 'border-stone-200' 
+                    : 'border-amber-200 ring-1 ring-amber-100'
                 }`}
               >
                 {/* Header */}
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="flex items-center gap-2 text-stone-800 font-medium">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-1.5">
+                      <div className="flex items-center gap-1.5 text-stone-800 text-sm md:text-base font-medium">
                         <User className="w-4 h-4" />
                         {comment.author_name}
                       </div>
                       {comment.author_email && (
-                        <div className="flex items-center gap-2 text-stone-600 text-sm">
+                        <div className="flex items-center gap-1.5 text-stone-500 text-[11px] md:text-sm min-w-0 truncate">
                           <Mail className="w-4 h-4" />
                           {comment.author_email}
                         </div>
@@ -231,12 +231,12 @@ export default function ManageCommentsPage() {
                       <Link
                         href={`/articles/${comment.article.slug}`}
                         target="_blank"
-                        className="text-sm text-amber-600 hover:text-amber-700"
+                        className="text-[11px] md:text-sm text-amber-600 hover:text-amber-700 line-clamp-1"
                       >
                         מאמר: {comment.article.title}
                       </Link>
                     ) : (
-                      <span className="text-sm text-stone-500">
+                      <span className="text-[11px] md:text-sm text-stone-500">
                         מאמר: {comment.article_id} (לא נמצא)
                       </span>
                     )}
@@ -258,13 +258,13 @@ export default function ManageCommentsPage() {
                 </div>
 
                 {/* Content */}
-                <div className="bg-stone-50 rounded-lg p-4 mb-4">
-                  <p className="text-stone-800 whitespace-pre-wrap">{comment.content}</p>
+                <div className="bg-stone-50 rounded-xl p-3 md:p-4 mb-3">
+                  <p className="text-xs md:text-sm text-stone-700 whitespace-pre-wrap leading-relaxed">{comment.content}</p>
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-stone-500">
+                <div className="flex flex-col gap-2.5">
+                  <div className="text-[11px] md:text-xs text-stone-400">
                     {new Date(comment.created_date).toLocaleString('he-IL')}
                   </div>
 
@@ -272,7 +272,7 @@ export default function ManageCommentsPage() {
                     {!comment.is_approved && (
                       <button
                         onClick={() => approveComment(comment.id)}
-                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white min-h-[44px] rounded-xl text-xs md:text-sm font-medium flex items-center justify-center gap-1.5 transition-colors"
                       >
                         <CheckCircle className="w-4 h-4" />
                         אשר
@@ -282,7 +282,7 @@ export default function ManageCommentsPage() {
                     {comment.is_approved && (
                       <button
                         onClick={() => rejectComment(comment.id)}
-                        className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+                        className="flex-1 bg-amber-600 hover:bg-amber-700 text-white min-h-[44px] rounded-xl text-xs md:text-sm font-medium flex items-center justify-center gap-1.5 transition-colors"
                       >
                         <XCircle className="w-4 h-4" />
                         בטל אישור
@@ -291,7 +291,7 @@ export default function ManageCommentsPage() {
 
                     <button
                       onClick={() => deleteComment(comment.id)}
-                      className="bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+                      className="min-h-[44px] px-4 border border-stone-200 text-stone-400 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 rounded-xl text-xs md:text-sm font-medium flex items-center justify-center gap-1.5 transition-colors flex-shrink-0"
                     >
                       <Trash2 className="w-4 h-4" />
                       מחק

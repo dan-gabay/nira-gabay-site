@@ -269,14 +269,14 @@ export default function EditArticlePage() {
             <ArrowRight className="w-4 h-4" />
             חזרה לניהול מאמרים
           </Link>
-          <h1 className="text-3xl font-bold text-stone-800">עריכת מאמר</h1>
+          <h1 className="text-xl md:text-3xl font-bold text-stone-800">עריכת מאמר</h1>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-100">
+          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
             <label className="block text-sm font-medium text-stone-700 mb-2">
               כותרת המאמר *
             </label>
@@ -291,7 +291,7 @@ export default function EditArticlePage() {
           </div>
 
           {/* Slug */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-100">
+          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
             <label className="block text-sm font-medium text-stone-700 mb-2">
               Slug (כתובת URL) *
             </label>
@@ -309,7 +309,7 @@ export default function EditArticlePage() {
           </div>
 
           {/* Image */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-100">
+          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
             <label className="block text-sm font-medium text-stone-700 mb-2">
               תמונת ראשית
             </label>
@@ -341,7 +341,7 @@ export default function EditArticlePage() {
 
           {/* Image Prompt Metadata - admin only, never shown on public page */}
           {(draftMetadata || !formData.image_url) && (
-            <div className="bg-amber-50 rounded-xl p-6 shadow-sm border border-amber-100">
+            <div className="bg-amber-50 rounded-2xl p-4 md:p-6 border border-amber-200">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-semibold text-stone-800">פרטי תמונה (לשימוש פנימי בלבד)</h2>
                 {draftMetadata?.image_status && (
@@ -420,7 +420,7 @@ export default function EditArticlePage() {
           )}
 
           {/* Excerpt */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-100">
+          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
             <label className="block text-sm font-medium text-stone-700 mb-2">
               תקציר (אופציונלי)
             </label>
@@ -434,7 +434,7 @@ export default function EditArticlePage() {
           </div>
 
           {/* SEO */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-100">
+          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold text-stone-800">SEO</h2>
               {seoReview?.score !== null && seoReview?.score !== undefined && (
@@ -558,7 +558,7 @@ export default function EditArticlePage() {
           </div>
 
           {/* Content */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-100">
+          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
             <label className="block text-sm font-medium text-stone-700 mb-2">
               תוכן המאמר (Markdown) *
             </label>
@@ -573,7 +573,7 @@ export default function EditArticlePage() {
           </div>
 
           {/* Tags */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-100">
+          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
             <label className="block text-sm font-medium text-stone-700 mb-3">
               תגיות (בחר מהרשימה)
             </label>
@@ -583,7 +583,7 @@ export default function EditArticlePage() {
                   key={tag}
                   type="button"
                   onClick={() => toggleTag(tag)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  className={`px-4 min-h-[40px] rounded-full text-xs md:text-sm font-medium transition-colors ${
                     selectedTags.includes(tag)
                       ? 'bg-amber-600 text-white'
                       : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
@@ -601,7 +601,7 @@ export default function EditArticlePage() {
           </div>
 
           {/* Publish Status */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-stone-100 space-y-4">
+          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200 space-y-4">
             <p className="text-sm font-semibold text-stone-700">סטטוס פרסום</p>
 
             {/* Publish now */}

@@ -39,7 +39,7 @@ function LoginForm() {
 
   return (
     <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4" dir="rtl">
-      <div className="bg-white rounded-2xl shadow-lg border border-stone-100 p-8 w-full max-w-sm">
+      <div className="bg-white rounded-2xl shadow-lg border border-stone-100 p-6 md:p-8 w-full max-w-sm">
         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center mx-auto mb-6">
           <Lock className="w-7 h-7 text-stone-700" />
         </div>

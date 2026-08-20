@@ -201,7 +201,7 @@ export default function ManageTagsPage() {
     return (
       <div className="py-20 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
           <p className="text-stone-600">טוען תגיות...</p>
         </div>
       </div>
@@ -243,7 +243,7 @@ export default function ManageTagsPage() {
       <div>
         {/* Add New Tag Form */}
         {isAdding && (
-          <div className="bg-white rounded-xl shadow-sm border-2 border-amber-300 p-6 mb-6">
+          <div className="bg-white rounded-2xl border border-amber-300 p-4 md:p-5 mb-4 md:mb-6">
             <h3 className="text-lg font-bold text-stone-800 mb-4">תגית חדשה</h3>
             <div className="flex gap-3">
               <input
@@ -277,14 +277,14 @@ export default function ManageTagsPage() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-2 gap-2.5 md:gap-4 mb-4 md:mb-6">
           <div className="bg-white p-4 rounded-lg border border-stone-200">
             <p className="text-stone-600 text-sm">סה"כ תגיות</p>
-            <p className="text-2xl font-bold text-stone-800">{tags.length}</p>
+            <p className="text-lg md:text-2xl font-bold text-stone-800">{tags.length}</p>
           </div>
           <div className="bg-white p-4 rounded-lg border border-stone-200">
             <p className="text-stone-600 text-sm">תגיות בשימוש</p>
-            <p className="text-2xl font-bold text-green-600">
+            <p className="text-lg md:text-2xl font-bold text-green-600">
               {tags.filter(t => (t.article_count || 0) > 0).length}
             </p>
           </div>
@@ -314,14 +314,14 @@ export default function ManageTagsPage() {
                       />
                       <button
                         onClick={() => updateTag(tag.id)}
-                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+                        className="bg-green-600 hover:bg-green-700 text-white min-h-[44px] px-4 rounded-xl text-xs md:text-sm font-medium flex items-center justify-center gap-1.5 transition-colors"
                       >
                         <Save className="w-4 h-4" />
                         שמור
                       </button>
                       <button
                         onClick={cancelEdit}
-                        className="bg-stone-200 hover:bg-stone-300 text-stone-700 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+                        className="bg-stone-100 hover:bg-stone-200 text-stone-700 min-h-[44px] px-4 rounded-xl text-xs md:text-sm font-medium flex items-center justify-center gap-1.5 transition-colors"
                       >
                         <X className="w-4 h-4" />
                         ביטול
@@ -341,14 +341,14 @@ export default function ManageTagsPage() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => startEdit(tag)}
-                          className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+                          className="bg-stone-100 hover:bg-stone-200 text-stone-700 min-h-[44px] px-4 rounded-xl text-xs md:text-sm font-medium flex items-center justify-center gap-1.5 transition-colors"
                         >
                           <Edit className="w-4 h-4" />
                           עריכה
                         </button>
                         <button
                           onClick={() => deleteTag(tag.id, tag.name, tag.article_count || 0)}
-                          className="bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+                          className="border border-stone-200 text-stone-400 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 min-h-[44px] px-4 rounded-xl text-xs md:text-sm font-medium flex items-center justify-center gap-1.5 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                           מחק
