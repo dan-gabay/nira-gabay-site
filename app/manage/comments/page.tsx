@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import { 
-  ArrowRight,
   CheckCircle,
   XCircle,
   Trash2,
@@ -139,7 +138,7 @@ export default function ManageCommentsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+      <div className="py-20 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-stone-600">טוען תגובות...</p>
@@ -149,15 +148,11 @@ export default function ManageCommentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50" dir="rtl">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="bg-white border-b border-stone-200">
-        <div className="container mx-auto px-4 py-6">
-          <Link href="/manage" className="text-amber-600 hover:text-amber-700 text-sm mb-2 inline-flex items-center gap-1">
-            <ArrowRight className="w-4 h-4" />
-            חזרה ללוח בקרה
-          </Link>
-          <h1 className="text-3xl font-bold text-stone-800 mb-4">ניהול תגובות</h1>
+      <div>
+        <div>
+          <h1 className="text-xl md:text-3xl font-bold text-stone-800 mb-3 md:mb-4">ניהול תגובות</h1>
 
           {/* Filter Tabs */}
           <div className="flex gap-2">
@@ -195,11 +190,11 @@ export default function ManageCommentsPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div>
         {/* Comments List */}
         <div className="space-y-4">
           {filteredComments.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm border border-stone-100 p-12 text-center">
+            <div className="bg-white rounded-xl shadow-sm border border-stone-100 p-8 md:p-12 text-center">
               <MessageSquare className="w-16 h-16 text-stone-300 mx-auto mb-4" />
               <p className="text-stone-600">
                 {filter === 'pending' && 'אין תגובות ממתינות לאישור'}

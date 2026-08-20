@@ -1,9 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { 
-  ArrowRight,
   Mail,
   User,
   Phone,
@@ -197,7 +195,7 @@ export default function ManageContactsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+      <div className="py-20 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-stone-600">טוען פניות...</p>
@@ -207,16 +205,12 @@ export default function ManageContactsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50" dir="rtl">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="bg-white border-b border-stone-200">
-        <div className="container mx-auto px-4 py-6">
-          <Link href="/manage" className="text-amber-600 hover:text-amber-700 text-sm mb-2 inline-flex items-center gap-1">
-            <ArrowRight className="w-4 h-4" />
-            חזרה ללוח בקרה
-          </Link>
+      <div>
+        <div>
           <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-            <h1 className="text-3xl font-bold text-stone-800">פניות צור קשר</h1>
+            <h1 className="text-xl md:text-3xl font-bold text-stone-800">פניות צור קשר</h1>
             <button
               onClick={() => setShowAddForm(!showAddForm)}
               className="bg-stone-800 hover:bg-stone-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
@@ -317,11 +311,11 @@ export default function ManageContactsPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div>
         {/* Messages List */}
         <div className="space-y-4">
           {filteredMessages.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm border border-stone-100 p-12 text-center">
+            <div className="bg-white rounded-xl shadow-sm border border-stone-100 p-8 md:p-12 text-center">
               <Mail className="w-16 h-16 text-stone-300 mx-auto mb-4" />
               <p className="text-stone-600">
                 {filter === 'unread' && 'אין פניות חדשות'}

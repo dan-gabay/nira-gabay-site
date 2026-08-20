@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import Link from 'next/link';
 import { 
-  ArrowRight,
   Tag as TagIcon,
   Plus,
   Edit,
@@ -201,7 +199,7 @@ export default function ManageTagsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+      <div className="py-20 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-stone-600">טוען תגיות...</p>
@@ -211,17 +209,13 @@ export default function ManageTagsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50" dir="rtl">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="bg-white border-b border-stone-200">
-        <div className="container mx-auto px-4 py-6">
+      <div>
+        <div>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <Link href="/manage" className="text-amber-600 hover:text-amber-700 text-sm mb-2 inline-flex items-center gap-1">
-                <ArrowRight className="w-4 h-4" />
-                חזרה ללוח בקרה
-              </Link>
-              <h1 className="text-3xl font-bold text-stone-800">ניהול תגיות</h1>
+              <h1 className="text-xl md:text-3xl font-bold text-stone-800">ניהול תגיות</h1>
             </div>
             <button
               onClick={() => setIsAdding(true)}
@@ -246,7 +240,7 @@ export default function ManageTagsPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div>
         {/* Add New Tag Form */}
         {isAdding && (
           <div className="bg-white rounded-xl shadow-sm border-2 border-amber-300 p-6 mb-6">
@@ -299,7 +293,7 @@ export default function ManageTagsPage() {
         {/* Tags List */}
         <div className="bg-white rounded-xl shadow-sm border border-stone-100">
           {filteredTags.length === 0 ? (
-            <div className="p-12 text-center text-stone-600">
+            <div className="p-8 md:p-12 text-center text-stone-600">
               {searchTerm ? 'לא נמצאו תגיות התואמות לחיפוש' : 'אין תגיות עדיין'}
             </div>
           ) : (

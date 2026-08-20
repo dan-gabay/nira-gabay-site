@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import {
   Plus, Edit, Trash2, Eye, Heart,
-  CheckCircle, XCircle, Clock, ArrowRight, Search,
+  CheckCircle, XCircle, Clock, Search,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -107,7 +107,7 @@ export default function ManageArticlesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+      <div className="py-20 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-stone-600">טוען מאמרים...</p>
@@ -117,16 +117,12 @@ export default function ManageArticlesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50" dir="rtl">
-      <div className="bg-white border-b border-stone-200">
-        <div className="container mx-auto px-4 py-6">
+    <div className="space-y-4 md:space-y-6">
+      <div>
+        <div>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <Link href="/manage" className="text-amber-600 hover:text-amber-700 text-sm mb-2 inline-flex items-center gap-1">
-                <ArrowRight className="w-4 h-4" />
-                חזרה ללוח בקרה
-              </Link>
-              <h1 className="text-3xl font-bold text-stone-800">ניהול מאמרים</h1>
+              <h1 className="text-xl md:text-3xl font-bold text-stone-800">ניהול מאמרים</h1>
             </div>
             <Link href="/manage/articles/new" className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-colors">
               <Plus className="w-5 h-5" />
@@ -146,7 +142,7 @@ export default function ManageArticlesPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div>
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white p-4 rounded-lg border border-stone-200">
@@ -169,7 +165,7 @@ export default function ManageArticlesPage() {
 
         <div className="bg-white rounded-xl shadow-sm border border-stone-100">
           {filtered.length === 0 ? (
-            <div className="p-12 text-center text-stone-600">
+            <div className="p-8 md:p-12 text-center text-stone-600">
               {searchTerm ? 'לא נמצאו מאמרים התואמים לחיפוש' : 'אין מאמרים עדיין'}
             </div>
           ) : (
