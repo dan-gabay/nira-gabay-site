@@ -413,18 +413,28 @@ export default async function ArticlePage({ params }: Props) {
             </div>
           )}
           
-          {/* Article Content */}
-          {/* `prose` is a plain hook for the article-body rules in
+          {/* Article Content.
+              `prose` is a plain hook for the article-body rules in
               globals.css - @tailwindcss/typography is not installed, so
               prose-* utilities would generate nothing. Sizes and spacing
-              (including the mobile/desktop scale) all live in that stylesheet. */}
-          <article className="prose max-w-none font-assistant mb-8 md:mb-12">
+              (including the mobile/desktop scale) all live in that stylesheet.
+
+              It sits on the markdown wrappers rather than the <article> so the
+              aside below is outside prose scope. Typography's `not-prose`
+              escape hatch compiles to nothing here too, so while the aside was
+              inside prose its paragraph and list picked up the body rhythm -
+              14px paragraph margins, a 20px list margin and a bullet indent -
+              on top of the box's own padding. Out of scope, its own classes
+              apply as written. */}
+          <article className="max-w-none font-assistant mb-8 md:mb-12">
             {splitContent && inlineLinks.length > 0 ? (
               <>
-                <ReactMarkdown remarkPlugins={[remarkBreaks]} components={markdownComponents}>
-                  {splitContent[0]}
-                </ReactMarkdown>
-                <aside className="not-prose bg-amber-50 border border-amber-200 rounded-2xl p-4 md:p-6 my-6 md:my-8">
+                <div className="prose max-w-none">
+                  <ReactMarkdown remarkPlugins={[remarkBreaks]} components={markdownComponents}>
+                    {splitContent[0]}
+                  </ReactMarkdown>
+                </div>
+                <aside className="bg-amber-50 border border-amber-200 rounded-2xl p-4 md:p-6 my-6 md:my-8">
                   <p className="font-bold text-stone-800 text-sm md:text-base mb-2 md:mb-3">מומלץ לקרוא גם:</p>
                   <ul className="space-y-1.5 md:space-y-2 text-sm md:text-base">
                     {inlineLinks.map((link) => (
@@ -439,14 +449,18 @@ export default async function ArticlePage({ params }: Props) {
                     ))}
                   </ul>
                 </aside>
-                <ReactMarkdown remarkPlugins={[remarkBreaks]} components={markdownComponents}>
-                  {splitContent[1]}
-                </ReactMarkdown>
+                <div className="prose max-w-none">
+                  <ReactMarkdown remarkPlugins={[remarkBreaks]} components={markdownComponents}>
+                    {splitContent[1]}
+                  </ReactMarkdown>
+                </div>
               </>
             ) : (
-              <ReactMarkdown remarkPlugins={[remarkBreaks]} components={markdownComponents}>
-                {article.content}
-              </ReactMarkdown>
+              <div className="prose max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkBreaks]} components={markdownComponents}>
+                  {article.content}
+                </ReactMarkdown>
+              </div>
             )}
           </article>
 
