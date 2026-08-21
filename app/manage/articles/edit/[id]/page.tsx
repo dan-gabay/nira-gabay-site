@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
-import { ArrowRight, Save, Copy, Check, ImageOff, Clock, X } from 'lucide-react';
+import { Save, Copy, Check, ImageOff, Clock, X } from 'lucide-react';
 
 type DraftMetadata = {
   image_concept: string | null;
@@ -251,7 +251,7 @@ export default function EditArticlePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+      <div className="py-20 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-stone-600">טוען מאמר...</p>
@@ -261,19 +261,10 @@ export default function EditArticlePage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50" dir="rtl">
-      {/* Header */}
-      <div className="bg-white border-b border-stone-200">
-        <div className="container mx-auto px-4 py-6">
-          <Link href="/manage/articles" className="text-amber-600 hover:text-amber-700 text-sm mb-2 inline-flex items-center gap-1">
-            <ArrowRight className="w-4 h-4" />
-            חזרה לניהול מאמרים
-          </Link>
-          <h1 className="text-xl md:text-3xl font-bold text-stone-800">עריכת מאמר</h1>
-        </div>
-      </div>
+    <div className="space-y-4 md:space-y-6">
+            <h1 className="text-xl md:text-3xl font-bold text-stone-800">עריכת מאמר</h1>
 
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="max-w-4xl mx-auto">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
           <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
@@ -658,20 +649,21 @@ export default function EditArticlePage() {
             )}
           </div>
 
-          {/* Actions */}
-          <div className="flex gap-3">
+          {/* Actions. Sticky: this form is long enough that on a phone
+              saving otherwise meant scrolling past every field. */}
+          <div className="sticky bottom-20 md:bottom-4 z-30 flex gap-2 bg-white/95 backdrop-blur border border-stone-200 rounded-2xl p-2 shadow-lg">
             <button
               type="submit"
               disabled={saving}
-              className="bg-amber-600 hover:bg-amber-700 disabled:bg-stone-300 text-white px-8 py-3 rounded-lg font-medium flex items-center gap-2 transition-colors"
+              className="flex-1 bg-stone-800 hover:bg-stone-900 disabled:bg-stone-300 text-white min-h-[48px] rounded-xl text-sm md:text-base font-medium flex items-center justify-center gap-2 transition-colors"
             >
-              <Save className="w-5 h-5" />
+              <Save className="w-4 h-4 md:w-5 md:h-5" />
               {saving ? 'שומר...' : 'שמור שינויים'}
             </button>
 
             <Link
               href="/manage/articles"
-              className="bg-stone-200 hover:bg-stone-300 text-stone-800 px-8 py-3 rounded-lg font-medium transition-colors inline-flex items-center gap-2"
+              className="min-h-[48px] px-5 border border-stone-300 text-stone-700 hover:bg-stone-50 rounded-xl text-sm md:text-base font-medium transition-colors inline-flex items-center justify-center"
             >
               ביטול
             </Link>

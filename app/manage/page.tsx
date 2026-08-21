@@ -44,6 +44,7 @@ export default function ManageDashboard() {
     {
       count: summary?.newLeads ?? 0,
       label: 'פניות חדשות',
+      cta: 'למענה',
       hint: 'ממתינות למענה',
       href: '/manage/contacts',
       icon: Inbox,
@@ -52,6 +53,7 @@ export default function ManageDashboard() {
     {
       count: summary?.pendingComments ?? 0,
       label: 'תגובות לאישור',
+      cta: 'לאישור',
       hint: 'לא מוצגות באתר עד שיאושרו',
       href: '/manage/comments',
       icon: MessageSquare,
@@ -60,6 +62,7 @@ export default function ManageDashboard() {
     {
       count: summary?.drafts ?? 0,
       label: 'טיוטות',
+      cta: 'לטיוטות',
       hint: 'מוכנות לבדיקה ופרסום',
       href: '/manage/articles?filter=draft',
       icon: FileText,
@@ -68,12 +71,25 @@ export default function ManageDashboard() {
     {
       count: summary?.queuePending ?? 0,
       label: 'בתור הייבוא',
+      cta: 'לתור',
       hint: 'מאמרים שטרם הומרו',
       href: '/manage/articles',
       icon: Download,
       tone: 'bg-stone-500',
     },
   ].filter((t) => t.count > 0);
+
+  const hour = new Date().getHours();
+  const greeting =
+    hour < 12 ? 'בוקר טוב' : hour < 17 ? 'צהריים טובים' : hour < 21 ? 'ערב טוב' : 'לילה טוב';
+
+  // The most urgent open item leads the page; everything else follows it.
+  const lead = todo[0];
+  const headline = !summary
+    ? 'טוען...'
+    : lead
+      ? `${lead.count} ${lead.label} ${lead.hint}`
+      : 'אין משימות פתוחות. האתר מתוחזק.';
 
   const stats = [
     { label: 'מאמרים באתר', value: summary?.published, icon: FileText },
@@ -83,15 +99,23 @@ export default function ManageDashboard() {
 
   return (
     <div className="space-y-5 md:space-y-8">
-      <div>
-        <h1 className="text-xl md:text-3xl font-bold text-stone-800">לוח בקרה</h1>
-        <p className="text-xs md:text-sm text-stone-500 mt-1">
-          {summary ? 'מה קורה באתר עכשיו' : 'טוען...'}
-        </p>
+      {/* The one thing that matters most, stated rather than implied. */}
+      <div className="rounded-2xl bg-stone-800 text-white p-4 md:p-6">
+        <p className="text-[11px] md:text-sm text-white/60">{greeting}</p>
+        <p className="text-base md:text-2xl font-bold mt-1 leading-snug">{headline}</p>
+        {lead && (
+          <Link
+            href={lead.href}
+            className="mt-3 inline-flex items-center gap-2 min-h-[44px] px-4 rounded-xl bg-white text-stone-900 text-sm font-medium hover:bg-stone-100 transition-colors"
+          >
+            {lead.cta}
+            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+          </Link>
+        )}
       </div>
 
       {/* ── Needs attention ───────────────────────────────────── */}
-      {summary && (
+      {summary && (todo.length !== 1) && (
         <section aria-labelledby="todo-heading">
           <h2 id="todo-heading" className="sr-only">
             דורש טיפול
@@ -108,7 +132,7 @@ export default function ManageDashboard() {
             </div>
           ) : (
             <div className="space-y-2.5 md:space-y-3">
-              {todo.map((item) => (
+              {todo.slice(1).map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
