@@ -354,10 +354,7 @@ function ManageArticlesInner() {
                       <span>{new Date(article.created_date).toLocaleDateString('he-IL')}</span>
                       {status === 'scheduled' && article.scheduled_publish_at && (
                         <span className="text-blue-600">
-                          {new Date(article.scheduled_publish_at).toLocaleString('he-IL', {
-                            dateStyle: 'short',
-                            timeStyle: 'short',
-                          })}
+                          {new Date(article.scheduled_publish_at).toLocaleDateString('he-IL')}
                         </span>
                       )}
                     </p>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { dateToScheduleIso, formatScheduleDate, scheduleIsoToDate, todayLocalDate } from '@/lib/schedule';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
@@ -93,11 +94,10 @@ export default function EditArticlePage() {
       const tags = data.tags || '';
       const tagsArray = tags ? tags.split(',').map((t: string) => t.trim()) : [];
 
-      // Convert ISO timestamp to datetime-local format (YYYY-MM-DDTHH:mm)
-      const scheduledRaw = data.scheduled_publish_at ?? '';
-      const scheduledLocal = scheduledRaw
-        ? new Date(scheduledRaw).toISOString().slice(0, 16)
-        : '';
+      // The stored instant becomes the date the admin picked, in their own
+      // timezone. The old code used toISOString() here, which showed the UTC
+      // date and so read a day early for anyone east of UTC.
+      const scheduledLocal = scheduleIsoToDate(data.scheduled_publish_at);
 
       setFormData({
         title: data.title || '',
@@ -216,7 +216,7 @@ export default function EditArticlePage() {
       // When publishing immediately, clear the schedule
       const scheduledAt = formData.is_published
         ? null
-        : (formData.scheduled_publish_at ? new Date(formData.scheduled_publish_at).toISOString() : null);
+        : dateToScheduleIso(formData.scheduled_publish_at);
 
       const { error } = await supabase
         .from('articles')
@@ -614,14 +614,14 @@ export default function EditArticlePage() {
               <div className="border-t border-stone-100 pt-4">
                 <p className="text-sm font-medium text-stone-700 mb-2 flex items-center gap-2">
                   <Clock className="w-4 h-4 text-blue-500" />
-                  תזמן פרסום אוטומטי
+                  תזמון פרסום
                 </p>
                 <div className="flex items-center gap-2">
                   <input
-                    type="datetime-local"
+                    type="date"
                     value={formData.scheduled_publish_at}
                     onChange={(e) => handleChange('scheduled_publish_at', e.target.value)}
-                    min={new Date().toISOString().slice(0, 16)}
+                    min={todayLocalDate()}
                     className="flex-1 px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     dir="ltr"
                   />
@@ -639,8 +639,8 @@ export default function EditArticlePage() {
                 {formData.scheduled_publish_at && (
                   <p className="text-xs text-blue-600 mt-2 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    יפורסם ב-{new Date(formData.scheduled_publish_at).toLocaleString('he-IL', { dateStyle: 'long', timeStyle: 'short' })}
-  </p>
+                    יפורסם ב-{formatScheduleDate(formData.scheduled_publish_at)}, בבוקר
+                  </p>
                 )}
                 {!formData.scheduled_publish_at && (
                   <p className="text-xs text-stone-400 mt-2">השאר ריק כדי לשמור כטיוטה</p>

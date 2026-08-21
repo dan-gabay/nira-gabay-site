@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { dateToScheduleIso, formatScheduleDate, todayLocalDate } from '@/lib/schedule';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
@@ -126,7 +127,7 @@ export default function NewArticlePage() {
 
       const scheduledAt = formData.is_published
         ? null
-        : (formData.scheduled_publish_at ? new Date(formData.scheduled_publish_at).toISOString() : null);
+        : dateToScheduleIso(formData.scheduled_publish_at);
 
       const articleData = {
         id: crypto.randomUUID(),
@@ -306,14 +307,14 @@ export default function NewArticlePage() {
               <div className="border-t border-stone-100 pt-4">
                 <p className="text-sm font-medium text-stone-700 mb-2 flex items-center gap-2">
                   <Clock className="w-4 h-4 text-blue-500" />
-                  תזמן פרסום אוטומטי
+                  תזמון פרסום
                 </p>
                 <div className="flex items-center gap-2">
                   <input
-                    type="datetime-local"
+                    type="date"
                     value={formData.scheduled_publish_at}
                     onChange={(e) => handleChange('scheduled_publish_at', e.target.value)}
-                    min={new Date().toISOString().slice(0, 16)}
+                    min={todayLocalDate()}
                     className="flex-1 px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     dir="ltr"
                   />
@@ -330,7 +331,7 @@ export default function NewArticlePage() {
                 {formData.scheduled_publish_at && (
                   <p className="text-xs text-blue-600 mt-2 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    יפורסם ב-{new Date(formData.scheduled_publish_at).toLocaleString('he-IL', { dateStyle: 'long', timeStyle: 'short' })}
+                    יפורסם ב-{formatScheduleDate(formData.scheduled_publish_at)}, בבוקר
                   </p>
                 )}
                 {!formData.scheduled_publish_at && (
