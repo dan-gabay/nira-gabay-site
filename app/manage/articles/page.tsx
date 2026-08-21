@@ -162,13 +162,24 @@ function ManageArticlesInner() {
     scheduled: articles.filter((a) => articleStatus(a) === 'scheduled').length,
   };
 
-  const filtered = articles.filter((a) => {
-    const matchesFilter = filter === 'all' || articleStatus(a) === filter;
-    const q = searchTerm.toLowerCase();
-    const matchesSearch =
-      !q || a.title.toLowerCase().includes(q) || a.excerpt?.toLowerCase().includes(q);
-    return matchesFilter && matchesSearch;
-  });
+  const filtered = articles
+    .filter((a) => {
+      const matchesFilter = filter === 'all' || articleStatus(a) === filter;
+      const q = searchTerm.toLowerCase();
+      const matchesSearch =
+        !q || a.title.toLowerCase().includes(q) || a.excerpt?.toLowerCase().includes(q);
+      return matchesFilter && matchesSearch;
+    })
+    // Drafts first, newest first within each group: what still needs a
+    // decision sits at the top of the list, and the piece written most
+    // recently is the one waiting at the very top.
+    .sort((a, b) => {
+      const rank = (x: Article) => (articleStatus(x) === 'published' ? 1 : 0);
+      if (rank(a) !== rank(b)) return rank(a) - rank(b);
+      return (
+        new Date(b.created_date).getTime() - new Date(a.created_date).getTime()
+      );
+    });
 
   const TABS: Array<{ key: FilterKey; label: string }> = [
     { key: 'all', label: 'הכל' },
