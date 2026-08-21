@@ -41,10 +41,14 @@ export async function GET(req: NextRequest) {
           .eq('is_approved', false),
       ),
       count(
+        // Drafts means "awaiting a decision". Consolidated articles are parked
+        // at status 'redirected': unpublished on purpose, never to be
+        // republished, and kept only so their 301'd slug stays occupied.
         supabase
           .from('articles')
           .select('*', { count: 'exact', head: true })
-          .eq('is_published', false),
+          .eq('is_published', false)
+          .or('status.is.null,status.neq.redirected'),
       ),
       count(
         supabase

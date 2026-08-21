@@ -96,6 +96,10 @@ function ManageArticlesInner() {
       const { data, error } = await supabase
         .from('articles')
         .select('id, title, slug, excerpt, image_url, views_count, likes_count, is_published, scheduled_publish_at, created_date')
+        // Consolidated articles (status 'redirected') are archive, not work:
+        // permanently unpublished, their slug held only so the 301 in
+        // next.config.ts can never be shadowed by a new article reusing it.
+        .or('status.is.null,status.neq.redirected')
         .order('created_date', { ascending: false });
       if (error) throw error;
       setArticles(data || []);
