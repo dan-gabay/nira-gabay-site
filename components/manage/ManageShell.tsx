@@ -115,7 +115,7 @@ export default function ManageShell({ children }: { children: React.ReactNode })
         </header>
 
         {/* pb clears the mobile tab bar */}
-        <main className="container mx-auto px-4 md:px-6 py-4 md:py-8 pb-24 md:pb-8">{children}</main>
+        <main id="main-content" className="container mx-auto px-4 md:px-6 py-4 md:py-8 pb-24 md:pb-8">{children}</main>
 
         {/* Mobile tab bar - thumb-reachable, always one tap between sections */}
         <nav

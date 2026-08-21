@@ -3,14 +3,8 @@ import type { Metadata } from "next";
 import { Heebo, Assistant } from "next/font/google";
 import "./globals.css";
 import "./accessibility.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import WhatsAppButton from "@/components/WhatsAppButton";
-import AccessibilityMenu from "@/components/AccessibilityMenu";
 import JsonLd from "@/components/JsonLd";
-import GoogleAnalytics from "@/components/GoogleAnalytics";
-import ExitIntentTracker from '@/components/ExitIntentTracker';
-import AnalyticsProvider from '@/components/AnalyticsProvider';
+import SiteChrome from "@/components/SiteChrome";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -237,17 +231,7 @@ export default function RootLayout({
         >
           דלגו לתוכן הראשי
         </a>
-        <GoogleAnalytics />
-        <AnalyticsProvider>
-          <ExitIntentTracker />
-          <Header />
-          <main id="main-content">
-            {children}
-          </main>
-          <Footer />
-          <WhatsAppButton />
-          <AccessibilityMenu />
-        </AnalyticsProvider>
+        <SiteChrome>{children}</SiteChrome>
         <Analytics />
         <SpeedInsights />
       </body>
