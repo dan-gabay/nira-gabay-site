@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import {
   Plus, Edit, Trash2, Eye, Heart,
-  CheckCircle, XCircle, Clock, Search, FileText,
+  CheckCircle, XCircle, Clock, Search, FileText, Download,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useManageSummary } from '@/components/manage/ManageShell';
@@ -24,8 +24,15 @@ type Article = {
   created_date: string;
 };
 
+type QueueItem = {
+  id: string;
+  source_title: string | null;
+  status: string;
+  imported_article_id: string | null;
+};
+
 type StatusKey = 'published' | 'scheduled' | 'draft';
-type FilterKey = 'all' | StatusKey;
+type FilterKey = 'all' | StatusKey | 'queue';
 
 function articleStatus(a: Article): StatusKey {
   if (a.is_published) return 'published';
@@ -45,6 +52,7 @@ function ManageArticlesInner() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [queue, setQueue] = useState<QueueItem[]>([]);
   // The dashboard links straight to the drafts that need publishing.
   const [filter, setFilter] = useState<FilterKey>(
     (searchParams.get('filter') as FilterKey) || 'all',
@@ -54,7 +62,34 @@ function ManageArticlesInner() {
     // Silently trigger scheduled publish check on every manage page visit
     fetch('/api/cron/publish-scheduled').catch(() => {});
     loadArticles();
+    loadQueue();
   }, []);
+
+  async function loadQueue() {
+    try {
+      const res = await fetch('/api/manage/queue');
+      if (!res.ok) return;
+      const data = await res.json();
+      setQueue(data.items || []);
+    } catch {
+      // the pipeline strip degrades to article counts only
+    }
+  }
+
+  async function parkQueueItem(id: string, status: 'skipped' | 'pending') {
+    try {
+      const res = await fetch('/api/manage/queue', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      setQueue((prev) => prev.map((q) => (q.id === id ? { ...q, status } : q)));
+      refresh();
+    } catch {
+      alert('שגיאה בעדכון התור');
+    }
+  }
 
   async function loadArticles() {
     try {
@@ -117,8 +152,11 @@ function ManageArticlesInner() {
     }
   }
 
-  const counts = {
+  const queuePending = queue.filter((q) => q.status === 'pending');
+
+  const counts: Record<FilterKey, number> = {
     all: articles.length,
+    queue: queuePending.length,
     published: articles.filter((a) => articleStatus(a) === 'published').length,
     draft: articles.filter((a) => articleStatus(a) === 'draft').length,
     scheduled: articles.filter((a) => articleStatus(a) === 'scheduled').length,
@@ -137,6 +175,7 @@ function ManageArticlesInner() {
     { key: 'draft', label: 'טיוטות' },
     { key: 'published', label: 'מפורסמים' },
     { key: 'scheduled', label: 'מתוזמנים' },
+    { key: 'queue', label: 'בתור' },
   ];
 
   if (loading) {
@@ -154,6 +193,36 @@ function ManageArticlesInner() {
           <Plus className="w-4 h-4" aria-hidden="true" />
           מאמר חדש
         </Link>
+      </div>
+
+      {/* The content pipeline, end to end: what is waiting, what is written,
+          what is live. Each stage is a filter, so the strip is navigation. */}
+      <div className="grid grid-cols-3 gap-2 md:gap-3">
+        {[
+          { key: 'queue' as FilterKey, label: 'בתור', n: counts.queue, tone: 'text-stone-500' },
+          { key: 'draft' as FilterKey, label: 'טיוטות', n: counts.draft, tone: 'text-amber-600' },
+          { key: 'published' as FilterKey, label: 'באתר', n: counts.published, tone: 'text-emerald-600' },
+        ].map((stage, i) => (
+          <button
+            key={stage.key}
+            onClick={() => setFilter(stage.key)}
+            aria-pressed={filter === stage.key}
+            className={`relative bg-white rounded-2xl border p-3 md:p-4 text-center transition-colors ${
+              filter === stage.key ? 'border-stone-800' : 'border-stone-200 hover:border-stone-300'
+            }`}
+          >
+            <p className={`text-xl md:text-3xl font-bold leading-none ${stage.tone}`}>{stage.n}</p>
+            <p className="text-[11px] md:text-sm text-stone-500 mt-1">{stage.label}</p>
+            {i < 2 && (
+              <span
+                aria-hidden="true"
+                className="hidden md:block absolute top-1/2 -left-2 -translate-y-1/2 text-stone-300"
+              >
+                ←
+              </span>
+            )}
+          </button>
+        ))}
       </div>
 
       {/* Search */}
@@ -196,7 +265,39 @@ function ManageArticlesInner() {
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+      {filter === 'queue' ? (
+        queuePending.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-stone-200 p-8 md:p-12 text-center">
+            <Download className="w-10 h-10 text-stone-300 mx-auto mb-3" aria-hidden="true" />
+            <p className="text-sm md:text-base text-stone-600">התור ריק</p>
+          </div>
+        ) : (
+          <>
+            <p className="text-[11px] md:text-sm text-stone-500 leading-relaxed">
+              מקורות שממתינים להמרה. ההמרה עצמה רצה בפייפליין, שמבצע כתיבה
+              מחדש מלאה - אפשר לפנות כאן מקורות שלא רלוונטיים כדי שלא יגיעו אליה.
+            </p>
+            <div className="space-y-2">
+              {queuePending.map((q) => (
+                <div
+                  key={q.id}
+                  className="flex items-center gap-3 bg-white rounded-2xl border border-stone-200 p-3 md:p-4"
+                >
+                  <span className="flex-1 min-w-0 text-sm md:text-base text-stone-800 line-clamp-2">
+                    {q.source_title || 'ללא כותרת'}
+                  </span>
+                  <button
+                    onClick={() => parkQueueItem(q.id, 'skipped')}
+                    className="min-h-[44px] px-4 rounded-xl border border-stone-200 text-stone-500 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-xs md:text-sm font-medium transition-colors flex-shrink-0"
+                  >
+                    דילוג
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
+        )
+      ) : filtered.length === 0 ? (
         <div className="bg-white rounded-2xl border border-stone-200 p-8 md:p-12 text-center">
           <FileText className="w-10 h-10 text-stone-300 mx-auto mb-3" aria-hidden="true" />
           <p className="text-sm md:text-base text-stone-600">

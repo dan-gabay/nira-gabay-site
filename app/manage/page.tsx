@@ -1,43 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabaseClient';
 import { useManageSummary } from '@/components/manage/ManageShell';
+import SitePulse from '@/components/manage/SitePulse';
 import {
   Inbox,
   MessageSquare,
   FileText,
   Download,
   Plus,
-  Eye,
-  Heart,
   ArrowLeft,
   CheckCircle2,
   Mail,
 } from 'lucide-react';
 
-type TopArticle = {
-  id: string;
-  title: string;
-  slug: string;
-  views_count: number;
-  likes_count: number;
-};
-
 export default function ManageDashboard() {
   const { summary } = useManageSummary();
-  const [topArticles, setTopArticles] = useState<TopArticle[]>([]);
-
-  useEffect(() => {
-    supabase
-      .from('articles')
-      .select('id, title, slug, views_count, likes_count')
-      .eq('is_published', true)
-      .order('views_count', { ascending: false })
-      .limit(5)
-      .then(({ data }) => setTopArticles(data || []));
-  }, []);
 
   // Only what actually needs a decision today, newest concern first.
   const todo = [
@@ -183,61 +161,8 @@ export default function ManageDashboard() {
         </div>
       </section>
 
-      {/* ── Stats ─────────────────────────────────────────────── */}
-      <section aria-labelledby="stats-heading">
-        <h2 id="stats-heading" className="sr-only">
-          מספרים
-        </h2>
-        <div className="grid grid-cols-3 gap-2.5 md:gap-4">
-          {stats.map((s) => (
-            <div
-              key={s.label}
-              className="bg-white rounded-2xl border border-stone-200 p-3 md:p-5 text-center"
-            >
-              <s.icon className="w-4 h-4 md:w-5 md:h-5 text-stone-400 mx-auto mb-1.5" aria-hidden="true" />
-              <p className="text-lg md:text-2xl font-bold text-stone-800 leading-none">
-                {s.value ?? '–'}
-              </p>
-              <p className="text-[11px] md:text-sm text-stone-500 mt-1 leading-tight">{s.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <SitePulse />
 
-      {/* ── Most read ─────────────────────────────────────────── */}
-      {topArticles.length > 0 && (
-        <section aria-labelledby="top-heading">
-          <h2 id="top-heading" className="text-sm md:text-lg font-bold text-stone-800 mb-2.5 md:mb-4">
-            הנקראים ביותר
-          </h2>
-          <div className="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100 overflow-hidden">
-            {topArticles.map((a, i) => (
-              <Link
-                key={a.id}
-                href={`/manage/articles/edit/${a.id}`}
-                className="flex items-center gap-3 p-3 md:p-4 hover:bg-stone-50 transition-colors"
-              >
-                <span className="w-6 text-center text-xs md:text-sm font-bold text-stone-300 flex-shrink-0">
-                  {i + 1}
-                </span>
-                <span className="flex-1 min-w-0 text-sm md:text-base text-stone-800 font-medium line-clamp-1">
-                  {a.title}
-                </span>
-                <span className="flex items-center gap-2.5 text-[11px] md:text-sm text-stone-500 flex-shrink-0">
-                  <span className="inline-flex items-center gap-1">
-                    <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-                    {a.views_count || 0}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Heart className="w-3.5 h-3.5" aria-hidden="true" />
-                    {a.likes_count || 0}
-                  </span>
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
     </div>
   );
 }
