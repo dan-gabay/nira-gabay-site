@@ -37,10 +37,20 @@ const CLIENT_SECRET = process.env.GSC_CLIENT_SECRET;
 const REDIRECT_URI = 'http://localhost:53682';
 
 // One consent covering both APIs, so this is done once rather than twice.
-// Both are readonly: Search Console performance data, and GA4 reporting.
+//
+// Default is readonly: this can look at data and change nothing. Passing
+// --edit swaps the GA4 scope for analytics.edit, which additionally allows
+// creating key events and other property configuration - useful because GA4
+// will not offer an event in its pick-list until that event has fired at
+// least once, so a conversion that has never happened cannot be marked
+// through the UI at all.
+const EDIT = process.argv.includes('--edit');
+
 const SCOPES = [
   'https://www.googleapis.com/auth/webmasters.readonly',
-  'https://www.googleapis.com/auth/analytics.readonly',
+  EDIT
+    ? 'https://www.googleapis.com/auth/analytics.edit'
+    : 'https://www.googleapis.com/auth/analytics.readonly',
 ].join(' ');
 
 function requireClient() {
@@ -64,6 +74,9 @@ function printUrl() {
     '&access_type=offline' +
     '&prompt=consent';
 
+  console.log(
+    `\nScopes: Search Console (read) + GA4 (${EDIT ? 'READ AND WRITE' : 'read'})`,
+  );
   console.log('\nOpen this in the browser, approve, then copy the URL you land on:\n');
   console.log(url);
   console.log(
