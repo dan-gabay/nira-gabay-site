@@ -46,7 +46,10 @@ export default function ServiceCta({
             sizes="(max-width: 1280px) 100vw, 1280px"
           />
 
-          <div className="relative px-4 py-6 md:px-12 md:py-14 flex flex-row items-center justify-between gap-3 md:gap-8">
+          {/* The banner stays full width; its contents do not. justify-between
+              across 1280px left 699px of empty gradient between the copy and
+              the buttons - correct on a phone, a stretched bar on a desktop. */}
+          <div className="relative px-4 py-6 md:px-12 md:py-14 md:max-w-3xl md:mx-auto flex flex-row items-center justify-between gap-3 md:gap-8">
             <div className="min-w-0 text-right">
               <h2 className="text-lg md:text-3xl font-bold text-white mb-1.5 md:mb-3">
                 {discreet ? 'רוצים לדבר על זה?' : 'רוצים להתחיל?'}
