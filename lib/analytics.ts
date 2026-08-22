@@ -6,6 +6,12 @@
 
 import { reportContactConversion, reportLeadConversion } from './conversions';
 import { usingGtm } from './tagging';
+import {
+  isTrackedEvent,
+  pageTypeFor,
+  entityFor,
+  type SiteEventPayload,
+} from './siteEvents';
 
 declare global {
   interface Window {
@@ -20,6 +26,69 @@ declare global {
   }
 }
 
+// An anonymous per-visit id. Session storage, not local: it dies with the tab,
+// so it separates one visit from another and cannot follow anyone around.
+function sessionId(): string | null {
+  try {
+    const KEY = 'se_sid';
+    let id = sessionStorage.getItem(KEY);
+    if (!id) {
+      id = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      sessionStorage.setItem(KEY, id);
+    }
+    return id;
+  } catch {
+    return null; // private mode, storage disabled - the event still sends
+  }
+}
+
+// Mirror the events worth keeping into our own store (lib/siteEvents.ts).
+//
+// sendBeacon is the point of this function. The WhatsApp and phone CTAs
+// navigate away the instant they are clicked, and a fetch dies with the page.
+// A beacon is handed to the browser and delivered regardless, which is why the
+// conversions that matter most are the ones that actually arrive here.
+function mirrorToStore(
+  eventName: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  params?: Record<string, any>,
+): void {
+  if (typeof window === 'undefined' || !isTrackedEvent(eventName)) return;
+
+  try {
+    const path = window.location.pathname;
+    const ref = document.referrer;
+    const q = new URLSearchParams(window.location.search);
+
+    const payload: SiteEventPayload = {
+      event_name: eventName,
+      path,
+      page_type: pageTypeFor(path),
+      entity: entityFor(path),
+      source: params?.event_label ?? params?.source ?? null,
+      session_id: sessionId(),
+      referrer_host: ref ? new URL(ref).hostname : null,
+      utm_source: q.get('utm_source'),
+      utm_medium: q.get('utm_medium'),
+      utm_campaign: q.get('utm_campaign'),
+    };
+
+    const body = JSON.stringify(payload);
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }));
+    } else {
+      void fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        keepalive: true,
+      });
+    }
+  } catch {
+    // Measurement must never break a CTA.
+  }
+}
+
 // Under GTM every event goes to dataLayer and nowhere else. GTM defines
 // window.gtag as a side effect of loading GA4, so calling both would send each
 // event twice: once directly and once through the container's GA4 event tag.
@@ -29,6 +98,10 @@ export const trackEvent = (
   eventParams?: Record<string, any>
 ) => {
   if (typeof window === 'undefined') return;
+
+  // Our own store gets the event either way - it is independent of which ad
+  // platform is loaded, and of whether one loaded at all.
+  mirrorToStore(eventName, eventParams);
 
   if (usingGtm) {
     window.dataLayer = window.dataLayer || [];

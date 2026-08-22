@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import {
+  trackEvent,
   identifyVisitorType,
   trackScrollDepth,
   trackEngagementTime,
@@ -66,6 +67,16 @@ export default function AnalyticsProvider({ children }: { children: React.ReactN
         }
       }
     }
+  }, [pathname]);
+
+  // One page_view per route, including SPA navigations. GA4 emits its own
+  // pageview from the config call, but our first-party store (lib/siteEvents)
+  // only ever sees what trackEvent is given, so it has to be explicit here.
+  useEffect(() => {
+    trackEvent('page_view', {
+      page_type: getPageType(pathname),
+      event_label: getPageType(pathname),
+    });
   }, [pathname]);
 
   // Reset on page change

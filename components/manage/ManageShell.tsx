@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState, createContext, useContext, useCallback } from 'react';
-import { LayoutDashboard, Inbox, FileText, MessageSquare, Tag, LogOut } from 'lucide-react';
+import { LayoutDashboard, Inbox, FileText, MessageSquare, Tag, LogOut, BarChart3 } from 'lucide-react';
 
 export type ManageSummary = {
   newLeads: number;
@@ -29,6 +29,7 @@ const NAV = [
   { href: '/manage/contacts', label: 'פניות', icon: Inbox, badge: 'newLeads' },
   { href: '/manage/articles', label: 'מאמרים', icon: FileText, badge: 'drafts' },
   { href: '/manage/comments', label: 'תגובות', icon: MessageSquare, badge: 'pendingComments' },
+  { href: '/manage/analytics', label: 'נתונים', icon: BarChart3, badge: null },
   { href: '/manage/tags', label: 'תגיות', icon: Tag, badge: null },
 ] as const;
 
