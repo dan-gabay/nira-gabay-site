@@ -9,8 +9,9 @@
 // Everything here is a no-op unless the matching env var is set, so nothing
 // fires in local or preview builds.
 
-export const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || '';
-export const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || '';
+import { META_PIXEL_ID, GOOGLE_ADS_ID, usingGtm } from './tagging';
+
+export { META_PIXEL_ID, GOOGLE_ADS_ID };
 
 declare global {
   interface Window {
@@ -20,6 +21,9 @@ declare global {
 }
 
 function meta(eventName: string, params?: Record<string, unknown>): void {
+  // Under GTM the Meta tags fire from dataLayer triggers on the same events
+  // lib/analytics.ts already pushes, so firing fbq here too would double them.
+  if (usingGtm) return;
   if (typeof window === 'undefined' || !META_PIXEL_ID || !window.fbq) return;
   try {
     window.fbq('track', eventName, params);

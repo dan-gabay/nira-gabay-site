@@ -1,5 +1,5 @@
 import Script from 'next/script';
-import { GOOGLE_ADS_ID } from '@/lib/conversions';
+import { GA_MEASUREMENT_ID, GOOGLE_ADS_ID, usingGtm } from '@/lib/tagging';
 
 // Owner-controlled GA4 property (created 2026-07 under dangabay2@gmail.com).
 // The previous hardcoded ID (G-9275H0XYFW) belonged to a property no current
@@ -8,9 +8,12 @@ import { GOOGLE_ADS_ID } from '@/lib/conversions';
 // The Google Ads tag rides the same gtag.js load rather than adding a second
 // script. Its job here is auto-tagging and gclid capture; the conversions
 // themselves are imported from GA4 key events (see lib/conversions.ts).
-const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'G-5HBTQFQL05';
 
 export default function GoogleAnalytics() {
+  // GTM loads GA4 itself. Embedding gtag.js alongside it would double every
+  // pageview and event (see lib/tagging.ts).
+  if (usingGtm) return null;
+
   return (
     <>
       <Script

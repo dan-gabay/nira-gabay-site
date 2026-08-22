@@ -5,6 +5,7 @@
 // into lib/conversions.ts. Everything else stays first-party.
 
 import { reportContactConversion, reportLeadConversion } from './conversions';
+import { usingGtm } from './tagging';
 
 declare global {
   interface Window {
@@ -14,27 +15,42 @@ declare global {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       config?: Record<string, any>
     ) => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    dataLayer?: Record<string, any>[];
   }
 }
 
+// Under GTM every event goes to dataLayer and nowhere else. GTM defines
+// window.gtag as a side effect of loading GA4, so calling both would send each
+// event twice: once directly and once through the container's GA4 event tag.
 export const trackEvent = (
   eventName: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   eventParams?: Record<string, any>
 ) => {
-  if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', eventName, eventParams);
+  if (typeof window === 'undefined') return;
+
+  if (usingGtm) {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: eventName, ...eventParams });
+    return;
   }
+
+  window.gtag?.('event', eventName, eventParams);
 };
 
 // ===== USER PROPERTIES (GA4 Recommended) =====
 // Set user properties for better segmentation
 export const setUserProperty = (propertyName: string, value: string | number | boolean) => {
-  if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('set', 'user_properties', {
-      [propertyName]: value
-    });
+  if (typeof window === 'undefined') return;
+
+  if (usingGtm) {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: 'set_user_property', property: propertyName, value });
+    return;
   }
+
+  window.gtag?.('set', 'user_properties', { [propertyName]: value });
 };
 
 // Identify returning visitors

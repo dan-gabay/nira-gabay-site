@@ -1,7 +1,7 @@
 'use client';
 
 import Script from 'next/script';
-import { META_PIXEL_ID } from '@/lib/conversions';
+import { META_PIXEL_ID, usingGtm } from '@/lib/tagging';
 
 // Meta Pixel. Installed ahead of any Meta spend on purpose: the remarketing
 // audience is built from people who visited before the first ad ever runs, and
@@ -10,7 +10,8 @@ import { META_PIXEL_ID } from '@/lib/conversions';
 // Renders nothing when NEXT_PUBLIC_META_PIXEL_ID is unset, so local and
 // preview builds stay clean.
 export default function MetaPixel() {
-  if (!META_PIXEL_ID) return null;
+  // GTM loads the pixel itself when a container is configured.
+  if (usingGtm || !META_PIXEL_ID) return null;
 
   return (
     <>
