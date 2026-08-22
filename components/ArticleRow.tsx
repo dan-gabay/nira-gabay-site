@@ -7,9 +7,25 @@ import { trackArticleCardClick, trackReadMoreClick } from '@/lib/analytics';
 import { MINT } from '@/lib/palette';
 import type { ArticleListItem } from '@/app/articles/ArticlesBrowser';
 
-// One horizontal article card: copy on the right, thumbnail on the left (RTL).
-// Shared by the /articles index, the topic hubs and the related-articles rail
-// so they cannot drift apart.
+// One article card, in two shapes from one piece of markup.
+//
+// Phone: horizontal - copy on the right, thumbnail on the left (RTL) - so a
+// list of them scans quickly in a narrow column.
+//
+// Desktop (md and up): the same card turns vertical, image on top, and the
+// lists that use it become grids. A single stretched column of horizontal
+// rows is a phone layout wearing a desktop's clothes; the wide viewport is
+// there to be used.
+//
+// Every desktop rule below is behind `md:`, so the phone rendering is
+// untouched by the card variant.
+//
+// The image is the second child and `md:flex-col-reverse` puts it on top,
+// which keeps the heading first in the DOM for screen readers and for the
+// tab order.
+//
+// Shared by the /articles index, the topic hubs, the homepage rail, the
+// service pages and the related-articles rail so they cannot drift apart.
 export default function ArticleRow({
   article,
   index,
@@ -44,11 +60,11 @@ export default function ArticleRow({
       href={`/articles/${article.slug || article.id}`}
       prefetch={index < 4}
       onClick={handleClick}
-      className="group flex items-stretch gap-3 md:gap-4 bg-white rounded-2xl p-2.5 md:p-4 shadow-sm hover:shadow-lg border border-stone-100 transition-shadow"
+      className="group flex items-stretch gap-3 bg-white rounded-2xl p-2.5 shadow-sm hover:shadow-lg border border-stone-100 transition-shadow md:h-full md:flex-col-reverse md:gap-0 md:p-0 md:overflow-hidden"
     >
       {/* Text first: in RTL this sits on the right, image on the left */}
-      <div className="flex-1 min-w-0 flex flex-col">
-        <Heading className="text-base md:text-xl font-bold text-stone-800 leading-snug line-clamp-2 mb-1 md:mb-1.5 group-hover:text-emerald-700 transition-colors">
+      <div className="flex-1 min-w-0 flex flex-col md:p-5">
+        <Heading className="text-base md:text-lg font-bold text-stone-800 leading-snug line-clamp-2 mb-1 md:mb-1.5 group-hover:text-emerald-700 transition-colors">
           {article.title}
         </Heading>
         {article.excerpt && (
@@ -75,20 +91,20 @@ export default function ArticleRow({
         </div>
       </div>
 
-      <div className="relative w-24 md:w-40 flex-shrink-0 self-stretch min-h-[86px] md:min-h-[104px] rounded-xl overflow-hidden bg-stone-100">
+      <div className="relative w-24 flex-shrink-0 self-stretch min-h-[86px] rounded-xl overflow-hidden bg-stone-100 md:w-full md:min-h-0 md:aspect-[16/9] md:rounded-none">
         {article.image_url ? (
           <Image
             src={article.image_url}
             alt={article.title}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-500"
-            sizes="(max-width: 768px) 96px, 160px"
+            sizes="(max-width: 768px) 96px, (max-width: 1024px) 50vw, 33vw"
             loading={index < 4 ? 'eager' : 'lazy'}
             priority={index < 4}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-50 to-stone-100">
-            <FileText className="w-6 h-6 text-emerald-600/60" aria-hidden="true" />
+            <FileText className="w-6 h-6 md:w-9 md:h-9 text-emerald-600/60" aria-hidden="true" />
           </div>
         )}
       </div>

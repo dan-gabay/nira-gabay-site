@@ -33,10 +33,13 @@ export default function ArticlesPreviewClient({ articles }: { articles: HomeArti
           <div className="w-16 md:w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mt-4 md:mt-6 mx-auto" />
         </Reveal>
 
-        {/* Same horizontal card as /articles, the topic hubs and the related rail */}
-        <div className="max-w-3xl mx-auto space-y-3 md:space-y-4">
+        {/* Same card as /articles, the topic hubs and the related rail:
+            a narrow column on the phone, a three-up grid on desktop. */}
+        <div className="max-w-3xl mx-auto space-y-3 md:max-w-none md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-5 lg:gap-6">
           {articles.map((article, index) => (
-            <Reveal key={article.id} delay={index * 0.08}>
+            // md:h-full so the Reveal wrapper stretches and the cards in a
+            // row end up the same height whatever the title lengths are.
+            <Reveal key={article.id} delay={index * 0.08} className="md:h-full">
               <ArticleRow
                 article={article}
                 index={index}

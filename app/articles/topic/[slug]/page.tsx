@@ -215,12 +215,14 @@ export default async function TopicPage({
       {/* ───────── Articles ───────── */}
       <section className="py-6 md:py-10 bg-gradient-to-b from-white to-stone-50">
         <div className="container mx-auto px-4 md:px-8">
-          <div className="max-w-3xl mx-auto">
+          {/* The intro above stays in a reading-width column; the article
+              grid takes the full container back on desktop. */}
+          <div className="max-w-3xl mx-auto md:max-w-none">
             <h2 className="text-lg md:text-2xl font-bold text-stone-800 mb-4 md:mb-6">
               מאמרים בנושא {topic.tag}
             </h2>
             {articles.length > 0 ? (
-              <div className="space-y-3 md:space-y-4">
+              <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-5 lg:gap-6">
                 {articles.map((article, index) => (
                   <ArticleRow
                     key={article.id}

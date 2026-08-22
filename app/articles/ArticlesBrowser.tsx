@@ -207,7 +207,9 @@ export default function ArticlesBrowser({
         <div className="container mx-auto px-4 md:px-8">
           {visibleArticles.length > 0 ? (
             <>
-              <div className="max-w-3xl mx-auto space-y-3 md:space-y-4">
+              {/* Phone: one narrow column of horizontal cards. Desktop: the
+                  column cap comes off and the same cards lay out as a grid. */}
+              <div className="max-w-3xl mx-auto space-y-3 md:max-w-none md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-5 lg:gap-6">
                 {visibleArticles.map((article, index) => (
                   <ArticleRow key={article.id} article={article} index={index} />
                 ))}

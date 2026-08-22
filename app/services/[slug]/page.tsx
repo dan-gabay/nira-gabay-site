@@ -373,7 +373,9 @@ export default async function ServicePage({
               <h2 className="text-lg md:text-2xl font-bold text-stone-800 mb-4 md:mb-6">
                 לקריאה נוספת בנושא
               </h2>
-              <div className="space-y-3 md:space-y-4">
+              {/* Stays inside the page's reading column, so two across on
+                  desktop rather than the three the wider pages use. */}
+              <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 md:gap-5">
                 {articles.map((a, i) => (
                   <ArticleRow
                     key={a.id}

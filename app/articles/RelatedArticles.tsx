@@ -96,8 +96,9 @@ export default async function RelatedArticles({ currentArticleId, tags, recommen
         מאמרים נוספים שעשויים לעניין אתכם
       </h3>
 
-      {/* Same horizontal card as the index and the topic hubs */}
-      <div className="space-y-3 md:space-y-4">
+      {/* Same card as the index and the topic hubs: stacked on the phone,
+          three across on desktop as this rail has always been. */}
+      <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-3 md:gap-5">
         {articles.map((article, index) => (
           <ArticleRow
             key={article.id}
