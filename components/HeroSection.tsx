@@ -1,11 +1,12 @@
 "use client";
+import { whatsappHref } from '@/lib/whatsapp';
 import React from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { MessageCircle, Calendar } from 'lucide-react';
 import { trackWhatsAppClick, trackCTAClick } from '@/lib/analytics';
 
-const WA_HREF = `https://wa.me/972507936681?text=${encodeURIComponent('שלום נירה, אשמח לקבוע פגישה')}`;
+
 
 // Teal palette sampled from the photo's wall, deepening for the gradient.
 const TEAL_DEEP = '#16323b';
@@ -35,7 +36,7 @@ export default function HeroSection() {
   const Buttons = (
     <div className="flex flex-col gap-3 w-full max-w-sm mx-auto">
       <a
-        href={WA_HREF}
+        href={whatsappHref()}
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => trackWhatsAppClick('hero')}

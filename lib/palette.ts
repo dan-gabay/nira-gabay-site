@@ -1,3 +1,5 @@
+import { whatsappHref } from './whatsapp';
+
 // Shared look for the article index and the topic hubs: a deep teal ground
 // with a mint accent, over the supplied leaf artwork.
 export const TEAL_DARK = '#1A4A44';
@@ -8,9 +10,9 @@ export const MINT = '#3FC195';
 export const ARTICLES_HERO_BG = '/images/articles-hero.webp';
 export const ARTICLES_CTA_BG = '/images/articles-cta.webp';
 
-export const WA_HREF = `https://wa.me/972507936681?text=${encodeURIComponent(
-  'שלום נירה, אשמח לקבוע פגישה',
-)}`;
+// Re-exported from lib/whatsapp.ts, the single source for the number and the
+// prefill text. Kept here so the existing imports keep working.
+export const WA_HREF = whatsappHref();
 
 // 40px on mobile keeps the chip row close to the design while still clearing
 // the WCAG 2.5.8 target size; md and up gets the full 44px.

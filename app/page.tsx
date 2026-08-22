@@ -11,6 +11,7 @@ import HeroSection from '@/components/HeroSection';
 import ServicesSection from '@/components/ServicesSection';
 import Reveal from '@/components/Reveal';
 import { supabaseServer } from '@/lib/supabaseServer';
+import { whatsappHref } from '@/lib/whatsapp';
 import type { Metadata } from 'next';
 
 // Refresh the latest-articles section every 5 minutes (ISR)
@@ -134,7 +135,7 @@ export default async function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href={`https://wa.me/972507936681?text=${encodeURIComponent('שלום נירה, אשמח לקבוע פגישה')}`}
+                href={whatsappHref()}
                 target="_blank"
                 rel="noopener noreferrer"
               >
