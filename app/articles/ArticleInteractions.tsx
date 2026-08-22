@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Heart, MessageCircle, Facebook, Send, User, Mail, Loader2, Instagram, Share2, Link2 } from 'lucide-react';
 import { getUserIdentifier } from '@/lib/userIdentifier';
 import { supabase as supabaseClient } from '@/lib/supabaseClient';
-import { trackArticleLike, trackCommentSubmit, trackArticleShare, trackWhatsAppClick } from '@/lib/analytics';
+import { trackArticleLike, trackCommentSubmit, trackArticleShare } from '@/lib/analytics';
 import { FACEBOOK_APP_ID } from '@/lib/facebook';
 
 type ArticleInteractionsProps = {
@@ -209,8 +209,10 @@ export default function ArticleInteractions({
   function shareOnWhatsApp() {
     const url = window.location.href;
     const text = `קראו את המאמר הזה מאת נירה גבאי`;
+    // Deliberately NOT trackWhatsAppClick: that is the "reached out to Nira"
+    // event and it now reports a conversion to the ad platforms. Sharing an
+    // article to WhatsApp is the opposite direction of traffic.
     trackArticleShare('whatsapp', articleId, document.title);
-    trackWhatsAppClick('article_share');
     window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
   }
 

@@ -1,5 +1,10 @@
 // Google Analytics 4 Events Tracking
 // Based on GA4 Best Practices and Recommended Events
+//
+// The handful of events that also matter to an ad platform additionally call
+// into lib/conversions.ts. Everything else stays first-party.
+
+import { reportContactConversion, reportLeadConversion } from './conversions';
 
 declare global {
   interface Window {
@@ -83,6 +88,7 @@ export const trackSignUp = (source: string) => {
     method: 'newsletter',
     source: source,
   });
+  reportLeadConversion(source);
 };
 
 // search - When a user performs a search
@@ -129,6 +135,7 @@ export const trackWhatsAppClick = (source: string) => {
     event_label: source,
     value: 1,
   });
+  reportContactConversion('whatsapp');
 };
 
 export const trackPhoneClick = (source: string) => {
@@ -137,6 +144,7 @@ export const trackPhoneClick = (source: string) => {
     event_label: source,
     value: 1,
   });
+  reportContactConversion('phone');
 };
 
 export const trackContactFormSubmit = (formType: string) => {
@@ -145,6 +153,7 @@ export const trackContactFormSubmit = (formType: string) => {
     event_label: formType,
     value: 5,
   });
+  reportContactConversion('form');
 };
 
 export const trackCommentSubmit = (articleId: string) => {
@@ -357,6 +366,8 @@ export const trackContactMethodClick = (method: 'whatsapp' | 'phone' | 'email' |
     event_label: location,
     value: 5,
   });
+  // This, not trackPhoneClick, is what the phone and email CTAs actually call.
+  reportContactConversion(method);
 };
 
 // About Page

@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import AccessibilityMenu from '@/components/AccessibilityMenu';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
+import MetaPixel from '@/components/MetaPixel';
 import AnalyticsProvider from '@/components/AnalyticsProvider';
 import ExitIntentTracker from '@/components/ExitIntentTracker';
 
@@ -27,6 +28,7 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
   return (
     <>
       <GoogleAnalytics />
+      <MetaPixel />
       <AnalyticsProvider>
         <ExitIntentTracker />
         <Header />
