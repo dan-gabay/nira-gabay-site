@@ -274,7 +274,12 @@ export default function ArticleInteractions({
       )}
 
       {/* Actions Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 md:gap-5 py-4 md:py-6 border-t border-b border-stone-200">
+      {/* Like and share are one gesture, so from md up they sit together in
+          the middle rather than at opposite ends of an 832px column - the
+          same 467px of dead space the closing banner had. The rules stay on
+          the row, not a wrapper, so the rules above and below stay full
+          width. Below sm the row is a column and none of this applies. */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 md:justify-center md:gap-10 py-4 md:py-6 border-t border-b border-stone-200">
         <button
           onClick={handleLike}
           disabled={hasLiked || isLiking}
