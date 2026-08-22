@@ -2,16 +2,25 @@
 // service the visitor was reading about - it makes Nira's first reply easier
 // and records service interest without asking the visitor anything. Service
 // name only; never symptoms or other health details.
+//
+// One deliberate exception: the discreet services (see lib/services.ts) get
+// the neutral default. The prefill sits in the visitor's own WhatsApp history
+// where other people may see it, so it must not announce the topic.
+
+import { SERVICES } from './services';
 
 export const WHATSAPP_NUMBER = '972507936681';
 
 export const DEFAULT_WHATSAPP_MESSAGE = 'שלום נירה, אשמח לקבוע פגישה';
 
-// Per-path prefills; longest prefix wins so /services/* pages can share one.
+// Per-path prefills. Service pages are generated from lib/services.ts so the
+// two can never drift; anything else is listed explicitly.
 const PATH_PREFILLS: Array<{ prefix: string; message: string }> = [
-  { prefix: '/services/parent-guidance', message: 'שלום נירה, אשמח לשיחת היכרות בנושא הדרכת הורים' },
-  { prefix: '/services/child-therapy', message: 'שלום נירה, אשמח לשיחת היכרות בנושא טיפול רגשי לילדים' },
-  { prefix: '/services/teen-therapy', message: 'שלום נירה, אשמח לשיחת היכרות בנושא טיפול למתבגרים' },
+  ...SERVICES.map((s) => ({
+    prefix: `/services/${s.slug}`,
+    message: s.whatsappMessage,
+  })),
+  { prefix: '/clinic', message: 'שלום נירה, אשמח לקבל הנחיות הגעה לקליניקה' },
 ];
 
 export function whatsappMessageForPath(pathname: string): string {

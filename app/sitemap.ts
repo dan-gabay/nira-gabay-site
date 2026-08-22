@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next'
 import { supabaseServer } from '../lib/supabaseServer'
 import { TOPICS } from '../lib/topics'
+import { SERVICES } from '../lib/services'
 
 // Standard sitemap without images (Next.js will use this)
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -39,6 +40,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }]
   })
 
+  // Service pages: the commercial-intent entry points, ranked just under the
+  // homepage. Static copy, so lastModified tracks the deploy rather than a row.
+  const serviceUrls = SERVICES.map((s) => ({
+    url: `${baseUrl}/services/${s.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly' as const,
+    priority: 0.9,
+  }))
+
   return [
     {
       url: baseUrl,
@@ -64,6 +74,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly' as const,
       priority: 0.7,
     },
+    {
+      url: `${baseUrl}/services`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.9,
+    },
+    ...serviceUrls,
     ...topicUrls,
     ...articleUrls,
   ]
