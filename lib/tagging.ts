@@ -17,7 +17,12 @@
 export const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID || '';
 export const GA_MEASUREMENT_ID =
   process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'G-5HBTQFQL05';
-export const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || '';
+// Owner's pixel, created 2026-08 under the Meta Business account. Hardcoded
+// as the default for the same reason as the GA4 id above: a pixel id is public
+// (it is readable in any page's source), and making it a required env var only
+// adds a dashboard step between a working deploy and working measurement.
+export const META_PIXEL_ID =
+  process.env.NEXT_PUBLIC_META_PIXEL_ID || '2294471474637160';
 export const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || '';
 
 /** True when GTM owns the tags and the site must not embed them itself. */
