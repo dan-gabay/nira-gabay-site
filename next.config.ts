@@ -36,6 +36,19 @@ const nextConfig: NextConfig = {
         destination: '/articles/family-birth-order-meaning-and-impact',
         permanent: true,
       },
+      // /blog is a route this site has never had, but GA4 shows 9 sessions
+      // landing there in 28 days - roughly a tenth of all traffic, from links
+      // shared before the site moved to /articles. They were all hitting a 404.
+      {
+        source: '/blog',
+        destination: '/articles',
+        permanent: true,
+      },
+      {
+        source: '/blog/:path*',
+        destination: '/articles',
+        permanent: true,
+      },
     ];
   },
   
