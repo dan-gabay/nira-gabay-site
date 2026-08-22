@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next'
 import { supabaseServer } from '../lib/supabaseServer'
 import { TOPICS } from '../lib/topics'
 import { SERVICES } from '../lib/services'
+import { SERVICES_LIVE } from '../lib/publish'
 
 // Standard sitemap without images (Next.js will use this)
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -42,7 +43,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Service pages: the commercial-intent entry points, ranked just under the
   // homepage. Static copy, so lastModified tracks the deploy rather than a row.
-  const serviceUrls = SERVICES.map((s) => ({
+  const serviceUrls = (SERVICES_LIVE ? SERVICES : []).map((s) => ({
     url: `${baseUrl}/services/${s.slug}`,
     lastModified: new Date(),
     changeFrequency: 'monthly' as const,
@@ -68,24 +69,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly' as const,
       priority: 0.9,
     },
-    {
-      url: `${baseUrl}/clinic`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.8,
-    },
+    ...(SERVICES_LIVE
+      ? [{
+          url: `${baseUrl}/clinic`,
+          lastModified: new Date(),
+          changeFrequency: 'monthly' as const,
+          priority: 0.8,
+        }]
+      : []),
     {
       url: `${baseUrl}/contact`,
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
       priority: 0.7,
     },
-    {
-      url: `${baseUrl}/services`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.9,
-    },
+    ...(SERVICES_LIVE
+      ? [{
+          url: `${baseUrl}/services`,
+          lastModified: new Date(),
+          changeFrequency: 'monthly' as const,
+          priority: 0.9,
+        }]
+      : []),
     ...serviceUrls,
     ...topicUrls,
     ...articleUrls,

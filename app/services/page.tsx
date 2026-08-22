@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, Users, User, Heart, Baby, HeartHandshake, Brain } from 'lucide-react';
 import { SERVICES } from '@/lib/services';
+import { SERVICES_LIVE, UNPUBLISHED_ROBOTS } from '@/lib/publish';
 import { TEAL_DARK, MINT, ARTICLES_HERO_BG } from '@/lib/palette';
 import ArticleCtaBanner from '@/components/ArticleCtaBanner';
 import JsonLd from '@/components/JsonLd';
@@ -14,7 +15,7 @@ const URL = `${BASE_URL}/services`;
 
 const META_TITLE = 'תחומי טיפול | נירה גבאי - פסיכותרפיה והדרכת הורים';
 const META_DESCRIPTION =
-  'טיפול זוגי, הדרכת הורים, CBT, טיפול במתבגרים ובמבוגרים וטיפול מיני. נירה גבאי, מטפלת בפסיכותרפיה. קליניקה במושב שואבה, 20 דקות מירושלים, וגם מפגשים אונליין.';
+  'טיפול זוגי, הדרכת הורים, CBT, טיפול במתבגרים ובמבוגרים וטיפול מיני. נירה גבאי, מטפלת בפסיכותרפיה. קליניקה במושב שואבה, רבע שעה מירושלים, וגם מפגשים אונליין.';
 
 const ICONS = { Users, User, Heart, Baby, HeartHandshake, Brain } as const;
 
@@ -22,6 +23,7 @@ export const metadata: Metadata = {
   title: { absolute: META_TITLE },
   description: META_DESCRIPTION,
   alternates: { canonical: URL },
+  ...(SERVICES_LIVE ? {} : { robots: UNPUBLISHED_ROBOTS }),
   openGraph: {
     title: META_TITLE,
     description: META_DESCRIPTION,
@@ -102,7 +104,7 @@ export default function ServicesIndexPage() {
               תחומי טיפול
             </h1>
             <p className="text-sm md:text-lg text-white/80 leading-relaxed">
-              קליניקה במושב שואבה, עשרים דקות מירושלים, וגם מפגשים אונליין מכל הארץ
+              קליניקה במושב שואבה, רבע שעה מירושלים, וגם מפגשים אונליין מכל הארץ
             </p>
           </div>
         </div>

@@ -6,6 +6,7 @@ import { cache } from 'react';
 import { Check } from 'lucide-react';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { SERVICES, getService, type Service } from '@/lib/services';
+import { SERVICES_LIVE, UNPUBLISHED_ROBOTS } from '@/lib/publish';
 import { whatsappHref } from '@/lib/whatsapp';
 import {
   TEAL_DARK,
@@ -71,6 +72,7 @@ export async function generateMetadata({
     description: service.metaDescription,
     keywords: [service.focusKeyword, ...service.secondaryKeywords],
     alternates: { canonical: url },
+    ...(SERVICES_LIVE ? {} : { robots: UNPUBLISHED_ROBOTS }),
     openGraph: {
       title: service.metaTitle,
       description: service.metaDescription,

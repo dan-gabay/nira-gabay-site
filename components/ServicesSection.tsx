@@ -6,6 +6,7 @@ import { Users, User, Heart, Baby, HeartHandshake, Brain } from 'lucide-react';
 import { trackServiceInterest } from '@/lib/analytics';
 import Reveal from '@/components/Reveal';
 import { SERVICES } from '@/lib/services';
+import { SERVICES_LIVE } from '@/lib/publish';
 
 const ICONS = { Users, User, Heart, Baby, HeartHandshake, Brain } as const;
 
@@ -18,6 +19,9 @@ const services = SERVICES.map((s) => ({
   description: s.cardDescription,
   href: `/services/${s.slug}`,
 }));
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const Card: any = SERVICES_LIVE ? Link : 'div';
 
 export default function ServicesSection() {
   const reduceMotion = useReducedMotion();
@@ -53,8 +57,11 @@ export default function ServicesSection() {
                 // transition; it isn't the animated element.
                 className="h-full"
               >
-                <Link
-                  href={service.href}
+                {/* A link once the service pages are approved; until then a
+                    plain card, because a card that navigates to a page nobody
+                    has signed off on is worse than one that does not. */}
+                <Card
+                  {...(SERVICES_LIVE ? { href: service.href } : {})}
                   onClick={() => trackServiceInterest(service.title)}
                   className="flex items-start gap-3 md:gap-4 bg-white rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-stone-100 group h-full"
                 >
@@ -65,7 +72,7 @@ export default function ServicesSection() {
                     <h3 className="text-base md:text-lg font-bold text-stone-800 mb-1.5 md:mb-2">{service.title}</h3>
                     <p className="text-stone-600 text-xs md:text-sm leading-relaxed">{service.description}</p>
                   </div>
-                </Link>
+                </Card>
               </motion.div>
             );
           })}

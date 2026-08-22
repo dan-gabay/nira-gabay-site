@@ -7,6 +7,7 @@ import { Menu, X, Phone, Mail, Facebook, MessageCircle, Home, User, FileText, Ph
 import { usePathname } from 'next/navigation';
 import { trackHeaderNavClick, trackHeaderLogoClick, trackMobileMenuToggle, trackWhatsAppClick, trackSocialClick } from '@/lib/analytics';
 import { whatsappHref, whatsappMessageForPath } from '@/lib/whatsapp';
+import { SERVICES_LIVE } from '@/lib/publish';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -22,7 +23,10 @@ export default function Header() {
   const navItems = [
     { name: 'דף הבית', href: '/', icon: Home },
     { name: 'קצת עליי', href: '/about', icon: User },
-    { name: 'תחומי טיפול', href: '/services', icon: HeartHandshake },
+    // Hidden until Nira approves the service pages (lib/publish.ts).
+    ...(SERVICES_LIVE
+      ? [{ name: 'תחומי טיפול', href: '/services', icon: HeartHandshake }]
+      : []),
     { name: 'מאמרים', href: '/articles', icon: FileText },
     { name: 'צרו קשר', href: '/contact', icon: PhoneCall },
   ];

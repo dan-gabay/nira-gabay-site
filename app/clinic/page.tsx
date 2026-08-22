@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Car, Accessibility, Clock, MapPin, Monitor } from 'lucide-react';
 import { CLINIC, ONLINE } from '@/lib/clinic';
 import { SERVICES } from '@/lib/services';
+import { SERVICES_LIVE, UNPUBLISHED_ROBOTS } from '@/lib/publish';
 import { TEAL_DARK, MINT, ARTICLES_HERO_BG } from '@/lib/palette';
 import ArticleCtaBanner from '@/components/ArticleCtaBanner';
 import JsonLd from '@/components/JsonLd';
@@ -21,6 +22,7 @@ export const metadata: Metadata = {
   title: { absolute: META_TITLE },
   description: META_DESCRIPTION,
   alternates: { canonical: URL },
+  ...(SERVICES_LIVE ? {} : { robots: UNPUBLISHED_ROBOTS }),
   openGraph: {
     title: META_TITLE,
     description: META_DESCRIPTION,
