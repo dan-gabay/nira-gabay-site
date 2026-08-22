@@ -10,6 +10,7 @@ export default function Footer() {
     { name: 'דף הבית', href: '/' },
     { name: 'קצת עליי', href: '/about' },
     { name: 'תחומי טיפול', href: '/services' },
+    { name: 'הקליניקה', href: '/clinic' },
     { name: 'מאמרים', href: '/articles' },
     { name: 'צרו קשר', href: '/contact' },
   ];
