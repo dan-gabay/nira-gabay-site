@@ -13,7 +13,7 @@
 // links are followed but the destinations are noindex, so they leak no ranking
 // signal; if the pages should be unreachable by humans too, those lines come
 // out with one statement (see scripts/link-articles-to-services.ts).
-export const SERVICES_LIVE = false;
+export const SERVICES_LIVE = true;
 
 /** Metadata `robots` value for a page that is built but not yet approved. */
 export const UNPUBLISHED_ROBOTS = { index: false, follow: false } as const;
