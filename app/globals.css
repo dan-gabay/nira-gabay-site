@@ -278,14 +278,14 @@ body {
 
   .prose h2 {
     font-size: 1.875rem;
-    margin-top: 2.5rem;
+    margin-top: 2rem;
     margin-bottom: 1.25rem;
     line-height: 1.6;
   }
 
   .prose h3 {
     font-size: 1.5rem;
-    margin-top: 2rem;
+    margin-top: 1.75rem;
     margin-bottom: 1rem;
     line-height: 1.7;
   }
@@ -294,12 +294,12 @@ body {
     font-size: 1.125rem;
     margin-top: 1rem;
     margin-bottom: 1rem;
-    line-height: 2;
+    line-height: 1.75;
   }
 
   .prose ul,
   .prose ol {
-    margin: 2rem 0;
+    margin: 1.5rem 0;
     padding-inline-start: 2rem;
   }
 
