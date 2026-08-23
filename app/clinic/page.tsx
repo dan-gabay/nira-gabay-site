@@ -172,7 +172,7 @@ export default function ClinicPage() {
                       <span className="block font-semibold text-stone-800 text-[14.5px] md:text-base">
                         {p.label}
                       </span>
-                      <span className="block text-[13.5px] md:text-[15px] text-stone-600 leading-relaxed mt-0.5">
+                      <span className="block text-[13.5px] md:text-[0.9375rem] text-stone-600 leading-relaxed mt-0.5">
                         {p.value}
                       </span>
                     </span>
@@ -206,7 +206,7 @@ export default function ClinicPage() {
                         {r.duration}
                       </span>
                     </div>
-                    <p className="text-[14px] md:text-[15.5px] text-stone-600 leading-relaxed">
+                    <p className="text-[14px] md:text-[0.96875rem] text-stone-600 leading-relaxed">
                       {r.directions}
                     </p>
                   </div>
@@ -230,7 +230,7 @@ export default function ClinicPage() {
             </h2>
             <div className="space-y-3 md:space-y-4">
               {ONLINE.body.map((p, i) => (
-                <p key={i} className="text-[14.5px] md:text-[16px] text-stone-600 leading-relaxed">
+                <p key={i} className="text-[14.5px] md:text-[1rem] text-stone-600 leading-relaxed">
                   {p}
                 </p>
               ))}

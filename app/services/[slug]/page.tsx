@@ -274,7 +274,7 @@ export default async function ServicePage({
                     style={{ color: MINT }}
                     aria-hidden="true"
                   />
-                  <span className="text-[13.5px] md:text-[15px] text-stone-700 leading-relaxed">
+                  <span className="text-[13.5px] md:text-[0.9375rem] text-stone-700 leading-relaxed">
                     {s}
                   </span>
                 </li>
@@ -297,7 +297,7 @@ export default async function ServicePage({
                   {sec.body.map((p, i) => (
                     <p
                       key={i}
-                      className="text-[15px] md:text-[17px] text-stone-600 leading-relaxed"
+                      className="text-[15px] md:text-[1.0625rem] text-stone-600 leading-relaxed"
                     >
                       {p}
                     </p>
@@ -323,7 +323,7 @@ export default async function ServicePage({
               {service.firstSession.map((p, i) => (
                 <p
                   key={i}
-                  className="text-[14.5px] md:text-[16px] text-stone-600 leading-relaxed"
+                  className="text-[14.5px] md:text-[1rem] text-stone-600 leading-relaxed"
                 >
                   {p}
                 </p>
@@ -346,7 +346,7 @@ export default async function ServicePage({
                   key={f.q}
                   className="group rounded-2xl border border-stone-200 bg-white p-4 md:p-5 open:border-emerald-200"
                 >
-                  <summary className="cursor-pointer list-none font-semibold text-stone-800 text-[15px] md:text-[17px] flex items-start justify-between gap-3">
+                  <summary className="cursor-pointer list-none font-semibold text-stone-800 text-[15px] md:text-[1.0625rem] flex items-start justify-between gap-3">
                     <span>{f.q}</span>
                     <span
                       aria-hidden="true"
@@ -355,7 +355,7 @@ export default async function ServicePage({
                       +
                     </span>
                   </summary>
-                  <p className="mt-2.5 text-[14.5px] md:text-[16px] text-stone-600 leading-relaxed">
+                  <p className="mt-2.5 text-[14.5px] md:text-[1rem] text-stone-600 leading-relaxed">
                     {f.a}
                   </p>
                 </details>

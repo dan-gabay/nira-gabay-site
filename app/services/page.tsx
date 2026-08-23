@@ -135,7 +135,7 @@ export default function ServicesIndexPage() {
                   <h2 className="text-base md:text-xl font-bold text-stone-800 mb-1.5">
                     {s.title}
                   </h2>
-                  <p className="text-[13.5px] md:text-[15px] text-stone-600 leading-relaxed flex-1">
+                  <p className="text-[13.5px] md:text-[0.9375rem] text-stone-600 leading-relaxed flex-1">
                     {s.tagline}
                   </p>
                   <span
