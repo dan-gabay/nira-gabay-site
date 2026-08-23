@@ -36,7 +36,14 @@ export const CLINIC = {
     'הקליניקה ממוקמת במושב שואבה, באזור ירושלים, במרחב שקט וירוק. החדר מעוצב ליצירת אווירה חמה ומכילה, והשקט סביבו הוא חלק מהעבודה ולא רק רקע לה.',
 
   // ─── Unknown. Ask Nira, then fill in. ───────────────────────────────
-  /** Street / house number, if the moshav uses them. */
+  /**
+   * Street / house number, if the moshav uses them.
+   *
+   * Stays null by the owner's decision, not for lack of an answer: the
+   * Google Business Profile does carry a street address, and it surfaced in
+   * the Google Ads preview, but the owner asked for it not to go on the site.
+   * Do not fill this in from the business profile or from a map.
+   */
   streetAddress: null as string | null,
   /** What a first-time visitor should look for on arrival. */
   arrivalNote: null as string | null,
