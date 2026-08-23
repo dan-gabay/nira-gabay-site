@@ -38,18 +38,18 @@ export default function ArticlesLoading() {
       {/* Card rows */}
       <div className="py-5 md:py-10 bg-gradient-to-b from-white to-stone-50">
         <div className="container mx-auto px-4 md:px-8">
-          <div className="max-w-3xl mx-auto space-y-3 md:space-y-4">
+          <div className="max-w-3xl mx-auto space-y-3 md:max-w-none md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-5 lg:gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
                 key={i}
-                className="flex items-stretch gap-3 md:gap-4 bg-white rounded-2xl p-2.5 md:p-4 shadow-sm border border-stone-100 animate-pulse"
+                className="flex items-stretch gap-3 bg-white rounded-2xl p-2.5 shadow-sm border border-stone-100 animate-pulse md:flex-col-reverse md:gap-0 md:p-0 md:overflow-hidden"
               >
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 md:p-5">
                   <div className="h-5 md:h-6 bg-stone-200 rounded w-3/4 mb-2" />
                   <div className="h-3 md:h-4 bg-stone-200 rounded w-full mb-1.5" />
                   <div className="h-3 md:h-4 bg-stone-200 rounded w-5/6" />
                 </div>
-                <div className="w-24 md:w-40 flex-shrink-0 min-h-[86px] md:min-h-[104px] bg-stone-200 rounded-xl" />
+                <div className="w-24 flex-shrink-0 min-h-[86px] bg-stone-200 rounded-xl md:w-full md:min-h-0 md:aspect-[16/9] md:rounded-none" />
               </div>
             ))}
           </div>

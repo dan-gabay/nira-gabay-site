@@ -128,15 +128,15 @@ export default function ArticleLoading() {
       <section className="py-8 md:py-16 bg-stone-50">
         <div className="container mx-auto px-4 md:px-8 max-w-4xl">
           <div className="h-6 md:h-8 bg-stone-200 rounded w-48 mb-4 md:mb-8 animate-pulse"></div>
-          <div className="space-y-3 md:space-y-4">
+          <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-3 md:gap-5">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-stretch gap-3 md:gap-4 bg-white rounded-2xl p-2.5 md:p-4 shadow-sm border border-stone-100 animate-pulse">
-                <div className="flex-1 min-w-0">
+              <div key={i} className="flex items-stretch gap-3 bg-white rounded-2xl p-2.5 shadow-sm border border-stone-100 animate-pulse md:flex-col-reverse md:gap-0 md:p-0 md:overflow-hidden">
+                <div className="flex-1 min-w-0 md:p-5">
                   <div className="h-5 md:h-6 bg-stone-200 rounded w-3/4 mb-2"></div>
                   <div className="h-3 md:h-4 bg-stone-200 rounded w-full mb-1.5"></div>
                   <div className="h-3 md:h-4 bg-stone-200 rounded w-5/6"></div>
                 </div>
-                <div className="w-24 md:w-40 flex-shrink-0 min-h-[86px] md:min-h-[104px] bg-stone-200 rounded-xl"></div>
+                <div className="w-24 flex-shrink-0 min-h-[86px] bg-stone-200 rounded-xl md:w-full md:min-h-0 md:aspect-[16/9] md:rounded-none"></div>
               </div>
             ))}
           </div>
