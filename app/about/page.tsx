@@ -41,7 +41,7 @@ export default function About() {
   return (
     <div className="overflow-hidden" style={{ paddingTop: '80px' }}>
       {/* Hero Section */}
-      <section className="relative py-12 md:py-24 bg-gradient-to-br from-stone-100 to-amber-50">
+      <section className="relative py-12 md:py-14 bg-gradient-to-br from-stone-100 to-amber-50">
         <div className="container mx-auto px-4 md:px-8">
           <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-12">
             {/* Image */}
@@ -91,7 +91,7 @@ export default function About() {
       </section>
 
       {/* Main Content */}
-      <section className="py-12 md:py-24 bg-white">
+      <section className="py-12 md:py-14 bg-white">
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-4xl mx-auto">
             {/* Philosophy Section */}
@@ -100,7 +100,7 @@ export default function About() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="mb-8 md:mb-16"
+              className="mb-8 md:mb-10"
             >
               <h2 className="text-xl md:text-3xl font-bold text-stone-800 mb-5 md:mb-8 text-center">
                 הגישה הטיפולית שלי
@@ -120,7 +120,7 @@ export default function About() {
             </motion.div>
 
             {/* Divider */}
-            <div className="w-16 md:w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mx-auto mb-8 md:mb-16" />
+            <div className="w-16 md:w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mx-auto mb-8 md:mb-10" />
 
             {/* Personal Story */}
             <motion.div
@@ -128,7 +128,7 @@ export default function About() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="mb-8 md:mb-16"
+              className="mb-8 md:mb-10"
             >
               <h2 className="text-xl md:text-3xl font-bold text-stone-800 mb-5 md:mb-8 text-center">
                 הסיפור שלי
@@ -158,7 +158,7 @@ export default function About() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="bg-gradient-to-br from-amber-50 to-stone-50 rounded-3xl p-5 md:p-12 mb-8 md:mb-16"
+              className="bg-gradient-to-br from-amber-50 to-stone-50 rounded-3xl p-5 md:p-8 mb-8 md:mb-10"
             >
               <div className="flex items-start gap-3 md:gap-4 mb-4 md:mb-6">
                 <Heart className="w-6 h-6 md:w-8 md:h-8 text-rose-400 flex-shrink-0 mt-0.5 md:mt-1" />
@@ -177,9 +177,9 @@ export default function About() {
       </section>
 
       {/* Milestones */}
-      <section className="py-12 md:py-24 bg-gradient-to-b from-stone-50 to-white">
+      <section className="py-12 md:py-14 bg-gradient-to-b from-stone-50 to-white">
         <div className="container mx-auto px-4 md:px-8">
-          <div className="text-center mb-7 md:mb-12">
+          <div className="text-center mb-7 md:mb-8">
             <h2 className="text-xl md:text-4xl font-bold text-stone-800 mb-3 md:mb-4">
               הכשרה וניסיון
             </h2>
@@ -210,10 +210,10 @@ export default function About() {
       </section>
 
       {/* Experience List */}
-      <section className="py-12 md:py-24 bg-white">
+      <section className="py-12 md:py-14 bg-white">
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-7 md:mb-12">
+            <div className="text-center mb-7 md:mb-8">
               <h2 className="text-xl md:text-4xl font-bold text-stone-800 mb-3 md:mb-4">
                 מסגרות עבודה
               </h2>
@@ -242,7 +242,7 @@ export default function About() {
       </section>
 
       {/* Clinic Section */}
-      <section className="py-12 md:py-24 bg-gradient-to-br from-stone-800 to-stone-900 text-white">
+      <section className="py-12 md:py-14 bg-gradient-to-br from-stone-800 to-stone-900 text-white">
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-5xl mx-auto">
             <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-12">

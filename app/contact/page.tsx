@@ -72,13 +72,13 @@ export default function Contact() {
   return (
     <div className="overflow-hidden" style={{ paddingTop: '80px' }}>
       {/* Hero */}
-      <section className="py-10 md:py-20 bg-gradient-to-br from-stone-100 to-amber-50">
+      <section className="py-10 md:py-12 bg-gradient-to-br from-stone-100 to-amber-50">
         <div className="container mx-auto px-4 md:px-8">
           <motion.div
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="text-center max-w-3xl mx-auto"
+            className="text-center max-w-3xl mx-auto lg:max-w-4xl"
           >
             <span className="inline-block px-4 py-1.5 md:py-2 bg-amber-100 rounded-full text-amber-800 text-xs md:text-sm mb-4 md:mb-6">
               צרו קשר
@@ -94,7 +94,7 @@ export default function Contact() {
       </section>
 
       {/* Main Content */}
-      <section className="py-8 md:py-16 bg-white">
+      <section className="py-8 md:py-12 bg-white">
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
@@ -209,7 +209,7 @@ export default function Contact() {
       </section>
 
       {/* Map Section */}
-      <section className="py-10 md:py-16 bg-gradient-to-br from-stone-50 to-amber-50">
+      <section className="py-10 md:py-12 bg-gradient-to-br from-stone-50 to-amber-50">
         <div className="container mx-auto px-4 md:px-8">
           <motion.div
             initial={{ opacity: 0, y: 15 }}
