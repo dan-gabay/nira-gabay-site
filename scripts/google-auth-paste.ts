@@ -20,7 +20,8 @@
  *           for a refresh token here. The token is appended to .env.local and
  *           never printed.
  *
- * Read-only scopes only. This can look at data; it cannot change anything.
+ * Read-only by default. --edit adds GA4 configuration write on top of the
+ * read scopes; Search Console stays read-only either way.
  *
  *   npx tsx scripts/google-auth-paste.ts url
  *   npx tsx scripts/google-auth-paste.ts exchange "http://localhost:53682/?code=..."
@@ -39,18 +40,24 @@ const REDIRECT_URI = 'http://localhost:53682';
 // One consent covering both APIs, so this is done once rather than twice.
 //
 // Default is readonly: this can look at data and change nothing. Passing
-// --edit swaps the GA4 scope for analytics.edit, which additionally allows
-// creating key events and other property configuration - useful because GA4
-// will not offer an event in its pick-list until that event has fired at
-// least once, so a conversion that has never happened cannot be marked
-// through the UI at all.
+// --edit ADDS analytics.edit, which allows creating key events and other
+// property configuration - useful because GA4 will not offer an event in its
+// pick-list until that event has fired at least once, so a conversion that
+// has never happened cannot be marked through the UI at all.
+//
+// Adds, rather than swaps. It used to swap, and that was wrong in a way that
+// only shows up later: analytics.edit covers the Admin API, which is
+// configuration, and NOT the Data API, which is reporting. So consenting with
+// --edit bought the ability to create a key event and silently gave up the
+// ability to read a single report - ga-report.ts started answering 403
+// "insufficient authentication scopes" and the reason was two weeks upstream.
+// Both scopes together cost nothing and there is no reason to trade them.
 const EDIT = process.argv.includes('--edit');
 
 const SCOPES = [
   'https://www.googleapis.com/auth/webmasters.readonly',
-  EDIT
-    ? 'https://www.googleapis.com/auth/analytics.edit'
-    : 'https://www.googleapis.com/auth/analytics.readonly',
+  'https://www.googleapis.com/auth/analytics.readonly',
+  ...(EDIT ? ['https://www.googleapis.com/auth/analytics.edit'] : []),
 ].join(' ');
 
 function requireClient() {
@@ -75,7 +82,7 @@ function printUrl() {
     '&prompt=consent';
 
   console.log(
-    `\nScopes: Search Console (read) + GA4 (${EDIT ? 'READ AND WRITE' : 'read'})`,
+    `\nScopes: Search Console (read) + GA4 read${EDIT ? ' AND write' : ''}`,
   );
   console.log('\nOpen this in the browser, approve, then copy the URL you land on:\n');
   console.log(url);
