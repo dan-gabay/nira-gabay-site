@@ -59,7 +59,7 @@ export default async function Home() {
       <section className="py-12 md:py-14 bg-white">
         <div className="container mx-auto px-4 md:px-8">
           <Reveal className="max-w-4xl mx-auto text-center">
-            <h2 className="text-xl md:text-4xl font-bold text-stone-800 mb-5 md:mb-8">
+            <h2 className="text-xl md:text-3xl font-bold text-stone-800 mb-5 md:mb-8">
               ברוכים הבאים למרחב הטיפולי שלי
             </h2>
             <p className="text-sm md:text-lg text-stone-600 leading-relaxed mb-5 md:mb-8">
@@ -127,7 +127,7 @@ export default async function Home() {
       <section className="py-12 md:py-14 bg-gradient-to-br from-stone-800 to-stone-900 text-white">
         <div className="container mx-auto px-4 md:px-8">
           <Reveal className="max-w-4xl mx-auto text-center">
-            <h2 className="text-xl md:text-4xl font-bold mb-4 md:mb-6">
+            <h2 className="text-xl md:text-3xl font-bold mb-4 md:mb-6">
               מוכנים לצעד הראשון?
             </h2>
             <p className="text-sm md:text-xl text-white/90 mb-7 md:mb-10 max-w-2xl mx-auto">

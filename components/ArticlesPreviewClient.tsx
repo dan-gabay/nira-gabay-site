@@ -28,7 +28,7 @@ export default function ArticlesPreviewClient({ articles }: { articles: HomeArti
     <section className="py-12 md:py-14 bg-white">
       <div className="container mx-auto px-4 md:px-8">
         <Reveal className="text-center mb-8 md:mb-10">
-          <h2 className="text-xl md:text-4xl font-bold text-stone-800 mb-3 md:mb-4">מאמרים אחרונים</h2>
+          <h2 className="text-xl md:text-3xl font-bold text-stone-800 mb-3 md:mb-4">מאמרים אחרונים</h2>
           <p className="text-sm md:text-lg text-stone-600 max-w-2xl mx-auto">תובנות, כלים וידע מעולם הפסיכותרפיה וההורות</p>
           <div className="w-16 md:w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mt-4 md:mt-6 mx-auto" />
         </Reveal>

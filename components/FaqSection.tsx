@@ -14,7 +14,7 @@ export default function FaqSection() {
     <section className="py-10 md:py-12 bg-stone-50" aria-labelledby="faq-heading">
       <div className="container mx-auto px-4 md:px-8">
         <Reveal className="max-w-3xl mx-auto lg:max-w-4xl">
-          <h2 id="faq-heading" className="text-xl md:text-4xl font-bold text-stone-800 mb-6 md:mb-10 text-center">
+          <h2 id="faq-heading" className="text-xl md:text-3xl font-bold text-stone-800 mb-6 md:mb-10 text-center">
             שאלות נפוצות
           </h2>
           <div className="space-y-2.5 md:space-y-4">
