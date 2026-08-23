@@ -199,7 +199,7 @@ export default async function TopicPage({
       {/* ───────── Intro ───────── */}
       <section className="pt-6 md:pt-10 bg-white">
         <div className="container mx-auto px-4 md:px-8">
-          <div className="max-w-3xl mx-auto lg:max-w-4xl space-y-3 md:space-y-4">
+          <div className="max-w-3xl mx-auto space-y-3 md:space-y-4">
             {topic.intro.map((p, i) => (
               <p
                 key={i}

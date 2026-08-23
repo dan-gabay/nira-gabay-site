@@ -113,7 +113,7 @@ export default function ServicesIndexPage() {
       {/* ───────── Cards ───────── */}
       <section className="py-8 md:py-14 bg-white">
         <div className="container mx-auto px-4 md:px-8">
-          <div className="max-w-4xl mx-auto grid gap-3 md:gap-4 sm:grid-cols-2 lg:max-w-6xl lg:grid-cols-3 lg:gap-5">
+          <div className="max-w-4xl mx-auto grid gap-3 md:gap-4 sm:grid-cols-2">
             {SERVICES.map((s) => {
               const Icon = ICONS[s.icon];
               return (

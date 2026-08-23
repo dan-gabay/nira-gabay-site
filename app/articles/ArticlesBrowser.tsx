@@ -112,7 +112,7 @@ export default function ArticlesBrowser({
               style={{ background: 'rgba(255,255,255,0.35)' }}
             />
             <h1
-              className="text-3xl md:text-5xl font-bold mb-2 md:mb-4 leading-tight"
+              className="text-3xl md:text-6xl font-bold mb-2 md:mb-4 leading-tight"
               style={{ color: MINT }}
             >
               מאמרים

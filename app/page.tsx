@@ -56,10 +56,10 @@ export default async function Home() {
       <HeroSection />
 
       {/* Introduction Section */}
-      <section className="py-12 md:py-14 bg-white">
+      <section className="py-12 md:py-24 bg-white">
         <div className="container mx-auto px-4 md:px-8">
           <Reveal className="max-w-4xl mx-auto text-center">
-            <h2 className="text-xl md:text-3xl font-bold text-stone-800 mb-5 md:mb-8">
+            <h2 className="text-xl md:text-4xl font-bold text-stone-800 mb-5 md:mb-8">
               ברוכים הבאים למרחב הטיפולי שלי
             </h2>
             <p className="text-sm md:text-lg text-stone-600 leading-relaxed mb-5 md:mb-8">
@@ -83,10 +83,10 @@ export default async function Home() {
       <ServicesSection />
 
       {/* Clinic Info */}
-      <section className="py-10 md:py-12 bg-gradient-to-br from-amber-50 to-stone-50">
+      <section className="py-10 md:py-20 bg-gradient-to-br from-amber-50 to-stone-50">
         <div className="container mx-auto px-4 md:px-8">
-          <Reveal className="max-w-4xl mx-auto lg:max-w-5xl">
-            <div className="bg-white rounded-3xl p-5 md:p-8 shadow-xl">
+          <Reveal className="max-w-4xl mx-auto">
+            <div className="bg-white rounded-3xl p-5 md:p-12 shadow-xl">
               <div className="flex flex-col md:flex-row items-center gap-5 md:gap-8">
                 <div className="w-full md:w-1/3">
                   <div className="relative w-full aspect-[4/3]">
@@ -124,10 +124,10 @@ export default async function Home() {
       <FaqSection />
 
       {/* CTA Section */}
-      <section className="py-12 md:py-14 bg-gradient-to-br from-stone-800 to-stone-900 text-white">
+      <section className="py-12 md:py-24 bg-gradient-to-br from-stone-800 to-stone-900 text-white">
         <div className="container mx-auto px-4 md:px-8">
           <Reveal className="max-w-4xl mx-auto text-center">
-            <h2 className="text-xl md:text-3xl font-bold mb-4 md:mb-6">
+            <h2 className="text-xl md:text-4xl font-bold mb-4 md:mb-6">
               מוכנים לצעד הראשון?
             </h2>
             <p className="text-sm md:text-xl text-white/90 mb-7 md:mb-10 max-w-2xl mx-auto">

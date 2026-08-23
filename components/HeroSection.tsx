@@ -58,7 +58,7 @@ export default function HeroSection() {
 
   const Copy = (
     <>
-      <h1 className="text-4xl md:text-5xl font-bold text-white leading-[1.05] mb-3">
+      <h1 className="text-4xl md:text-6xl xl:text-7xl font-bold text-white leading-[1.05] mb-3">
         נירה גבאי
         {/* keyword-rich continuation for SEO/crawlers; visually hidden so the design is unchanged */}
         <span className="sr-only"> - מטפלת בפסיכותרפיה ומדריכת הורים</span>

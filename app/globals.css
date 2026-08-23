@@ -163,18 +163,8 @@ body {
   overflow-wrap: break-word;
 }
 
-/* Phone only, and deliberately scoped that way.
-   Tailwind v4 emits its utilities inside @layer utilities, and unlayered CSS
-   beats layered CSS whatever the specificity - so this bare `p` selector was
-   silently overriding every leading-* class on every paragraph on the site.
-   `leading-relaxed` is 1.625; it was resolving to 1.85 everywhere, which is
-   14% more leading than the markup asks for, on every page.
-   1.85 suits Hebrew in a narrow phone column, so it stays there. Above 768px
-   the leading-* classes are allowed to mean what they say. */
-@media (max-width: 767px) {
-  p {
-    line-height: 1.85;
-  }
+p {
+  line-height: 1.85;
 }
 
 /* ── Article body typography ──────────────────────────────────────────────
@@ -278,14 +268,14 @@ body {
 
   .prose h2 {
     font-size: 1.875rem;
-    margin-top: 2rem;
+    margin-top: 2.5rem;
     margin-bottom: 1.25rem;
     line-height: 1.6;
   }
 
   .prose h3 {
     font-size: 1.5rem;
-    margin-top: 1.75rem;
+    margin-top: 2rem;
     margin-bottom: 1rem;
     line-height: 1.7;
   }
@@ -294,12 +284,12 @@ body {
     font-size: 1.125rem;
     margin-top: 1rem;
     margin-bottom: 1rem;
-    line-height: 1.75;
+    line-height: 2;
   }
 
   .prose ul,
   .prose ol {
-    margin: 1.5rem 0;
+    margin: 2rem 0;
     padding-inline-start: 2rem;
   }
 
