@@ -243,7 +243,7 @@ export default async function ServicePage({
       {/* ───────── Intro ───────── */}
       <section className="pt-6 md:pt-10 bg-white">
         <div className="container mx-auto px-4 md:px-8">
-          <div className="max-w-3xl mx-auto space-y-3 md:space-y-4">
+          <div className="max-w-3xl mx-auto lg:max-w-4xl space-y-3 md:space-y-4">
             {service.intro.map((p, i) => (
               <p
                 key={i}
@@ -259,7 +259,7 @@ export default async function ServicePage({
       {/* ───────── When people come ───────── */}
       <section className="py-8 md:py-12 bg-white">
         <div className="container mx-auto px-4 md:px-8">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-3xl mx-auto lg:max-w-4xl">
             <h2 className="text-lg md:text-2xl font-bold text-stone-800 mb-4 md:mb-5">
               מתי פונים
             </h2>
@@ -287,7 +287,7 @@ export default async function ServicePage({
       {/* ───────── Body ───────── */}
       <section className="pb-4 md:pb-8 bg-white">
         <div className="container mx-auto px-4 md:px-8">
-          <div className="max-w-3xl mx-auto space-y-8 md:space-y-10">
+          <div className="max-w-3xl mx-auto lg:max-w-4xl space-y-8 md:space-y-10">
             {service.sections.map((sec) => (
               <div key={sec.heading}>
                 <h2 className="text-lg md:text-2xl font-bold text-stone-800 mb-2.5 md:mb-4">
@@ -313,7 +313,7 @@ export default async function ServicePage({
       <section className="py-8 md:py-12 bg-white">
         <div className="container mx-auto px-4 md:px-8">
           <div
-            className="max-w-3xl mx-auto rounded-3xl p-5 md:p-8"
+            className="max-w-3xl mx-auto lg:max-w-4xl rounded-3xl p-5 md:p-8"
             style={{ background: '#F4FAF7', border: '1px solid #D6EDE3' }}
           >
             <h2 className="text-lg md:text-2xl font-bold text-stone-800 mb-3 md:mb-4">
@@ -336,7 +336,7 @@ export default async function ServicePage({
       {/* ───────── FAQ ───────── */}
       <section className="pb-8 md:pb-12 bg-white">
         <div className="container mx-auto px-4 md:px-8">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-3xl mx-auto lg:max-w-4xl">
             <h2 className="text-lg md:text-2xl font-bold text-stone-800 mb-4 md:mb-6">
               שאלות נפוצות
             </h2>
@@ -369,7 +369,7 @@ export default async function ServicePage({
       {articles.length > 0 && (
         <section className="py-8 md:py-12 bg-gradient-to-b from-white to-stone-50">
           <div className="container mx-auto px-4 md:px-8">
-            <div className="max-w-3xl mx-auto">
+            <div className="max-w-3xl mx-auto lg:max-w-4xl">
               <h2 className="text-lg md:text-2xl font-bold text-stone-800 mb-4 md:mb-6">
                 לקריאה נוספת בנושא
               </h2>

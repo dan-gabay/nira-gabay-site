@@ -131,7 +131,7 @@ export default function ClinicPage() {
       {/* ───────── The room ───────── */}
       <section className="py-8 md:py-14 bg-white">
         <div className="container mx-auto px-4 md:px-8">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-3xl mx-auto lg:max-w-4xl">
             <div className="relative w-full h-52 md:h-80 rounded-3xl overflow-hidden mb-5 md:mb-8">
               <Image
                 src={CLINIC.photo}
@@ -153,7 +153,7 @@ export default function ClinicPage() {
       {practical.length > 0 && (
         <section className="pb-8 md:pb-12 bg-white">
           <div className="container mx-auto px-4 md:px-8">
-            <div className="max-w-3xl mx-auto">
+            <div className="max-w-3xl mx-auto lg:max-w-4xl">
               <h2 className="text-lg md:text-2xl font-bold text-stone-800 mb-4 md:mb-5">
                 פרטים מעשיים
               </h2>
@@ -188,7 +188,7 @@ export default function ClinicPage() {
       {CLINIC.routes.length > 0 && (
         <section className="pb-8 md:pb-12 bg-white">
           <div className="container mx-auto px-4 md:px-8">
-            <div className="max-w-3xl mx-auto">
+            <div className="max-w-3xl mx-auto lg:max-w-4xl">
               <h2 className="text-lg md:text-2xl font-bold text-stone-800 mb-4 md:mb-5">
                 איך מגיעים
               </h2>
@@ -221,7 +221,7 @@ export default function ClinicPage() {
       <section className="pb-8 md:pb-12 bg-white">
         <div className="container mx-auto px-4 md:px-8">
           <div
-            className="max-w-3xl mx-auto rounded-3xl p-5 md:p-8"
+            className="max-w-3xl mx-auto lg:max-w-4xl rounded-3xl p-5 md:p-8"
             style={{ background: '#F4FAF7', border: '1px solid #D6EDE3' }}
           >
             <h2 className="text-lg md:text-2xl font-bold text-stone-800 mb-3 md:mb-4 flex items-center gap-2.5">
@@ -242,7 +242,7 @@ export default function ClinicPage() {
       {/* ───────── What happens here ───────── */}
       <section className="pb-8 md:pb-12 bg-gradient-to-b from-white to-stone-50">
         <div className="container mx-auto px-4 md:px-8">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-3xl mx-auto lg:max-w-4xl">
             <h2 className="text-lg md:text-2xl font-bold text-stone-800 mb-4 md:mb-5">
               מה קורה כאן
             </h2>
