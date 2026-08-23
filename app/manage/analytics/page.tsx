@@ -17,7 +17,14 @@ type Payload = {
   top_pages: Array<{ path: string; page_type: string; views: number }>;
   conversions_by_source: Array<{ name: string; source: string; n: number }>;
   referrers: Array<{ host: string; n: number }>;
-  campaigns: Array<{ source: string; utm_campaign: string | null; visits: number; conversions: number }>;
+  campaigns: Array<{
+    channel: string;
+    utm_campaign: string | null;
+    utm_content: string | null;
+    utm_term: string | null;
+    visits: number;
+    conversions: number;
+  }>;
   devices: Array<{ device: string; n: number }>;
   first_event: string | null;
 };
@@ -215,12 +222,20 @@ export default function AnalyticsPage() {
               />
             </Card>
 
-            <Card title="קמפיינים" sub="לפי utm">
+            <Card title="מאיפה הגיעו" sub="לפי ביקור, כולל ממומן">
               <RankedList
-                emptyText="אין עדיין תנועה מקמפיין."
+                emptyText="אין עדיין תנועה."
                 rows={(data.campaigns || []).map((c) => ({
-                  label: c.source,
-                  sub: c.utm_campaign || (c.conversions > 0 ? `${c.conversions} פניות` : undefined),
+                  label: c.channel,
+                  // Campaign, then ad group, then keyword - whichever the ad
+                  // platform actually sent. Google auto-tagging sends none of
+                  // them, so a Google Ads row shows only the conversions until
+                  // a final URL suffix is set on the campaign.
+                  sub:
+                    [c.utm_campaign, c.utm_content, c.utm_term]
+                      .filter(Boolean)
+                      .join(' · ') ||
+                    (c.conversions > 0 ? `${c.conversions} פניות` : undefined),
                   value: c.visits,
                 }))}
               />

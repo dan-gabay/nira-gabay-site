@@ -126,4 +126,22 @@ export type SiteEventPayload = {
   utm_source?: string | null;
   utm_medium?: string | null;
   utm_campaign?: string | null;
+  utm_term?: string | null;
+  utm_content?: string | null;
+  /**
+   * Which ad platform's click id was on the landing URL, not the id itself.
+   *
+   * Google auto-tagging sends gclid (or wbraid/gbraid from iOS) and no utm at
+   * all, which is why every paid visit has been landing in the dashboard as
+   * "organic / direct". The id is a per-click identifier and this table
+   * deliberately stores no identifiers - IP and user agent are already thrown
+   * away - so only which platform it came from is kept.
+   */
+  click_kind?: string | null;
 };
+
+/** The ad platforms we recognise a click id from. */
+export const CLICK_KINDS = ['google', 'meta'] as const;
+export type ClickKind = (typeof CLICK_KINDS)[number];
+export const isClickKind = (v: string): v is ClickKind =>
+  (CLICK_KINDS as readonly string[]).includes(v);

@@ -42,6 +42,72 @@ function sessionId(): string | null {
   }
 }
 
+/**
+ * The campaign that started this session, remembered for the whole session.
+ *
+ * Two bugs this fixes. The utm parameters were read off the current URL on
+ * every event, but they only exist on the landing URL - so a WhatsApp click
+ * two pages later carried no campaign at all, and the dashboard credited the
+ * visit but not the conversion it produced. And Google Ads auto-tagging sends
+ * gclid rather than utm, so every paid visit read as organic.
+ *
+ * Captured once per session in sessionStorage, which is the right lifetime:
+ * localStorage would let an ad click from last month claim today's organic
+ * visit, and that is lead attribution, a different question, already handled
+ * separately in lib/attribution.ts.
+ *
+ * The click id itself is never stored or sent - only which platform it came
+ * from. It is a per-click identifier, and this table holds none.
+ */
+type SessionCampaign = {
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  utm_term: string | null;
+  utm_content: string | null;
+  click_kind: string | null;
+};
+
+const CAMPAIGN_KEY = 'site_session_campaign_v1';
+
+function sessionCampaign(): SessionCampaign {
+  const empty: SessionCampaign = {
+    utm_source: null, utm_medium: null, utm_campaign: null,
+    utm_term: null, utm_content: null, click_kind: null,
+  };
+  if (typeof window === 'undefined') return empty;
+
+  try {
+    const cached = sessionStorage.getItem(CAMPAIGN_KEY);
+    if (cached) return JSON.parse(cached) as SessionCampaign;
+  } catch {
+    return empty; // storage unavailable - attribution is best effort
+  }
+
+  const q = new URLSearchParams(window.location.search);
+  const clickKind =
+    q.get('gclid') || q.get('wbraid') || q.get('gbraid') ? 'google'
+    : q.get('fbclid') ? 'meta'
+    : null;
+
+  const captured: SessionCampaign = {
+    utm_source: q.get('utm_source'),
+    utm_medium: q.get('utm_medium'),
+    utm_campaign: q.get('utm_campaign'),
+    utm_term: q.get('utm_term'),
+    utm_content: q.get('utm_content'),
+    click_kind: clickKind,
+  };
+
+  try {
+    sessionStorage.setItem(CAMPAIGN_KEY, JSON.stringify(captured));
+  } catch {
+    // ignore
+  }
+  return captured;
+}
+
+
 // Mirror the events worth keeping into our own store (lib/siteEvents.ts).
 //
 // sendBeacon is the point of this function. The WhatsApp and phone CTAs
@@ -58,7 +124,6 @@ function mirrorToStore(
   try {
     const path = window.location.pathname;
     const ref = document.referrer;
-    const q = new URLSearchParams(window.location.search);
 
     const payload: SiteEventPayload = {
       event_name: eventName,
@@ -68,9 +133,7 @@ function mirrorToStore(
       source: params?.event_label ?? params?.source ?? null,
       session_id: sessionId(),
       referrer_host: ref ? new URL(ref).hostname : null,
-      utm_source: q.get('utm_source'),
-      utm_medium: q.get('utm_medium'),
-      utm_campaign: q.get('utm_campaign'),
+      ...sessionCampaign(),
     };
 
     const body = JSON.stringify(payload);
