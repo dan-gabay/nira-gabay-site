@@ -15,7 +15,9 @@ export const runtime = 'nodejs';
 // equal length. A number with nothing to compare it to cannot tell the admin
 // the only thing she wants to know, which is whether it is going up.
 
-const ALLOWED_RANGES = [7, 30, 90];
+// 1 means the last 24 hours; the SQL switches to hourly buckets at that
+// range, because a day plotted in daily buckets is a single point.
+const ALLOWED_RANGES = [1, 7, 30, 90];
 
 export async function GET(req: NextRequest) {
   if (!(await isManageAuthorized(req.cookies.get(MANAGE_COOKIE)?.value))) {

@@ -83,8 +83,15 @@ as $fn$
         'visits',      count(distinct session_id),
         'conversions', count(*) filter (where is_conversion),
         'signups',     count(*) filter (where event_name = 'sign_up')) from prev),
+    -- One day asked for means 24 hours, and a 24-hour window plotted in daily
+    -- buckets is one bar. Bucket by hour instead; the client picks its axis
+    -- from 'granularity' rather than guessing from the key format.
+    'granularity', (case when p_days <= 1 then 'hour' else 'day' end),
     'daily', (select coalesce(json_agg(d order by d.day), '[]'::json) from (
-        select to_char(date_trunc('day', created_at), 'YYYY-MM-DD') as day,
+        select to_char(
+                 date_trunc(case when p_days <= 1 then 'hour' else 'day' end, created_at),
+                 case when p_days <= 1 then 'YYYY-MM-DD"T"HH24' else 'YYYY-MM-DD' end
+               ) as day,
                count(*) filter (where event_name = 'page_view') as views,
                count(distinct session_id)                       as visits,
                count(*) filter (where is_conversion)            as conversions
@@ -100,6 +107,17 @@ as $fn$
         select path, coalesce(page_type,'other') as page_type, count(*) as views
         from cur where event_name = 'page_view' and path is not null
         group by 1,2 order by 3 desc limit 15) t),
+    -- Which articles were actually read in this window. top_pages mixes every
+    -- page type together and shows a slug; this joins the title back on.
+    'top_articles', (select coalesce(json_agg(a order by a.views desc), '[]'::json) from (
+        select e.entity as slug,
+               coalesce(ar.title, e.entity) as title,
+               count(*)                     as views,
+               count(distinct e.session_id) as readers
+        from cur e
+        left join articles ar on ar.slug = e.entity
+        where e.event_name = 'page_view' and e.page_type = 'article' and e.entity is not null
+        group by 1,2 order by 3 desc limit 10) a),
     'conversions_by_source', (select coalesce(json_agg(c order by c.n desc), '[]'::json) from (
         select event_name as name, coalesce(source,'לא ידוע') as source, count(*) as n
         from cur where is_conversion group by 1,2 order by 3 desc limit 15) c),

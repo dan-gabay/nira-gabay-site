@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { Eye, Users, MessageCircle, Mail, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { LineChart, BarChart, RankedList, fillDays, type DayPoint } from '@/components/manage/Charts';
+import {
+  LineChart,
+  BarChart,
+  RankedList,
+  fillDays,
+  fillHours,
+  type DayPoint,
+} from '@/components/manage/Charts';
 import { EVENT_LABELS, PAGE_TYPE_LABELS } from '@/lib/siteEvents';
 
 type Totals = { views: number; visits: number; conversions: number; signups: number; events?: number };
@@ -11,7 +18,9 @@ type Payload = {
   range_days: number;
   totals: Totals;
   previous: Totals;
+  granularity?: 'hour' | 'day';
   daily: DayPoint[];
+  top_articles: Array<{ slug: string; title: string; views: number; readers: number }>;
   by_event: Array<{ name: string; n: number }>;
   by_page_type: Array<{ page_type: string; views: number; conversions: number }>;
   top_pages: Array<{ path: string; page_type: string; views: number }>;
@@ -30,6 +39,7 @@ type Payload = {
 };
 
 const RANGES = [
+  { days: 1, label: '24 שעות' },
   { days: 7, label: '7 ימים' },
   { days: 30, label: '30 יום' },
   { days: 90, label: '90 יום' },
@@ -101,7 +111,17 @@ export default function AnalyticsPage() {
     return () => { live = false; };
   }, [range]);
 
-  const days = data ? fillDays(data.daily || [], data.range_days) : [];
+  // A 24-hour range comes back in hourly buckets, so it needs the hourly fill,
+  // and both chart labels follow from the same flag - "1 ימים" and "פניות לפי
+  // יום" were both wrong on that range.
+  const isHourly = data?.granularity === 'hour';
+  const rangeLabel = isHourly ? '24 שעות' : `${data?.range_days ?? 30} ימים`;
+  // A 24-hour range comes back in hourly buckets, so it needs the hourly fill.
+  const days = data
+    ? data.granularity === 'hour'
+      ? fillHours(data.daily || [], 24)
+      : fillDays(data.daily || [], data.range_days)
+    : [];
   const noData = Boolean(data) && (data?.totals.events ?? 0) === 0;
 
   return (
@@ -161,14 +181,14 @@ export default function AnalyticsPage() {
             <Tile icon={Mail} label="הרשמות לרשימה" value={data.totals.signups} prev={data.previous.signups} />
           </div>
 
-          <Card title="תנועה לאורך זמן" sub={`${data.range_days} ימים`}>
+          <Card title="תנועה לאורך זמן" sub={rangeLabel}>
             <LineChart data={days} labels={{ primary: 'צפיות', secondary: 'ביקורים' }} />
           </Card>
 
           {/* Conversions get their own chart rather than a second axis: they
               are two orders of magnitude below pageviews, and a shared scale
               would flatten them into the baseline. */}
-          <Card title="פניות לפי יום" sub="ווטסאפ, טלפון, מייל וטופס">
+          <Card title={isHourly ? 'פניות לפי שעה' : 'פניות לפי יום'} sub="ווטסאפ, טלפון, מייל וטופס">
             <BarChart data={days} />
           </Card>
 
@@ -208,6 +228,20 @@ export default function AnalyticsPage() {
                 rows={(data.by_event || [])
                   .filter((e) => e.name !== 'page_view')
                   .map((e) => ({ label: EVENT_LABELS[e.name] || e.name, value: e.n }))}
+              />
+            </Card>
+
+            {/* Which articles were actually read in the selected window.
+                "top_pages" mixes every page type together and shows a slug;
+                this is the question Nira asks, answered by title. */}
+            <Card title="המאמרים הנקראים ביותר" sub="בתקופה שנבחרה">
+              <RankedList
+                emptyText="אין עדיין צפיות במאמרים בתקופה הזו."
+                rows={(data.top_articles || []).map((a) => ({
+                  label: a.title,
+                  sub: `${a.readers} קוראים`,
+                  value: a.views,
+                }))}
               />
             </Card>
 

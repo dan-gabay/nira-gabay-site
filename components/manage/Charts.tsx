@@ -34,8 +34,12 @@ function useWidth<T extends HTMLElement>() {
   return [ref, w] as const;
 }
 
-const heDay = (iso: string) => {
-  const d = new Date(`${iso}T00:00`);
+// Buckets arrive as either 2026-08-23 (a day) or 2026-08-23T14 (an hour), so
+// the label follows the key rather than needing to be told which it is.
+const heDay = (key: string) => {
+  const [date, hour] = key.split('T');
+  if (hour !== undefined) return `${hour}:00`;
+  const d = new Date(`${date}T00:00`);
   return `${d.getDate()}/${d.getMonth() + 1}`;
 };
 
@@ -46,6 +50,24 @@ function niceMax(v: number): number {
 }
 
 export type DayPoint = { day: string; views: number; visits: number; conversions: number };
+
+/**
+ * Fills gaps, so a quiet hour reads as zero instead of the line jumping over
+ * it. Same job as fillDays, on the hourly buckets a 24-hour range returns.
+ */
+export function fillHours(rows: DayPoint[], hours = 24): DayPoint[] {
+  const by = new Map(rows.map((r) => [r.day, r]));
+  const out: DayPoint[] = [];
+  const now = new Date();
+  for (let i = hours - 1; i >= 0; i--) {
+    const d = new Date(now.getTime() - i * 3600_000);
+    const key =
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-` +
+      `${String(d.getDate()).padStart(2, '0')}T${String(d.getHours()).padStart(2, '0')}`;
+    out.push(by.get(key) || { day: key, views: 0, visits: 0, conversions: 0 });
+  }
+  return out;
+}
 
 /** Fills gaps, so a quiet Tuesday reads as zero instead of vanishing. */
 export function fillDays(rows: DayPoint[], days: number): DayPoint[] {
