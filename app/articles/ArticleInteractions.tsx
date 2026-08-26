@@ -360,6 +360,7 @@ export default function ArticleInteractions({
               </label>
               <User className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-stone-400" />
               <input
+                data-clarity-mask="true"
                 id="comment-author-name"
                 type="text"
                 placeholder="שם *"
@@ -374,6 +375,7 @@ export default function ArticleInteractions({
               </label>
               <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-stone-400" />
               <input
+                data-clarity-mask="true"
                 id="comment-author-email"
                 type="email"
                 placeholder="אימייל (לא יפורסם)"
@@ -388,6 +390,7 @@ export default function ArticleInteractions({
             התגובה שלכם
           </label>
           <textarea
+            data-clarity-mask="true"
             id="comment-content"
             placeholder="התגובה שלכם *"
             value={commentForm.content}

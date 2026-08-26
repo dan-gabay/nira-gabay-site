@@ -25,5 +25,13 @@ export const META_PIXEL_ID =
   process.env.NEXT_PUBLIC_META_PIXEL_ID || '2294471474637160';
 export const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || '';
 
+// Microsoft Clarity: session replay and heatmaps. Not part of the GTM/direct
+// split above - the container never carried it - so it loads on its own.
+//
+// Left as a required env var rather than defaulted like the GA and pixel ids.
+// Those two only count things; this one records what a visitor does on a page
+// about therapy, and that is not something to switch on by default in a repo.
+export const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID || '';
+
 /** True when GTM owns the tags and the site must not embed them itself. */
 export const usingGtm = Boolean(GTM_ID);

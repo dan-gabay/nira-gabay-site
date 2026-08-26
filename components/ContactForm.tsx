@@ -129,6 +129,7 @@ export default function ContactForm({
                 שם מלא *
               </label>
               <input
+                data-clarity-mask="true"
                 id={`contact-name-${sourceId}`}
                 type="text"
                 placeholder="השם שלכם"
@@ -146,6 +147,7 @@ export default function ContactForm({
                   אימייל
                 </label>
                 <input
+                  data-clarity-mask="true"
                   id={`contact-email-${sourceId}`}
                   type="email"
                   dir="ltr"
@@ -161,6 +163,7 @@ export default function ContactForm({
                   טלפון *
                 </label>
                 <input
+                  data-clarity-mask="true"
                   id={`contact-phone-${sourceId}`}
                   type="tel"
                   dir="ltr"
@@ -180,6 +183,7 @@ export default function ContactForm({
                 הודעה *
               </label>
               <textarea
+                data-clarity-mask="true"
                 id={`contact-message-${sourceId}`}
                 placeholder="במה אוכל לעזור?"
                 value={formData.message}
