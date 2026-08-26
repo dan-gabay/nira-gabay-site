@@ -64,6 +64,7 @@ export default function NewsletterSignup({ source = 'article' }: { source?: stri
           כתובת אימייל
         </label>
         <input
+          data-clarity-mask="true"
           id="newsletter-email"
           type="email"
           dir="ltr"
