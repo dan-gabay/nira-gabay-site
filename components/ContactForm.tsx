@@ -104,7 +104,7 @@ export default function ContactForm({
     <div
       className={
         onDark
-          ? 'relative p-5 md:p-10'
+          ? 'relative px-5 pb-5 pt-1 md:px-10 md:pb-8 md:pt-2'
           : 'bg-white rounded-3xl shadow-xl border border-stone-100 p-5 md:p-10'
       }
     >
@@ -128,8 +128,18 @@ export default function ContactForm({
         </motion.div>
       ) : (
         <>
-          <h2 className={`text-lg md:text-2xl font-bold mb-1.5 md:mb-2 ${onDark ? 'text-white' : 'text-stone-800'}`}>{title}</h2>
-          <p className={`text-sm md:text-base mb-6 md:mb-8 ${onDark ? 'text-white/80' : 'text-stone-500'}`}>{subtitle}</p>
+          {/* Skipped when the parent has already said who this is and why -
+              on a service page the card carries her photo, her name and an
+              invitation directly above, and a third heading repeating it was
+              about 100px of the card saying nothing new. */}
+          {title ? (
+            <>
+              <h2 className={`text-lg md:text-2xl font-bold mb-1.5 md:mb-2 ${onDark ? 'text-white' : 'text-stone-800'}`}>{title}</h2>
+              {subtitle ? (
+                <p className={`text-sm md:text-base mb-6 md:mb-8 ${onDark ? 'text-white/80' : 'text-stone-500'}`}>{subtitle}</p>
+              ) : null}
+            </>
+          ) : null}
 
           {error && (
             <div className="mb-4 md:mb-6 p-3.5 md:p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-xs md:text-sm">
@@ -137,7 +147,7 @@ export default function ContactForm({
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+          <form onSubmit={handleSubmit} className={onDark ? 'space-y-3.5 md:space-y-4' : 'space-y-4 md:space-y-6'}>
             {/* Honeypot - hidden from real users */}
             <input
               type="text"
@@ -213,7 +223,7 @@ export default function ContactForm({
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 onFocus={() => trackFormFieldFocus('contact_form', 'message')}
-                className={`${FIELD(onDark)} min-h-24 md:min-h-32`}
+                className={`${FIELD(onDark)} ${onDark ? 'min-h-20 md:min-h-24' : 'min-h-24 md:min-h-32'}`}
                 required
               />
             </div>

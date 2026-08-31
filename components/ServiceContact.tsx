@@ -98,8 +98,8 @@ export default function ServiceContact({
               <div className="relative">
                 <ContactForm
                   sourceId={`service_${serviceSlug}`}
-                  title="שלחו הודעה"
-                  subtitle="ללא התחייבות, ואענה בהקדם"
+                  title=""
+                  subtitle=""
                   variant="onDark"
                 />
                 <ServiceAltChannels
