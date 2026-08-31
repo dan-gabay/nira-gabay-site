@@ -2,11 +2,17 @@ import Image from 'next/image';
 import ContactForm from '@/components/ContactForm';
 import ServiceCta from '@/components/ServiceCta';
 import { FORM_BG, TEAL_DARK } from '@/lib/palette';
-import { CLINIC } from '@/lib/clinic';
 
 // The same wording the hero and the footer use. One phrase for who she is,
 // not three variants across the site.
 const ROLE = 'מטפלת בפסיכותרפיה ומדריכת הורים';
+
+// The same file the home page's mobile hero uses. It is already a tight
+// 495x505 headshot, so a circular crop is a near-exact fit and needs no
+// repositioning - and being local it actually loads, unlike the blob-hosted
+// profile.png on /clinic. Replacing that one file changes her photo in both
+// places, which is the behaviour you want from a portrait.
+const PORTRAIT = '/images/hero-mobile.jpg';
 
 /**
  * The closing block on a service page: who she is, and a form.
@@ -65,7 +71,7 @@ export default function ServiceContact({
               <div className="relative px-5 pt-6 md:px-10 md:pt-8">
                 <div className="flex items-center gap-3 md:gap-4">
                   <Image
-                    src={CLINIC.photo}
+                    src={PORTRAIT}
                     alt={`נירה גבאי, ${ROLE}`}
                     width={72}
                     height={72}
