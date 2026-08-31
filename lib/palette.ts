@@ -9,10 +9,6 @@ export const MINT = '#3FC195';
 // are used at full opacity with the solid colours as the paint-in layer.
 export const ARTICLES_HERO_BG = '/images/articles-hero.webp';
 export const ARTICLES_CTA_BG = '/images/articles-cta.webp';
-// Portrait crop of the same artwork, for the contact block on the service
-// pages - that section is taller than wide, and the landscape files above
-// crop badly into it.
-export const FORM_BG = '/images/form-bg.webp';
 
 // Re-exported from lib/whatsapp.ts, the single source for the number and the
 // prefill text. Kept here so the existing imports keep working.

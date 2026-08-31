@@ -17,7 +17,7 @@ import {
   CHIP_ACTIVE,
 } from '@/lib/palette';
 import ArticleRow from '@/components/ArticleRow';
-import ServiceContact from '@/components/ServiceContact';
+import ServiceCta from '@/components/ServiceCta';
 import JsonLd from '@/components/JsonLd';
 import type { ArticleListItem } from '@/app/articles/ArticlesBrowser';
 
@@ -391,7 +391,7 @@ export default async function ServicePage({
         </section>
       )}
 
-      <ServiceContact
+      <ServiceCta
         serviceSlug={service.slug}
         serviceLabel={service.navLabel}
         waHref={waHref}
