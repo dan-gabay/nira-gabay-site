@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import ContactForm from '@/components/ContactForm';
-import ServiceCta from '@/components/ServiceCta';
+import ServiceAltChannels from '@/components/ServiceAltChannels';
 import { FORM_BG, TEAL_DARK } from '@/lib/palette';
 
 // The same wording the hero and the footer use. One phrase for who she is,
@@ -30,11 +30,16 @@ const PORTRAIT = '/images/hero-mobile.jpg';
  * to, and the service pages showed only text. The article pages have carried
  * her photo all along; this is the page where it matters more.
  *
- * A second channel. The only ask was WhatsApp, which hands your name and phone
- * number to a stranger before you have spoken. For a marriage in crisis or a
- * question about sex therapy that is a real barrier, and it is the likeliest
- * reason the enquiries that happened went through the quieter route instead.
- * Form first here; WhatsApp and phone stay underneath for whoever prefers them.
+ * A second channel, demoted. The only ask used to be WhatsApp, which hands
+ * your name and phone number to a stranger before you have spoken - a real
+ * barrier for a marriage in crisis or a question about sex therapy, and the
+ * likeliest reason the enquiries that did happen took the quieter route.
+ * The form leads; WhatsApp and phone follow as a quiet line inside the same
+ * card.
+ *
+ * This block replaces the old ServiceCta banner rather than sitting above it.
+ * Two green blocks in a row asked the same thing twice, and the second one
+ * competed with the form for the same click.
  *
  * No price. Deliberately: the owner does not publish one.
  */
@@ -50,7 +55,6 @@ export default function ServiceContact({
   discreet?: boolean;
 }) {
   return (
-    <>
       <section className="bg-stone-50 py-10 md:py-16">
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-xl mx-auto">
@@ -98,19 +102,16 @@ export default function ServiceContact({
                   subtitle="ללא התחייבות, ואענה בהקדם"
                   variant="onDark"
                 />
+                <ServiceAltChannels
+                  serviceSlug={serviceSlug}
+                  serviceLabel={serviceLabel}
+                  waHref={waHref}
+                />
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* WhatsApp and phone stay available for whoever prefers them. */}
-      <ServiceCta
-        serviceSlug={serviceSlug}
-        serviceLabel={serviceLabel}
-        waHref={waHref}
-        discreet={discreet}
-      />
-    </>
   );
 }
