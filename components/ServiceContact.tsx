@@ -54,8 +54,11 @@ export default function ServiceContact({
   waHref: string;
   discreet?: boolean;
 }) {
+  // Every other content section on this page is plain white; stone-50 made
+  // this one read as a different band rather than the page's last block. The
+  // card carries the colour, the section does not.
   return (
-      <section className="bg-stone-50 py-10 md:py-16">
+    <section className="bg-white py-10 md:py-16">
         <div className="container mx-auto px-4 md:px-8">
           {/* Matches the reading column above it rather than sitting narrower than
                 everything else on the page - the card was 521px against 695px of
