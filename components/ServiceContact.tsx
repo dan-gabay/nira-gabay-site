@@ -57,7 +57,10 @@ export default function ServiceContact({
   return (
       <section className="bg-stone-50 py-10 md:py-16">
         <div className="container mx-auto px-4 md:px-8">
-          <div className="max-w-xl mx-auto">
+          {/* Matches the reading column above it rather than sitting narrower than
+                everything else on the page - the card was 521px against 695px of
+                content, which read as a third width rather than a deliberate one. */}
+            <div className="max-w-3xl mx-auto">
             {/* The artwork is the card, not the page behind it. */}
             <div
               className="relative overflow-hidden rounded-3xl shadow-xl"
@@ -69,7 +72,7 @@ export default function ServiceContact({
                 fill
                 loading="lazy"
                 className="object-cover"
-                sizes="(max-width: 768px) 100vw, 576px"
+                sizes="(max-width: 768px) 100vw, 700px"
               />
 
               <div className="relative px-5 pt-6 md:px-10 md:pt-8">

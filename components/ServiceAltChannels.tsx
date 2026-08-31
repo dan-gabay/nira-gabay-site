@@ -27,14 +27,16 @@ export default function ServiceAltChannels({
   serviceLabel: string;
   waHref: string;
 }) {
+  // Full width and evenly split, so they line up with the submit button above
+  // instead of huddling to one side of the card.
   const link =
-    'inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-full ' +
+    'flex-1 inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-full ' +
     'border border-white/40 text-white text-sm md:text-base hover:bg-white/15 transition-colors';
 
   return (
     <div className="px-5 pb-6 md:px-10 md:pb-8">
       <p className="text-xs md:text-sm text-white/70 mb-3">או, אם נוח לכם יותר:</p>
-      <div className="flex flex-wrap gap-2.5 md:gap-3">
+      <div className="flex gap-2.5 md:gap-3">
         <a
           href={waHref}
           target="_blank"
