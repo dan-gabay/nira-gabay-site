@@ -118,12 +118,15 @@ export default function ManageShell({ children }: { children: React.ReactNode })
         {/* pb clears the mobile tab bar */}
         <main id="main-content" className="container mx-auto px-4 md:px-6 py-4 md:py-8 pb-24 md:pb-8">{children}</main>
 
-        {/* Mobile tab bar - thumb-reachable, always one tap between sections */}
+        {/* Mobile tab bar - thumb-reachable, always one tap between sections.
+            Six items in a five-column grid wrapped תגיות onto a second row,
+            which then sat under Safari's own bottom bar. The column count is
+            derived from NAV so adding a seventh section cannot repeat it. */}
         <nav
           className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-stone-200 pb-[env(safe-area-inset-bottom)]"
           aria-label="ניווט ניהול"
         >
-          <div className="grid grid-cols-5">
+          <div className="grid" style={{ gridTemplateColumns: `repeat(${NAV.length}, minmax(0, 1fr))` }}>
             {NAV.map((item) => {
               const badge = item.badge ? summary?.[item.badge] ?? 0 : 0;
               const active = isActive(item.href);
@@ -132,7 +135,7 @@ export default function ManageShell({ children }: { children: React.ReactNode })
                   key={item.href}
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`relative flex flex-col items-center justify-center gap-0.5 min-h-[56px] text-[11px] font-medium transition-colors ${
+                  className={`relative flex flex-col items-center justify-center gap-0.5 min-h-[56px] px-0.5 text-[10px] font-medium leading-tight text-center whitespace-nowrap transition-colors ${
                     active ? 'text-stone-900' : 'text-stone-400'
                   }`}
                 >
@@ -145,7 +148,7 @@ export default function ManageShell({ children }: { children: React.ReactNode })
                     )}
                   </span>
                   {item.label}
-                  {active && <span className="absolute top-0 inset-x-4 h-0.5 bg-stone-900 rounded-full" />}
+                  {active && <span className="absolute top-0 inset-x-2 h-0.5 bg-stone-900 rounded-full" />}
                 </Link>
               );
             })}

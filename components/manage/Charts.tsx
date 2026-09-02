@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { enquiries, visits as visitCount } from '@/lib/heCount';
+
 // Charts for the admin analytics page, hand-built in SVG - the whole dashboard
 // is two chart shapes, and a library would cost more than it saves.
 //
@@ -277,13 +279,131 @@ export function BarChart({ data, height = 150 }: { data: DayPoint[]; height?: nu
   );
 }
 
+// ─────────────────────────────────────────────── proportion bar
+
+/**
+ * One measure split into named parts, drawn as a single bar with the legend
+ * carrying the numbers. A pie would need three labels and a key to say the
+ * same thing, and would still not let you compare two periods by eye.
+ */
+export function SplitBar({
+  parts,
+}: {
+  parts: Array<{ key: string; label: string; value: number; color: string }>;
+}) {
+  const total = parts.reduce((a, p) => a + p.value, 0);
+  if (total === 0) return <p className="text-xs md:text-sm text-stone-400 py-2">אין עדיין תנועה בטווח הזה.</p>;
+  const shown = parts.filter((p) => p.value > 0);
+
+  return (
+    <div>
+      <div className="flex h-3 rounded-full overflow-hidden bg-stone-100" role="img"
+           aria-label={shown.map((p) => `${p.label} ${Math.round((p.value / total) * 100)}%`).join(', ')}>
+        {shown.map((p) => (
+          <span key={p.key} style={{ width: `${(p.value / total) * 100}%`, background: p.color }} />
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[11px] md:text-xs" style={{ color: INK }}>
+        {shown.map((p) => (
+          <span key={p.key} className="inline-flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: p.color }} />
+            {p.label}
+            <strong className="tabular-nums text-stone-800">{p.value}</strong>
+            <span className="text-stone-400 tabular-nums">{Math.round((p.value / total) * 100)}%</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────── categorical bars
+
+export type Slot = { label: string; visits: number; conversions: number };
+
+/**
+ * Visits per slot as bars, with the slots that produced an enquiry marked by a
+ * dot above the bar. Used for hour-of-day and day-of-week, where the x axis is
+ * a fixed cycle rather than a timeline - the same shape would be misleading as
+ * a line, because there is no continuity between 23:00 and 00:00.
+ *
+ * The bars carry one measure and keep one colour. Recolouring a bar because it
+ * converted made four of seven weekdays amber, which reads as a second
+ * category rather than as a mark on the first.
+ */
+export function SlotBars({ slots, height = 110 }: { slots: Slot[]; height?: number }) {
+  const [ref, w] = useWidth<HTMLDivElement>();
+  const [hover, setHover] = useState<number | null>(null);
+  const pad = { t: 10, r: 2, b: 18, l: 2 };
+  const iw = Math.max(0, w - pad.l - pad.r);
+  const ih = height - pad.t - pad.b;
+  const max = Math.max(1, ...slots.map((s) => s.visits));
+  const step = slots.length ? iw / slots.length : iw;
+  // Seven bars across a full-width card are 95px each and read as a wall, so
+  // the bar is capped and centred in its slot instead of filling it.
+  const bw = Math.max(2, Math.min(step - 2, 30));
+  const every = slots.length > 12 ? (w < 420 ? 4 : 2) : 1;
+  const bx = (i: number) => i * step + (step - bw) / 2;
+
+  return (
+    <div ref={ref} className="relative w-full">
+      {w > 0 && (
+        <svg width={w} height={height} role="img" aria-label="ביקורים ופניות לפי משבצת זמן"
+             onMouseLeave={() => setHover(null)}>
+          <g transform={`translate(${pad.l},${pad.t})`}>
+            {slots.map((s, i) => {
+              const h = (s.visits / max) * ih;
+              return (
+                <g key={s.label} onMouseEnter={() => setHover(i)}>
+                  <rect x={i * step} y={0} width={Math.max(step, 6)} height={ih} fill="transparent" />
+                  <rect
+                    x={bx(i)}
+                    y={ih - h}
+                    width={bw}
+                    height={Math.max(s.visits > 0 ? 2 : 0, h)}
+                    rx={2}
+                    fill={SERIES.primary}
+                    opacity={hover === null || hover === i ? 1 : 0.5}
+                  />
+                  {s.conversions > 0 && (
+                    <circle cx={bx(i) + bw / 2} cy={Math.max(4, ih - h - 6)} r={3.5} fill={SERIES.secondary} />
+                  )}
+                  {i % every === 0 && (
+                    <text x={bx(i) + bw / 2} y={ih + 13} textAnchor="middle" fontSize={9} fill={MUTED}>
+                      {s.label}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
+          </g>
+        </svg>
+      )}
+      <div className="mt-1 text-[11px]" style={{ color: INK }}>
+        {hover !== null && slots[hover] ? (
+          <span>
+            <strong className="text-stone-800">{slots[hover].label}</strong>
+            {' · '}{visitCount(slots[hover].visits)}
+            {slots[hover].conversions > 0 && <> · {enquiries(slots[hover].conversions)}</>}
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 text-stone-400">
+            <span className="w-2 h-2 rounded-full" style={{ background: SERIES.secondary }} />
+            נקודה = התקבלה פנייה
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────── ranked list
 
 export function RankedList({
   rows,
   emptyText,
 }: {
-  rows: Array<{ label: string; sub?: string; value: number }>;
+  rows: Array<{ label: string; sub?: string; value: number; meta?: string }>;
   emptyText: string;
 }) {
   if (rows.length === 0) {
@@ -307,6 +427,9 @@ export function RankedList({
               {r.label}
               {r.sub && <span className="text-stone-400"> · {r.sub}</span>}
             </span>
+            {r.meta && (
+              <span className="flex-shrink-0 text-[11px] text-stone-500 tabular-nums">{r.meta}</span>
+            )}
             <span className="font-semibold text-stone-800 tabular-nums flex-shrink-0">{r.value}</span>
           </span>
         </li>
