@@ -365,9 +365,13 @@ export default async function ServicePage({
         </div>
       </section>
 
-      {/* ───────── Supporting articles ───────── */}
+      {/* ───────── Supporting articles ─────────
+          Plain white like every other section. The gradient that used to be
+          here faded into the teal CTA banner that closed the page; that banner
+          is gone, replaced by the contact form, so the fade only left a visible
+          step between this section and the form below it. */}
       {articles.length > 0 && (
-        <section className="py-8 md:py-12 bg-gradient-to-b from-white to-stone-50">
+        <section className="py-8 md:py-12 bg-white">
           <div className="container mx-auto px-4 md:px-8">
             <div className="max-w-3xl mx-auto">
               <h2 className="text-lg md:text-2xl font-bold text-stone-800 mb-4 md:mb-6">
