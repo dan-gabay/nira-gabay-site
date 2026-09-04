@@ -15,6 +15,7 @@ import {
 import { trackContactMethodClick, trackSocialClick, trackWhatsAppClick } from '@/lib/analytics';
 import FaqSection from '@/components/FaqSection';
 import ContactForm from '@/components/ContactForm';
+import { whatsappHref, DEFAULT_WHATSAPP_MESSAGE } from '@/lib/whatsapp';
 
 type ContactInfoItem = {
   icon: LucideIcon | (() => React.ReactElement);
@@ -24,8 +25,6 @@ type ContactInfoItem = {
   color: string;
 };
 
-const WHATSAPP_NUMBER = '972507936681';
-const WHATSAPP_MESSAGE = 'שלום נירה, אשמח לקבוע פגישה';
 
 const contactInfo: ContactInfoItem[] = [
   {
@@ -164,7 +163,7 @@ export default function Contact() {
                     </div>
                   </div>
                   <a
-                    href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`}
+                    href={whatsappHref(DEFAULT_WHATSAPP_MESSAGE)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block w-full bg-green-600 hover:bg-green-700 text-white text-center py-3 rounded-lg text-sm md:text-base font-medium transition-colors"
@@ -241,7 +240,7 @@ export default function Contact() {
                   <span className="text-sm md:text-lg font-medium text-stone-800">מושב שואבה</span>
                 </div>
                 <a
-                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('שלום נירה, אשמח לקבל הנחיות הגעה לקליניקה')}`}
+                  href={whatsappHref('שלום נירה, אשמח לקבל הנחיות הגעה לקליניקה')}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-6 min-h-[44px] border border-stone-200 rounded-lg hover:bg-stone-50 text-sm md:text-base transition-colors flex items-center gap-2"

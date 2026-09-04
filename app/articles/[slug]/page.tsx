@@ -465,7 +465,11 @@ export default async function ArticlePage({ params }: Props) {
           </article>
 
           {/* Article Read Tracking */}
-          <ArticleReadTracker articleId={article.id} articleTitle={article.title} />
+          <ArticleReadTracker
+            articleId={article.id}
+            articleTitle={article.title}
+            readingTime={article.reading_time}
+          />
 
           {/* Interactions (Likes, Share, Comments) */}
           <ArticleInteractions 

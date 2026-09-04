@@ -1,42 +1,27 @@
 "use client";
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
+import Link from 'next/link';
 import { Users, User, Heart, Baby, HeartHandshake, Brain } from 'lucide-react';
 import { trackServiceInterest } from '@/lib/analytics';
 import Reveal from '@/components/Reveal';
+import { SERVICES } from '@/lib/services';
+import { SERVICES_LIVE } from '@/lib/publish';
 
-const services = [
-  {
-    icon: User,
-    title: 'טיפול במבוגרים',
-    description: 'מרחב בטוח לעיבוד רגשי, התמודדות עם אתגרי החיים והגשמה עצמית.'
-  },
-  {
-    icon: Users,
-    title: 'טיפול במתבגרים',
-    description: 'ליווי מקצועי ורגיש בתקופה מאתגרת של התבגרות, עם דגש על בניית ביטחון עצמי וכלים להתמודדות.'
-  },
-  {
-    icon: Heart,
-    title: 'טיפול זוגי',
-    description: 'חיזוק הקשר הזוגי, שיפור התקשורת והתמודדות עם משברים מתוך הבנה ואמפתיה.'
-  },
-  {
-    icon: Baby,
-    title: 'הדרכת הורים',
-    description: 'כלים מעשיים להורות מיטבית, הבנת עולמם של הילדים ובניית קשר משפחתי בריא.'
-  },
-  {
-    icon: HeartHandshake,
-    title: 'טיפול מיני',
-    description: 'התמחות במיניות בריאה, ליווי זוגות ויחידים בנושאי אינטימיות וחיי מין.'
-  },
-  {
-    icon: Brain,
-    title: 'טיפול קוגניטיבי התנהגותי (CBT)',
-    description: 'גישה מעשית ומוכחת מדעית לטיפול בחרדות, דיכאון, פוביות ודפוסי חשיבה שליליים.'
-  }
-];
+const ICONS = { Users, User, Heart, Baby, HeartHandshake, Brain } as const;
+
+// Cards come from lib/services.ts so the homepage cannot drift from the
+// service pages it links to. The cards used to be cursor-pointer divs that
+// went nowhere; they are links now.
+const services = SERVICES.map((s) => ({
+  icon: ICONS[s.icon],
+  title: s.title,
+  description: s.cardDescription,
+  href: `/services/${s.slug}`,
+}));
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const Card: any = SERVICES_LIVE ? Link : 'div';
 
 export default function ServicesSection() {
   const reduceMotion = useReducedMotion();
@@ -58,7 +43,7 @@ export default function ServicesSection() {
             const IconComponent = service.icon;
             return (
               <motion.div
-                key={index}
+                key={service.href}
                 initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true, amount: 0.2 }}
@@ -70,10 +55,16 @@ export default function ServicesSection() {
                 // each frame's value on its own 300ms curve, so the card
                 // stuttered its way in. The icon keeps its own transform
                 // transition; it isn't the animated element.
-                className="bg-white rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-stone-100 group h-full cursor-pointer"
-                onClick={() => trackServiceInterest(service.title)}
+                className="h-full"
               >
-                <div className="flex items-start gap-3 md:gap-4">
+                {/* A link once the service pages are approved; until then a
+                    plain card, because a card that navigates to a page nobody
+                    has signed off on is worse than one that does not. */}
+                <Card
+                  {...(SERVICES_LIVE ? { href: service.href } : {})}
+                  onClick={() => trackServiceInterest(service.title)}
+                  className="flex items-start gap-3 md:gap-4 bg-white rounded-2xl p-4 md:p-6 shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-stone-100 group h-full"
+                >
                   <div className="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
                     <IconComponent className="w-5 h-5 md:w-7 md:h-7 text-stone-700" />
                   </div>
@@ -81,7 +72,7 @@ export default function ServicesSection() {
                     <h3 className="text-base md:text-lg font-bold text-stone-800 mb-1.5 md:mb-2">{service.title}</h3>
                     <p className="text-stone-600 text-xs md:text-sm leading-relaxed">{service.description}</p>
                   </div>
-                </div>
+                </Card>
               </motion.div>
             );
           })}

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Heart, MessageCircle, Facebook, Send, User, Mail, Loader2, Instagram, Share2, Link2 } from 'lucide-react';
 import { getUserIdentifier } from '@/lib/userIdentifier';
 import { supabase as supabaseClient } from '@/lib/supabaseClient';
-import { trackArticleLike, trackCommentSubmit, trackArticleShare, trackWhatsAppClick } from '@/lib/analytics';
+import { trackArticleLike, trackCommentSubmit, trackArticleShare } from '@/lib/analytics';
 import { FACEBOOK_APP_ID } from '@/lib/facebook';
 
 type ArticleInteractionsProps = {
@@ -209,8 +209,10 @@ export default function ArticleInteractions({
   function shareOnWhatsApp() {
     const url = window.location.href;
     const text = `קראו את המאמר הזה מאת נירה גבאי`;
+    // Deliberately NOT trackWhatsAppClick: that is the "reached out to Nira"
+    // event and it now reports a conversion to the ad platforms. Sharing an
+    // article to WhatsApp is the opposite direction of traffic.
     trackArticleShare('whatsapp', articleId, document.title);
-    trackWhatsAppClick('article_share');
     window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
   }
 
@@ -272,7 +274,12 @@ export default function ArticleInteractions({
       )}
 
       {/* Actions Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 md:gap-5 py-4 md:py-6 border-t border-b border-stone-200">
+      {/* Like and share are one gesture, so from md up they sit together in
+          the middle rather than at opposite ends of an 832px column - the
+          same 467px of dead space the closing banner had. The rules stay on
+          the row, not a wrapper, so the rules above and below stay full
+          width. Below sm the row is a column and none of this applies. */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 md:justify-center md:gap-10 py-4 md:py-6 border-t border-b border-stone-200">
         <button
           onClick={handleLike}
           disabled={hasLiked || isLiking}
@@ -353,6 +360,7 @@ export default function ArticleInteractions({
               </label>
               <User className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-stone-400" />
               <input
+                data-clarity-mask="true"
                 id="comment-author-name"
                 type="text"
                 placeholder="שם *"
@@ -367,6 +375,7 @@ export default function ArticleInteractions({
               </label>
               <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-stone-400" />
               <input
+                data-clarity-mask="true"
                 id="comment-author-email"
                 type="email"
                 placeholder="אימייל (לא יפורסם)"
@@ -381,6 +390,7 @@ export default function ArticleInteractions({
             התגובה שלכם
           </label>
           <textarea
+            data-clarity-mask="true"
             id="comment-content"
             placeholder="התגובה שלכם *"
             value={commentForm.content}

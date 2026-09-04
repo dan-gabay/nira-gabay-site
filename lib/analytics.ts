@@ -1,5 +1,17 @@
 // Google Analytics 4 Events Tracking
 // Based on GA4 Best Practices and Recommended Events
+//
+// The handful of events that also matter to an ad platform additionally call
+// into lib/conversions.ts. Everything else stays first-party.
+
+import { reportContactConversion, reportLeadConversion } from './conversions';
+import { usingGtm } from './tagging';
+import {
+  isTrackedEvent,
+  pageTypeFor,
+  entityFor,
+  type SiteEventPayload,
+} from './siteEvents';
 
 declare global {
   interface Window {
@@ -9,27 +21,172 @@ declare global {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       config?: Record<string, any>
     ) => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    dataLayer?: Record<string, any>[];
   }
 }
 
+// An anonymous per-visit id. Session storage, not local: it dies with the tab,
+// so it separates one visit from another and cannot follow anyone around.
+function sessionId(): string | null {
+  try {
+    const KEY = 'se_sid';
+    let id = sessionStorage.getItem(KEY);
+    if (!id) {
+      id = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      sessionStorage.setItem(KEY, id);
+    }
+    return id;
+  } catch {
+    return null; // private mode, storage disabled - the event still sends
+  }
+}
+
+/**
+ * The campaign that started this session, remembered for the whole session.
+ *
+ * Two bugs this fixes. The utm parameters were read off the current URL on
+ * every event, but they only exist on the landing URL - so a WhatsApp click
+ * two pages later carried no campaign at all, and the dashboard credited the
+ * visit but not the conversion it produced. And Google Ads auto-tagging sends
+ * gclid rather than utm, so every paid visit read as organic.
+ *
+ * Captured once per session in sessionStorage, which is the right lifetime:
+ * localStorage would let an ad click from last month claim today's organic
+ * visit, and that is lead attribution, a different question, already handled
+ * separately in lib/attribution.ts.
+ *
+ * The click id itself is never stored or sent - only which platform it came
+ * from. It is a per-click identifier, and this table holds none.
+ */
+type SessionCampaign = {
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  utm_term: string | null;
+  utm_content: string | null;
+  click_kind: string | null;
+};
+
+const CAMPAIGN_KEY = 'site_session_campaign_v1';
+
+function sessionCampaign(): SessionCampaign {
+  const empty: SessionCampaign = {
+    utm_source: null, utm_medium: null, utm_campaign: null,
+    utm_term: null, utm_content: null, click_kind: null,
+  };
+  if (typeof window === 'undefined') return empty;
+
+  try {
+    const cached = sessionStorage.getItem(CAMPAIGN_KEY);
+    if (cached) return JSON.parse(cached) as SessionCampaign;
+  } catch {
+    return empty; // storage unavailable - attribution is best effort
+  }
+
+  const q = new URLSearchParams(window.location.search);
+  const clickKind =
+    q.get('gclid') || q.get('wbraid') || q.get('gbraid') ? 'google'
+    : q.get('fbclid') ? 'meta'
+    : null;
+
+  const captured: SessionCampaign = {
+    utm_source: q.get('utm_source'),
+    utm_medium: q.get('utm_medium'),
+    utm_campaign: q.get('utm_campaign'),
+    utm_term: q.get('utm_term'),
+    utm_content: q.get('utm_content'),
+    click_kind: clickKind,
+  };
+
+  try {
+    sessionStorage.setItem(CAMPAIGN_KEY, JSON.stringify(captured));
+  } catch {
+    // ignore
+  }
+  return captured;
+}
+
+
+// Mirror the events worth keeping into our own store (lib/siteEvents.ts).
+//
+// sendBeacon is the point of this function. The WhatsApp and phone CTAs
+// navigate away the instant they are clicked, and a fetch dies with the page.
+// A beacon is handed to the browser and delivered regardless, which is why the
+// conversions that matter most are the ones that actually arrive here.
+function mirrorToStore(
+  eventName: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  params?: Record<string, any>,
+): void {
+  if (typeof window === 'undefined' || !isTrackedEvent(eventName)) return;
+
+  try {
+    const path = window.location.pathname;
+    const ref = document.referrer;
+
+    const payload: SiteEventPayload = {
+      event_name: eventName,
+      path,
+      page_type: pageTypeFor(path),
+      entity: entityFor(path),
+      source: params?.event_label ?? params?.source ?? null,
+      session_id: sessionId(),
+      referrer_host: ref ? new URL(ref).hostname : null,
+      ...sessionCampaign(),
+    };
+
+    const body = JSON.stringify(payload);
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }));
+    } else {
+      void fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        keepalive: true,
+      });
+    }
+  } catch {
+    // Measurement must never break a CTA.
+  }
+}
+
+// Under GTM every event goes to dataLayer and nowhere else. GTM defines
+// window.gtag as a side effect of loading GA4, so calling both would send each
+// event twice: once directly and once through the container's GA4 event tag.
 export const trackEvent = (
   eventName: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   eventParams?: Record<string, any>
 ) => {
-  if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', eventName, eventParams);
+  if (typeof window === 'undefined') return;
+
+  // Our own store gets the event either way - it is independent of which ad
+  // platform is loaded, and of whether one loaded at all.
+  mirrorToStore(eventName, eventParams);
+
+  if (usingGtm) {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: eventName, ...eventParams });
+    return;
   }
+
+  window.gtag?.('event', eventName, eventParams);
 };
 
 // ===== USER PROPERTIES (GA4 Recommended) =====
 // Set user properties for better segmentation
 export const setUserProperty = (propertyName: string, value: string | number | boolean) => {
-  if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('set', 'user_properties', {
-      [propertyName]: value
-    });
+  if (typeof window === 'undefined') return;
+
+  if (usingGtm) {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: 'set_user_property', property: propertyName, value });
+    return;
   }
+
+  window.gtag?.('set', 'user_properties', { [propertyName]: value });
 };
 
 // Identify returning visitors
@@ -83,6 +240,7 @@ export const trackSignUp = (source: string) => {
     method: 'newsletter',
     source: source,
   });
+  reportLeadConversion(source);
 };
 
 // search - When a user performs a search
@@ -129,6 +287,7 @@ export const trackWhatsAppClick = (source: string) => {
     event_label: source,
     value: 1,
   });
+  reportContactConversion('whatsapp');
 };
 
 export const trackPhoneClick = (source: string) => {
@@ -137,6 +296,7 @@ export const trackPhoneClick = (source: string) => {
     event_label: source,
     value: 1,
   });
+  reportContactConversion('phone');
 };
 
 export const trackContactFormSubmit = (formType: string) => {
@@ -145,6 +305,7 @@ export const trackContactFormSubmit = (formType: string) => {
     event_label: formType,
     value: 5,
   });
+  reportContactConversion('form');
 };
 
 export const trackCommentSubmit = (articleId: string) => {
@@ -357,6 +518,8 @@ export const trackContactMethodClick = (method: 'whatsapp' | 'phone' | 'email' |
     event_label: location,
     value: 5,
   });
+  // This, not trackPhoneClick, is what the phone and email CTAs actually call.
+  reportContactConversion(method);
 };
 
 // About Page

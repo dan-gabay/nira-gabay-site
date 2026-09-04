@@ -1,38 +1,41 @@
+/**
+ * Regenerates every icon the site references, from app/icon.png.
+ *
+ * The previous version of this script read ./public/logo-temp.png and deleted
+ * it on the way out, so it could only ever run once - and it never produced
+ * the two sizes app/manifest.ts asks for, which is why /icon-192.png returned
+ * 404 for anyone who installed the site or whose browser fetched the manifest.
+ *
+ * Source is app/icon.png (1024x1026), the largest artwork in the repo. It is
+ * two pixels off square, so every output is cover-fitted rather than stretched.
+ *
+ * Run: node scripts/create-favicons.js
+ */
 const sharp = require('sharp');
-const fs = require('fs');
 
-async function createFavicons() {
-  const inputFile = './public/logo-temp.png';
-  
-  try {
-    // Create favicon.ico (32x32)
-    await sharp(inputFile)
-      .resize(32, 32)
-      .toFile('./public/favicon.ico');
-    
-    console.log('✅ favicon.ico created (32x32)');
-    
-    // Create different sizes for icon.png
-    await sharp(inputFile)
-      .resize(512, 512)
-      .toFile('./public/icon.png');
-    
-    console.log('✅ icon.png created (512x512)');
-    
-    // Create apple-icon.png
-    await sharp(inputFile)
-      .resize(180, 180)
-      .toFile('./public/apple-icon.png');
-    
-    console.log('✅ apple-icon.png created (180x180)');
-    
-    // Cleanup temp file
-    fs.unlinkSync(inputFile);
-    console.log('✅ Cleaned up temp file');
-    
-  } catch (error) {
-    console.error('Error:', error);
+const SOURCE = 'app/icon.png';
+
+// Every size here must stay in step with app/manifest.ts and the icon files
+// Next.js picks up by convention.
+const OUTPUTS = [
+  { file: 'public/favicon.ico', size: 32 },
+  { file: 'public/icon.png', size: 512 },
+  { file: 'public/apple-icon.png', size: 180 },
+  { file: 'public/icon-192.png', size: 192 }, // app/manifest.ts
+  { file: 'public/icon-512.png', size: 512 }, // app/manifest.ts
+];
+
+async function main() {
+  for (const { file, size } of OUTPUTS) {
+    await sharp(SOURCE)
+      .resize(size, size, { fit: 'cover', position: 'centre' })
+      .png({ compressionLevel: 9 })
+      .toFile(file);
+    console.log(`wrote ${file} (${size}x${size})`);
   }
 }
 
-createFavicons();
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

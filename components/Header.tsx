@@ -3,12 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Menu, X, Phone, Mail, Facebook, MessageCircle, Home, User, FileText, PhoneCall } from 'lucide-react';
+import { Menu, X, Phone, Mail, Facebook, MessageCircle, Home, User, FileText, PhoneCall, HeartHandshake } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { trackHeaderNavClick, trackHeaderLogoClick, trackMobileMenuToggle, trackWhatsAppClick, trackSocialClick } from '@/lib/analytics';
-
-const WHATSAPP_NUMBER = '972507936681';
-const WHATSAPP_MESSAGE = 'שלום נירה, אשמח לקבוע פגישה';
+import { whatsappHref, whatsappMessageForPath } from '@/lib/whatsapp';
+import { SERVICES_LIVE } from '@/lib/publish';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -24,9 +23,21 @@ export default function Header() {
   const navItems = [
     { name: 'דף הבית', href: '/', icon: Home },
     { name: 'קצת עליי', href: '/about', icon: User },
+    // Hidden until Nira approves the service pages (lib/publish.ts).
+    ...(SERVICES_LIVE
+      ? [{ name: 'תחומי טיפול', href: '/services', icon: HeartHandshake }]
+      : []),
     { name: 'מאמרים', href: '/articles', icon: FileText },
     { name: 'צרו קשר', href: '/contact', icon: PhoneCall },
   ];
+
+  // A section's nav item stays lit on its sub-pages too, so /services/cbt
+  // still shows "תחומי טיפול" as current. '/' would match everything.
+  const isCurrent = (href: string) =>
+    href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
+
+  // Prefill names the service the visitor is reading about (see lib/whatsapp.ts)
+  const waHref = whatsappHref(whatsappMessageForPath(pathname));
 
   return (
     <>
@@ -65,7 +76,7 @@ export default function Header() {
                   href={item.href}
                   onClick={() => trackHeaderNavClick(item.name)}
                   className={`nav-link text-stone-700 hover:text-stone-900 font-medium relative ${
-                    pathname === item.href ? 'active text-stone-900' : ''
+                    isCurrent(item.href) ? 'active text-stone-900' : ''
                   }`}
                 >
                   {item.name}
@@ -76,7 +87,7 @@ export default function Header() {
             {/* CTA Buttons */}
             <div className="hidden lg:flex items-center gap-4">
               <a
-                href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`}
+                href={waHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackWhatsAppClick('header')}
@@ -131,7 +142,7 @@ export default function Header() {
                     trackHeaderNavClick(item.name + '_mobile');
                   }}
                   className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
-                    pathname === item.href 
+                    isCurrent(item.href)
                       ? 'bg-amber-100 text-stone-900' 
                       : 'hover:bg-stone-100 text-stone-700'
                   }`}
@@ -142,7 +153,7 @@ export default function Header() {
               ))}
               <div className="pt-4 flex gap-3">
                 <a
-                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`}
+                  href={waHref}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1"

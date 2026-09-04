@@ -156,6 +156,25 @@ a, button, [role="button"] {
   will-change: opacity;
 }
 
+/* ── Desktop scale ────────────────────────────────────────────────────────
+   The owner's read: at 100% the desktop is about a tenth too large, and it
+   looks right at 90% browser zoom. This does exactly that, once, instead of
+   me shrinking individual headings and paddings and pulling the proportions
+   apart - which is what the previous four attempts did wrong.
+
+   Tailwind's sizes and spacing are rem, so one root font-size carries type,
+   padding, margin, gap and max-width together and every ratio survives.
+
+   Above md only, and the breakpoint does not move with it: rem inside a media
+   query resolves against the initial 16px, not against this rule. Verified at
+   the edge - 767px keeps a 16px root and 20px h2, 768px gets 14.4px and 32.4px.
+   Nothing below 768px is reachable from here. */
+@media (min-width: 768px) {
+  html {
+    font-size: 90%;
+  }
+}
+
 /* Hebrew RTL body typography */
 body {
   line-height: 1.75;

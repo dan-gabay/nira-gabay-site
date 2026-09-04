@@ -68,12 +68,16 @@ export const metadata: Metadata = {
   authors: [{ name: 'נירה גבאי' }],
   creator: 'נירה גבאי',
   applicationName: 'נירה גבאי',
+  // Each entry now points at a file whose real dimensions match what it
+  // claims. /icon.png is 1024x1026, so it was declaring 512x512 in one place
+  // and 180x180 in another, and every Apple device was pulling 64KB for a
+  // 180px slot.
   icons: {
     icon: [
-      { url: '/icon.png', sizes: '512x512', type: 'image/png' },
-      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.ico', sizes: '16x16 32x32 48x48' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
-    apple: { url: '/icon.png', sizes: '180x180', type: 'image/png' },
+    apple: { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
   },
   openGraph: {
     type: 'website',
