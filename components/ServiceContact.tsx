@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import ContactForm from '@/components/ContactForm';
 import ServiceAltChannels from '@/components/ServiceAltChannels';
 import { FORM_BG, TEAL_DARK } from '@/lib/palette';
@@ -79,20 +80,30 @@ export default function ServiceContact({
               />
 
               <div className="relative px-5 pt-6 md:px-10 md:pt-8">
-                <div className="flex items-center gap-3 md:gap-4">
+                {/* The portrait and the name go to /about. Someone about to
+                    type why they need therapy is entitled to read who they are
+                    typing it to first, and until now this was the one place on
+                    the page where her face appeared and led nowhere. */}
+                <Link
+                  href="/about"
+                  aria-label="קצת עליי - נירה גבאי"
+                  className="group inline-flex items-center gap-3 md:gap-4 rounded-2xl -m-1 p-1 outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/80"
+                >
                   <Image
                     src={PORTRAIT}
                     alt={`נירה גבאי, ${ROLE}`}
                     width={72}
                     height={72}
                     loading="lazy"
-                    className="w-14 h-14 md:w-[72px] md:h-[72px] rounded-full object-cover flex-shrink-0 border-2 border-white/70"
+                    className="w-14 h-14 md:w-[72px] md:h-[72px] rounded-full object-cover flex-shrink-0 border-2 border-white/70 transition-colors group-hover:border-white"
                   />
                   <div className="text-white">
-                    <p className="text-base md:text-xl font-bold leading-snug">נירה גבאי</p>
+                    <p className="text-base md:text-xl font-bold leading-snug underline decoration-white/40 decoration-1 underline-offset-4 transition-colors group-hover:decoration-white">
+                      נירה גבאי
+                    </p>
                     <p className="text-xs md:text-sm text-white/80 leading-relaxed">{ROLE}</p>
                   </div>
-                </div>
+                </Link>
 
                 <p className="text-sm md:text-base text-white/90 leading-relaxed mt-4 md:mt-5">
                   {discreet
