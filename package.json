@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && npm run indexnow -- --submit",
     "start": "next start",
     "lint": "eslint",
     "test": "tsx --test tests/*.test.ts",
     "verify:agent-readiness": "tsx scripts/verify-agent-readiness.ts",
+    "indexnow": "tsx scripts/indexnow-submit.ts",
     "import-tags": "tsx scripts/import-tags.ts",
     "discover:source-articles": "tsx scripts/discover-source-articles.ts",
     "extract:search-urls": "tsx scripts/extract-urls-from-search-results.ts",

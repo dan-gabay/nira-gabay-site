@@ -1,107 +1,18 @@
 import { MetadataRoute } from 'next'
 import { supabaseServer } from '../lib/supabaseServer'
-import { TOPICS } from '../lib/topics'
-import { SERVICES } from '../lib/services'
-import { SERVICES_LIVE } from '../lib/publish'
+import { getSiteUrls } from '../lib/siteUrls'
 
-// Standard sitemap without images (Next.js will use this)
+// The URL list itself lives in lib/siteUrls.ts, because IndexNow needs the
+// same list and a second copy of it would drift. This route is now only the
+// projection of that list into the sitemap's shape - the contentKey each entry
+// carries is for IndexNow's diffing and has no place in a sitemap.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const supabase = supabaseServer()
-  const baseUrl = 'https://www.niragabay.com'
+  const entries = await getSiteUrls(supabaseServer())
 
-  const { data: articles } = await supabase
-    .from('articles')
-    .select('slug, updated_date, created_date, tags')
-    .eq('is_published', true)
-
-  const articleUrls = (articles || []).map((article) => ({
-    url: `${baseUrl}/articles/${article.slug}`,
-    lastModified: article.updated_date || article.created_date || new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: 0.8,
+  return entries.map(({ url, lastModified, changeFrequency, priority }) => ({
+    url,
+    lastModified,
+    changeFrequency,
+    priority,
   }))
-
-  // Topic hub pages - only hubs with 2+ published articles (thinner hubs
-  // noindex themselves and stay out of the sitemap until they fill up).
-  const topicUrls = TOPICS.flatMap((topic) => {
-    const members = (articles || []).filter((a) =>
-      (a.tags || '').split(',').map((t: string) => t.trim()).includes(topic.tag)
-    )
-    if (members.length < 2) return []
-    const lastModified = members
-      .map((a) => a.updated_date || a.created_date)
-      .filter(Boolean)
-      .sort()
-      .pop()
-    return [{
-      url: `${baseUrl}/articles/topic/${topic.slug}`,
-      lastModified: lastModified || new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.7,
-    }]
-  })
-
-  // Service pages: the commercial-intent entry points, ranked just under the
-  // homepage. Static copy, so lastModified tracks the deploy rather than a row.
-  const serviceUrls = (SERVICES_LIVE ? SERVICES : []).map((s) => ({
-    url: `${baseUrl}/services/${s.slug}`,
-    lastModified: new Date(),
-    changeFrequency: 'monthly' as const,
-    priority: 0.9,
-  }))
-
-  return [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/about`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/articles`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.9,
-    },
-    ...(SERVICES_LIVE
-      ? [{
-          url: `${baseUrl}/clinic`,
-          lastModified: new Date(),
-          changeFrequency: 'monthly' as const,
-          priority: 0.8,
-        }]
-      : []),
-    {
-      url: `${baseUrl}/contact`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
-    },
-    // A trust-anchor page: about/contact/privacy are the three an AI agent
-    // checks before it will name a business. Low priority, but it has to be
-    // discoverable to count.
-    {
-      url: `${baseUrl}/privacy`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly' as const,
-      priority: 0.3,
-    },
-    ...(SERVICES_LIVE
-      ? [{
-          url: `${baseUrl}/services`,
-          lastModified: new Date(),
-          changeFrequency: 'monthly' as const,
-          priority: 0.9,
-        }]
-      : []),
-    ...serviceUrls,
-    ...topicUrls,
-    ...articleUrls,
-  ]
 }
