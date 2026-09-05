@@ -244,3 +244,66 @@ test('no article schema reintroduces a hand-written author literal', () => {
   // spelled the author out again somewhere in the node.
   assert.equal(authorNames.length, 1);
 });
+
+// ───────────────────────────────────────────────── heading structure
+
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+
+const ROOT = process.cwd();
+
+// Comments talk about markup ("two <h1> elements", "on the <img> itself"), so
+// they have to come out before anything counts tags - otherwise the guard fires
+// on the comment that explains the guard.
+function stripComments(source: string): string {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+}
+
+function tsxFiles(dir: string, found: string[] = []): string[] {
+  for (const entry of readdirSync(dir)) {
+    const path = join(dir, entry);
+    if (statSync(path).isDirectory()) tsxFiles(path, found);
+    else if (entry.endsWith('.tsx')) found.push(path);
+  }
+  return found;
+}
+
+test('no source file declares more than one <h1>', () => {
+  // The homepage shipped two <h1> elements for months: the hero copy is
+  // rendered twice, once for the mobile layout and once for the desktop
+  // overlay, and CSS hides whichever does not apply - but both are in the DOM
+  // and Bing counted both. This is the cheap half of the guard; the rendered
+  // half is `npm run audit:html`, which is what actually catches a duplicate
+  // introduced by a component being mounted twice.
+  const offenders: string[] = [];
+  for (const file of [...tsxFiles(join(ROOT, 'app')), ...tsxFiles(join(ROOT, 'components'))]) {
+    const count = (stripComments(readFileSync(file, 'utf8')).match(/<h1[\s>]/g) || []).length;
+    if (count > 1) offenders.push(`${file.replace(ROOT + '/', '')} (${count})`);
+  }
+  assert.deepEqual(offenders, []);
+});
+
+test('the hero renders one h1 and styles its duplicate identically', () => {
+  const source = stripComments(readFileSync(join(ROOT, 'components/HeroSection.tsx'), 'utf8'));
+  assert.equal((source.match(/<h1[\s>]/g) || []).length, 1);
+  assert.equal((source.match(/<h2[\s>]/g) || []).length, 1);
+  // Both levels take the same class list, so demoting the duplicate cannot
+  // change a single pixel.
+  assert.equal((source.match(/className=\{HEADING_CLASS\}/g) || []).length, 2);
+});
+
+test('every <img> in the source carries an alt attribute', () => {
+  // next/image makes `alt` a required prop, so this is really about the three
+  // raw <img> elements: two upload previews in /manage and the Meta Pixel's
+  // 1x1 noscript beacon.
+  const offenders: string[] = [];
+  for (const file of [...tsxFiles(join(ROOT, 'app')), ...tsxFiles(join(ROOT, 'components'))]) {
+    const source = stripComments(readFileSync(file, 'utf8'));
+    for (const tag of source.match(/<img\b[\s\S]*?\/?>/g) || []) {
+      if (!/\balt\s*=/.test(tag)) offenders.push(`${file.replace(ROOT + '/', '')}: ${tag.slice(0, 60)}`);
+    }
+  }
+  assert.deepEqual(offenders, []);
+});

@@ -20,7 +20,8 @@
     "generate:article-image": "tsx scripts/generate-and-upload-article-image.ts",
     "insert:supabase-draft": "tsx scripts/insert-supabase-article-draft.ts",
     "run:article-import-pipeline": "tsx scripts/run-article-import-pipeline.ts",
-    "final:check-and-publish": "tsx scripts/final-check-and-publish-first-article.ts"
+    "final:check-and-publish": "tsx scripts/final-check-and-publish-first-article.ts",
+    "audit:html": "tsx scripts/audit-html.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.87.1",

@@ -56,13 +56,35 @@ export default function HeroSection() {
     </div>
   );
 
-  const Copy = (
+  // The hero copy is rendered twice - once inside the mobile block and once
+  // inside the desktop overlay - because the two layouts are structurally
+  // different (stacked vs. absolutely positioned over the photo). CSS shows
+  // exactly one of them, but BOTH are in the DOM, and that is what Bing was
+  // reporting: two <h1> elements on the homepage.
+  //
+  // So the heading level is a parameter. The mobile copy comes first in the
+  // document and keeps the <h1>; the desktop duplicate renders an <h2> with
+  // the identical class list, which looks the same to the pixel (Tailwind's
+  // preflight strips the browser's default heading sizes, so the tag carries
+  // no styling of its own here).
+  //
+  // The visually-hidden continuation belongs to the H1 only. Repeating it in
+  // the duplicate would put the same keyword phrase on the page twice for no
+  // reader's benefit, which is the definition of stuffing.
+  const HEADING_CLASS =
+    'text-4xl md:text-6xl xl:text-7xl font-bold text-white leading-[1.05] mb-3';
+
+  const copyFor = (level: 'h1' | 'h2') => (
     <>
-      <h1 className="text-4xl md:text-6xl xl:text-7xl font-bold text-white leading-[1.05] mb-3">
-        נירה גבאי
-        {/* keyword-rich continuation for SEO/crawlers; visually hidden so the design is unchanged */}
-        <span className="sr-only"> - מטפלת בפסיכותרפיה ומדריכת הורים</span>
-      </h1>
+      {level === 'h1' ? (
+        <h1 className={HEADING_CLASS}>
+          נירה גבאי
+          {/* keyword-rich continuation for SEO/crawlers; visually hidden so the design is unchanged */}
+          <span className="sr-only"> - מטפלת בפסיכותרפיה ומדריכת הורים</span>
+        </h1>
+      ) : (
+        <h2 className={HEADING_CLASS}>נירה גבאי</h2>
+      )}
       <p className="text-lg md:text-xl xl:text-2xl text-white/90 font-light mb-5">
         מטפלת בפסיכותרפיה ומדריכת הורים
       </p>
@@ -106,7 +128,7 @@ export default function HeroSection() {
           className="px-6 pt-8 pb-10 text-center"
         >
           <div className="mb-5">{Pill}</div>
-          {Copy}
+          {copyFor('h1')}
           {Buttons}
         </motion.div>
       </div>
@@ -147,7 +169,7 @@ export default function HeroSection() {
             style={{ textShadow: '0 1px 14px rgba(0,0,0,0.30)' }}
           >
             <div className="mb-8">{Pill}</div>
-            {Copy}
+            {copyFor('h2')}
             {Buttons}
           </motion.div>
         </div>
