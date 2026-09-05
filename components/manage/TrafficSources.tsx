@@ -22,7 +22,9 @@ export type TrafficRow = {
   conversions: number;
 };
 
-const GROUP_LABELS: Record<string, string> = {
+// Exported: the source-over-time chart labels the same six groups, and two
+// copies of these strings would drift the moment one of them was reworded.
+export const GROUP_LABELS: Record<string, string> = {
   google_ads: 'גוגל - מודעות בתשלום',
   paid_other: 'ממומן - פלטפורמה אחרת',
   organic_search: 'חיפוש אורגני בגוגל',

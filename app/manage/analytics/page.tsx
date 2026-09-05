@@ -10,12 +10,16 @@ import {
   BarChart,
   RankedList,
   SlotBars,
+  SourceLines,
+  SOURCE_SERIES,
+  bucketKeys,
   fillDays,
   fillHours,
+  fillSeries,
   type DayPoint,
   type Slot,
 } from '@/components/manage/Charts';
-import TrafficSources, { type TrafficRow } from '@/components/manage/TrafficSources';
+import TrafficSources, { GROUP_LABELS, type TrafficRow } from '@/components/manage/TrafficSources';
 import { EVENT_LABELS, PAGE_TYPE_LABELS } from '@/lib/siteEvents';
 import { SERVICES } from '@/lib/services';
 import { buildInsights } from '@/lib/analyticsInsights';
@@ -47,6 +51,8 @@ type Payload = {
   // Added 2026-09-02. An older cached response will not carry them, so every
   // read of these is guarded.
   traffic?: TrafficRow[];
+  // Added 2026-09-05, so guarded like the rest of this block.
+  traffic_daily?: Array<{ day: string; grp: string; visits: number; conversions: number }>;
   landing_pages?: Array<{ path: string; page_type: string; visits: number; conversions: number }>;
   service_funnel?: Array<{ slug: string; views: number; visits: number; conversions: number }>;
   by_hour?: Array<{ hour: number; visits: number; conversions: number }>;
@@ -177,6 +183,30 @@ export default function AnalyticsPage() {
       ? fillHours(data.daily || [], 24)
       : fillDays(data.daily || [], data.range_days)
     : [];
+  // Visitors by source, over the same buckets the chart above uses.
+  //
+  // Only the groups that actually sent someone in this range get a line: a
+  // source with no traffic would otherwise be a flat zero along the baseline,
+  // which is a line that says nothing and one more hue competing for the eye.
+  // The colours are pinned per group in SOURCE_SERIES, so a group appearing or
+  // disappearing never repaints the ones that stayed.
+  const trafficRows = data?.traffic_daily || [];
+  const sourceSeries = Object.keys(SOURCE_SERIES)
+    .map((key) => ({
+      key,
+      label: GROUP_LABELS[key] || key,
+      color: SOURCE_SERIES[key],
+      total: trafficRows.reduce((a, r) => a + (r.grp === key ? r.visits : 0), 0),
+    }))
+    .filter((s) => s.total > 0)
+    .sort((a, b) => b.total - a.total);
+  const sourcePoints = data
+    ? fillSeries(
+        trafficRows,
+        isHourly ? bucketKeys(24, 'hour') : bucketKeys(data.range_days, 'day'),
+      )
+    : [];
+
   const noData = Boolean(data) && (data?.totals.events ?? 0) === 0;
 
   const insights = data
@@ -318,6 +348,15 @@ export default function AnalyticsPage() {
 
           <Card title="מאיפה הגיעו המבקרים" sub="לחיצה על שורה פותחת את הפירוט">
             <TrafficSources rows={data.traffic || []} />
+          </Card>
+
+          {/* The card above is the totals for the range: who sent the most.
+              This is the same split over time - which is the question the
+              totals cannot answer. A campaign that was paused, a post that
+              went out on one day, a slow drift in organic: all of them are a
+              single number in the card above and a visible shape here. */}
+          <Card title="מבקרים לפי מקור הגעה, לאורך זמן" sub={rangeLabel}>
+            <SourceLines data={sourcePoints} series={sourceSeries} />
           </Card>
 
           {hasClock && (

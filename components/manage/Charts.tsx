@@ -187,7 +187,10 @@ export function LineChart({
         <div
           className="pointer-events-none absolute top-0 bg-white border border-stone-200 rounded-lg shadow-sm px-2.5 py-1.5 text-[11px] leading-relaxed"
           style={{
-            insetInlineStart: Math.min(Math.max(0, x(hover) + pad.l - 45), Math.max(0, w - 110)),
+            // `left`, not `insetInlineStart`: x() is measured from the SVG's
+            // left edge and this page is RTL, so an inline-start offset put the
+            // tooltip on the opposite side of the chart from the cursor.
+            left: Math.min(Math.max(0, x(hover) + pad.l - 45), Math.max(0, w - 110)),
             color: INK,
           }}
         >
@@ -435,5 +438,229 @@ export function RankedList({
         </li>
       ))}
     </ol>
+  );
+}
+
+// ─────────────────────────────────────────── traffic sources over time
+
+/**
+ * The categorical palette for traffic-source lines.
+ *
+ * Six fixed slots, one per source group, assigned by entity and never by rank -
+ * so filtering the range or a group dropping to zero can never repaint the
+ * survivors. Teal and amber keep the meaning they already carry in the
+ * "מאיפה הגיעו" card, where paid is teal and organic is amber, so the two
+ * cards read as one story rather than two colour schemes.
+ *
+ * Validated as a set on a light surface: every slot inside the lightness band,
+ * above the chroma floor and over 3:1 against the card, worst adjacent pair
+ * ΔE 13.6 under deuteranopia and 18.8 to normal vision - clear of the 8 and 15
+ * floors. What no six-hue set clears is the all-pairs test, where any two lines
+ * may end up touching: green against teal is ΔE 10.7. That is why identity here
+ * never rests on colour - the legend pairs every swatch with its name, and the
+ * hover tooltip names every series at the bucket under the cursor.
+ */
+export const SOURCE_SERIES: Record<string, string> = {
+  google_ads: '#0D9488',
+  organic_search: '#B45309',
+  social: '#0369A1',
+  direct: '#15803D',
+  referral: '#7C3AED',
+  paid_other: '#BE185D',
+};
+
+export type SeriesPoint = { day: string; values: Record<string, number> };
+
+/** fillDays/fillHours, for the one-row-per-bucket-per-group shape. */
+export function fillSeries(
+  rows: Array<{ day: string; grp: string; visits: number }>,
+  buckets: string[],
+): SeriesPoint[] {
+  const by = new Map<string, Record<string, number>>();
+  for (const r of rows) {
+    const slot = by.get(r.day) || {};
+    slot[r.grp] = (slot[r.grp] || 0) + r.visits;
+    by.set(r.day, slot);
+  }
+  return buckets.map((day) => ({ day, values: by.get(day) || {} }));
+}
+
+/** The bucket keys a range covers, in order - the x axis, gaps included. */
+export function bucketKeys(count: number, unit: 'day' | 'hour'): string[] {
+  const out: string[] = [];
+  const now = new Date();
+  for (let i = count - 1; i >= 0; i--) {
+    const d = unit === 'hour' ? new Date(now.getTime() - i * 3600_000) : new Date(now);
+    if (unit === 'day') d.setDate(d.getDate() - i);
+    const base =
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-` +
+      `${String(d.getDate()).padStart(2, '0')}`;
+    out.push(unit === 'hour' ? `${base}T${String(d.getHours()).padStart(2, '0')}` : base);
+  }
+  return out;
+}
+
+/**
+ * One line per traffic source, over time.
+ *
+ * A separate component from LineChart rather than a generalisation of it:
+ * LineChart draws two fixed measures of the same thing (views against visits)
+ * and its whole tooltip is those two rows. This draws an open set of series
+ * that come and go with the data, needs a legend that follows them, and sorts
+ * its tooltip by value so the row order matches the line order under the
+ * cursor. Merging the two would have left one component with a mode flag and
+ * two half-used code paths.
+ */
+export function SourceLines({
+  data,
+  series,
+  height = 210,
+}: {
+  data: SeriesPoint[];
+  series: Array<{ key: string; label: string; color: string }>;
+  height?: number;
+}) {
+  const [ref, w] = useWidth<HTMLDivElement>();
+  const [hover, setHover] = useState<number | null>(null);
+
+  const pad = { t: 12, r: 10, b: 26, l: 34 };
+  const iw = Math.max(0, w - pad.l - pad.r);
+  const ih = height - pad.t - pad.b;
+
+  const at = (p: SeriesPoint, key: string) => p.values[key] || 0;
+  const max = niceMax(
+    Math.max(1, ...data.flatMap((p) => series.map((s) => at(p, s.key)))),
+  );
+
+  const x = (i: number) => (data.length <= 1 ? iw / 2 : (i / (data.length - 1)) * iw);
+  const y = (v: number) => ih - (v / max) * ih;
+  const path = (key: string) =>
+    data.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(at(p, key)).toFixed(1)}`).join(' ');
+
+  const ticks = [0, max / 2, max];
+  const every = Math.max(1, Math.ceil(data.length / (w < 420 ? 4 : 8)));
+
+  if (series.length === 0) {
+    return <p className="text-xs md:text-sm text-stone-400 py-2">אין עדיין תנועה בטווח הזה.</p>;
+  }
+
+  // Tooltip rows follow the lines: highest at the cursor first, and a source
+  // that sent nobody in that bucket is left out rather than listed as a zero.
+  const rowsAt = (i: number) =>
+    series
+      .map((s) => ({ ...s, value: at(data[i], s.key) }))
+      .filter((r) => r.value > 0)
+      .sort((a, b) => b.value - a.value);
+
+  return (
+    <div ref={ref} className="w-full">
+      {/* Always present, never optional: with this many hues on one surface,
+          the swatch is a pointer to the name, not a substitute for it. */}
+      <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2 text-[11px] md:text-xs" style={{ color: INK }}>
+        {series.map((s) => (
+          <span key={s.key} className="inline-flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: s.color }} />
+            {s.label}
+          </span>
+        ))}
+      </div>
+
+      {/* The tooltip is positioned against the plot box, so it can never ride
+          up over the legend, and in `left` rather than `insetInlineStart`:
+          x() is an SVG coordinate measured from the left edge, while the page
+          is RTL, so an inline-start offset put the tooltip on the opposite
+          side of the chart from the cursor. */}
+      <div className="relative">
+      {w > 0 && (
+        <svg
+          width={w}
+          height={height}
+          role="img"
+          aria-label={`מבקרים לפי מקור הגעה לאורך זמן: ${series.map((s) => s.label).join(', ')}`}
+          onMouseLeave={() => setHover(null)}
+          onMouseMove={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            const px = e.clientX - r.left - pad.l;
+            const i = Math.round((px / Math.max(1, iw)) * (data.length - 1));
+            setHover(Math.min(data.length - 1, Math.max(0, i)));
+          }}
+        >
+          <g transform={`translate(${pad.l},${pad.t})`}>
+            {ticks.map((t) => (
+              <g key={t}>
+                <line x1={0} x2={iw} y1={y(t)} y2={y(t)} stroke={GRID} strokeWidth={1} />
+                <text x={-8} y={y(t)} dy="0.32em" textAnchor="end" fontSize={10} fill={MUTED}>
+                  {Math.round(t)}
+                </text>
+              </g>
+            ))}
+
+            {data.map((p, i) =>
+              i % every === 0 ? (
+                <text key={p.day} x={x(i)} y={ih + 17} textAnchor="middle" fontSize={10} fill={MUTED}>
+                  {heDay(p.day)}
+                </text>
+              ) : null,
+            )}
+
+            {/* Painted smallest first, so the busiest sources end up on top.
+                Drawn in legend order instead, the source with two visits in a
+                month was the last path laid down and its flat zero line ran
+                across every other series at the baseline. */}
+            {[...series].reverse().map((s) => (
+              <path
+                key={s.key}
+                d={path(s.key)}
+                fill="none"
+                stroke={s.color}
+                strokeWidth={2}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+            ))}
+
+            {hover !== null && (
+              <g>
+                <line x1={x(hover)} x2={x(hover)} y1={0} y2={ih} stroke={MUTED} strokeWidth={1} strokeDasharray="3 3" />
+                {[...series].reverse().map((s) => (
+                  <circle
+                    key={s.key}
+                    cx={x(hover)}
+                    cy={y(at(data[hover], s.key))}
+                    r={4.5}
+                    fill={s.color}
+                    stroke="#fff"
+                    strokeWidth={2}
+                  />
+                ))}
+              </g>
+            )}
+          </g>
+        </svg>
+      )}
+
+      {hover !== null && data[hover] && (
+        <div
+          className="pointer-events-none absolute top-0 bg-white border border-stone-200 rounded-lg shadow-sm px-2.5 py-1.5 text-[11px] leading-relaxed"
+          style={{
+            left: Math.min(Math.max(0, x(hover) + pad.l - 55), Math.max(0, w - 190)),
+            color: INK,
+          }}
+        >
+          <div className="font-semibold text-stone-800">{heDay(data[hover].day)}</div>
+          {rowsAt(hover).length === 0 ? (
+            <div className="text-stone-400">אין מבקרים</div>
+          ) : (
+            rowsAt(hover).map((r) => (
+              <div key={r.key} className="flex items-center gap-1.5 whitespace-nowrap">
+                <span className="w-2 h-2 rounded-sm flex-shrink-0" style={{ background: r.color }} />
+                {r.label}: <strong>{r.value}</strong>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+      </div>
+    </div>
   );
 }
