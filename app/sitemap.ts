@@ -83,6 +83,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly' as const,
       priority: 0.7,
     },
+    // A trust-anchor page: about/contact/privacy are the three an AI agent
+    // checks before it will name a business. Low priority, but it has to be
+    // discoverable to count.
+    {
+      url: `${baseUrl}/privacy`,
+      lastModified: new Date(),
+      changeFrequency: 'yearly' as const,
+      priority: 0.3,
+    },
     ...(SERVICES_LIVE
       ? [{
           url: `${baseUrl}/services`,

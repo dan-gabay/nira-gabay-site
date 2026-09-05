@@ -4,6 +4,7 @@ import { Heebo, Assistant } from "next/font/google";
 import "./globals.css";
 import "./accessibility.css";
 import JsonLd from "@/components/JsonLd";
+import { personSchema, practiceSchema, webSiteSchema } from "@/lib/identitySchema";
 import SiteChrome from "@/components/SiteChrome";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -126,94 +127,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const organizationSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Psychologist',
-    name: 'נירה גבאי',
-    description: 'מטפלת בפסיכותרפיה ומדריכת הורים',
-    url: 'https://www.niragabay.com',
-    logo: 'https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/logo.png',
-    image: 'https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png',
-    telephone: '+972-50-7936681',
-    email: 'niraga1123@gmail.com',
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: 'שואבה',
-      addressRegion: 'ירושלים',
-      addressCountry: 'IL',
-    },
-    geo: {
-      '@type': 'GeoCoordinates',
-      latitude: '31.7907',
-      longitude: '35.0644',
-    },
-    sameAs: [
-      'https://www.facebook.com/nira.gabay',
-      'https://www.instagram.com/niragabay',
-    ],
-    priceRange: '$$',
-    areaServed: {
-      '@type': 'Country',
-      name: 'ישראל',
-    },
-    availableService: [
-      {
-        '@type': 'Service',
-        name: 'טיפול במתבגרים',
-        description: 'ליווי מקצועי ורגיש בתקופה מאתגרת של התבגרות',
-      },
-      {
-        '@type': 'Service',
-        name: 'טיפול במבוגרים',
-        description: 'מרחב בטוח לעיבוד רגשי והתמודדות עם אתגרי החיים',
-      },
-      {
-        '@type': 'Service',
-        name: 'טיפול זוגי',
-        description: 'חיזוק הקשר הזוגי ושיפור התקשורת',
-      },
-      {
-        '@type': 'Service',
-        name: 'הדרכת הורים',
-        description: 'כלים מעשיים להורות מיטבית',
-      },
-      {
-        '@type': 'Service',
-        name: 'טיפול מיני',
-        description: 'התמחות במיניות בריאה',
-      },
-      {
-        '@type': 'Service',
-        name: 'טיפול קוגניטיבי התנהגותי (CBT)',
-        description: 'גישה מעשית לטיפול בחרדות ודיכאון',
-      },
-    ],
-  };
-
-  // WebSite Schema - זה מה שגוגל משתמש בו להציג את שם האתר בתוצאות חיפוש
-  const webSiteSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'נירה גבאי - פסיכותרפיה והדרכת הורים',
-    alternateName: 'נירה גבאי',
-    url: 'https://www.niragabay.com',
-    description: 'מטפלת בפסיכותרפיה ומדריכת הורים. מלווה מתבגרים, מבוגרים וזוגות בדרכם להגשמה עצמית.',
-    inLanguage: 'he-IL',
-    publisher: {
-      '@type': 'Person',
-      name: 'נירה גבאי',
-      url: 'https://www.niragabay.com/about'
-    },
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: {
-        '@type': 'EntryPoint',
-        urlTemplate: 'https://www.niragabay.com/articles?search={search_term_string}'
-      },
-      'query-input': 'required name=search_term_string'
-    }
-  };
-
   return (
     <html lang="he" dir="rtl">
       <head>
@@ -225,7 +138,10 @@ export default function RootLayout({
             Dialog. Emitted here rather than via metadata.other, which renders
             name= while Facebook documents property=. */}
         <meta property="fb:app_id" content={FACEBOOK_APP_ID} />
-        <JsonLd data={organizationSchema} />
+        {/* Identity graph: see lib/identitySchema.ts. Person and practice are
+            linked by @id so a parser reads one entity, not two. */}
+        <JsonLd data={personSchema} />
+        <JsonLd data={practiceSchema} />
         <JsonLd data={webSiteSchema} />
       </head>
       <body className={`${heebo.variable} ${assistant.variable} antialiased font-heebo`}>

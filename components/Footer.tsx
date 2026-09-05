@@ -122,6 +122,15 @@ export default function Footer() {
 
         <div className="border-t border-stone-700 mt-8 md:mt-12 pt-6 md:pt-8 text-center text-xs md:text-base text-stone-500">
           <p>© {new Date().getFullYear()} נירה גבאי - כל הזכויות שמורות</p>
+          <p className="mt-2">
+            <Link
+              href="/privacy"
+              className="hover:text-stone-300 transition-colors underline underline-offset-4"
+              onClick={() => trackFooterLinkClick('מדיניות פרטיות')}
+            >
+              מדיניות פרטיות
+            </Link>
+          </p>
         </div>
       </div>
     </footer>

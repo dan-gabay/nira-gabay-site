@@ -27,6 +27,37 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
 
+  // `Vary: Accept` for the HTML/Markdown content negotiation in proxy.ts.
+  //
+  // The value is a superset, not just `Accept`, and that is the whole point.
+  // Next.js emits its own Vary on every App Router response
+  // (base-server.ts setVaryHeader: the four RSC routing headers) and, on a page
+  // response, that value replaces anything set from proxy.ts or from here -
+  // verified against `next start`, where the entry below has no effect on a
+  // page. On Vercel, custom headers are applied by the Edge Network and win
+  // instead. Whichever layer ends up on top, the response then carries every
+  // entry it needs: drop the RSC names and a deploy would silently break
+  // client-side navigation caching.
+  //
+  // If a future Next version changes that list, this string has to follow it.
+  async headers() {
+    return [
+      {
+        // Not _next/static or _next/image: those are immutable assets that
+        // never negotiate, and adding routing headers to their Vary only
+        // fragments the cache.
+        source: '/((?!_next/static|_next/image).*)',
+        headers: [
+          {
+            key: 'Vary',
+            value:
+              'RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Accept, Accept-Encoding',
+          },
+        ],
+      },
+    ];
+  },
+
   async redirects() {
     return [
       // Birth-order consolidation (SEO audit P1-8): two published articles

@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "tsx --test tests/*.test.ts",
+    "verify:agent-readiness": "tsx scripts/verify-agent-readiness.ts",
     "import-tags": "tsx scripts/import-tags.ts",
     "discover:source-articles": "tsx scripts/discover-source-articles.ts",
     "extract:search-urls": "tsx scripts/extract-urls-from-search-results.ts",
