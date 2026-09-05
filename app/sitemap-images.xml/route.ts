@@ -13,35 +13,30 @@ export async function GET() {
     .select('slug, updated_date, created_date, image_url, title')
     .eq('is_published', true)
 
-  const staticPages = [
-    { url: baseUrl, lastmod: new Date().toISOString(), priority: '1.0', changefreq: 'monthly' },
-    { url: `${baseUrl}/about`, lastmod: new Date().toISOString(), priority: '0.9', changefreq: 'monthly' },
-    { url: `${baseUrl}/articles`, lastmod: new Date().toISOString(), priority: '0.9', changefreq: 'weekly' },
-    { url: `${baseUrl}/contact`, lastmod: new Date().toISOString(), priority: '0.7', changefreq: 'monthly' },
-  ]
+  // Image sitemap: entries that actually carry an <image:image>, and nothing
+  // else. It used to open with four static pages (/, /about, /articles,
+  // /contact) that have no image tags at all - a hand-maintained copy of a
+  // slice of sitemap.xml, already missing /privacy, /services/* and the topic
+  // hubs, and drifting further with every page added. Those URLs are in
+  // sitemap.xml, which is generated from lib/siteUrls.ts and cannot drift.
+  // Listing them here a second time bought nothing and had to be remembered.
+  const withImages = (articles || []).filter((a) => Boolean(a.image_url))
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
-${staticPages.map(page => `  <url>
-    <loc>${page.url}</loc>
-    <lastmod>${page.lastmod}</lastmod>
-    <changefreq>${page.changefreq}</changefreq>
-    <priority>${page.priority}</priority>
-  </url>`).join('\n')}
-${(articles || []).map(article => {
+${withImages.map(article => {
     const lastmod = article.updated_date || article.created_date || new Date().toISOString()
-    const imageTag = article.image_url ? `
-    <image:image>
-      <image:loc>${escapeXml(article.image_url)}</image:loc>
-      <image:title>${escapeXml(article.title)}</image:title>
-    </image:image>` : ''
-    
+
     return `  <url>
     <loc>${baseUrl}/articles/${article.slug}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>${imageTag}
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>${escapeXml(article.image_url)}</image:loc>
+      <image:title>${escapeXml(article.title)}</image:title>
+    </image:image>
   </url>`
   }).join('\n')}
 </urlset>`

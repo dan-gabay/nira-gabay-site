@@ -19,6 +19,7 @@ import {
 import ArticleRow from '@/components/ArticleRow';
 import ServiceContact from '@/components/ServiceContact';
 import JsonLd from '@/components/JsonLd';
+import { authorRef } from '@/lib/identitySchema';
 import type { ArticleListItem } from '@/app/articles/ArticlesBrowser';
 
 // Service copy is static; only the supporting-article rail comes from the DB.
@@ -85,12 +86,8 @@ export async function generateMetadata({
 }
 
 function buildSchema(service: Service, url: string) {
-  const provider = {
-    '@type': 'Person',
-    name: 'נירה גבאי',
-    jobTitle: 'מטפלת בפסיכותרפיה ומדריכת הורים',
-    url: `${BASE_URL}/about`,
-  };
+  // The site's Person node, referenced - not a fourth hand-written copy of it.
+  const provider = authorRef;
 
   const serviceSchema = {
     '@context': 'https://schema.org',

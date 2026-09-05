@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { supabaseServer } from '../../lib/supabaseServer';
 import ArticlesBrowser, { type ArticleListItem, type Tag } from './ArticlesBrowser';
+import JsonLd from '@/components/JsonLd';
+import { BASE_URL, authorRef, webSiteRef } from '@/lib/identitySchema';
 
 // Revalidate the article list every 5 minutes (ISR)
 export const revalidate = 300;
@@ -50,12 +52,57 @@ export default async function Articles({ searchParams }: { searchParams: SearchP
 
   const allTags: Tag[] = tagsData || [];
 
+  // The index was the one content route with no structured data at all: an AI
+  // answer engine arriving here saw a page of links and no statement of what
+  // they were. Same shape as the topic hubs (CollectionPage wrapping an
+  // ItemList) so the two read consistently.
+  //
+  // The list is built from the full published set, not from the filtered view -
+  // ?search= and ?tag= are canonicalised to /articles, so the markup has to
+  // describe the canonical page.
+  const url = `${BASE_URL}/articles`;
+  const collectionSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': `${url}#collection`,
+    name: 'מאמרים - נירה גבאי',
+    description:
+      'מאמרים מאת נירה גבאי, מטפלת בפסיכותרפיה ומדריכת הורים, על פסיכותרפיה, הדרכת הורים, זוגיות, CBT והתמודדות רגשית.',
+    url,
+    inLanguage: 'he-IL',
+    isPartOf: webSiteRef,
+    author: authorRef,
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: articles.length,
+      itemListElement: articles.map((a, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `${BASE_URL}/articles/${a.slug}`,
+        name: a.title,
+      })),
+    },
+  };
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'דף הבית', item: BASE_URL },
+      { '@type': 'ListItem', position: 2, name: 'מאמרים', item: url },
+    ],
+  };
+
   return (
-    <ArticlesBrowser
-      articles={articles}
-      allTags={allTags}
-      initialSearch={typeof search === 'string' ? search : undefined}
-      initialTag={typeof tag === 'string' ? tag : undefined}
-    />
+    <>
+      <JsonLd data={collectionSchema} />
+      <JsonLd data={breadcrumbSchema} />
+      <ArticlesBrowser
+        articles={articles}
+        allTags={allTags}
+        initialSearch={typeof search === 'string' ? search : undefined}
+        initialTag={typeof tag === 'string' ? tag : undefined}
+      />
+    </>
   );
 }

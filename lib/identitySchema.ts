@@ -138,3 +138,35 @@ export const webSiteSchema = {
     'query-input': 'required name=search_term_string',
   },
 };
+
+// Short references to the two nodes above, for use inside other schema graphs
+// (an article's `author`, a service's `provider`).
+//
+// They carry `@id` *and* a couple of literal fields. The `@id` alone is the
+// correct linked-data answer and Google resolves it against the full node the
+// root layout emits on every page. Bing and the AI crawlers are less reliable
+// about cross-node resolution, and an `author` they cannot resolve reads as an
+// article with no author at all. The literals are read off the nodes rather
+// than retyped, so there is still exactly one place to edit.
+export const authorRef = {
+  '@type': 'Person',
+  '@id': PERSON_ID,
+  name: personSchema.name,
+  url: personSchema.url,
+  jobTitle: personSchema.jobTitle,
+} as const;
+
+export const publisherRef = {
+  '@type': 'ProfessionalService',
+  '@id': PRACTICE_ID,
+  name: practiceSchema.name,
+  url: practiceSchema.url,
+  logo: { '@type': 'ImageObject', url: practiceSchema.logo },
+} as const;
+
+export const webSiteRef = {
+  '@type': 'WebSite',
+  '@id': webSiteSchema['@id'],
+  name: webSiteSchema.name,
+  url: webSiteSchema.url,
+} as const;

@@ -5,6 +5,7 @@ import "./globals.css";
 import "./accessibility.css";
 import JsonLd from "@/components/JsonLd";
 import { personSchema, practiceSchema, webSiteSchema } from "@/lib/identitySchema";
+import { BING_SITE_VERIFICATION } from "@/lib/verification";
 import SiteChrome from "@/components/SiteChrome";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -102,6 +103,12 @@ export const metadata: Metadata = {
     description: 'מטפלת בפסיכותרפיה ומדריכת הורים',
     images: ['https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png'],
   },
+  // The <meta> half of Bing Webmaster Tools verification (the file half is
+  // /BingSiteAuth.xml). Both read the same env var; whichever method Bing's UI
+  // offers will pass. Omitted entirely when the var is unset.
+  ...(BING_SITE_VERIFICATION
+    ? { verification: { other: { 'msvalidate.01': BING_SITE_VERIFICATION } } }
+    : {}),
   robots: {
     index: true,
     follow: true,

@@ -28,7 +28,7 @@ export const BASE_URL = 'https://www.niragabay.com';
  * late re-crawl. Bumping it on every deploy would be exactly the spam IndexNow
  * asks implementers not to send.
  */
-export const STATIC_CONTENT_VERSION = '2026-09-05';
+export const STATIC_CONTENT_VERSION = '2026-09-05b';
 
 const hash = (value: unknown) =>
   createHash('sha1').update(JSON.stringify(value)).digest('hex').slice(0, 12);

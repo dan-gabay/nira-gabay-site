@@ -16,6 +16,7 @@ import {
 import ArticleRow from '@/components/ArticleRow';
 import ArticleCtaBanner from '@/components/ArticleCtaBanner';
 import JsonLd from '@/components/JsonLd';
+import { webSiteRef } from '@/lib/identitySchema';
 import type { ArticleListItem } from '../../ArticlesBrowser';
 
 // Revalidate hub pages every 5 minutes, like the article index
@@ -96,7 +97,7 @@ export default async function TopicPage({
     description: topic.metaDescription,
     url,
     inLanguage: 'he-IL',
-    isPartOf: { '@type': 'WebSite', name: 'נירה גבאי', url: BASE_URL },
+    isPartOf: webSiteRef,
     mainEntity: {
       '@type': 'ItemList',
       itemListElement: articles.map((a, i) => ({

@@ -17,11 +17,10 @@ import {
 } from './text';
 import { GENERIC_KEYWORDS } from './validate';
 
+import { authorRef, publisherRef } from '../identitySchema';
+
 export const BRAND = 'נירה גבאי';
 export const CANONICAL_BASE = 'https://www.niragabay.com';
-const AUTHOR_URL = `${CANONICAL_BASE}/about`;
-const PUBLISHER_LOGO =
-  'https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/logo.png';
 
 const TITLE_MAX = 60;
 const DESC_MIN = 120;
@@ -211,17 +210,12 @@ function buildSchemaJson(params: {
     datePublished: params.createdDate,
     dateModified: params.createdDate,
     mainEntityOfPage: { '@type': 'WebPage', '@id': params.canonical },
-    author: {
-      '@type': 'Person',
-      name: BRAND,
-      jobTitle: 'מטפלת בפסיכותרפיה ומדריכת הורים',
-      url: AUTHOR_URL,
-    },
-    publisher: {
-      '@type': 'Organization',
-      name: 'נירה גבאי - פסיכותרפיה והדרכת הורים',
-      logo: { '@type': 'ImageObject', url: PUBLISHER_LOGO },
-    },
+    // References to the site's canonical identity nodes rather than fresh
+    // literals, so a stored schema_json cannot drift from lib/identitySchema.ts
+    // (the render path in lib/articleSchema.ts overwrites these anyway - this
+    // keeps the column itself honest for anything reading it directly).
+    author: authorRef,
+    publisher: publisherRef,
     keywords: params.keywords.join(', '),
   };
 }
