@@ -233,3 +233,35 @@ test('no schema claims the protected title "Psychologist"', () => {
   assert.equal(practiceSchema['@type'], 'ProfessionalService');
   assert.ok(personSchema.jobTitle.includes('פסיכותרפיה'));
 });
+
+// ───────────────────────────────────────────────── the Vary constant
+
+test('the Vary value never loses an entry any layer depends on', async () => {
+  const { VARY_VALUE } = await import('@/lib/agent/vary');
+  const entries = VARY_VALUE.split(',').map((v) => v.trim().toLowerCase());
+  // Accept is the point of the exercise; the four RSC names are what a naive
+  // `Vary: Accept` wiped out in production on the 404 response.
+  for (const required of [
+    'accept',
+    'accept-encoding',
+    'rsc',
+    'next-router-state-tree',
+    'next-router-prefetch',
+    'next-router-segment-prefetch',
+  ]) {
+    assert.ok(entries.includes(required), `Vary keeps ${required}`);
+  }
+});
+
+test('all three layers emit the same Vary value', async () => {
+  const { VARY_VALUE } = await import('@/lib/agent/vary');
+  for (const file of ['proxy.ts', 'next.config.ts', 'app/api/md/[[...path]]/route.ts']) {
+    const src = readFileSync(join(ROOT, file), 'utf8');
+    assert.ok(src.includes('VARY_VALUE'), `${file} uses the shared constant`);
+    assert.ok(
+      !/Vary['"]?\s*[:,]\s*['"]Accept['"]/.test(src),
+      `${file} does not hard-code a bare Vary: Accept`,
+    );
+  }
+  assert.ok(VARY_VALUE.length > 0);
+});

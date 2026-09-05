@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { VARY_VALUE } from "./lib/agent/vary";
 
 const nextConfig: NextConfig = {
   // Image Optimization
@@ -48,11 +49,7 @@ const nextConfig: NextConfig = {
         // fragments the cache.
         source: '/((?!_next/static|_next/image).*)',
         headers: [
-          {
-            key: 'Vary',
-            value:
-              'RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Accept, Accept-Encoding',
-          },
+          { key: 'Vary', value: VARY_VALUE },
         ],
       },
     ];

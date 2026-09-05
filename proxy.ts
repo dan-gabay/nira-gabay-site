@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MANAGE_COOKIE, manageSessionToken } from '@/lib/manageAuth';
 import { prefersMarkdown } from '@/lib/agent/accept';
+import { VARY_VALUE } from '@/lib/agent/vary';
 
 // Two jobs, in this order: keep the admin area shut, then negotiate the
 // representation of everything else.
@@ -110,13 +111,13 @@ function negotiateRepresentation(req: NextRequest) {
     return NextResponse.rewrite(url, { request: { headers } });
   }
 
-  // Best-effort on the HTML side. Next replaces Vary on App Router page
-  // responses with its own RSC list, so this survives on route handlers and is
-  // overwritten on pages; next.config.ts carries the superset that covers the
-  // page case at the edge. Appended rather than set, so that where it does
-  // survive it adds to Next's list instead of replacing it.
+  // Measured in production: on some responses this wins outright and replaces
+  // whatever Next set, on others Next's own value replaces this. That is why
+  // it is the superset from lib/agent/vary.ts and not a bare `Accept` - the
+  // bare version won on the 404 and took Next's four RSC routing entries with
+  // it. Whichever layer ends up on top, nothing is lost.
   const res = NextResponse.next();
-  res.headers.append('Vary', 'Accept');
+  res.headers.set('Vary', VARY_VALUE);
   return res;
 }
 

@@ -18,6 +18,7 @@ import {
   type ArticleFull,
   type ArticleSummary,
 } from '@/lib/agent/markdown';
+import { VARY_VALUE } from '@/lib/agent/vary';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -42,7 +43,7 @@ const SUMMARY_COLUMNS = 'slug, title, excerpt, reading_time, created_date, updat
 function markdownResponse(body: string, status: number, negotiated: boolean) {
   const headers: Record<string, string> = {
     'Content-Type': 'text/markdown; charset=utf-8',
-    Vary: 'Accept, Accept-Encoding',
+    Vary: VARY_VALUE,
     // Short enough that an edited article is not stale for long, long enough
     // that a crawler sweeping the site is not re-rendering every page.
     'Cache-Control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=3600',
