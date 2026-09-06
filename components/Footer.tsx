@@ -51,13 +51,20 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Services. Listed in full so every page links to every service
-              page - the cheapest internal linking the site has. */}
+          {/* Services, minus the discreet ones.
+              
+              The list used to be complete, because a footer link from every
+              page is the cheapest internal linking the site has. A discreet
+              service is the one case where that trades against something worth
+              more: it is not meant to greet a reader who came to look up a
+              phone number. It stays in the sitemap and in the services index,
+              so someone searching for it still finds it - it just stops being
+              on every page of the site. */}
           {SERVICES_LIVE && (
           <div>
             <h3 className="text-base md:text-xl font-bold text-white mb-3 md:mb-4 font-serif">תחומי טיפול</h3>
             <ul className="space-y-3">
-              {SERVICES.map((s) => (
+              {SERVICES.filter((s) => !s.discreet).map((s) => (
                 <li key={s.slug}>
                   <Link
                     href={`/services/${s.slug}`}

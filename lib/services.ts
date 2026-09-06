@@ -41,8 +41,9 @@ export type Service = {
   /** Prefilled WhatsApp text for this page. Service name only, never symptoms. */
   whatsappMessage: string;
   /**
-   * Handled discreetly: kept out of paid campaigns and out of any prominent
-   * promotion at Nira's request. It is a normal indexable page - people who
+   * Handled discreetly: kept out of paid campaigns, out of the site-wide
+   * footer, and out of any prominent promotion at Nira's request. It is a
+   * normal indexable page, listed in the sitemap and on /services - people who
    * search for it find it - it is simply never pushed at anyone.
    */
   discreet?: boolean;

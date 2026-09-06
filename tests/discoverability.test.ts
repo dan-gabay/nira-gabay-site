@@ -307,3 +307,28 @@ test('every <img> in the source carries an alt attribute', () => {
   }
   assert.deepEqual(offenders, []);
 });
+
+// ───────────────────────────────────────────────── discreet services
+
+import { SERVICES } from '@/lib/services';
+
+test('a discreet service is kept out of the site-wide footer', () => {
+  const footer = stripComments(readFileSync(join(ROOT, 'components/Footer.tsx'), 'utf8'));
+  assert.match(footer, /SERVICES\.filter\(\(s\) => !s\.discreet\)/);
+});
+
+test('a discreet service stays reachable everywhere that is not promotion', () => {
+  // Removing it from the footer must not have removed it from the site. It is
+  // still a page, still in the sitemap, still on the services index - the point
+  // was to stop putting it in front of people who did not ask.
+  const discreet = SERVICES.filter((s) => s.discreet);
+  assert.ok(discreet.length > 0, 'no discreet service to check');
+
+  const servicesIndex = readFileSync(join(ROOT, 'app/services/page.tsx'), 'utf8');
+  assert.match(servicesIndex, /SERVICES\.map/);
+  assert.doesNotMatch(servicesIndex, /discreet/);
+
+  // lib/siteUrls.ts feeds both the sitemap and IndexNow off the same list.
+  const siteUrls = readFileSync(join(ROOT, 'lib/siteUrls.ts'), 'utf8');
+  assert.doesNotMatch(siteUrls, /discreet/);
+});
