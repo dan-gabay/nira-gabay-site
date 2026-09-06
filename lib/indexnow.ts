@@ -11,7 +11,17 @@
 // Naver - so there is nothing to gain from posting to each endpoint.
 
 /** 8-128 hex characters, per the spec. Public by design: it is served at the key location. */
-export const INDEXNOW_KEY = 'f9039251ba6447b2841d485ce150bb67';
+// Generated in Bing Webmaster Tools rather than chosen by us.
+//
+// The protocol lets a site pick any 8-128 hex string and prove control by
+// hosting it at the key location, and the previous key did exactly that and was
+// served correctly - verified against production. Bing still answered every
+// submission with 403 UserForbiddedToAccessSite, including a single-URL GET
+// made from a browser with none of this code involved, and for the apex host as
+// well as www. That rules out the request, the key file and the host form, and
+// leaves Bing's own record of who owns this domain. This key comes from their
+// generator, which is the one variable left that we can change.
+export const INDEXNOW_KEY = '0aa8c7f1909b448eab06231be12eae62';
 
 export const INDEXNOW_HOST = 'www.niragabay.com';
 export const INDEXNOW_KEY_LOCATION = `https://${INDEXNOW_HOST}/${INDEXNOW_KEY}.txt`;
