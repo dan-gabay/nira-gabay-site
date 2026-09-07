@@ -36,6 +36,18 @@ export type Service = {
   /** What actually happens in a first meeting. Reduces the fear of calling. */
   firstSession: string[];
   faq: ServiceFaq[];
+  /**
+   * Where the clinic is, and who travels to it - rendered after the
+   * first-session card, before the FAQ.
+   *
+   * Optional because it only earns its place where local search is actually in
+   * play. It exists because /services/teen-therapy promised "בירושלים והסביבה"
+   * in its title tag and its meta description while the visible page said
+   * nothing about any location at all: 147 impressions a quarter, ranking
+   * around 25, never clicked. A title that the body does not corroborate is a
+   * claim with nothing behind it.
+   */
+  location?: { heading: string; body: string[] };
   /** Slugs of published articles that support this service. */
   articleSlugs: string[];
   /** Prefilled WhatsApp text for this page. Service name only, never symptoms. */
@@ -434,6 +446,14 @@ export const SERVICES: Service[] = [
       'אחריה נפגשת עם המתבגר, וזו פגישת היכרות בלי שום ציפייה שהוא יספר משהו. גם פגישה שבה הוא כמעט לא מדבר היא פגישה טובה.',
       'בסוף השלב הזה נדבר יחד על האם ואיך ממשיכים.',
     ],
+    location: {
+      heading: 'מאיפה מגיעים אליי',
+      body: [
+        'הקליניקה נמצאת במושב שואבה, בהרי ירושלים, כרבע שעה נסיעה מירושלים. רוב המשפחות שמגיעות אליי הן מירושלים ומהיישובים סביבה, בהם מבשרת ציון, בית שמש ומודיעין.',
+        'אצל מתבגרים המיקום הוא לא רק עניין של נסיעה. קליניקה שאינה בשכונה שבה הוא גר, ושבה הוא לא עלול לפגוש בכניסה מישהו מבית הספר, מורידה חלק גדול מההתנגדות עוד לפני הפגישה הראשונה. לא מעט הורים מגלים שזה מה שהכריע אצל הילד שלהם.',
+        'ואם הנסיעה לא מסתדרת עם שעות בית הספר או עם לוח הזמנים שלכם, אפשר להיפגש בזום.',
+      ],
+    },
     faq: [
       {
         q: 'תספרי לנו מה הוא אומר?',
@@ -450,6 +470,10 @@ export const SERVICES: Service[] = [
       {
         q: 'אפשר מפגשים אונליין?',
         a: 'כן, ומתבגרים רבים דווקא מרגישים נוח יותר במסך. בשלב ההיכרות אני בכל זאת מעדיפה מפגש פנים אל פנים כשזה אפשרי.',
+      },
+      {
+        q: 'אנחנו מירושלים, זה רחוק?',
+        a: 'הקליניקה במושב שואבה, בהרי ירושלים, כרבע שעה נסיעה מירושלים, ורוב המשפחות שמגיעות אליי הן מירושלים והסביבה. אם הנסיעה לא מסתדרת בשעות שאתם צריכים, אפשר להיפגש בזום, ואצל מתבגרים זה עובד טוב.',
       },
     ],
     articleSlugs: [

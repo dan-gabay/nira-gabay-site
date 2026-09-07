@@ -330,6 +330,32 @@ export default async function ServicePage({
         </div>
       </section>
 
+      {/* ───────── Where the clinic is ─────────
+          After the first-session card and before the FAQ, because it answers
+          the question a parent asks once they have decided the therapy sounds
+          right and before they ask what it costs: can we actually get there. */}
+      {service.location && (
+        <section className="pb-4 md:pb-8 bg-white">
+          <div className="container mx-auto px-4 md:px-8">
+            <div className="max-w-3xl mx-auto">
+              <h2 className="text-lg md:text-2xl font-bold text-stone-800 mb-2.5 md:mb-4">
+                {service.location.heading}
+              </h2>
+              <div className="space-y-3 md:space-y-4">
+                {service.location.body.map((p, i) => (
+                  <p
+                    key={i}
+                    className="text-[15px] md:text-[1.0625rem] text-stone-600 leading-relaxed"
+                  >
+                    {p}
+                  </p>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ───────── FAQ ───────── */}
       <section className="pb-8 md:pb-12 bg-white">
         <div className="container mx-auto px-4 md:px-8">
