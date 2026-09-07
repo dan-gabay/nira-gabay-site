@@ -10,21 +10,27 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { SOURCE_SERIES, bucketKeys, fillSeries } from '@/components/manage/Charts';
+import { SOURCE_SERIES, bucketKeys, clockKey, fillDays, fillSeries } from '@/components/manage/Charts';
 import { GROUP_LABELS } from '@/components/manage/TrafficSources';
 
 // ───────────────────────────────────────────────── x axis
 
-test('bucketKeys returns one key per day, oldest first, ending today', () => {
+// What the dashboard's clock must be, independent of where the browser is.
+const inJerusalem = (at: Date, unit: 'day' | 'hour') => {
+  const p: Record<string, string> = {};
+  for (const part of new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Jerusalem',
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23',
+  }).formatToParts(at)) p[part.type] = part.value;
+  const day = `${p.year}-${p.month}-${p.day}`;
+  return unit === 'hour' ? `${day}T${p.hour}` : day;
+};
+
+test('bucketKeys returns one key per day, oldest first, ending today in Israel', () => {
   const keys = bucketKeys(30, 'day');
   assert.equal(keys.length, 30);
   assert.match(keys[0], /^\d{4}-\d{2}-\d{2}$/);
-
-  const today = new Date();
-  const todayKey =
-    `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-` +
-    `${String(today.getDate()).padStart(2, '0')}`;
-  assert.equal(keys[keys.length - 1], todayKey);
+  assert.equal(keys[keys.length - 1], inJerusalem(new Date(), 'day'));
 
   // Strictly increasing, no repeats - a duplicate would stack two days on one x.
   assert.deepEqual([...keys].sort(), keys);
@@ -36,6 +42,7 @@ test('an hourly range uses the hour-suffixed key the SQL emits', () => {
   assert.equal(keys.length, 24);
   for (const k of keys) assert.match(k, /^\d{4}-\d{2}-\d{2}T\d{2}$/);
   assert.equal(new Set(keys).size, 24);
+  assert.equal(keys[keys.length - 1], inJerusalem(new Date(), 'hour'));
 });
 
 test('a month boundary does not repeat or skip a day', () => {
@@ -115,4 +122,43 @@ test('the palette is the validated set, in the validated order', () => {
   assert.deepEqual(Object.values(SOURCE_SERIES), [
     '#0D9488', '#B45309', '#0369A1', '#15803D', '#7C3AED', '#BE185D',
   ]);
+});
+
+
+// ───────────────────────────────────── the clock (regression: 14:48 shown as 11)
+
+test('an instant is bucketed on Israel time, not UTC', () => {
+  // The enquiry that started this: stored as 11:48 UTC, which is 14:48 in
+  // Jerusalem. The dashboard printed 11:00, because the bucket was UTC on both
+  // sides of the wire.
+  const at = new Date('2026-09-07T11:48:18.564Z');
+  assert.equal(clockKey(at, 'hour'), '2026-09-07T14');
+  assert.equal(clockKey(at, 'day'), '2026-09-07');
+});
+
+test('a late-evening event belongs to the next day, the way the clock says', () => {
+  // 23:04 UTC is 02:04 the following morning in Israel. Counting it on the 5th
+  // is the same bug wearing a different hat, and it was silent because nobody
+  // checks which day a Saturday-night click landed on.
+  const at = new Date('2026-09-05T23:04:27.132Z');
+  assert.equal(clockKey(at, 'day'), '2026-09-06');
+  assert.equal(clockKey(at, 'hour'), '2026-09-06T02');
+});
+
+test('the clock does not follow the machine it runs on', () => {
+  // Same instant, whatever TZ node was started with. If this ever fails, the
+  // key builder has gone back to reading the local clock.
+  const at = new Date('2026-01-15T22:30:00.000Z'); // winter: Israel is UTC+2
+  assert.equal(clockKey(at, 'hour'), '2026-01-16T00');
+  assert.equal(clockKey(at, 'day'), '2026-01-16');
+});
+
+test('fillDays and bucketKeys spell the same key', () => {
+  // They used to be two separate pieces of date arithmetic. A row lands in a
+  // bucket only if both spell it identically, so they are now one function.
+  const days = bucketKeys(7, 'day');
+  const filled = fillDays([{ day: days[3], views: 5, visits: 4, conversions: 1 }], 7);
+  assert.deepEqual(filled.map((f) => f.day), days);
+  assert.equal(filled[3].views, 5);
+  assert.equal(filled[0].views, 0);
 });

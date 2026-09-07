@@ -54,35 +54,81 @@ function niceMax(v: number): number {
 export type DayPoint = { day: string; views: number; visits: number; conversions: number };
 
 /**
- * Fills gaps, so a quiet hour reads as zero instead of the line jumping over
- * it. Same job as fillDays, on the hourly buckets a 24-hour range returns.
+ * The clock the whole dashboard is read on.
+ *
+ * Both halves of a bucket key have to agree on it. The SQL emits keys in Israel
+ * local time; these builders used to assemble theirs from the browser's clock
+ * with getHours()/getDate(), which is only the same thing while the browser
+ * happens to sit in Israel - and was not the same thing at all while the SQL
+ * was still emitting UTC. A key the two sides spell differently is not an error
+ * anywhere, it is a bucket that silently reads as zero.
  */
-export function fillHours(rows: DayPoint[], hours = 24): DayPoint[] {
-  const by = new Map(rows.map((r) => [r.day, r]));
-  const out: DayPoint[] = [];
-  const now = new Date();
-  for (let i = hours - 1; i >= 0; i--) {
-    const d = new Date(now.getTime() - i * 3600_000);
-    const key =
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-` +
-      `${String(d.getDate()).padStart(2, '0')}T${String(d.getHours()).padStart(2, '0')}`;
-    out.push(by.get(key) || { day: key, views: 0, visits: 0, conversions: 0 });
+const CLOCK = 'Asia/Jerusalem';
+
+const KEY_PARTS = new Intl.DateTimeFormat('en-GB', {
+  timeZone: CLOCK,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  hourCycle: 'h23',
+});
+
+/**
+ * The bucket an instant falls into, spelled exactly as the SQL spells it.
+ * Exported for the tests: this one function is where the off-by-three-hours
+ * bug lived, and it is the only part of the axis that can be checked against a
+ * fixed instant rather than against whatever "now" happens to be.
+ */
+export function clockKey(at: Date, unit: 'day' | 'hour'): string {
+  const p: Record<string, string> = {};
+  for (const part of KEY_PARTS.formatToParts(at)) p[part.type] = part.value;
+  const day = `${p.year}-${p.month}-${p.day}`;
+  return unit === 'hour' ? `${day}T${p.hour}` : day;
+}
+
+/**
+ * The bucket keys a range covers, oldest first - the x axis, gaps included.
+ *
+ * Hours step by an absolute hour, so a DST change repeats or skips exactly the
+ * hour the real clock does. Days step on a noon anchor rather than by adding 24
+ * hours to a local midnight: on the two days a year the offset moves, adding
+ * 24 hours to midnight lands on the same calendar date twice, or skips one.
+ */
+export function bucketKeys(count: number, unit: 'day' | 'hour'): string[] {
+  const out: string[] = [];
+  if (unit === 'hour') {
+    const now = Date.now();
+    for (let i = count - 1; i >= 0; i--) out.push(clockKey(new Date(now - i * 3_600_000), 'hour'));
+    return out;
+  }
+  const [y, m, d] = clockKey(new Date(), 'day').split('-').map(Number);
+  const anchor = Date.UTC(y, m - 1, d, 12);
+  for (let i = count - 1; i >= 0; i--) {
+    const t = new Date(anchor - i * 86_400_000);
+    out.push(
+      `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, '0')}-` +
+        `${String(t.getUTCDate()).padStart(2, '0')}`,
+    );
   }
   return out;
 }
 
+/** Fills gaps, so a quiet hour reads as zero instead of the line jumping it. */
+export function fillHours(rows: DayPoint[], hours = 24): DayPoint[] {
+  return fillPoints(rows, bucketKeys(hours, 'hour'));
+}
+
 /** Fills gaps, so a quiet Tuesday reads as zero instead of vanishing. */
 export function fillDays(rows: DayPoint[], days: number): DayPoint[] {
+  return fillPoints(rows, bucketKeys(days, 'day'));
+}
+
+function fillPoints(rows: DayPoint[], keys: string[]): DayPoint[] {
   const by = new Map(rows.map((r) => [r.day, r]));
-  const out: DayPoint[] = [];
-  const today = new Date();
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    out.push(by.get(key) || { day: key, views: 0, visits: 0, conversions: 0 });
-  }
-  return out;
+  return keys.map(
+    (day) => by.get(day) || { day, views: 0, visits: 0, conversions: 0 },
+  );
 }
 
 // ─────────────────────────────────────────────── two-series line
@@ -483,21 +529,6 @@ export function fillSeries(
     by.set(r.day, slot);
   }
   return buckets.map((day) => ({ day, values: by.get(day) || {} }));
-}
-
-/** The bucket keys a range covers, in order - the x axis, gaps included. */
-export function bucketKeys(count: number, unit: 'day' | 'hour'): string[] {
-  const out: string[] = [];
-  const now = new Date();
-  for (let i = count - 1; i >= 0; i--) {
-    const d = unit === 'hour' ? new Date(now.getTime() - i * 3600_000) : new Date(now);
-    if (unit === 'day') d.setDate(d.getDate() - i);
-    const base =
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-` +
-      `${String(d.getDate()).padStart(2, '0')}`;
-    out.push(unit === 'hour' ? `${base}T${String(d.getHours()).padStart(2, '0')}` : base);
-  }
-  return out;
 }
 
 /**
