@@ -4,7 +4,6 @@ import Image from 'next/image';
 import { Calendar, MessageCircle } from 'lucide-react';
 import JsonLd from '@/components/JsonLd';
 import { faqSchema } from '@/lib/faqSchema';
-import { servicesSchema } from '@/lib/servicesSchema';
 import ArticlesPreviewClient, { type HomeArticlePreview } from '@/components/ArticlesPreviewClient';
 import FaqSection from '@/components/FaqSection';
 import HeroSection from '@/components/HeroSection';
@@ -50,7 +49,6 @@ export default async function Home() {
   return (
     <div className="overflow-hidden" style={{ paddingTop: '80px' }}>
       <JsonLd data={faqSchema} />
-      <JsonLd data={servicesSchema} />
       
       {/* Hero Section (client component with animations) */}
       <HeroSection />

@@ -25,7 +25,7 @@ export const CLINIC = {
   locality: 'מושב שואבה',
   region: 'אזור ירושלים',
   addressCountry: 'IL',
-  /** Matches lib/servicesSchema.ts - do not let the two drift. */
+  /** The single source for the practice's coordinates; lib/identitySchema.ts reads them from here. */
   geo: { latitude: '31.7907', longitude: '35.0644' },
   phone: '+972-50-7936681',
   phoneDisplay: '050-7936681',
