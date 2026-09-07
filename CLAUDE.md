@@ -147,3 +147,33 @@ Flags: `--skip-seo-validation` (bypass the SEO gate), `--continue-on-error` (rec
   `status = 'redirected'`; its URL 301s to
   `/articles/family-birth-order-meaning-and-impact` (see `next.config.ts`).
 - Do not republish, do not remove the redirect, do not reuse the slug.
+
+---
+
+## Claude SEO skills (`.claude/`)
+
+[Claude SEO](https://github.com/AgriciDaniel/claude-seo) v2.2.5 (MIT) is vendored into this repo
+so it travels with the project instead of a per-machine `~/.claude` install.
+
+- `.claude/skills/` - 31 skills (`seo` orchestrator + sub-skills + MCP extension skills)
+- `.claude/agents/` - 18 specialist sub-agents
+- `.claude/skills/seo/{scripts,schema,data,pdf,bin,hooks}` - bundled Python tooling and reference data
+
+The Python tooling needs a one-time per-machine runtime (isolated venv + Chromium, created
+outside the repo in the OS data dir - nothing is written back into git):
+
+```bash
+.claude/skills/seo/bin/claude-seo setup     # create/refresh the runtime
+.claude/skills/seo/bin/claude-seo doctor    # check readiness, changes nothing
+```
+
+Then use `/seo audit <url>`, `/seo page <url>`, `/seo schema <url>`, `/seo geo <url>`, etc.
+See `.claude/skills/seo/SKILL.md` for the full command surface.
+
+Notes:
+- This is the manual/vendored layout, so skill docs call the launcher by its repo-relative path
+  rather than relying on plugin `PATH` injection.
+- `.claude/skills/seo/hooks/` is copied but NOT wired up: its `hooks.json` depends on
+  `${CLAUDE_PLUGIN_ROOT}`, which only resolves under a real `/plugin install`.
+- These skills are general-purpose SEO analysis and are separate from this project's own
+  `lib/seo/` import-pipeline SEO generation + validation.
