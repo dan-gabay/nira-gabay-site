@@ -159,8 +159,10 @@ so it travels with the project instead of a per-machine `~/.claude` install.
 - `.claude/agents/` - 18 specialist sub-agents
 - `.claude/skills/seo/{scripts,schema,data,pdf,bin,hooks}` - bundled Python tooling and reference data
 
-The Python tooling needs a one-time per-machine runtime (isolated venv + Chromium, created
-outside the repo in the OS data dir - nothing is written back into git):
+The Python tooling needs a one-time per-machine runtime (isolated venv + Chromium). In this
+vendored ("manual") layout the runtime is created inside the skill directory - at
+`.claude/skills/seo/.venv/` and `.claude/skills/seo/ms-playwright/`, roughly 800 MB - and both
+paths plus `runtime-state.json` are gitignored:
 
 ```bash
 .claude/skills/seo/bin/claude-seo setup     # create/refresh the runtime
