@@ -18,6 +18,8 @@
 // `hasCredential` are the ones her own About page states.
 
 import { CLINIC } from '@/lib/clinic';
+import { SERVICES } from '@/lib/services';
+import { SERVICES_LIVE } from '@/lib/publish';
 
 export const BASE_URL = 'https://www.niragabay.com';
 export const PERSON_ID = `${BASE_URL}/#nira`;
@@ -28,14 +30,25 @@ const SAME_AS = [
   'https://www.instagram.com/niragabay',
 ];
 
-const SERVICE_NAMES: Array<{ name: string; description: string }> = [
-  { name: 'טיפול במתבגרים', description: 'ליווי מקצועי ורגיש בתקופה מאתגרת של התבגרות' },
-  { name: 'טיפול במבוגרים', description: 'מרחב בטוח לעיבוד רגשי והתמודדות עם אתגרי החיים' },
-  { name: 'טיפול זוגי', description: 'חיזוק הקשר הזוגי ושיפור התקשורת' },
-  { name: 'הדרכת הורים', description: 'כלים מעשיים להורות מיטבית' },
-  { name: 'טיפול מיני', description: 'התמחות במיניות בריאה' },
-  { name: 'טיפול קוגניטיבי התנהגותי (CBT)', description: 'גישה מעשית לטיפול בחרדות ודיכאון' },
+const SERVICE_NAMES: Array<{ slug: string; name: string; description: string }> = [
+  { slug: 'teen-therapy', name: 'טיפול במתבגרים', description: 'ליווי מקצועי ורגיש בתקופה מאתגרת של התבגרות' },
+  { slug: 'adult-therapy', name: 'טיפול במבוגרים', description: 'מרחב בטוח לעיבוד רגשי והתמודדות עם אתגרי החיים' },
+  { slug: 'couples-therapy', name: 'טיפול זוגי', description: 'חיזוק הקשר הזוגי ושיפור התקשורת' },
+  { slug: 'parent-guidance', name: 'הדרכת הורים', description: 'כלים מעשיים להורות מיטבית' },
+  { slug: 'sex-therapy', name: 'טיפול מיני', description: 'התמחות במיניות בריאה' },
+  { slug: 'cbt', name: 'טיפול קוגניטיבי התנהגותי (CBT)', description: 'גישה מעשית לטיפול בחרדות ודיכאון' },
 ];
+
+// The URL of the page that actually sells each service.
+//
+// Resolved against lib/services.ts rather than written out here, so a slug
+// that stops existing yields no url instead of a 404 in the structured data.
+// Gated on SERVICES_LIVE for the same reason the sitemap is: while the service
+// pages are noindex, the entity must not point search engines at them.
+const serviceUrl = (slug: string): string | undefined =>
+  SERVICES_LIVE && SERVICES.some((s) => s.slug === slug)
+    ? `${BASE_URL}/services/${slug}`
+    : undefined;
 
 export const personSchema = {
   '@context': 'https://schema.org',
@@ -83,11 +96,22 @@ export const personSchema = {
   worksFor: { '@id': PRACTICE_ID },
 };
 
+// This is the practice, and it is the ONLY node that may describe it.
+//
+// A second ProfessionalService used to be emitted on the homepage from
+// lib/servicesSchema.ts. It carried no @id, so standard JSON-LD processing
+// resolved it to a blank node - a separate business that happened to share a
+// phone number - and the useful properties ended up split across the two:
+// founder/employee/sameAs here, paymentAccepted/areaServed/offers there, with
+// neither node complete and the two already disagreeing about the locality
+// ('מושב שואבה' vs 'שואבה') and the area served (all of Israel vs five towns).
+// Its distinct properties were folded in below and the file deleted.
 export const practiceSchema = {
   '@context': 'https://schema.org',
   '@type': 'ProfessionalService',
   '@id': PRACTICE_ID,
   name: 'נירה גבאי - פסיכותרפיה והדרכת הורים',
+  alternateName: 'Nira Gabay - Psychotherapy and Parenting Counseling',
   description: 'קליניקה לפסיכותרפיה והדרכת הורים במושב שואבה, אזור ירושלים, וטיפול מקוון בזום.',
   url: BASE_URL,
   logo: 'https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/logo.png',
@@ -109,13 +133,27 @@ export const practiceSchema = {
     longitude: CLINIC.geo.longitude,
   },
   priceRange: '$$',
-  areaServed: { '@type': 'Country', name: 'ישראל' },
-  availableService: SERVICE_NAMES.map((s) => ({
-    '@type': 'Service',
-    name: s.name,
-    description: s.description,
-    provider: { '@id': PERSON_ID },
-  })),
+  paymentAccepted: 'מזומן, העברה בנקאית, אשראי',
+  // Both facts, because both are true and they answer different searches: the
+  // towns are who can reach the room, the country is who can be seen on Zoom.
+  areaServed: [
+    { '@type': 'City', name: 'שואבה' },
+    { '@type': 'City', name: 'ירושלים' },
+    { '@type': 'City', name: 'מבשרת ציון' },
+    { '@type': 'City', name: 'בית שמש' },
+    { '@type': 'City', name: 'מודיעין' },
+    { '@type': 'Country', name: 'ישראל' },
+  ],
+  availableService: SERVICE_NAMES.map((s) => {
+    const url = serviceUrl(s.slug);
+    return {
+      '@type': 'Service',
+      name: s.name,
+      description: s.description,
+      provider: { '@id': PERSON_ID },
+      ...(url ? { url } : {}),
+    };
+  }),
 };
 
 export const webSiteSchema = {
