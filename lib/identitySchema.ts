@@ -134,6 +134,10 @@ export const practiceSchema = {
   },
   priceRange: '$$',
   paymentAccepted: 'מזומן, העברה בנקאית, אשראי',
+  // Carried over from the /clinic page's own ProfessionalService block, which
+  // was removed as a duplicate. It is the one claim that block made and this
+  // node did not.
+  availableLanguage: { '@type': 'Language', name: 'Hebrew' },
   // Both facts, because both are true and they answer different searches: the
   // towns are who can reach the room, the country is who can be seen on Zoom.
   areaServed: [
