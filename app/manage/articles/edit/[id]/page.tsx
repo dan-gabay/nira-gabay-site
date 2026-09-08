@@ -178,12 +178,16 @@ export default function EditArticlePage() {
     try {
       setUploading(true);
 
-      const formData = new FormData();
-      formData.append('file', file);
+      // Named `body` rather than `formData` so the component's own formData
+      // state stays reachable: the article's slug names the stored blob, rather
+      // than whatever the browser called the file. See app/api/upload-image.
+      const body = new FormData();
+      body.append('file', file);
+      body.append('slug', formData.slug);
 
       const response = await fetch('/api/upload-image', {
         method: 'POST',
-        body: formData,
+        body,
       });
 
       const result = await response.json();
