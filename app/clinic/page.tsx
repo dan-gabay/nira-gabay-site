@@ -43,35 +43,19 @@ const practical = [
 ].filter((p): p is typeof p & { value: string } => Boolean(p.value));
 
 export default function ClinicPage() {
-  const placeSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'ProfessionalService',
-    name: 'הקליניקה של נירה גבאי',
-    description: META_DESCRIPTION,
-    url: URL,
-    telephone: CLINIC.phone,
-    image: CLINIC.photo,
-    inLanguage: 'he-IL',
-    address: {
-      '@type': 'PostalAddress',
-      ...(CLINIC.streetAddress ? { streetAddress: CLINIC.streetAddress } : {}),
-      addressLocality: 'שואבה',
-      addressRegion: 'ירושלים',
-      addressCountry: CLINIC.addressCountry,
-    },
-    geo: {
-      '@type': 'GeoCoordinates',
-      latitude: CLINIC.geo.latitude,
-      longitude: CLINIC.geo.longitude,
-    },
-    areaServed: [
-      { '@type': 'City', name: 'ירושלים' },
-      { '@type': 'City', name: 'מבשרת ציון' },
-      { '@type': 'City', name: 'בית שמש' },
-      { '@type': 'City', name: 'מודיעין' },
-    ],
-    availableLanguage: { '@type': 'Language', name: 'Hebrew' },
-  };
+  // No ProfessionalService node here.
+  //
+  // This page used to emit a second one - `placeSchema` - describing the room.
+  // It carried no @id, so JSON-LD processing resolved it to a blank node and
+  // the page declared two businesses, the same defect the homepage had. It also
+  // drifted from the real one in the usual way: 'שואבה' against 'מושב שואבה',
+  // and an areaServed of four towns that omitted שואבה itself.
+  //
+  // The root layout already emits the full #practice node on every page, this
+  // one included, with the address, geo, telephone and image the block was
+  // repeating. Its only unique claim - the language of the service - moved to
+  // practiceSchema in lib/identitySchema.ts, where the practice is described
+  // once.
 
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
@@ -84,7 +68,6 @@ export default function ClinicPage() {
 
   return (
     <div style={{ paddingTop: '80px' }}>
-      <JsonLd data={placeSchema} />
       <JsonLd data={breadcrumbSchema} />
 
       {/* ───────── Hero ───────── */}
