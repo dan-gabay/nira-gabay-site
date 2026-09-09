@@ -490,28 +490,40 @@ export function RankedList({
 // ─────────────────────────────────────────── traffic sources over time
 
 /**
- * The categorical palette for traffic-source lines.
+ * The categorical palette for the traffic-source stack.
  *
  * Six fixed slots, one per source group, assigned by entity and never by rank -
- * so filtering the range or a group dropping to zero can never repaint the
- * survivors. Teal and amber keep the meaning they already carry in the
- * "מאיפה הגיעו" card, where paid is teal and organic is amber, so the two
- * cards read as one story rather than two colour schemes.
+ * so filtering the range, or a group dropping to zero, can never repaint the
+ * survivors.
  *
- * Validated as a set on a light surface: every slot inside the lightness band,
- * above the chroma floor and over 3:1 against the card, worst adjacent pair
- * ΔE 13.6 under deuteranopia and 18.8 to normal vision - clear of the 8 and 15
- * floors. What no six-hue set clears is the all-pairs test, where any two lines
- * may end up touching: green against teal is ΔE 10.7. That is why identity here
- * never rests on colour - the legend pairs every swatch with its name, and the
- * hover tooltip names every series at the bucket under the cursor.
+ * These are re-stepped from the values the line version used, and the reason is
+ * the switch to a stack. Lines almost never touch, so that palette only had to
+ * clear the *adjacent* pairlist, and it did. Stacked segments touch by
+ * construction, and worse, which pairs touch is not fixed: a source with no
+ * visits in one bucket is a zero-height segment, and its neighbours close up
+ * over it. On a quiet day google_ads and direct end up sharing an edge. Under
+ * the all-pairs test the old set failed hard - teal against green was ΔE 10.7
+ * to normal vision, below the 15 floor, and pink against green ΔE 3.0 under
+ * deuteranopia.
+ *
+ * Every group keeps its hue family, so nothing changes meaning: paid stays
+ * teal, organic stays orange, social stays blue, direct stays green, referral
+ * stays violet, other-paid stays rose. Only the steps moved.
+ *
+ * Validated as an ordered set on white, all pairs: lightness band and chroma
+ * floor pass, normal vision worst pair ΔE 16.4 (floor 15), every hue over 3:1
+ * against the card. Worst CVD pair is rose against teal at ΔE 7.7 deutan, which
+ * sits in the 6-8 band and is legal only with secondary encoding - which this
+ * chart has three of: the 2px surface gap between every pair of segments, a
+ * legend that is always present, and a tooltip that names every source in the
+ * column under the cursor.
  */
 export const SOURCE_SERIES: Record<string, string> = {
   google_ads: '#0D9488',
-  organic_search: '#B45309',
-  social: '#0369A1',
-  direct: '#15803D',
-  referral: '#7C3AED',
+  organic_search: '#eb6834',
+  social: '#2a78d6',
+  direct: '#166534',
+  referral: '#5B21B6',
   paid_other: '#BE185D',
 };
 
@@ -532,17 +544,19 @@ export function fillSeries(
 }
 
 /**
- * One line per traffic source, over time.
+ * Visits per bucket, stacked by traffic source.
  *
- * A separate component from LineChart rather than a generalisation of it:
- * LineChart draws two fixed measures of the same thing (views against visits)
- * and its whole tooltip is those two rows. This draws an open set of series
- * that come and go with the data, needs a legend that follows them, and sorts
- * its tooltip by value so the row order matches the line order under the
- * cursor. Merging the two would have left one component with a mode flag and
- * two half-used code paths.
+ * A stack rather than one line per source, because the question the card above
+ * cannot answer is "how much traffic came in, and what was it made of". A stack
+ * answers both at once: the column height is the day's total, the segments are
+ * the split. Lines gave the split but never the total - the reader had to add
+ * five values by eye.
+ *
+ * What a stack gives up is the shape of an individual series: only the segment
+ * sitting on the baseline has a straight edge to be read against. That is the
+ * accepted trade, and it decides the stack order below.
  */
-export function SourceLines({
+export function SourceBars({
   data,
   series,
   height = 210,
@@ -559,14 +573,21 @@ export function SourceLines({
   const ih = height - pad.t - pad.b;
 
   const at = (p: SeriesPoint, key: string) => p.values[key] || 0;
-  const max = niceMax(
-    Math.max(1, ...data.flatMap((p) => series.map((s) => at(p, s.key)))),
-  );
+  const totalAt = (p: SeriesPoint) => series.reduce((a, s) => a + at(p, s.key), 0);
+  const max = niceMax(Math.max(1, ...data.map(totalAt)));
 
-  const x = (i: number) => (data.length <= 1 ? iw / 2 : (i / (data.length - 1)) * iw);
+  // Band per bucket, with the bar capped so a short range does not produce one
+  // slab per day. The leftover inside the band is air, not bar.
+  //
+  // The air is a share of the band rather than a fixed number of pixels. 90
+  // days on a phone is a 4px band, where a fixed 2px gutter was eating half of
+  // every bar and left a row of hairlines; a share keeps the bar the thicker
+  // part of its band at any density, and the 24px cap still stops a 7-day range
+  // from drawing one slab per day.
+  const band = data.length ? iw / data.length : iw;
+  const bw = Math.max(2, Math.min(24, band - Math.min(8, Math.max(1, band * 0.28))));
+  const bx = (i: number) => i * band + (band - bw) / 2;
   const y = (v: number) => ih - (v / max) * ih;
-  const path = (key: string) =>
-    data.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(at(p, key)).toFixed(1)}`).join(' ');
 
   const ticks = [0, max / 2, max];
   const every = Math.max(1, Math.ceil(data.length / (w < 420 ? 4 : 8)));
@@ -575,8 +596,46 @@ export function SourceLines({
     return <p className="text-xs md:text-sm text-stone-400 py-2">אין עדיין תנועה בטווח הזה.</p>;
   }
 
-  // Tooltip rows follow the lines: highest at the cursor first, and a source
-  // that sent nobody in that bucket is left out rather than listed as a zero.
+  // The surface gap - white, never a stroke around the segment. One consistent
+  // width within a chart, but a thin bar gets the thinner of the two: at 2px on
+  // a 3px-wide bar the segments stopped reading as a stack and became dashes.
+  const GAP = bw < 8 ? 1 : 2;
+  const R = 4; // rounded data-end, square at the baseline
+
+  /**
+   * The segments of one column, bottom-up, in the order `series` arrives in.
+   *
+   * Sources with no visits in this bucket are dropped rather than drawn as a
+   * zero-height sliver, so `topmost` is the last one that actually has height
+   * and gets the rounded end. Everything below it is shaved by the gap.
+   */
+  const segmentsAt = (i: number) => {
+    const out: Array<{ key: string; label: string; color: string; value: number; y: number; h: number; top: boolean }> = [];
+    let base = 0;
+    const present = series.filter((s) => at(data[i], s.key) > 0);
+    present.forEach((s, j) => {
+      const v = at(data[i], s.key);
+      const bottom = y(base);
+      const top = y(base + v);
+      const isTop = j === present.length - 1;
+      // The gap goes above every segment that has one above it. The topmost
+      // keeps its full height so the column still measures the day's total.
+      const shave = isTop ? 0 : GAP;
+      out.push({ ...s, value: v, y: top, h: Math.max(1, bottom - top - shave), top: isTop });
+      base += v;
+    });
+    return out;
+  };
+
+  // A rounded top on the data-end, square where it meets the baseline.
+  const capPath = (x: number, top: number, h: number) => {
+    const r = Math.min(R, bw / 2, h);
+    const b = top + h;
+    return `M${x},${b} L${x},${top + r} Q${x},${top} ${x + r},${top} L${x + bw - r},${top} Q${x + bw},${top} ${x + bw},${top + r} L${x + bw},${b} Z`;
+  };
+
+  // Tooltip rows: biggest first, and a source that sent nobody in that bucket
+  // is left out rather than listed as a zero.
   const rowsAt = (i: number) =>
     series
       .map((s) => ({ ...s, value: at(data[i], s.key) }))
@@ -598,7 +657,7 @@ export function SourceLines({
 
       {/* The tooltip is positioned against the plot box, so it can never ride
           up over the legend, and in `left` rather than `insetInlineStart`:
-          x() is an SVG coordinate measured from the left edge, while the page
+          bx() is an SVG coordinate measured from the left edge, while the page
           is RTL, so an inline-start offset put the tooltip on the opposite
           side of the chart from the cursor. */}
       <div className="relative">
@@ -607,14 +666,8 @@ export function SourceLines({
           width={w}
           height={height}
           role="img"
-          aria-label={`מבקרים לפי מקור הגעה לאורך זמן: ${series.map((s) => s.label).join(', ')}`}
+          aria-label={`מבקרים לפי מקור הגעה לאורך זמן, עמודות נערמות: ${series.map((s) => s.label).join(', ')}`}
           onMouseLeave={() => setHover(null)}
-          onMouseMove={(e) => {
-            const r = e.currentTarget.getBoundingClientRect();
-            const px = e.clientX - r.left - pad.l;
-            const i = Math.round((px / Math.max(1, iw)) * (data.length - 1));
-            setHover(Math.min(data.length - 1, Math.max(0, i)));
-          }}
         >
           <g transform={`translate(${pad.l},${pad.t})`}>
             {ticks.map((t) => (
@@ -628,44 +681,48 @@ export function SourceLines({
 
             {data.map((p, i) =>
               i % every === 0 ? (
-                <text key={p.day} x={x(i)} y={ih + 17} textAnchor="middle" fontSize={10} fill={MUTED}>
+                <text key={p.day} x={bx(i) + bw / 2} y={ih + 17} textAnchor="middle" fontSize={10} fill={MUTED}>
                   {heDay(p.day)}
                 </text>
               ) : null,
             )}
 
-            {/* Painted smallest first, so the busiest sources end up on top.
-                Drawn in legend order instead, the source with two visits in a
-                month was the last path laid down and its flat zero line ran
-                across every other series at the baseline. */}
-            {[...series].reverse().map((s) => (
-              <path
-                key={s.key}
-                d={path(s.key)}
-                fill="none"
-                stroke={s.color}
-                strokeWidth={2}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
+            {/* The hover highlight is a backdrop behind one band, never opacity
+                on the others. Dimming the rest to 45% looked tidy and quietly
+                undid the palette: at that strength the green reads as sage and
+                the teal as pale mint, the two become hard to tell apart, and
+                every comparison is a washed column against a full-strength one.
+                A backdrop leaves all six hues exactly as validated. */}
+            {hover !== null && (
+              <rect x={hover * band} y={0} width={band} height={ih} fill="#f5f5f4" />
+            )}
+
+            {data.map((p, i) => (
+              <g key={p.day}>
+                {segmentsAt(i).map((sg) =>
+                  sg.top ? (
+                    <path key={sg.key} d={capPath(bx(i), sg.y, sg.h)} fill={sg.color} />
+                  ) : (
+                    <rect key={sg.key} x={bx(i)} y={sg.y} width={bw} height={sg.h} fill={sg.color} />
+                  ),
+                )}
+              </g>
             ))}
 
-            {hover !== null && (
-              <g>
-                <line x1={x(hover)} x2={x(hover)} y1={0} y2={ih} stroke={MUTED} strokeWidth={1} strokeDasharray="3 3" />
-                {[...series].reverse().map((s) => (
-                  <circle
-                    key={s.key}
-                    cx={x(hover)}
-                    cy={y(at(data[hover], s.key))}
-                    r={4.5}
-                    fill={s.color}
-                    stroke="#fff"
-                    strokeWidth={2}
-                  />
-                ))}
-              </g>
-            )}
+            {/* Hit targets are the full band and the full plot height, so a
+                column of two visits is as easy to hover as a column of forty.
+                They sit last so they are above every mark. */}
+            {data.map((p, i) => (
+              <rect
+                key={`hit-${p.day}`}
+                x={i * band}
+                y={0}
+                width={band}
+                height={ih}
+                fill="transparent"
+                onMouseEnter={() => setHover(i)}
+              />
+            ))}
           </g>
         </svg>
       )}
@@ -674,11 +731,16 @@ export function SourceLines({
         <div
           className="pointer-events-none absolute top-0 bg-white border border-stone-200 rounded-lg shadow-sm px-2.5 py-1.5 text-[11px] leading-relaxed"
           style={{
-            left: Math.min(Math.max(0, x(hover) + pad.l - 55), Math.max(0, w - 190)),
+            left: Math.min(Math.max(0, bx(hover) + pad.l - 55), Math.max(0, w - 190)),
             color: INK,
           }}
         >
-          <div className="font-semibold text-stone-800">{heDay(data[hover].day)}</div>
+          <div className="font-semibold text-stone-800">
+            {heDay(data[hover].day)}
+            {totalAt(data[hover]) > 0 && (
+              <span className="font-normal text-stone-500"> · {visitCount(totalAt(data[hover]))}</span>
+            )}
+          </div>
           {rowsAt(hover).length === 0 ? (
             <div className="text-stone-400">אין מבקרים</div>
           ) : (

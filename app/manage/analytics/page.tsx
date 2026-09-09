@@ -10,7 +10,7 @@ import {
   BarChart,
   RankedList,
   SlotBars,
-  SourceLines,
+  SourceBars,
   SOURCE_SERIES,
   bucketKeys,
   fillDays,
@@ -354,9 +354,15 @@ export default function AnalyticsPage() {
               This is the same split over time - which is the question the
               totals cannot answer. A campaign that was paused, a post that
               went out on one day, a slow drift in organic: all of them are a
-              single number in the card above and a visible shape here. */}
+              single number in the card above and a visible shape here.
+
+              Stacked rather than one line per source, so the column height is
+              the day's total and the segments are what it was made of. The
+              sort above puts the biggest source first, which places it on the
+              baseline - the only position in a stack with a straight edge to
+              read a trend against. */}
           <Card title="מבקרים לפי מקור הגעה, לאורך זמן" sub={rangeLabel}>
-            <SourceLines data={sourcePoints} series={sourceSeries} />
+            <SourceBars data={sourcePoints} series={sourceSeries} />
           </Card>
 
           {hasClock && (

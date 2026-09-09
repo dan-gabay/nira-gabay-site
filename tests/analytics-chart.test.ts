@@ -98,13 +98,13 @@ test('two rows for the same bucket and group are summed, not overwritten', () =>
 
 // ───────────────────────────────────────────────── colour mapping
 
-test('every source group the traffic card labels has a line colour', () => {
+test('every source group the traffic card labels has a segment colour', () => {
   for (const key of Object.keys(GROUP_LABELS)) {
-    assert.ok(SOURCE_SERIES[key], `no colour for "${key}" - its line would draw with no stroke`);
+    assert.ok(SOURCE_SERIES[key], `no colour for "${key}" - its segment would draw with no fill`);
   }
 });
 
-test('every line colour belongs to a group the traffic card can name', () => {
+test('every segment colour belongs to a group the traffic card can name', () => {
   for (const key of Object.keys(SOURCE_SERIES)) {
     assert.ok(GROUP_LABELS[key], `no label for "${key}" - its legend entry would read as a raw key`);
   }
@@ -117,10 +117,14 @@ test('no two groups share a colour', () => {
 
 test('the palette is the validated set, in the validated order', () => {
   // Changing a hex here without re-running the dataviz validator is how a
-  // palette quietly stops being colourblind-safe. The order is part of it:
-  // the checks are run on adjacent pairs.
+  // palette quietly stops being colourblind-safe.
+  //
+  // These are the all-pairs values, not the adjacent ones the line version was
+  // checked against. A stack needs the stronger test: a source with no visits
+  // in a bucket is a zero-height segment, so its neighbours close up over it
+  // and any two groups can end up sharing an edge.
   assert.deepEqual(Object.values(SOURCE_SERIES), [
-    '#0D9488', '#B45309', '#0369A1', '#15803D', '#7C3AED', '#BE185D',
+    '#0D9488', '#eb6834', '#2a78d6', '#166534', '#5B21B6', '#BE185D',
   ]);
 });
 
