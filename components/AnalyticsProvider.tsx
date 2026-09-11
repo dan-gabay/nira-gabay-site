@@ -72,7 +72,14 @@ export default function AnalyticsProvider({ children }: { children: React.ReactN
   // One page_view per route, including SPA navigations. GA4 emits its own
   // pageview from the config call, but our first-party store (lib/siteEvents)
   // only ever sees what trackEvent is given, so it has to be explicit here.
+  //
+  // A 404 is not a visit to a page of the site, so it is skipped. The route
+  // that rendered is the only thing that knows it 404'd - the pathname cannot
+  // tell us, since a wrong URL looks like any other - so app/not-found.tsx
+  // leaves a marker in the tree. It is committed to the DOM before this effect
+  // runs, on the first paint and on every SPA navigation alike.
   useEffect(() => {
+    if (document.querySelector('[data-page-not-found]')) return;
     trackEvent('page_view', {
       page_type: getPageType(pathname),
       event_label: getPageType(pathname),

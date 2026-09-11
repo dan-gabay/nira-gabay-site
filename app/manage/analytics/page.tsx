@@ -156,7 +156,11 @@ function Card({ title, sub, children }: { title: string; sub?: string; children:
 }
 
 export default function AnalyticsPage() {
-  const [range, setRange] = useState(30);
+  // 24 hours is the default because this is now the landing screen of the
+  // admin (app/manage/page.tsx redirects here). The first question on opening
+  // it is "what happened since I last looked", not "what did the month do" -
+  // the longer ranges are one click away and answer a different question.
+  const [range, setRange] = useState(1);
   const [data, setData] = useState<Payload | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
@@ -176,7 +180,7 @@ export default function AnalyticsPage() {
   // and both chart labels follow from the same flag - "1 ימים" and "פניות לפי
   // יום" were both wrong on that range.
   const isHourly = data?.granularity === 'hour';
-  const rangeLabel = isHourly ? '24 שעות' : `${data?.range_days ?? 30} ימים`;
+  const rangeLabel = isHourly ? '24 שעות' : `${data?.range_days ?? range} ימים`;
   // A 24-hour range comes back in hourly buckets, so it needs the hourly fill.
   const days = data
     ? data.granularity === 'hour'

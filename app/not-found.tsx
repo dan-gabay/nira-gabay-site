@@ -28,48 +28,59 @@ const LINKS = [
 
 export default function NotFound() {
   return (
-    <div
-      className="min-h-screen bg-gradient-to-br from-stone-100 to-amber-50 py-12 md:py-24"
-      style={{ paddingTop: '120px' }}
-    >
-      <div className="container mx-auto px-4 md:px-8 max-w-2xl text-center">
-        <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Compass className="w-8 h-8 text-amber-600" aria-hidden="true" />
+    <>
+      {/* Marks the rendered tree as a 404 so AnalyticsProvider can skip the
+          page_view. A wrong URL is not a visit to a page of the site, and
+          every such event in the store so far was someone mistyping the admin
+          path (/menage, /menege, /manege, /mange) - admin sessions reaching
+          the traffic numbers by the back door, which SiteChrome already keeps
+          out of /manage itself. A DOM marker rather than a module flag on
+          purpose: the tree is committed before any effect runs, so there is
+          no mount-order assumption here to get wrong later. */}
+      <div data-page-not-found hidden />
+      <div
+        className="min-h-screen bg-gradient-to-br from-stone-100 to-amber-50 py-12 md:py-24"
+        style={{ paddingTop: '120px' }}
+      >
+        <div className="container mx-auto px-4 md:px-8 max-w-2xl text-center">
+          <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Compass className="w-8 h-8 text-amber-600" aria-hidden="true" />
+          </div>
+
+          <h1 className="text-xl md:text-3xl font-bold text-stone-800 mb-3">העמוד לא נמצא</h1>
+          <p className="text-stone-500 mb-8">
+            ייתכן שהכתובת שגויה או שהתוכן עבר. אלה העמודים הראשיים באתר:
+          </p>
+
+          <nav aria-label="ניווט חלופי">
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-start">
+              {LINKS.map(({ href, label, icon: Icon }) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    className="flex items-center gap-3 px-4 py-3 min-h-[44px] bg-white/70 hover:bg-white border border-stone-200 rounded-xl transition-colors text-stone-700"
+                  >
+                    <Icon className="w-4 h-4 text-stone-400 flex-shrink-0" aria-hidden="true" />
+                    <span>{label}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <p className="mt-8 text-xs text-stone-400">
+            מפת האתר המלאה:{' '}
+            <a href="/sitemap.xml" className="underline hover:text-stone-600">
+              sitemap.xml
+            </a>
+            {' · '}
+            סיכום לקריאה אוטומטית:{' '}
+            <a href="/llms.txt" className="underline hover:text-stone-600">
+              llms.txt
+            </a>
+          </p>
         </div>
-
-        <h1 className="text-xl md:text-3xl font-bold text-stone-800 mb-3">העמוד לא נמצא</h1>
-        <p className="text-stone-500 mb-8">
-          ייתכן שהכתובת שגויה או שהתוכן עבר. אלה העמודים הראשיים באתר:
-        </p>
-
-        <nav aria-label="ניווט חלופי">
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-start">
-            {LINKS.map(({ href, label, icon: Icon }) => (
-              <li key={href}>
-                <Link
-                  href={href}
-                  className="flex items-center gap-3 px-4 py-3 min-h-[44px] bg-white/70 hover:bg-white border border-stone-200 rounded-xl transition-colors text-stone-700"
-                >
-                  <Icon className="w-4 h-4 text-stone-400 flex-shrink-0" aria-hidden="true" />
-                  <span>{label}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <p className="mt-8 text-xs text-stone-400">
-          מפת האתר המלאה:{' '}
-          <a href="/sitemap.xml" className="underline hover:text-stone-600">
-            sitemap.xml
-          </a>
-          {' · '}
-          סיכום לקריאה אוטומטית:{' '}
-          <a href="/llms.txt" className="underline hover:text-stone-600">
-            llms.txt
-          </a>
-        </p>
       </div>
-    </div>
+    </>
   );
 }

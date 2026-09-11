@@ -25,7 +25,7 @@ const SummaryContext = createContext<{
 export const useManageSummary = () => useContext(SummaryContext);
 
 const NAV = [
-  { href: '/manage', label: 'בקרה', icon: LayoutDashboard, badge: null },
+  { href: '/manage/overview', label: 'בקרה', icon: LayoutDashboard, badge: null },
   { href: '/manage/contacts', label: 'פניות', icon: Inbox, badge: 'newLeads' },
   { href: '/manage/articles', label: 'מאמרים', icon: FileText, badge: 'drafts' },
   { href: '/manage/comments', label: 'תגובות', icon: MessageSquare, badge: 'pendingComments' },
@@ -55,8 +55,9 @@ export default function ManageShell({ children }: { children: React.ReactNode })
     return <>{children}</>;
   }
 
-  const isActive = (href: string) =>
-    href === '/manage' ? pathname === '/manage' : pathname?.startsWith(href);
+  // Every nav href is now a real subpath, so a plain prefix test is correct.
+  // '/manage' itself only redirects to /manage/analytics and is never rendered.
+  const isActive = (href: string) => pathname?.startsWith(href);
 
   return (
     <SummaryContext.Provider value={{ summary, refresh }}>
