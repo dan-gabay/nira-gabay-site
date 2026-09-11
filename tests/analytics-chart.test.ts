@@ -123,8 +123,13 @@ test('the palette is the validated set, in the validated order', () => {
   // checked against. A stack needs the stronger test: a source with no visits
   // in a bucket is a zero-height segment, so its neighbours close up over it
   // and any two groups can end up sharing an edge.
+  //
+  // The magenta is ai_referral, added later. It was picked so that it is the
+  // limiting factor on no check: with seven slots the worst CVD pair is still
+  // rose-against-teal at 7.7 and the worst normal-vision pair is still
+  // blue-against-teal at 16.4, exactly as with six.
   assert.deepEqual(Object.values(SOURCE_SERIES), [
-    '#0D9488', '#eb6834', '#2a78d6', '#166534', '#5B21B6', '#BE185D',
+    '#0D9488', '#eb6834', '#2a78d6', '#166534', '#5B21B6', '#BE185D', '#d025ca',
   ]);
 });
 

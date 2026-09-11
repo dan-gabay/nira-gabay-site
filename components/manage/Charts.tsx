@@ -517,6 +517,22 @@ export function RankedList({
  * chart has three of: the 2px surface gap between every pair of segments, a
  * legend that is always present, and a tooltip that names every source in the
  * column under the cursor.
+ *
+ * ai_referral joined as a seventh slot without disturbing any of that. It was
+ * chosen by searching every hex that passes the per-colour checks, holding the
+ * six fixed, and keeping only candidates that cost nothing on either separation
+ * metric: with the magenta added, the worst CVD pair is still rose-against-teal
+ * at 7.7 and the worst normal pair is still blue-against-teal at 16.4. The new
+ * hue is the limiting factor on no check.
+ *
+ * It is a magenta rather than a fresh hue family because there was no fresh
+ * family to have. The yellow-to-green quadrant is the one wide gap left in the
+ * wheel, and it is unusable here: a gold light enough to stay clear of orange
+ * falls under 3:1 on white, and every olive and lime that clears contrast lands
+ * within ΔE 15 of direct-green or of the teal, which is a hard fail that
+ * secondary encoding is explicitly not allowed to excuse. Magenta sits between
+ * referral-violet and other-paid-rose, and both of those are darker and more
+ * muted; other-paid has never appeared in production data at all.
  */
 export const SOURCE_SERIES: Record<string, string> = {
   google_ads: '#0D9488',
@@ -525,6 +541,7 @@ export const SOURCE_SERIES: Record<string, string> = {
   direct: '#166534',
   referral: '#5B21B6',
   paid_other: '#BE185D',
+  ai_referral: '#d025ca',
 };
 
 export type SeriesPoint = { day: string; values: Record<string, number> };

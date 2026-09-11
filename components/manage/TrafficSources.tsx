@@ -22,13 +22,14 @@ export type TrafficRow = {
   conversions: number;
 };
 
-// Exported: the source-over-time chart labels the same six groups, and two
+// Exported: the source-over-time chart labels the same seven groups, and two
 // copies of these strings would drift the moment one of them was reworded.
 export const GROUP_LABELS: Record<string, string> = {
   google_ads: 'גוגל - מודעות בתשלום',
   paid_other: 'ממומן - פלטפורמה אחרת',
   organic_search: 'חיפוש אורגני בגוגל',
   social: 'פייסבוק ואינסטגרם',
+  ai_referral: 'המלצת כלי AI',
   direct: 'ישיר - הקלדה או שמירה',
   referral: 'אתרים אחרים',
 };
@@ -40,6 +41,7 @@ const DETAIL_LABELS: Record<string, string> = {
   paid_other: 'לפי קמפיין',
   organic_search: 'לפי מנוע החיפוש',
   social: 'לפי הרשת',
+  ai_referral: 'לפי הכלי שהמליץ',
   referral: 'לפי האתר המפנה',
 };
 
