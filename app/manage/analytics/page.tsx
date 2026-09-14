@@ -24,12 +24,15 @@ import { EVENT_LABELS, PAGE_TYPE_LABELS } from '@/lib/siteEvents';
 import { SERVICES } from '@/lib/services';
 import { buildInsights } from '@/lib/analyticsInsights';
 import { enquiries, readers } from '@/lib/heCount';
+import { BOT_KIND_LABELS, type BotKind } from '@/lib/botDetect';
 
 type Totals = { views: number; visits: number; conversions: number; signups: number; events?: number };
 
 type Payload = {
   range_days: number;
   totals: Totals;
+  /** Automated clients, counted apart from the numbers above. */
+  bots?: Array<{ kind: string; hits: number; sessions: number }>;
   previous: Totals;
   granularity?: 'hour' | 'day';
   daily: DayPoint[];
@@ -181,6 +184,17 @@ export default function AnalyticsPage() {
   // יום" were both wrong on that range.
   const isHourly = data?.granularity === 'hour';
   const rangeLabel = isHourly ? '24 שעות' : `${data?.range_days ?? range} ימים`;
+
+  // Bots, kept out of every number above and named here instead. Sessions, not
+  // hits: one crawler fetching forty pages is one client, not forty visitors.
+  const bots = data?.bots ?? [];
+  const botSessions = bots.reduce((a, b) => a + b.sessions, 0);
+  const botSummary = bots
+    .slice()
+    .sort((a, b) => b.sessions - a.sessions)
+    .slice(0, 3)
+    .map((b) => `${BOT_KIND_LABELS[b.kind as BotKind] ?? b.kind} ${b.sessions}`)
+    .join(', ');
   // A 24-hour range comes back in hourly buckets, so it needs the hourly fill.
   const days = data
     ? data.granularity === 'hour'
@@ -259,6 +273,15 @@ export default function AnalyticsPage() {
           <p className="text-[11px] md:text-sm text-stone-500 mt-0.5">
             נמדד ישירות באתר, לא דרך גוגל או פייסבוק
           </p>
+          {/* Said out loud rather than left implicit: every figure on this page
+              counts people only. A crawler is still served, still stored and
+              still listed here - it just is not a visit. */}
+          {botSessions > 0 && (
+            <p className="text-[11px] text-stone-400 mt-1">
+              ללא {botSessions.toLocaleString('he-IL')} כניסות אוטומטיות
+              {botSummary && <> ({botSummary})</>}
+            </p>
+          )}
         </div>
         <div className="flex gap-1.5" role="group" aria-label="טווח זמן">
           {RANGES.map((r) => (

@@ -133,6 +133,9 @@ function mirrorToStore(
       source: params?.event_label ?? params?.source ?? null,
       session_id: sessionId(),
       referrer_host: ref ? new URL(ref).hostname : null,
+      // Set by every browser under automation. The server decides what to do
+      // with it; see lib/botDetect.ts.
+      automated: navigator.webdriver === true,
       ...sessionCampaign(),
     };
 

@@ -138,6 +138,17 @@ export type SiteEventPayload = {
    * away - so only which platform it came from is kept.
    */
   click_kind?: string | null;
+  /**
+   * navigator.webdriver, which a browser sets when it is being driven by
+   * automation (Playwright, Puppeteer, Selenium). It is a standard flag, it
+   * identifies nobody, and it catches the case the user agent cannot: a real
+   * rendering engine steered by a script behind an ordinary Chrome UA.
+   *
+   * Advisory only. app/api/track/route.ts decides the stored bot_kind, and a
+   * crafted `automated: false` can only fail to flag a bot, never mislabel a
+   * person as one.
+   */
+  automated?: boolean;
 };
 
 /** The ad platforms we recognise a click id from. */

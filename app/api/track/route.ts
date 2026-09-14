@@ -6,6 +6,7 @@ import {
   isClickKind,
   type SiteEventPayload,
 } from '@/lib/siteEvents';
+import { botKindFromUserAgent } from '@/lib/botDetect';
 
 export const runtime = 'nodejs';
 
@@ -19,7 +20,12 @@ export const runtime = 'nodejs';
 //   the ad-click identifier itself is never accepted or stored
 // - every string is clipped, so a large body cannot fill the table
 // - no IP and no user agent string are stored; the user agent is read only to
-//   reduce it to "mobile" or "desktop" and is then discarded
+//   reduce it to "mobile" or "desktop" and to one coarse bot_kind word, and is
+//   then discarded
+// - bots are LABELLED, never turned away: this route is the last step of a
+//   request whose content has already been served, so flagging a crawler here
+//   costs it nothing and keeps it in the AI indexes. It only decides whether
+//   the hit counts as a visit on the dashboard.
 //
 // Failures are swallowed and answered 204. Analytics must never be the reason
 // a visitor sees an error, and the WhatsApp button must never wait on it.
@@ -50,6 +56,7 @@ export async function POST(req: NextRequest) {
     const rawKind = clip(body.click_kind);
     const clickKind = rawKind && isClickKind(rawKind) ? rawKind : null;
 
+    const ua = req.headers.get('user-agent');
     const supabase = supabaseServer();
     const { error } = await supabase.from('site_events').insert({
       event_name: name,
@@ -58,7 +65,11 @@ export async function POST(req: NextRequest) {
       entity: clip(body.entity),
       source: clip(body.source),
       session_id: clip(body.session_id),
-      device: deviceFrom(req.headers.get('user-agent')),
+      device: deviceFrom(ua),
+      // null for a person. The client's navigator.webdriver is trusted only to
+      // ADD a flag: it can reveal a driven browser behind an ordinary UA, and
+      // a forged `false` merely leaves a bot looking like everyone else.
+      bot_kind: botKindFromUserAgent(ua) ?? (body.automated === true ? 'automation' : null),
       referrer_host: clip(body.referrer_host),
       utm_source: clip(body.utm_source),
       utm_medium: clip(body.utm_medium),
