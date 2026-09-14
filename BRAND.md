@@ -78,9 +78,46 @@ child - `החלק השני חשוב לא פחות.`
   appears nowhere on the site. Decide whether to surface it before an article
   leans on it.
 
-**Competitors**: not established. The owner has not named direct competitors and
-none should be invented. Fill this in before running `/blog strategy`, which
-otherwise has nothing real to differentiate against.
+### Competitors
+
+Read from search results and page titles; the pages themselves could not be
+fetched from the working environment, so treat the register notes as a strong
+inference rather than a full content audit. All three were sampled on the same
+query family as our own `narcissistic-personality-parenting`.
+
+**betipulnet.co.il - בטיפולנט.** A large professional psychology portal, not a
+practice. A lexicon entry ("אבחון, תסמינים ודרכי טיפול") sitting on top of
+academic summaries - Kohut, McWilliams, Ronningstam, DSM-V. Written for
+clinicians and the educated layperson.
+*Differentiator*: they define the disorder. We do not compete for the
+definition. A parent who already knows the word and now has to get through
+Friday dinner is not served by a lexicon.
+
+**grunhaus.co.il - פרופ' לאון גרינהאוס.** A psychiatrist, professor, specialist
+in depression and anxiety, with a section of the site on psychiatric
+medication. Institutional-medical authority, and already present in the
+co-parenting space (the BIFF method for communicating with a narcissistic
+co-parent).
+*Differentiator*: this is precisely our stated anti-positioning. He diagnoses
+and prescribes; we do neither. Where he explains the pathology, we stay with
+the person who has to keep living in the room. Never try to match him on
+diagnostic or pharmacological ground - it is his, legitimately.
+
+**regashot-info.co.il - התעללות רגשית סמויה.** The abuse-survivor register:
+covert narcissism, passive aggression, "זאבים בעור כבשה", devastating impact on
+the family. Emotionally charged and adversarial by design.
+*Differentiator*: they name a villain. We do not. Our POV says the behaviour is
+a reasonable response to something, and that the work includes the reader - a
+frame that cannot coexist with an exposé. This is the sharpest contrast of the
+three and the one most worth protecting: warmth without accusation.
+
+**What this means for topic selection.** The head term (`נרקיסיסט`,
+`הפרעת אישיות נרקיסיסטית`) is not winnable. A portal carrying DSM summaries and
+a professor with a medication section will outrank a single 697-word article,
+and should. The winnable ground is the situational long tail, which is also
+where the voice is strongest: living beside it, raising children beside it,
+separating from it, what to say on a specific Tuesday. Same pattern holds in
+every other pillar - concede the definition, own the situation.
 
 ## Editorial Rules
 
