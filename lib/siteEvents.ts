@@ -149,6 +149,17 @@ export type SiteEventPayload = {
    * person as one.
    */
   automated?: boolean;
+  /**
+   * Which visit this is for this browser, and how long it has been coming
+   * back. Both from lib/visitor.ts - a random first-party counter, never an
+   * IP, expiring after 90 days like lead attribution.
+   *
+   * The question they exist to answer is the one a practice actually needs:
+   * how many visits and how many days pass before someone makes contact.
+   * People research a therapist for weeks before they write.
+   */
+  visit_number?: number | null;
+  days_since_first?: number | null;
 };
 
 /** The ad platforms we recognise a click id from. */

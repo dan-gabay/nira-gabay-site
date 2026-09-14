@@ -5,6 +5,7 @@
 // into lib/conversions.ts. Everything else stays first-party.
 
 import { reportContactConversion, reportLeadConversion } from './conversions';
+import { visitorState, daysSinceFirst } from './visitor';
 import { usingGtm } from './tagging';
 import {
   isTrackedEvent,
@@ -124,6 +125,8 @@ function mirrorToStore(
   try {
     const path = window.location.pathname;
     const ref = document.referrer;
+    // Counts this session once, however many events it goes on to send.
+    const visitor = visitorState();
 
     const payload: SiteEventPayload = {
       event_name: eventName,
@@ -136,6 +139,8 @@ function mirrorToStore(
       // Set by every browser under automation. The server decides what to do
       // with it; see lib/botDetect.ts.
       automated: navigator.webdriver === true,
+      visit_number: visitor?.visit ?? null,
+      days_since_first: daysSinceFirst(visitor),
       ...sessionCampaign(),
     };
 
@@ -193,12 +198,16 @@ export const setUserProperty = (propertyName: string, value: string | number | b
 };
 
 // Identify returning visitors
+// GA4's copy of the same fact. It reads lib/visitor.ts rather than keeping its
+// own tally, so the two can never disagree - and because that module counts
+// once per session, this no longer inflates by one on every in-page
+// navigation, which is what it used to do.
 export const identifyVisitorType = () => {
   if (typeof window === 'undefined') return;
-  
-  const visitCount = parseInt(localStorage.getItem('visit_count') || '0') + 1;
-  localStorage.setItem('visit_count', visitCount.toString());
-  
+
+  const visitCount = visitorState()?.visit;
+  if (!visitCount) return;
+
   setUserProperty('visitor_type', visitCount === 1 ? 'new' : 'returning');
   setUserProperty('visit_count', visitCount);
   

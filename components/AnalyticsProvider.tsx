@@ -48,15 +48,20 @@ export default function AnalyticsProvider({ children }: { children: React.ReactN
 
   // Capture lead attribution (utm/gclid/landing page) once per full page
   // load - mount = start of visit; SPA navigations don't re-run this.
+  //
+  // identifyVisitorType belongs here for the same reason. It used to sit in the
+  // effect below, keyed on `pathname`, so it re-ran on every in-page navigation
+  // and counted a three-article sitting as three visits. lib/visitor.ts guards
+  // against that on its own now, but the honest home for a once-per-visit call
+  // is the once-per-visit effect.
   useEffect(() => {
     captureAttribution();
+    identifyVisitorType();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Identify visitor type on mount
+  // Page-load timing, per route.
   useEffect(() => {
-    identifyVisitorType();
-    
     // Track page performance
     if (typeof window !== 'undefined' && window.performance) {
       const timing = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;

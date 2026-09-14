@@ -34,6 +34,12 @@ const MAX = 300;
 const clip = (v: unknown): string | null =>
   typeof v === 'string' && v.trim() ? v.trim().slice(0, MAX) : null;
 
+const clampInt = (v: unknown, lo: number, hi: number): number | null => {
+  if (typeof v !== 'number' || !Number.isFinite(v)) return null;
+  const n = Math.round(v);
+  return n < lo || n > hi ? null : n;
+};
+
 function deviceFrom(ua: string | null): string {
   if (!ua) return 'unknown';
   return /mobile|android|iphone|ipad|ipod/i.test(ua) ? 'mobile' : 'desktop';
@@ -70,6 +76,10 @@ export async function POST(req: NextRequest) {
       // ADD a flag: it can reveal a driven browser behind an ordinary UA, and
       // a forged `false` merely leaves a bot looking like everyone else.
       bot_kind: botKindFromUserAgent(ua) ?? (body.automated === true ? 'automation' : null),
+      // Clamped, not trusted: these come from the visitor's own storage, so a
+      // crafted body can only describe itself, and cannot describe anyone else.
+      visit_number: clampInt(body.visit_number, 1, 10000),
+      days_since_first: clampInt(body.days_since_first, 0, 400),
       referrer_host: clip(body.referrer_host),
       utm_source: clip(body.utm_source),
       utm_medium: clip(body.utm_medium),

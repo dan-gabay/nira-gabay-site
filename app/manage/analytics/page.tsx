@@ -20,6 +20,13 @@ import {
   type Slot,
 } from '@/components/manage/Charts';
 import TrafficSources, { GROUP_LABELS, type TrafficRow } from '@/components/manage/TrafficSources';
+import {
+  ReturningVisitors,
+  SourceQuality,
+  type ReturningSummary,
+  type ReturningBucket,
+  type SourceQualityRow,
+} from '@/components/manage/Audience';
 import { EVENT_LABELS, PAGE_TYPE_LABELS } from '@/lib/siteEvents';
 import { SERVICES } from '@/lib/services';
 import { buildInsights } from '@/lib/analyticsInsights';
@@ -67,6 +74,11 @@ type Payload = {
     article_reads: number;
     article_completed: number;
   };
+  // Added 2026-09-14 with the visitor counter, so guarded the same way: a
+  // response cached before it landed simply has no returning section.
+  returning?: ReturningSummary;
+  returning_buckets?: ReturningBucket[];
+  engagement_by_source?: SourceQualityRow[];
   first_event: string | null;
 };
 
@@ -85,6 +97,20 @@ const DEVICE_LABELS: Record<string, string> = {
 };
 
 const WEEKDAYS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+
+// What a response from before the visitor counter looks like. Zero known
+// visits is the card's own "not measured yet" state, so an old cached payload
+// degrades to the same honest sentence as a fresh install.
+const EMPTY_RETURNING: ReturningSummary = {
+  known_visits: 0,
+  new_visits: 0,
+  returning_visits: 0,
+  loyal_visits: 0,
+  new_conversions: 0,
+  returning_conversions: 0,
+  median_visit_at_conversion: null,
+  median_days_at_conversion: null,
+};
 
 const SERVICE_TITLES = new Map(SERVICES.map((s) => [s.slug, s.title]));
 const serviceName = (slug: string) => SERVICE_TITLES.get(slug) || slug;
@@ -239,6 +265,8 @@ export default function AnalyticsPage() {
           devices: data.devices,
           engagement: data.engagement,
           landing_pages: data.landing_pages,
+          engagement_by_source: data.engagement_by_source,
+          returning: data.returning,
         },
         serviceName,
       )
@@ -390,6 +418,24 @@ export default function AnalyticsPage() {
               read a trend against. */}
           <Card title="מבקרים לפי מקור הגעה, לאורך זמן" sub={rangeLabel}>
             <SourceBars data={sourcePoints} series={sourceSeries} />
+          </Card>
+
+          {/* Volume is the question the two cards above answer. This is the one
+              they cannot: a paid click and a search arrival are the same single
+              number up there, and nothing on the page said that one of them
+              reads three pages and the other reads one. */}
+          <Card title="איכות התנועה לפי מקור" sub="כמה עמודים נקראים בפועל">
+            <SourceQuality rows={data.engagement_by_source || []} />
+          </Card>
+
+          {/* Every other card on this page counts visits, and a visit cannot
+              tell forty people who came once from ten who came four times. */}
+          <Card title="מבקרים חוזרים" sub="לפי דפדפן, בלי IP">
+            <ReturningVisitors
+              summary={data.returning ?? EMPTY_RETURNING}
+              buckets={data.returning_buckets || []}
+              totalVisits={data.totals.visits}
+            />
           </Card>
 
           {hasClock && (

@@ -37,9 +37,26 @@ export type InsightInput = {
     article_completed: number;
   };
   landing_pages?: Array<{ path: string; page_type: string; visits: number; conversions: number }>;
+  engagement_by_source?: Array<{
+    grp: string;
+    visits: number;
+    views: number;
+    one_page_visits: number;
+    deep_visits: number;
+    conversions: number;
+  }>;
+  returning?: {
+    known_visits: number;
+    new_visits: number;
+    returning_visits: number;
+    new_conversions: number;
+    returning_conversions: number;
+    median_visit_at_conversion: number | null;
+  };
 };
 
 const pct = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
+const round1 = (n: number) => (Math.round(n * 10) / 10).toString();
 
 export function buildInsights(d: InsightInput, serviceName: (slug: string) => string): Insight[] {
   const out: Insight[] = [];
@@ -114,7 +131,26 @@ export function buildInsights(d: InsightInput, serviceName: (slug: string) => st
     });
   }
 
-  // 5. When enquiries actually arrive - the one figure here that maps onto a
+  // 5. The gap the traffic cards cannot show. Both sides are visits up there
+  //    and look alike; the difference is what happens after the page loads,
+  //    and it is the difference between buying traffic and buying readers.
+  const quality = d.engagement_by_source || [];
+  const perVisit = (grp: string) => {
+    const r = quality.find((x) => x.grp === grp);
+    return r && r.visits >= 20 ? r.views / r.visits : null;
+  };
+  const organicDepth = perVisit('organic_search');
+  const paidDepth = perVisit('google_ads');
+  if (organicDepth !== null && paidDepth !== null && organicDepth >= paidDepth * 1.5) {
+    out.push({
+      tone: 'neutral',
+      text:
+        `מי שמגיע מחיפוש אורגני קורא ${round1(organicDepth)} עמודים לביקור, ` +
+        `לעומת ${round1(paidDepth)} ממודעות בתשלום.`,
+    });
+  }
+
+  // 6. When enquiries actually arrive - the one figure here that maps onto a
   //    setting, since ad scheduling is set by hour.
   const hours = d.by_hour || [];
   const convHours = hours.filter((h) => h.conversions > 0);
@@ -129,7 +165,7 @@ export function buildInsights(d: InsightInput, serviceName: (slug: string) => st
     });
   }
 
-  // 6. How many leave from the page they landed on. High on every site; worth
+  // 7. How many leave from the page they landed on. High on every site; worth
   //    a line only when it is high enough to be the constraint.
   const eng = d.engagement;
   if (eng && eng.visits >= 30) {
@@ -142,7 +178,7 @@ export function buildInsights(d: InsightInput, serviceName: (slug: string) => st
     }
   }
 
-  // 7. Which screen the site is actually read on. Decides where a change gets
+  // 8. Which screen the site is actually read on. Decides where a change gets
   //    checked before it ships.
   const devices = d.devices || [];
   const deviceTotal = devices.reduce((a, x) => a + x.n, 0);
@@ -152,6 +188,25 @@ export function buildInsights(d: InsightInput, serviceName: (slug: string) => st
       tone: 'neutral',
       text: `${pct(mobile.n, deviceTotal)}% מהגולשים מגיעים מהטלפון.`,
     });
+  }
+
+  // 9. Whether anyone comes back. Last, because it is the slowest number on
+  //    the page to mean anything - it only counts browsers that have been here
+  //    since the counter was added, so it stays silent for weeks and then
+  //    starts being true.
+  const ret = d.returning;
+  if (ret && ret.known_visits >= 30) {
+    const back = pct(ret.returning_visits, ret.known_visits);
+    if (back >= 10) {
+      out.push({
+        tone: 'good',
+        text:
+          `${back}% מהביקורים הם של מי שכבר היה כאן` +
+          (ret.median_visit_at_conversion !== null && ret.median_visit_at_conversion > 1
+            ? `, וחצי מהפניות מגיעות רק בביקור ה-${round1(ret.median_visit_at_conversion)} ומעלה.`
+            : '.'),
+      });
+    }
   }
 
   return out.slice(0, 6);
