@@ -172,6 +172,86 @@ function Tile({
   );
 }
 
+function Hero({ label, value, display, prev, unit }: {
+  label: string; value: number; display?: string; prev: number; unit?: string;
+}) {
+  return (
+    <div>
+      <p className="text-[11px] text-stone-400">{label}</p>
+      {/* Number and trend share a baseline. Stacked, the gap under a 30px
+          figure read as an empty band and cost a whole row per headline. */}
+      <p className="flex items-baseline gap-2 mt-1">
+        <span className="text-[28px] font-bold text-stone-800 leading-none tabular-nums">
+          {display ?? value}
+        </span>
+        <Trend now={value} prev={prev} unit={unit} />
+      </p>
+    </div>
+  );
+}
+
+function Mini({ label, value, display, prev, unit }: {
+  label: string; value: number; display?: string; prev: number; unit?: string;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <span className="text-[11px] text-stone-500 truncate">{label}</span>
+      <span className="flex items-baseline gap-1.5 flex-shrink-0">
+        <span className="text-sm font-bold text-stone-800 tabular-nums">{display ?? value}</span>
+        <Trend now={value} prev={prev} unit={unit} />
+      </span>
+    </div>
+  );
+}
+
+/**
+ * The six tiles, folded into one card for the phone.
+ *
+ * The grid is right on a desktop and wrong at 390px: six bordered cards, each
+ * spending about 165px of height on a two-digit number, push every chart on
+ * this page below three screens of scrolling. Worse, it hands a standing zero
+ * (list signups) exactly as much room as the one figure the page exists for.
+ *
+ * So on a phone the same six numbers are ranked rather than tiled. Two get the
+ * headline - did anyone come, and did anyone write - and the four that qualify
+ * them get a line each. Nothing is dropped and nothing is rounded differently;
+ * only the weight changes. The bot note moves in here too, because it is a
+ * caveat on these numbers and belongs next to them, not above the tabs where
+ * it was the first thing the screen showed.
+ */
+function SummaryMobile({
+  visits, prevVisits, conversions, prevConversions,
+  convRate, prevConvRate, perVisit, prevPerVisit,
+  views, prevViews, signups, prevSignups, note,
+}: {
+  visits: number; prevVisits: number; conversions: number; prevConversions: number;
+  convRate: number; prevConvRate: number; perVisit: number; prevPerVisit: number;
+  views: number; prevViews: number; signups: number; prevSignups: number;
+  note?: string;
+}) {
+  return (
+    <div className="md:hidden bg-white rounded-2xl border border-stone-200 p-4">
+      <div className="grid grid-cols-2 gap-3">
+        <Hero label="ביקורים" value={visits} prev={prevVisits} />
+        <Hero label="פניות" value={conversions} prev={prevConversions} />
+      </div>
+      <div className="mt-3.5 pt-3 border-t border-stone-100 grid gap-2">
+        <Mini label="שיעור פנייה" value={convRate} display={`${one(convRate)}%`}
+              prev={prevConvRate} unit=" נק'" />
+        <Mini label="עמודים לביקור" value={perVisit} display={one(perVisit)}
+              prev={prevPerVisit} unit="" />
+        <Mini label="צפיות בעמודים" value={views} prev={prevViews} />
+        <Mini label="הרשמות לרשימה" value={signups} prev={prevSignups} />
+      </div>
+      {note && (
+        <p className="text-[10px] text-stone-400 mt-3 pt-2.5 border-t border-stone-100 leading-snug">
+          {note}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function Card({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
     <section className="bg-white rounded-2xl border border-stone-200 p-3.5 md:p-5">
@@ -298,27 +378,30 @@ export default function AnalyticsPage() {
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-lg md:text-2xl font-bold text-stone-800">נתוני האתר</h1>
-          <p className="text-[11px] md:text-sm text-stone-500 mt-0.5">
+          <p className="hidden md:block text-sm text-stone-500 mt-0.5">
             נמדד ישירות באתר, לא דרך גוגל או פייסבוק
           </p>
           {/* Said out loud rather than left implicit: every figure on this page
               counts people only. A crawler is still served, still stored and
               still listed here - it just is not a visit. */}
           {botSessions > 0 && (
-            <p className="text-[11px] text-stone-400 mt-1">
+            <p className="hidden md:block text-[11px] text-stone-400 mt-1">
               ללא {botSessions.toLocaleString('he-IL')} כניסות אוטומטיות
               {botSummary && <> ({botSummary})</>}
             </p>
           )}
         </div>
-        <div className="flex gap-1.5" role="group" aria-label="טווח זמן">
+        {/* Four equal segments across the full width on a phone, where the
+            left-aligned pill row left a ragged gap and gave each tab a target
+            narrower than a thumb. Unchanged from md up. */}
+        <div className="grid grid-cols-4 gap-1.5 w-full md:flex md:w-auto" role="group" aria-label="טווח זמן">
           {RANGES.map((r) => (
             <button
               key={r.days}
               type="button"
               onClick={() => setRange(r.days)}
               aria-pressed={range === r.days}
-              className={`min-h-[36px] px-3 rounded-xl text-xs md:text-sm font-medium transition-colors ${
+              className={`min-h-[38px] px-1.5 md:px-3 rounded-xl text-xs md:text-sm font-medium transition-colors ${
                 range === r.days
                   ? 'bg-stone-800 text-white'
                   : 'bg-white border border-stone-300 text-stone-600 hover:bg-stone-50'
@@ -350,7 +433,21 @@ export default function AnalyticsPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2.5 md:gap-4">
+          <SummaryMobile
+            visits={data.totals.visits} prevVisits={data.previous.visits}
+            conversions={data.totals.conversions} prevConversions={data.previous.conversions}
+            convRate={convRate} prevConvRate={prevConvRate}
+            perVisit={perVisit} prevPerVisit={prevPerVisit}
+            views={data.totals.views} prevViews={data.previous.views}
+            signups={data.totals.signups} prevSignups={data.previous.signups}
+            note={
+              botSessions > 0
+                ? `ללא ${botSessions.toLocaleString('he-IL')} כניסות אוטומטיות${botSummary ? ` (${botSummary})` : ''}`
+                : undefined
+            }
+          />
+
+          <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2.5 md:gap-4">
             <Tile icon={Users} label="ביקורים" value={data.totals.visits} prev={data.previous.visits}
                   hint="מבקרים שונים, לפי ביקור" />
             <Tile icon={Eye} label="צפיות בעמודים" value={data.totals.views} prev={data.previous.views} />
