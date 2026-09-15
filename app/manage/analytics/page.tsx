@@ -38,8 +38,14 @@ type Totals = { views: number; visits: number; conversions: number; signups: num
 type Payload = {
   range_days: number;
   totals: Totals;
-  /** Automated clients, counted apart from the numbers above. */
+  /** Automated clients that ran the page's JavaScript, counted apart from the
+   *  numbers above. A small and unrepresentative slice of the automated
+   *  traffic - see `bot_fetches`. */
   bots?: Array<{ kind: string; hits: number; sessions: number }>;
+  /** Added 2026-09-15, so guarded. Every automated request the server saw,
+   *  written at the edge by proxy.ts rather than by the page's JavaScript.
+   *  `paths` is distinct pages, `hits` is requests. */
+  bot_fetches?: Array<{ kind: string; hits: number; paths: number }>;
   previous: Totals;
   granularity?: 'hour' | 'day';
   daily: DayPoint[];
@@ -305,13 +311,22 @@ export default function AnalyticsPage() {
   // down the page. `ai_answer` is the one bot bucket that is not a nuisance to
   // be discounted: it is an assistant opening the page mid-conversation
   // because a person asked it something, which is a reader the site otherwise
-  // has no way of seeing. Everything else in `bots` is a machine reading on
-  // its own schedule. Rows written before 2026-09-15 carry the old coarse
-  // 'ai' and cannot be re-sorted, so they stay out of this figure rather than
-  // inflate it - see lib/botDetect.ts.
-  const aiAnswerSessions = bots
-    .filter((b) => b.kind === 'ai_answer')
-    .reduce((a, b) => a + b.sessions, 0);
+  // has no way of seeing. Everything else here is a machine reading on its own
+  // schedule.
+  //
+  // Read from `bot_fetches` and deliberately NOT from `bots`. An assistant
+  // fetches the HTML and reads it; it does not run the page's JavaScript, and
+  // `bots` is built from site_events, which only exists because that
+  // JavaScript ran. So `bots` would report zero for exactly the event this
+  // line is about. `bot_fetches` is written at the edge, before any of that.
+  //
+  // Rows written before 2026-09-15 carry the old coarse 'ai' and cannot be
+  // re-sorted, so they stay out of this figure rather than inflate it - see
+  // lib/botDetect.ts.
+  const botFetches = data?.bot_fetches ?? [];
+  const aiAnswer = botFetches.filter((b) => b.kind === 'ai_answer');
+  const aiAnswerHits = aiAnswer.reduce((a, b) => a + b.hits, 0);
+  const aiAnswerPaths = aiAnswer.reduce((a, b) => a + b.paths, 0);
   // A 24-hour range comes back in hourly buckets, so it needs the hourly fill.
   const days = data
     ? data.granularity === 'hour'
@@ -520,13 +535,13 @@ export default function AnalyticsPage() {
                 Deliberately not added to any total. There is no person on the
                 site during one of these, so calling it a visit would corrupt
                 every rate on the page. */}
-            {aiAnswerSessions > 0 && (
+            {aiAnswerHits > 0 && (
               <p className="mt-3.5 pt-3 border-t border-stone-100 text-[11px] text-stone-500 leading-relaxed">
-                בנוסף, כלי AI פתח עמוד באתר {aiAnswerSessions.toLocaleString('he-IL')} פעמים
-                תוך כדי שענה למישהו. זה לא נספר כביקור - אין אדם על האתר - אבל זה
+                בנוסף, כלי AI פתח עמוד באתר {aiAnswerHits.toLocaleString('he-IL')} פעמים
+                {aiAnswerPaths > 1 && <> ({aiAnswerPaths.toLocaleString('he-IL')} עמודים שונים)</>}
+                {' '}תוך כדי שענה למישהו. זה לא נספר כביקור - אין אדם על האתר - אבל זה
                 אומר שהאתר נשלף כדי לענות. מי שילחץ על הקישור בתשובה יופיע למעלה
-                כ&quot;{GROUP_LABELS.ai_referral}&quot;. נספרים רק כלים שטוענים את
-                העמוד כמו דפדפן, ולכן זו רצפה ולא ספירה מלאה.
+                כ&quot;{GROUP_LABELS.ai_referral}&quot;.
               </p>
             )}
           </Card>

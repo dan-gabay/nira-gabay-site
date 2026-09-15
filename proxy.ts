@@ -1,10 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, type NextFetchEvent } from 'next/server';
 import { MANAGE_COOKIE, manageSessionToken } from '@/lib/manageAuth';
 import { prefersMarkdown } from '@/lib/agent/accept';
 import { VARY_VALUE } from '@/lib/agent/vary';
+import { botKindFromUserAgent } from '@/lib/botDetect';
+import { recordBotHit } from '@/lib/botLog';
 
-// Two jobs, in this order: keep the admin area shut, then negotiate the
-// representation of everything else.
+// Three jobs, in this order: note down an automated request, keep the admin
+// area shut, then negotiate the representation of everything else.
 //
 // (Next 16 renamed middleware to proxy, and refuses to build if both files
 // exist - so the content negotiation lives here rather than in a middleware.ts
@@ -121,8 +123,39 @@ function negotiateRepresentation(req: NextRequest) {
   return res;
 }
 
-export default async function proxy(req: NextRequest) {
+// ──────────────────────────────────────────── 3. the bot ledger
+
+// Decides whether this request is worth a row in public.bot_hits, and returns
+// the bucket if so.
+//
+// The narrowing is deliberate. A row should stand for "something automated
+// asked for a page", so:
+//
+// - GET and HEAD only. A POST is not a reading.
+// - Not an RSC payload request: those are the router fetching part of a page
+//   a browser already has, and counting them would multiply one visit.
+// - Only negotiable paths, which already excludes /api/, /manage, /_next/,
+//   /_vercel/ and anything with a file extension. An asset fetch is not a
+//   reading either.
+// - Only when the user agent identifies something automated. For a person
+//   botKindFromUserAgent returns null and nothing at all is written - this
+//   table collects nothing about human visitors.
+function botHitKind(req: NextRequest): string | null {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return null;
+  if (req.headers.has('rsc') || req.headers.has('next-router-prefetch')) return null;
+  if (!isNegotiable(req.nextUrl.pathname)) return null;
+  return botKindFromUserAgent(req.headers.get('user-agent'));
+}
+
+export default async function proxy(req: NextRequest, event: NextFetchEvent) {
   const { pathname } = req.nextUrl;
+
+  // Before anything else, and never in the way of it: the insert is handed to
+  // waitUntil so the response does not wait on a round trip to the database,
+  // and recordBotHit swallows its own failures so a database that is down
+  // cannot take the site with it.
+  const kind = botHitKind(req);
+  if (kind) event.waitUntil(recordBotHit(kind, pathname));
 
   if (pathname === '/manage' || pathname.startsWith('/manage/') || pathname.startsWith('/api/manage/')) {
     return gateManage(req);
