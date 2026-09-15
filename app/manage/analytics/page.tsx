@@ -31,7 +31,7 @@ import { EVENT_LABELS, PAGE_TYPE_LABELS } from '@/lib/siteEvents';
 import { SERVICES } from '@/lib/services';
 import { buildInsights } from '@/lib/analyticsInsights';
 import { enquiries, readers } from '@/lib/heCount';
-import { BOT_KIND_LABELS, type BotKind } from '@/lib/botDetect';
+import { BOT_KIND_LABELS, type StoredBotKind } from '@/lib/botDetect';
 
 type Totals = { views: number; visits: number; conversions: number; signups: number; events?: number };
 
@@ -299,8 +299,19 @@ export default function AnalyticsPage() {
     .slice()
     .sort((a, b) => b.sessions - a.sessions)
     .slice(0, 3)
-    .map((b) => `${BOT_KIND_LABELS[b.kind as BotKind] ?? b.kind} ${b.sessions}`)
+    .map((b) => `${BOT_KIND_LABELS[b.kind as StoredBotKind] ?? b.kind} ${b.sessions}`)
     .join(', ');
+  // Pulled out of the caveat above and given a sentence of its own further
+  // down the page. `ai_answer` is the one bot bucket that is not a nuisance to
+  // be discounted: it is an assistant opening the page mid-conversation
+  // because a person asked it something, which is a reader the site otherwise
+  // has no way of seeing. Everything else in `bots` is a machine reading on
+  // its own schedule. Rows written before 2026-09-15 carry the old coarse
+  // 'ai' and cannot be re-sorted, so they stay out of this figure rather than
+  // inflate it - see lib/botDetect.ts.
+  const aiAnswerSessions = bots
+    .filter((b) => b.kind === 'ai_answer')
+    .reduce((a, b) => a + b.sessions, 0);
   // A 24-hour range comes back in hourly buckets, so it needs the hourly fill.
   const days = data
     ? data.granularity === 'hour'
@@ -500,6 +511,24 @@ export default function AnalyticsPage() {
 
           <Card title="מאיפה הגיעו המבקרים" sub="לחיצה על שורה פותחת את הפירוט">
             <TrafficSources rows={data.traffic || []} />
+            {/* The other half of the AI story, and it belongs here rather than
+                in a card of its own: the row above counts a person who clicked
+                through from an answer, and this counts the assistant that
+                wrote that answer opening the page to do it. Same event, two
+                ends, and neither one means much without the other.
+
+                Deliberately not added to any total. There is no person on the
+                site during one of these, so calling it a visit would corrupt
+                every rate on the page. */}
+            {aiAnswerSessions > 0 && (
+              <p className="mt-3.5 pt-3 border-t border-stone-100 text-[11px] text-stone-500 leading-relaxed">
+                בנוסף, כלי AI פתח עמוד באתר {aiAnswerSessions.toLocaleString('he-IL')} פעמים
+                תוך כדי שענה למישהו. זה לא נספר כביקור - אין אדם על האתר - אבל זה
+                אומר שהאתר נשלף כדי לענות. מי שילחץ על הקישור בתשובה יופיע למעלה
+                כ&quot;{GROUP_LABELS.ai_referral}&quot;. נספרים רק כלים שטוענים את
+                העמוד כמו דפדפן, ולכן זו רצפה ולא ספירה מלאה.
+              </p>
+            )}
           </Card>
 
           {/* The card above is the totals for the range: who sent the most.

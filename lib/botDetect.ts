@@ -18,25 +18,74 @@
 //
 // PRIVACY. app/api/track/route.ts reads the user agent, passes it through here
 // and discards it, exactly as it already does to reduce it to mobile/desktop.
-// What is stored is one coarse word - 'ai', 'search', 'preview' - which says
-// what kind of client it was and cannot identify anyone. That is the same
+// What is stored is one coarse word - 'ai_answer', 'search', 'preview' - which
+// says what kind of client it was and cannot identify anyone. That is the same
 // bargain lib/siteEvents.ts already documents: no IP, no user agent string, no
 // identifiers.
+//
+// The AI bucket is two words and not one, since 2026-09-15. A crawler building
+// a training set and an assistant fetching the page mid-conversation to answer
+// someone were both landing in 'ai', which made the number unreadable: it could
+// double because a scraper got keener, or because more people were being shown
+// the site, and nothing on the dashboard could tell those apart. The user agent
+// says which, and it is the only thing that does - the fetches are otherwise
+// identical. See the two families below.
 
 /** The kinds worth telling apart on the dashboard. `null` means a person. */
-export type BotKind = 'ai' | 'search' | 'seo' | 'preview' | 'automation' | 'monitor' | 'other';
+export type BotKind =
+  | 'ai_answer'
+  | 'ai_crawler'
+  | 'search'
+  | 'seo'
+  | 'preview'
+  | 'automation'
+  | 'monitor'
+  | 'other';
+
+/**
+ * What can be found in `site_events.bot_kind`, which is not the same set.
+ *
+ * Rows written between 2026-09-14 and the split carry the old coarse 'ai'.
+ * The user agent was discarded at write time, so those rows can never be
+ * re-sorted into answer and crawler - they are what they are, and the
+ * dashboard has to keep a name for them rather than print a raw slug.
+ */
+export type StoredBotKind = BotKind | 'ai';
 
 // Ordered: the first list that matches wins, so a specific family beats the
 // generic catch-all at the bottom. Every entry is matched case-insensitively
 // against the raw user agent.
 const FAMILIES: Array<{ kind: BotKind; patterns: RegExp }> = [
   {
-    // Assistants and the crawlers that feed them. Worth its own bucket: these
-    // are the ones whose presence is good news, and they are also the ones
-    // most likely to be confused with a visit, since some render JavaScript.
-    kind: 'ai',
+    // An assistant fetching this page BECAUSE SOMEONE JUST ASKED IT SOMETHING.
+    //
+    // This is the only bucket on the page that is evidence of a reader. Every
+    // agent listed here is documented by its own vendor as user-initiated:
+    // the fetch happens inside a live conversation, so the page was pulled to
+    // be read back to a person, usually with a link. It is the closest thing
+    // the site gets to a visit it cannot see - no page_view, no scroll, no
+    // session, because the person is reading the answer and not the site.
+    //
+    // Keep the list strict. Every crawler moved in here makes the figure
+    // bigger and makes it mean less, which defeats the reason for splitting.
+    // Listed first so it wins: ChatGPT-User carries "openai.com" in its UA and
+    // would otherwise be swallowed by the crawler pattern below.
+    kind: 'ai_answer',
     patterns:
-      /gptbot|oai-searchbot|chatgpt-user|openai|perplexitybot|perplexity-user|claudebot|claude-web|claude-user|anthropic-ai|google-extended|bytespider|ccbot|cohere-ai|youbot|diffbot|timpibot|omgili|meta-externalagent|amazonbot|applebot-extended|mistralai/i,
+      /chatgpt-user|perplexity-user|claude-user|claude-web|duckassistbot|meta-externalfetcher|mistralai-user|cohere-user/i,
+  },
+  {
+    // The same companies, reading the site on their own schedule: training
+    // corpora and the indexes their answers are drawn from. Nobody is waiting
+    // on the other end of these.
+    //
+    // Not bad news - being in the index is how the bucket above ever happens,
+    // and OAI-SearchBot in particular is what puts the site in ChatGPT's
+    // search results. It is just not a reader, and counting it as one was the
+    // thing that made the old 'ai' number impossible to act on.
+    kind: 'ai_crawler',
+    patterns:
+      /gptbot|oai-searchbot|openai|perplexitybot|claudebot|claude-searchbot|anthropic-ai|google-extended|bytespider|ccbot|cohere-ai|youbot|diffbot|timpibot|omgili|meta-externalagent|amazonbot|applebot-extended|mistralai/i,
   },
   {
     kind: 'search',
@@ -90,9 +139,11 @@ export function botKindFromUserAgent(ua: string | null | undefined): BotKind | n
 export const isBotUserAgent = (ua: string | null | undefined): boolean =>
   botKindFromUserAgent(ua) !== null;
 
-/** Hebrew labels for the dashboard. */
-export const BOT_KIND_LABELS: Record<BotKind, string> = {
-  ai: 'מנועי AI',
+/** Hebrew labels for the dashboard, including the pre-split rows. */
+export const BOT_KIND_LABELS: Record<StoredBotKind, string> = {
+  ai_answer: 'AI בתשובה למישהו',
+  ai_crawler: 'סריקת AI',
+  ai: 'AI לפני הפיצול',
   search: 'מנועי חיפוש',
   seo: 'כלי SEO',
   preview: 'תצוגה מקדימה של קישור',

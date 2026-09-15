@@ -33,27 +33,53 @@ test('AppleWebKit is not Applebot', () => {
   assert.equal(botKindFromUserAgent('Mozilla/5.0 (compatible; Applebot/0.1)'), 'search');
 });
 
-test('assistants and their crawlers are labelled ai', () => {
+test('an assistant fetching mid-conversation is ai_answer', () => {
+  // The bucket that means a person was on the other end. Every string here is
+  // an agent its own vendor documents as user-initiated.
   for (const ua of [
-    'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.2; +https://openai.com/gptbot',
-    'Mozilla/5.0 AppleWebKit/537.36 (compatible; OAI-SearchBot/1.0; +https://openai.com/searchbot)',
     'Mozilla/5.0 (compatible; ChatGPT-User/1.0; +https://openai.com/bot)',
-    'Mozilla/5.0 (compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)',
-    'Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)',
-    'Mozilla/5.0 (compatible; Claude-User/1.0)',
-    'Mozilla/5.0 (compatible; Google-Extended)',
-    'Mozilla/5.0 (compatible; Bytespider; spider-feedback@bytedance.com)',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36; compatible; Perplexity-User/1.0; +https://perplexity.ai/perplexity-user',
+    'Mozilla/5.0 (compatible; Claude-User/1.0; +Claude-User@anthropic.com)',
+    'Claude-Web/1.0',
+    'Mozilla/5.0 (compatible; DuckAssistBot/1.0; +http://duckduckgo.com/duckassistbot.html)',
+    'meta-externalfetcher/1.1',
   ]) {
-    assert.equal(botKindFromUserAgent(ua), 'ai', ua.slice(0, 50));
+    assert.equal(botKindFromUserAgent(ua), 'ai_answer', ua.slice(0, 50));
   }
 });
 
-test('search crawlers are their own bucket, not ai', () => {
+test('ChatGPT-User beats the openai crawler pattern', () => {
+  // The regression the ordering exists to prevent: the ChatGPT-User string
+  // carries "openai.com" in its documentation URL, and the crawler family
+  // matches bare /openai/. First match wins, so ai_answer must be listed
+  // first - swap the two families and this test fails.
+  assert.equal(
+    botKindFromUserAgent('Mozilla/5.0 (compatible; ChatGPT-User/1.0; +https://openai.com/bot)'),
+    'ai_answer',
+  );
+  assert.equal(botKindFromUserAgent('MistralAI-User/1.0'), 'ai_answer');
+  assert.equal(botKindFromUserAgent('MistralAI-Crawler/1.0'), 'ai_crawler');
+});
+
+test('assistants and their crawlers are labelled ai_crawler', () => {
+  for (const ua of [
+    'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.2; +https://openai.com/gptbot',
+    'Mozilla/5.0 AppleWebKit/537.36 (compatible; OAI-SearchBot/1.0; +https://openai.com/searchbot)',
+    'Mozilla/5.0 (compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)',
+    'Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)',
+    'Mozilla/5.0 (compatible; Google-Extended)',
+    'Mozilla/5.0 (compatible; Bytespider; spider-feedback@bytedance.com)',
+  ]) {
+    assert.equal(botKindFromUserAgent(ua), 'ai_crawler', ua.slice(0, 50));
+  }
+});
+
+test('search crawlers are their own bucket, not AI', () => {
   assert.equal(botKindFromUserAgent('Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'), 'search');
   assert.equal(botKindFromUserAgent('Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)'), 'search');
   // Google-Extended is the AI training crawler and must not fall to 'search'
   // just because it says Google.
-  assert.equal(botKindFromUserAgent('Mozilla/5.0 (compatible; Google-Extended/1.0)'), 'ai');
+  assert.equal(botKindFromUserAgent('Mozilla/5.0 (compatible; Google-Extended/1.0)'), 'ai_crawler');
 });
 
 test('a driven browser is caught even behind an ordinary Chrome string', () => {
@@ -96,10 +122,18 @@ test('isBotUserAgent agrees with botKindFromUserAgent', () => {
 });
 
 test('every kind the detector can return has a Hebrew label', () => {
-  for (const ua of ['GPTBot/1.2', 'Googlebot/2.1', 'AhrefsBot/7.0', 'WhatsApp/2.23',
-                    'curl/8.7.1', 'UptimeRobot/2.0', 'UnknownCrawler/1.0']) {
+  for (const ua of ['ChatGPT-User/1.0', 'GPTBot/1.2', 'Googlebot/2.1', 'AhrefsBot/7.0',
+                    'WhatsApp/2.23', 'curl/8.7.1', 'UptimeRobot/2.0', 'UnknownCrawler/1.0']) {
     const kind = botKindFromUserAgent(ua);
     assert.ok(kind, ua);
     assert.ok(BOT_KIND_LABELS[kind], `no label for "${kind}"`);
   }
+});
+
+test("rows written before the split still have a name", () => {
+  // site_events rows from 2026-09-14 carry the old coarse 'ai' and the user
+  // agent that would re-sort them is gone. The dashboard reads the label map
+  // by the stored string, so dropping this entry would print "ai" to the admin
+  // in the middle of a Hebrew line.
+  assert.ok(BOT_KIND_LABELS.ai);
 });

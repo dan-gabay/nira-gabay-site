@@ -1,0 +1,37 @@
+-- Split the `ai` bot_kind into `ai_answer` and `ai_crawler`.
+--
+-- Why: 'ai' was answering two questions with one number. GPTBot building a
+-- training set and ChatGPT-User opening a page because someone just asked it
+-- something are the same HTTP request from the same company, and only the user
+-- agent tells them apart. Lumped together, the figure could double because a
+-- scraper got keener or because more people were being shown the site, and
+-- nothing on the dashboard could say which. One of those is worth acting on.
+--
+-- NOTHING HERE CHANGES DATA. The labelling is entirely in lib/botDetect.ts and
+-- applies to rows written from 2026-09-15 on. The 27 sessions already stored as
+-- 'ai' (2026-09-14 12:56 onward) cannot be re-sorted: app/api/track/route.ts
+-- discards the user agent after reducing it to this one word, which is the
+-- privacy bargain the column exists under, and the user agent is the only thing
+-- that distinguishes the two. Those rows keep 'ai' and the dashboard keeps a
+-- Hebrew label for it rather than printing a raw slug.
+--
+-- manage_analytics needs no change. Its 'bots' key groups by bot_kind without
+-- naming any value:
+--
+--     select e.bot_kind as kind, count(*) as hits,
+--            count(distinct e.session_id) as sessions
+--     from site_events e, bounds b
+--     where e.created_at >= b.cur_from and e.bot_kind is not null
+--     group by 1
+--
+-- so the new words appear on the dashboard the first time they are written.
+-- Verified against pg_get_functiondef before writing this file.
+--
+-- A caveat that belongs with the column and not only in the UI: a hit reaches
+-- site_events only if the client executed the page's JavaScript, because the
+-- row is written by a fetch to /api/track from the browser. A crawler that
+-- pulls the HTML and leaves is never recorded at all. So ai_answer is a floor,
+-- not a count.
+
+comment on column public.site_events.bot_kind is
+  'What kind of automated client sent this hit: ai_answer (an assistant fetching the page mid-conversation, because a person asked it something), ai_crawler (training and index crawlers from the same companies), search, seo, preview, automation, monitor, other. Also ai, on rows written 2026-09-14 to 2026-09-15, before the AI bucket was split - those cannot be re-sorted, the user agent is gone. NULL means a person. Derived in app/api/track/route.ts from the user agent, which is then discarded - see lib/botDetect.ts. Bots are labelled, never blocked. Only clients that run JavaScript ever reach this table.';
