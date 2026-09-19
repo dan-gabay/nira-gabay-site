@@ -229,13 +229,17 @@ export default function ManageContactsPage() {
   // "A message did arrive." Opens the lead form carrying this tap, so saving
   // copies its campaign onto the lead. The name still has to be typed - it is
   // in the WhatsApp message and nowhere the site can reach.
+  //
+  // heard_from is deliberately NOT filled in from the tap. It holds what the
+  // client herself said when asked how she found Nira, and strategy §4 keeps
+  // it precisely because it is independent of the technical attribution:
+  // someone can arrive on a Google ad and still be there because a friend
+  // recommended her, with the ad only being how she found the page again.
+  // Writing "גוגל" into it from the gclid would overwrite the one signal that
+  // can contradict the tracking, and leave no way to notice when it is wrong.
   function startLeadFromIntent(intent: ContactIntent) {
     setLinkedIntent(intent);
-    setNewLead((prev) => ({
-      ...prev,
-      channel: intent.channel,
-      heard_from: prev.heard_from || 'גוגל',
-    }));
+    setNewLead((prev) => ({ ...prev, channel: intent.channel }));
     setShowAddForm(true);
   }
 
@@ -382,7 +386,7 @@ export default function ManageContactsPage() {
                 משויך ללחיצה מ{timeAgo(linkedIntent.created_at)} · {intentSource(linkedIntent)}
               </p>
               <p className="text-[11px] text-emerald-800/80 mt-0.5">
-                המודעה שהביאה אותה תישמר על הפנייה. נשאר רק להוסיף שם וטלפון מההודעה.
+                המקור כבר נשמר - אין צורך למלא אותו. נשאר רק שם וטלפון מההודעה.
               </p>
             </div>
           ) : (
@@ -422,7 +426,9 @@ export default function ManageContactsPage() {
             <input
               value={newLead.heard_from}
               onChange={(e) => setNewLead({ ...newLead, heard_from: e.target.value })}
-              placeholder="איך שמעו עלייך?"
+              placeholder={
+                linkedIntent ? 'מה הם אמרו על איך הגיעו? (לא חובה)' : 'איך שמעו עלייך?'
+              }
               aria-label="איך שמעו עלייך"
               className="min-h-[44px] px-3.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-400 focus:outline-none"
             />
