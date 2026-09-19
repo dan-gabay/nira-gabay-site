@@ -11,6 +11,8 @@ import {
   RotateCcw,
   ChevronDown,
   Inbox,
+  X,
+  HelpCircle,
 } from 'lucide-react';
 import { useManageSummary } from '@/components/manage/ManageShell';
 
@@ -37,6 +39,23 @@ type ContactMessage = {
   landing_page?: string | null;
   referrer?: string | null;
   source_page?: string | null;
+};
+
+// A tap on WhatsApp/phone/email, recorded server-side with the ad click that
+// produced it. Pending until Nira says whether a message actually arrived -
+// the site cannot know, because the tap hands the visitor to another app.
+type ContactIntent = {
+  id: number;
+  created_at: string;
+  channel: string;
+  source_page?: string | null;
+  device?: string | null;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
+  utm_term?: string | null;
+  gclid?: string | null;
+  landing_page?: string | null;
 };
 
 // Lead lifecycle - the quality signal campaign optimization is judged by.
@@ -110,9 +129,23 @@ function attributionSummary(m: ContactMessage): string | null {
   return parts.length ? parts.join(' · ') : null;
 }
 
+// Where a tap came from, in one line. Deliberately short: this list is a
+// yes/no queue, not a report.
+function intentSource(i: ContactIntent): string {
+  if (i.utm_term) return `Google Ads · ${i.utm_term}`;
+  if (i.gclid) return 'Google Ads';
+  if (i.utm_campaign) return `${i.utm_source || 'קמפיין'} · ${i.utm_campaign}`;
+  if (i.utm_source) return i.utm_source;
+  return 'ישיר / אורגני';
+}
+
 export default function ManageContactsPage() {
   const { refresh } = useManageSummary();
   const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [intents, setIntents] = useState<ContactIntent[]>([]);
+  // The tap the open lead form is answering "it arrived" for, so its campaign
+  // is copied onto the lead the server creates.
+  const [linkedIntent, setLinkedIntent] = useState<ContactIntent | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'unread' | 'all' | 'read'>('unread');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -135,6 +168,7 @@ export default function ManageContactsPage() {
       if (!res.ok) throw new Error(`load failed (${res.status})`);
       const data = await res.json();
       setMessages(data.messages || []);
+      setIntents(data.intents || []);
     } catch (error) {
       console.error('Error loading messages:', error);
     } finally {
@@ -173,6 +207,38 @@ export default function ManageContactsPage() {
     }
   }
 
+  // "No message arrived." One tap, and the row leaves the queue. Kept in the
+  // table rather than deleted: taps that produced nothing are what make the
+  // button-to-conversation rate measurable.
+  async function dismissIntent(id: number) {
+    setIntents((prev) => prev.filter((i) => i.id !== id));
+    try {
+      const res = await fetch('/api/manage/contact-intents', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, dismissed: true }),
+      });
+      if (!res.ok) throw new Error(`dismiss failed (${res.status})`);
+    } catch (error) {
+      console.error('Error dismissing intent:', error);
+      // Put it back rather than leave the admin thinking it was handled.
+      await loadMessages();
+    }
+  }
+
+  // "A message did arrive." Opens the lead form carrying this tap, so saving
+  // copies its campaign onto the lead. The name still has to be typed - it is
+  // in the WhatsApp message and nowhere the site can reach.
+  function startLeadFromIntent(intent: ContactIntent) {
+    setLinkedIntent(intent);
+    setNewLead((prev) => ({
+      ...prev,
+      channel: intent.channel,
+      heard_from: prev.heard_from || 'גוגל',
+    }));
+    setShowAddForm(true);
+  }
+
   async function addManualLead() {
     if (!newLead.name || !newLead.phone) {
       alert('נא למלא שם וטלפון');
@@ -183,10 +249,13 @@ export default function ManageContactsPage() {
       const res = await fetch('/api/manage/contacts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newLead),
+        body: JSON.stringify(
+          linkedIntent ? { ...newLead, intent_id: linkedIntent.id } : newLead,
+        ),
       });
       if (!res.ok) throw new Error(`insert failed (${res.status})`);
       setNewLead({ name: '', phone: '', channel: 'whatsapp', heard_from: '', message: '' });
+      setLinkedIntent(null);
       setShowAddForm(false);
       await loadMessages();
       refresh();
@@ -237,7 +306,10 @@ export default function ManageContactsPage() {
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-xl md:text-3xl font-bold text-stone-800">פניות</h1>
         <button
-          onClick={() => setShowAddForm((v) => !v)}
+          onClick={() => {
+            setShowAddForm((v) => !v);
+            setLinkedIntent(null);
+          }}
           className="inline-flex items-center gap-1.5 min-h-[44px] px-4 rounded-xl bg-stone-800 hover:bg-stone-900 text-white text-xs md:text-sm font-medium transition-colors"
         >
           <Plus className="w-4 h-4" aria-hidden="true" />
@@ -245,12 +317,79 @@ export default function ManageContactsPage() {
         </button>
       </div>
 
+      {/* Taps waiting on the one thing the site cannot know: did a message
+          actually arrive. Each row already holds the ad click that produced
+          it, so answering "yes" carries the campaign onto the lead. */}
+      {intents.length > 0 && (
+        <div className="bg-amber-50/70 rounded-2xl border border-amber-200 p-4 md:p-5 space-y-3">
+          <div className="flex items-start gap-2">
+            <HelpCircle className="w-4 h-4 text-amber-700 mt-0.5 flex-shrink-0" aria-hidden="true" />
+            <div>
+              <h2 className="text-sm md:text-base font-semibold text-stone-800">
+                לחצו על יצירת קשר - הגיעה הודעה?
+              </h2>
+              <p className="text-xs text-stone-500 mt-0.5">
+                {intents.length.toLocaleString('he-IL')} לחיצות ממתינות. סימון
+                &quot;הגיע&quot; שומר גם מאיזו מודעה זה בא.
+              </p>
+            </div>
+          </div>
+
+          <ul className="space-y-2">
+            {intents.map((i) => (
+              <li
+                key={i.id}
+                className="bg-white rounded-xl border border-amber-200/70 p-3 flex flex-col sm:flex-row sm:items-center gap-2.5"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-stone-800">
+                    {CHANNEL_LABELS[i.channel] || i.channel}
+                    <span className="font-normal text-stone-400"> · {timeAgo(i.created_at)}</span>
+                  </p>
+                  <p className="text-[11px] text-stone-500 mt-0.5 truncate">
+                    {intentSource(i)}
+                    {i.source_page && <span className="text-stone-400"> · {i.source_page}</span>}
+                  </p>
+                </div>
+                <div className="flex gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => startLeadFromIntent(i)}
+                    className="inline-flex items-center gap-1.5 min-h-[40px] px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium transition-colors"
+                  >
+                    <Check className="w-3.5 h-3.5" aria-hidden="true" />
+                    הגיע
+                  </button>
+                  <button
+                    onClick={() => dismissIntent(i.id)}
+                    className="inline-flex items-center gap-1.5 min-h-[40px] px-3.5 rounded-xl bg-white border border-stone-300 text-stone-600 hover:bg-stone-50 text-xs font-medium transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" aria-hidden="true" />
+                    לא הגיע
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Manual lead - for calls and WhatsApp that never touched the form */}
       {showAddForm && (
         <div className="bg-white rounded-2xl border border-stone-200 p-4 md:p-5 space-y-3">
-          <p className="text-xs md:text-sm text-stone-500">
-            לתיעוד פנייה שהגיעה בטלפון או בוואטסאפ, כדי שתיספר יחד עם השאר.
-          </p>
+          {linkedIntent ? (
+            <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-2.5">
+              <p className="text-xs md:text-sm text-emerald-900 font-medium">
+                משויך ללחיצה מ{timeAgo(linkedIntent.created_at)} · {intentSource(linkedIntent)}
+              </p>
+              <p className="text-[11px] text-emerald-800/80 mt-0.5">
+                המודעה שהביאה אותה תישמר על הפנייה. נשאר רק להוסיף שם וטלפון מההודעה.
+              </p>
+            </div>
+          ) : (
+            <p className="text-xs md:text-sm text-stone-500">
+              לתיעוד פנייה שהגיעה בטלפון או בוואטסאפ, כדי שתיספר יחד עם השאר.
+            </p>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <input
               value={newLead.name}

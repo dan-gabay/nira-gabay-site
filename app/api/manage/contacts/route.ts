@@ -26,7 +26,26 @@ export async function GET(req: NextRequest) {
     console.error('manage contacts list failed:', error.message);
     return NextResponse.json({ error: 'load failed' }, { status: 500 });
   }
-  return NextResponse.json({ messages: data || [] });
+
+  // Taps on WhatsApp/phone/email still awaiting an answer to the one question
+  // only the owner can answer: did a message actually arrive. Pending means
+  // neither logged as a lead nor dismissed. Bounded to 90 days because that is
+  // how long a gclid stays usable, which is what these rows are for.
+  const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: intents, error: intentsError } = await supabase
+    .from('contact_intents')
+    .select('id, created_at, channel, source_page, device, utm_source, utm_medium, utm_campaign, utm_term, gclid, landing_page')
+    .is('claimed_by', null)
+    .is('dismissed_at', null)
+    .gte('created_at', since)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  // A failure here must not cost the admin their lead list; the taps are an
+  // aid to logging a lead, not the lead itself.
+  if (intentsError) console.error('manage contact intents list failed:', intentsError.message);
+
+  return NextResponse.json({ messages: data || [], intents: intents || [] });
 }
 
 const LEAD_STATUSES = ['new', 'spoke', 'started_therapy', 'ongoing', 'irrelevant'] as const;
@@ -92,6 +111,9 @@ export async function POST(req: NextRequest) {
     message?: string;
     heard_from?: string;
     channel?: string;
+    // The contact_intents row this enquiry came from, if the admin identified
+    // it. Carries the campaign attribution onto the lead.
+    intent_id?: number;
   };
   try {
     body = await req.json();
@@ -110,9 +132,34 @@ export async function POST(req: NextRequest) {
       : 'other';
 
   const supabase = supabaseServer();
+
+  // A hand-logged lead has no attribution of its own: Nira is transcribing a
+  // WhatsApp message, not receiving a form post. If she identified the tap it
+  // came from, its campaign fields are copied across - that copy is the whole
+  // point of contact_intents, and what makes cost per qualified lead and
+  // offline conversion import possible for WhatsApp enquiries.
+  let attribution: Record<string, string | null> = {};
+  let intentId: number | null = null;
+  if (typeof body.intent_id === 'number' && Number.isFinite(body.intent_id)) {
+    const { data: intent, error: intentError } = await supabase
+      .from('contact_intents')
+      .select('id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, gclid, landing_page, referrer')
+      .eq('id', Math.round(body.intent_id))
+      .is('claimed_by', null)
+      .maybeSingle();
+    if (intentError) {
+      console.error('manage contact intent read failed:', intentError.message);
+    } else if (intent) {
+      const { id, ...fields } = intent;
+      intentId = id as number;
+      attribution = fields as Record<string, string | null>;
+    }
+  }
+
+  const leadId = crypto.randomUUID();
   const { error } = await supabase.from('contact_messages').insert([
     {
-      id: crypto.randomUUID(),
+      id: leadId,
       name: name.slice(0, 200),
       phone: phone.slice(0, 50),
       email: (body.email || '').trim().slice(0, 200),
@@ -121,6 +168,7 @@ export async function POST(req: NextRequest) {
       channel,
       is_read: true, // Nira logs it herself - it's already "read"
       created_date: new Date().toISOString(),
+      ...attribution,
     },
   ]);
 
@@ -128,6 +176,19 @@ export async function POST(req: NextRequest) {
     console.error('manage contacts manual insert failed:', error.message);
     return NextResponse.json({ error: 'insert failed' }, { status: 500 });
   }
+
+  // Marked only after the lead exists, so a failed insert leaves the tap
+  // available to try again. `is('claimed_by', null)` keeps two admins racing on
+  // the same tap from both claiming it.
+  if (intentId !== null) {
+    const { error: claimError } = await supabase
+      .from('contact_intents')
+      .update({ claimed_by: leadId })
+      .eq('id', intentId)
+      .is('claimed_by', null);
+    if (claimError) console.error('manage contact intent claim failed:', claimError.message);
+  }
+
   return NextResponse.json({ ok: true });
 }
 

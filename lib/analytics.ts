@@ -5,6 +5,7 @@
 // into lib/conversions.ts. Everything else stays first-party.
 
 import { reportContactConversion, reportLeadConversion } from './conversions';
+import { recordContactIntent } from './contactIntent';
 import { visitorState, daysSinceFirst } from './visitor';
 import { usingGtm } from './tagging';
 import {
@@ -300,6 +301,10 @@ export const trackWhatsAppClick = (source: string) => {
     value: 1,
   });
   reportContactConversion('whatsapp');
+  // Writes the ad attribution to contact_intents, because the tap that follows
+  // leaves no other trace: the visitor is handed to WhatsApp and any enquiry
+  // arrives on Nira's phone with no source attached. See lib/contactIntent.ts.
+  recordContactIntent('whatsapp');
 };
 
 export const trackPhoneClick = (source: string) => {
@@ -309,6 +314,7 @@ export const trackPhoneClick = (source: string) => {
     value: 1,
   });
   reportContactConversion('phone');
+  recordContactIntent('phone');
 };
 
 export const trackContactFormSubmit = (formType: string) => {
@@ -532,6 +538,7 @@ export const trackContactMethodClick = (method: 'whatsapp' | 'phone' | 'email' |
   });
   // This, not trackPhoneClick, is what the phone and email CTAs actually call.
   reportContactConversion(method);
+  recordContactIntent(method);
 };
 
 // About Page
