@@ -19,7 +19,8 @@ export async function GET(req: NextRequest) {
 
   try {
     const [
-      newLeads,
+      newLeadRows,
+      pendingIntents,
       totalLeads,
       pendingComments,
       drafts,
@@ -37,6 +38,17 @@ export async function GET(req: NextRequest) {
           .from('contact_messages')
           .select('*', { count: 'exact', head: true })
           .or('status.is.null,status.eq.new'),
+      ),
+      count(
+        // Taps on WhatsApp or phone that are still waiting to be told whether
+        // a message or a call actually arrived. They sit on the same page and
+        // want the same attention as an untriaged lead, so they belong in the
+        // same badge - a queue nobody is reminded of is a queue nobody clears.
+        supabase
+          .from('contact_intents')
+          .select('*', { count: 'exact', head: true })
+          .is('claimed_by', null)
+          .is('dismissed_at', null),
       ),
       count(supabase.from('contact_messages').select('*', { count: 'exact', head: true })),
       count(
@@ -71,7 +83,11 @@ export async function GET(req: NextRequest) {
     ]);
 
     return NextResponse.json({
-      newLeads,
+      // One number for "the פניות page has things waiting": leads nobody has
+      // classified, plus taps nobody has confirmed. Both are resolved there.
+      newLeads: newLeadRows + pendingIntents,
+      newLeadRows,
+      pendingIntents,
       totalLeads,
       pendingComments,
       drafts,

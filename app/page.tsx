@@ -11,6 +11,7 @@ import ServicesSection from '@/components/ServicesSection';
 import Reveal from '@/components/Reveal';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { whatsappHref } from '@/lib/whatsapp';
+import WhatsAppLink from '@/components/WhatsAppLink';
 import type { Metadata } from 'next';
 
 // Refresh the latest-articles section every 5 minutes (ISR)
@@ -132,16 +133,12 @@ export default async function Home() {
               הדרך לשינוי מתחילה בשיחה אחת. אני כאן ללוות אתכם בתהליך אישי ומותאם לצרכים שלכם.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
-                href={whatsappHref()}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <WhatsAppLink href={whatsappHref()} source="home_cta">
                 <button className="bg-green-600 hover:bg-green-700 text-white px-6 md:px-8 py-3 md:py-4 text-sm md:text-lg rounded-xl shadow-2xl w-full sm:w-auto inline-flex items-center justify-center gap-2.5 md:gap-3">
                   <MessageCircle className="w-5 h-5 md:w-6 md:h-6" />
                   שלחו הודעת WhatsApp
                 </button>
-              </a>
+              </WhatsAppLink>
               <Link href="/contact">
                 <button className="border-2 border-white bg-transparent text-white hover:bg-white hover:text-stone-900 px-6 md:px-8 py-3 md:py-4 text-sm md:text-lg rounded-xl w-full sm:w-auto inline-flex items-center justify-center gap-2.5 md:gap-3">
                   <Calendar className="w-5 h-5 md:w-6 md:h-6" />

@@ -6,7 +6,11 @@ import { useEffect, useState, createContext, useContext, useCallback } from 'rea
 import { LayoutDashboard, Inbox, FileText, MessageSquare, Tag, LogOut, BarChart3 } from 'lucide-react';
 
 export type ManageSummary = {
+  /** Leads awaiting classification PLUS taps awaiting confirmation: both are
+   *  cleared on /manage/contacts, so the badge counts them together. */
   newLeads: number;
+  newLeadRows?: number;
+  pendingIntents?: number;
   totalLeads: number;
   pendingComments: number;
   drafts: number;
