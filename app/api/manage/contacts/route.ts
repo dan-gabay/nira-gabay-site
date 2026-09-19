@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { MANAGE_COOKIE, isManageAuthorized } from '@/lib/manageAuth';
+import { normalizePhone, PHONE_ERROR } from '@/lib/phone';
 
 export const runtime = 'nodejs';
 
@@ -126,6 +127,13 @@ export async function POST(req: NextRequest) {
   if (!name || !phone) {
     return NextResponse.json({ error: 'נא למלא שם וטלפון' }, { status: 400 });
   }
+  // normalizePhone rather than the strict Israeli check: Nira is transcribing
+  // a number from a message she already has, so a foreign one written with a
+  // country code is real and refusing to record her would be the worse error.
+  const normalizedPhone = normalizePhone(phone);
+  if (!normalizedPhone) {
+    return NextResponse.json({ error: PHONE_ERROR }, { status: 400 });
+  }
   const channel =
     body.channel && (LEAD_CHANNELS as readonly string[]).includes(body.channel)
       ? body.channel
@@ -161,7 +169,7 @@ export async function POST(req: NextRequest) {
     {
       id: leadId,
       name: name.slice(0, 200),
-      phone: phone.slice(0, 50),
+      phone: normalizedPhone,
       email: (body.email || '').trim().slice(0, 200),
       message: (body.message || '').trim().slice(0, 5000),
       heard_from: (body.heard_from || '').trim().slice(0, 200) || null,

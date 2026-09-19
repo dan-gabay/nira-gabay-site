@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
+import { normalizeIsraeliPhone, PHONE_ERROR } from '@/lib/phone';
 
 export const runtime = 'nodejs';
 
@@ -72,13 +73,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'bad request' }, { status: 400 });
   }
 
+  // The phone number is the lead. Checked here and not only in the form,
+  // because this route is public and the browser is not the authority on what
+  // reaches the table - a lead arrived on 2026-09-18 with eight digits and no
+  // way to call the person back. Stored normalised, so /manage can dial and
+  // open WhatsApp without re-parsing what someone typed.
+  const normalizedPhone = normalizeIsraeliPhone(phone);
+  if (!normalizedPhone) {
+    return NextResponse.json({ error: PHONE_ERROR }, { status: 400 });
+  }
+
   const supabase = supabaseServer();
   const { error } = await supabase.from('contact_messages').insert([
     {
       id: crypto.randomUUID(),
       name,
       email,
-      phone,
+      phone: normalizedPhone,
       message,
       is_read: false,
       created_date: new Date().toISOString(),
@@ -113,7 +124,7 @@ export async function POST(req: NextRequest) {
             '<div dir="rtl" style="font-family:Arial,sans-serif">',
             '<h2>פנייה חדשה מטופס יצירת הקשר</h2>',
             `<p><strong>שם:</strong> ${escapeHtml(name)}</p>`,
-            `<p><strong>טלפון:</strong> ${escapeHtml(phone)}</p>`,
+            `<p><strong>טלפון:</strong> ${escapeHtml(normalizedPhone)}</p>`,
             email ? `<p><strong>אימייל:</strong> ${escapeHtml(email)}</p>` : '',
             `<p><strong>הודעה:</strong></p><p>${escapeHtml(message).replace(/\n/g, '<br/>')}</p>`,
             '<hr/><p>ניתן לצפות בכל הפניות באזור הניהול באתר.</p>',

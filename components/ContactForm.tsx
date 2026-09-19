@@ -9,6 +9,7 @@ import {
   trackGenerateLead,
 } from '@/lib/analytics';
 import { getStoredAttribution } from '@/lib/attribution';
+import { isValidIsraeliPhone, PHONE_ERROR } from '@/lib/phone';
 
 // One definition for the field styling, so the two variants cannot drift.
 const FIELD = (onDark: boolean) =>
@@ -50,6 +51,10 @@ export default function ContactForm({
     phone: '',
     message: '',
   });
+  // Shown once the field has been left, never while it is being typed: a
+  // number is invalid for most of the time it takes to enter one, and an error
+  // that appears on the third keystroke reads as the form arguing with you.
+  const [phoneTouched, setPhoneTouched] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -61,6 +66,13 @@ export default function ContactForm({
 
     if (!formData.name || !formData.message || !formData.phone) {
       setError('נא למלא שם, טלפון והודעה');
+      return;
+    }
+    // Checked again on the server, which is the authority; this is here so the
+    // person finds out now rather than after a round trip.
+    if (!isValidIsraeliPhone(formData.phone)) {
+      setPhoneTouched(true);
+      setError(PHONE_ERROR);
       return;
     }
 
@@ -92,6 +104,7 @@ export default function ContactForm({
 
       setSubmitted(true);
       setFormData({ name: '', email: '', phone: '', message: '' });
+      setPhoneTouched(false);
     } catch (err) {
       console.error('Form submission error:', err);
       setError('לא הצלחנו לשלוח את ההודעה. אנא נסו שוב או צרו קשר ישירות בטלפון/WhatsApp.');
@@ -204,11 +217,32 @@ export default function ContactForm({
                   inputMode="tel"
                   placeholder="050-0000000"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, phone: e.target.value });
+                    // Typing again clears the complaint; it comes back on blur
+                    // if the number is still not one.
+                    if (phoneTouched) setPhoneTouched(false);
+                  }}
                   onFocus={() => trackFormFieldFocus('contact_form', 'phone')}
-                  className={`${FIELD(onDark)} text-left`}
+                  onBlur={() => setPhoneTouched(true)}
+                  aria-invalid={phoneTouched && !!formData.phone && !isValidIsraeliPhone(formData.phone)}
+                  aria-describedby={`contact-phone-help-${sourceId}`}
+                  className={`${FIELD(onDark)} text-left ${
+                    phoneTouched && formData.phone && !isValidIsraeliPhone(formData.phone)
+                      ? 'border-red-400 focus:ring-red-400'
+                      : ''
+                  }`}
                   required
                 />
+                {phoneTouched && formData.phone && !isValidIsraeliPhone(formData.phone) && (
+                  <p
+                    id={`contact-phone-help-${sourceId}`}
+                    role="alert"
+                    className={`mt-1.5 text-xs ${onDark ? 'text-red-200' : 'text-red-600'}`}
+                  >
+                    {PHONE_ERROR}
+                  </p>
+                )}
               </div>
             </div>
 
