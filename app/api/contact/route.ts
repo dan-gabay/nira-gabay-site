@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { normalizeIsraeliPhone, PHONE_ERROR } from '@/lib/phone';
+import { sendLeadEmail } from '@/lib/leadNotify';
 
 export const runtime = 'nodejs';
 
@@ -83,6 +84,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: PHONE_ERROR }, { status: 400 });
   }
 
+  const attribution = sanitizeAttribution(body.attribution);
+
   const supabase = supabaseServer();
   const { error } = await supabase.from('contact_messages').insert([
     {
@@ -93,7 +96,7 @@ export async function POST(req: NextRequest) {
       message,
       is_read: false,
       created_date: new Date().toISOString(),
-      ...sanitizeAttribution(body.attribution),
+      ...attribution,
     },
   ]);
 
@@ -105,45 +108,24 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Notify Nira by email. Failure here must not fail the lead itself.
-  const resendKey = process.env.RESEND_API_KEY;
-  const notifyTo = process.env.CONTACT_NOTIFY_EMAIL || 'niraga1123@gmail.com';
-  if (resendKey) {
-    try {
-      await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${resendKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: process.env.CONTACT_NOTIFY_FROM || 'onboarding@resend.dev',
-          to: [notifyTo],
-          subject: `פנייה חדשה מהאתר: ${name}`,
-          html: [
-            '<div dir="rtl" style="font-family:Arial,sans-serif">',
-            '<h2>פנייה חדשה מטופס יצירת הקשר</h2>',
-            `<p><strong>שם:</strong> ${escapeHtml(name)}</p>`,
-            `<p><strong>טלפון:</strong> ${escapeHtml(normalizedPhone)}</p>`,
-            email ? `<p><strong>אימייל:</strong> ${escapeHtml(email)}</p>` : '',
-            `<p><strong>הודעה:</strong></p><p>${escapeHtml(message).replace(/\n/g, '<br/>')}</p>`,
-            '<hr/><p>ניתן לצפות בכל הפניות באזור הניהול באתר.</p>',
-            '</div>',
-          ].join(''),
-        }),
-      });
-    } catch (e) {
-      console.error('lead email notification failed:', e);
-    }
+  // Notify Nira. Failure here must never fail the lead itself - it is already
+  // in the database, which is the part that matters - but it IS logged with
+  // the reason, so a notification pipeline that has quietly stopped working
+  // can be found. /api/manage/notify-test answers the same question on demand.
+  const notified = await sendLeadEmail({
+    name,
+    phone: normalizedPhone,
+    email,
+    message,
+    source: attribution.utm_term
+      ? `Google Ads · ${attribution.utm_term}`
+      : attribution.gclid
+        ? 'Google Ads'
+        : attribution.utm_source || null,
+  });
+  if (!notified.ok) {
+    console.error(`lead email not sent (${notified.reason}): ${notified.detail}`);
   }
 
   return NextResponse.json({ ok: true });
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }

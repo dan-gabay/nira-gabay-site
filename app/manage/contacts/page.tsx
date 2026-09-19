@@ -13,6 +13,7 @@ import {
   Inbox,
   X,
   HelpCircle,
+  BellRing,
 } from 'lucide-react';
 import { useManageSummary } from '@/components/manage/ManageShell';
 
@@ -149,6 +150,9 @@ export default function ManageContactsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'unread' | 'all' | 'read'>('unread');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [notifyCheck, setNotifyCheck] = useState<
+    { state: 'idle' } | { state: 'running' } | { state: 'done'; ok: boolean; text: string }
+  >({ state: 'idle' });
   const [isAddingLead, setIsAddingLead] = useState(false);
   const [newLead, setNewLead] = useState({
     name: '',
@@ -243,6 +247,35 @@ export default function ManageContactsPage() {
     setShowAddForm(true);
   }
 
+  // Sends a test through the same code path a real lead uses, and reports what
+  // came back. The contact route swallows notification failures on purpose, so
+  // without this an unset key looks identical to everything working.
+  async function checkNotifications() {
+    setNotifyCheck({ state: 'running' });
+    try {
+      const res = await fetch('/api/manage/notify-test', { method: 'POST' });
+      const data = await res.json();
+      if (data.ok) {
+        setNotifyCheck({
+          state: 'done',
+          ok: true,
+          text: `נשלח אל ${(data.to || []).join(', ')}. אם זה לא הגיע תוך דקה, כדאי לבדוק ספאם.`,
+        });
+      } else if (data.reason === 'not_configured') {
+        setNotifyCheck({
+          state: 'done',
+          ok: false,
+          text: 'אין מפתח Resend מוגדר, כך שלא נשלחת שום התראה על פניות. צריך להגדיר RESEND_API_KEY.',
+        });
+      } else {
+        setNotifyCheck({ state: 'done', ok: false, text: `השליחה נכשלה: ${data.detail || 'שגיאה לא ידועה'}` });
+      }
+    } catch (error) {
+      console.error('notify check failed:', error);
+      setNotifyCheck({ state: 'done', ok: false, text: 'הבדיקה עצמה נכשלה. נסי שוב.' });
+    }
+  }
+
   async function addManualLead() {
     if (!newLead.name || !newLead.phone) {
       alert('נא למלא שם וטלפון');
@@ -327,6 +360,29 @@ export default function ManageContactsPage() {
           <Plus className="w-4 h-4" aria-hidden="true" />
           {showAddForm ? 'סגירה' : 'פנייה ידנית'}
         </button>
+      </div>
+
+      {/* Notifications go out on every lead and their failures are swallowed by
+          design, so this is the only way to tell working from silent. */}
+      <div className="flex flex-wrap items-center gap-2.5">
+        <button
+          onClick={checkNotifications}
+          disabled={notifyCheck.state === 'running'}
+          className="inline-flex items-center gap-1.5 min-h-[36px] px-3 rounded-lg border border-stone-200 bg-white text-stone-500 hover:text-stone-700 hover:bg-stone-50 text-[11px] font-medium transition-colors disabled:opacity-60"
+        >
+          <BellRing className="w-3.5 h-3.5" aria-hidden="true" />
+          {notifyCheck.state === 'running' ? 'שולח...' : 'בדיקת התראות'}
+        </button>
+        {notifyCheck.state === 'done' && (
+          <p
+            role="status"
+            className={`text-[11px] leading-relaxed ${
+              notifyCheck.ok ? 'text-emerald-700' : 'text-red-600'
+            }`}
+          >
+            {notifyCheck.text}
+          </p>
+        )}
       </div>
 
       {/* Taps waiting on the one thing the site cannot know: did a message
