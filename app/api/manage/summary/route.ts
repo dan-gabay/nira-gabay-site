@@ -28,10 +28,15 @@ export async function GET(req: NextRequest) {
       subscribers,
     ] = await Promise.all([
       count(
+        // "New" means the status has not been moved off 'new', matching the
+        // חדשות tab in /manage/contacts. It deliberately does NOT count unread
+        // rows: replying on WhatsApp marks a lead read, and a lead being
+        // replied to still needs handling. Rows from before the status column
+        // exists are null and are counted as new, which is what the list shows.
         supabase
           .from('contact_messages')
           .select('*', { count: 'exact', head: true })
-          .eq('is_read', false),
+          .or('status.is.null,status.eq.new'),
       ),
       count(supabase.from('contact_messages').select('*', { count: 'exact', head: true })),
       count(

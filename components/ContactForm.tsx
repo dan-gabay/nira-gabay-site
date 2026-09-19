@@ -227,9 +227,15 @@ export default function ContactForm({
                   onBlur={() => setPhoneTouched(true)}
                   aria-invalid={phoneTouched && !!formData.phone && !isValidIsraeliPhone(formData.phone)}
                   aria-describedby={`contact-phone-help-${sourceId}`}
+                  // A ring, not a border colour. FIELD() already sets a border
+                  // colour per variant, and two Tailwind border-colour
+                  // utilities are decided by their order in the generated CSS
+                  // rather than in the class attribute - so border-red-400 lost
+                  // silently on both variants and the field looked unmarked.
+                  // A ring is a box-shadow, so it cannot collide.
                   className={`${FIELD(onDark)} text-left ${
                     phoneTouched && formData.phone && !isValidIsraeliPhone(formData.phone)
-                      ? 'border-red-400 focus:ring-red-400'
+                      ? 'ring-2 ring-red-400 focus:ring-red-400'
                       : ''
                   }`}
                   required

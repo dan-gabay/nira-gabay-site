@@ -286,16 +286,24 @@ export default function ManageContactsPage() {
     }
   }
 
-  const unreadCount = messages.filter((m) => !m.is_read).length;
-  const readCount = messages.length - unreadCount;
+  // A lead is "new" until its STATUS says otherwise - not until it has been
+  // opened. Tapping WhatsApp to reply marks a lead read, and while these tabs
+  // filtered on is_read that single tap moved the lead out of חדשות before
+  // anyone had spoken to the person. Replying is the beginning of handling a
+  // lead, not the end of it. Rows predating the status column read as new,
+  // which is the truthful default for a lead nobody has classified.
+  const isNew = (m: ContactMessage) => (m.status ?? 'new') === 'new';
+
+  const newCount = messages.filter(isNew).length;
+  const handledCount = messages.length - newCount;
 
   const filtered = messages.filter((m) =>
-    filter === 'unread' ? !m.is_read : filter === 'read' ? m.is_read : true,
+    filter === 'unread' ? isNew(m) : filter === 'read' ? !isNew(m) : true,
   );
 
   const TABS = [
-    { key: 'unread' as const, label: 'חדשות', count: unreadCount },
-    { key: 'read' as const, label: 'טופלו', count: readCount },
+    { key: 'unread' as const, label: 'חדשות', count: newCount },
+    { key: 'read' as const, label: 'טופלו', count: handledCount },
     { key: 'all' as const, label: 'הכל', count: messages.length },
   ];
 
@@ -487,7 +495,7 @@ export default function ManageContactsPage() {
               <article
                 key={m.id}
                 className={`bg-white rounded-2xl border overflow-hidden ${
-                  m.is_read ? 'border-stone-200' : 'border-rose-200 ring-1 ring-rose-100'
+                  isNew(m) ? 'border-rose-200 ring-1 ring-rose-100' : 'border-stone-200'
                 }`}
               >
                 <div className="p-3.5 md:p-5 space-y-3">
@@ -495,7 +503,7 @@ export default function ManageContactsPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <h2 className="font-bold text-stone-800 text-sm md:text-base truncate">
-                        {!m.is_read && (
+                        {isNew(m) && (
                           <span
                             className="inline-block w-2 h-2 rounded-full bg-rose-500 ml-1.5 align-middle"
                             aria-label="חדש"
@@ -585,16 +593,19 @@ export default function ManageContactsPage() {
                         </option>
                       ))}
                     </select>
+                    {/* One tap for the common move, the dropdown beside it for
+                        the rest. It sets the STATUS rather than the read flag,
+                        because that is what the tabs and the ring now read. */}
                     <button
-                      onClick={() => setReadState(m.id, !m.is_read)}
-                      title={m.is_read ? 'סימון כחדשה' : 'סימון כטופלה'}
-                      aria-label={m.is_read ? 'סימון כחדשה' : 'סימון כטופלה'}
+                      onClick={() => updateLead(m.id, { status: isNew(m) ? 'spoke' : 'new' })}
+                      title={isNew(m) ? 'סימון כטופלה - דיברנו' : 'החזרה לחדשות'}
+                      aria-label={isNew(m) ? 'סימון כטופלה - דיברנו' : 'החזרה לחדשות'}
                       className="w-11 h-11 flex items-center justify-center rounded-xl border border-stone-300 text-stone-600 hover:bg-stone-50 transition-colors flex-shrink-0"
                     >
-                      {m.is_read ? (
-                        <RotateCcw className="w-4 h-4" aria-hidden="true" />
-                      ) : (
+                      {isNew(m) ? (
                         <Check className="w-4 h-4" aria-hidden="true" />
+                      ) : (
+                        <RotateCcw className="w-4 h-4" aria-hidden="true" />
                       )}
                     </button>
                     <button
