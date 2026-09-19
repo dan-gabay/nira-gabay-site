@@ -4,171 +4,252 @@ The day-60 optimization review called for in
 `docs/google-ads-strategy-2026-07.md` §7. Companion docs: that strategy file
 and `docs/ads-keyword-research-2026-07.md`.
 
-**Source of the numbers.** Everything here comes from the site's own
-`site_events` and `contact_messages` tables, covering the ~26 days to
-2026-09-19. It is click-to-enquiry data. It does NOT include cost: no spend,
-no CPC, no CPA figure appears below, because this container has no GA4
-credentials. Every recommendation is therefore about *structure*, which is
-where the problem turns out to be anyway. Re-run `scripts/ads-check.ts`
-when cost data is needed to finish the budget math.
+Last updated 2026-09-19.
 
-## 1. The finding
+## 0. Owner decisions recorded in this review
 
-**The campaign that is running is not the campaign that was approved.**
+1. **The adult / couples / CBT segments are approved.** They were deferred in
+   the July strategy and started running anyway (see §2). As of 2026-09-19 the
+   owner approves what is live. The deferral in
+   `docs/google-ads-strategy-2026-07.md` §2 is superseded.
+2. **A WhatsApp enquiry counts as a conversion.** Consistent with strategy §4,
+   which already lists the WhatsApp click as a PRIMARY conversion. Nothing in
+   §5 below argues against WhatsApp as a channel; the open question is
+   narrower and is stated in §7.
 
-The July strategy (§2) approved three ad groups - הדרכת הורים, טיפול רגשי
-לילדים, טיפול למתבגרים - and explicitly deferred adult individual therapy,
-CBT and couples to a day-60 revisit. The keyword doc repeats it: "Adult
-individual therapy + couples terms - deferred".
+## 1. The account as it stands
 
-Where the 340 paid sessions actually went:
+| | |
+|---|---|
+| Campaign | חיפוש - מקומי - אוגוסט 2026 (one campaign, Search only) |
+| Budget | ₪30/day, ₪912/month, pacing "on plan" |
+| Spend 1-19 Sept | ₪596.82 |
+| Search Partners | off (Google is recommending joining, so it is not on) |
+| Display expansion | off |
+| Bidding | not automated (Google is recommending Maximize Conversions) |
+| Ads-reported, 13-19 Sept | ₪199, 4 conversions, CPA ₪49.80 |
 
-| Landing page | Sessions | Share | Enquiries | Status in the approved plan |
-|---|---|---|---|---|
-| /services/adult-therapy | 270 | 79% | 7 | deferred |
-| /about | 33 | 10% | 0 | sitelink, not a landing page |
-| /services/couples-therapy | 17 | 5% | 0 | deferred |
-| /services/cbt | 10 | 3% | 0 | deferred |
-| /clinic | 4 | 1% | 0 | - |
-| **/services/parent-guidance** | **4** | **1%** | 0 | **approved ad group 1** |
-| /contact | 1 | <1% | 0 | - |
-| / | 1 | <1% | 0 | - |
-| **/services/teen-therapy** | **0** | **0%** | 0 | **approved ad group 3** |
+`utm_campaign` arrives as the literal string `search-he`, not `{campaignid}`
+as the strategy's URL convention specifies, and `utm_content` is empty on
+every row, so `{creative}` is missing from the final URLs. Consequence: no
+ad-level breakdown is possible from our own data. Worth fixing in the tracking
+template before the next review.
 
-- **87% of the traffic (297 of 340) went to the three deferred segments.**
-- **1.2% (4 of 340) went to the approved ad groups.**
-- Ad group 2 cannot be running at all: `/services/child-therapy` does not
-  exist. `lib/services.ts` has adult-therapy, couples-therapy,
-  parent-guidance, cbt, teen-therapy, sex-therapy. There is no child page.
+## 2. Structure: what was approved vs what ran
 
-This is not a bidding problem and it is not a landing-page problem. The
-account is advertising a different practice than the one that was planned.
+The July strategy approved three ad groups - הדרכת הורים, טיפול רגשי לילדים,
+טיפול למתבגרים - and deferred adult, CBT and couples. What actually ran:
 
-## 2. Keywords
-
-| Keyword | Sessions | Enquiries |
-|---|---|---|
-| פסיכותרפיה | 269 | 6 |
-| מטפלת רגשית | 34 | 1 |
-| טיפול פסיכותרפי | 12 | 0 |
-| טיפול זוגי | 6 | 0 |
-| מטפלת זוגית | 4 | 0 |
-| טיפול זוגי בירושלים | 4 | 0 |
-| מדריכת הורים | 4 | 0 |
-| טיפולים זוגיים | 2 | 0 |
-| טיפול רגשי ירושלים | 1 | 0 |
-| מדריכת הורים ירושלים | 1 | 0 |
-| טיפול זוגי ירושלים | 1 | 0 |
-| ייעוץ זוגי | 1 | 0 |
-| (none) | 1 | 0 |
-
-Two things stand out.
-
-**`פסיכותרפיה` is 79% of the campaign on its own.** It is a dictionary word.
-Nobody types it while looking for a therapist near Shoeva; they type it while
-finding out what the word means. A single head term pulling 269 of 340
-sessions is also a strong hint that **broad match is on**, which the strategy
-(§3) ruled out: "phrase + exact only. No broad match". Under phrase match
-this term would not produce this shape of traffic.
-
-**The high-intent long tail is starving.** `מדריכת הורים ירושלים`,
-`טיפול זוגי ירושלים`, `טיפול רגשי ירושלים` - one session each across 26 days.
-These are the terms with actual local buying intent, and they are getting
-nothing while the head term eats the budget.
-
-## 3. Landing pages
-
-| Landing | Sessions | Enquiries | Pages/session | Bounced | Mobile |
-|---|---|---|---|---|---|
-| /services/adult-therapy | 270 | 7 | 1.50 | 222 (82%) | 262 |
-| /about | 33 | 0 | 1.00 | 33 (100%) | 33 |
-| /services/couples-therapy | 17 | 0 | 1.65 | 14 | 16 |
-| /services/cbt | 10 | 0 | 1.20 | 9 | 10 |
-| /clinic | 4 | 0 | 2.00 | 3 | 4 |
-| /services/parent-guidance | 4 | 0 | 4.50 | 0 | 3 |
-| /contact | 1 | 0 | 1.00 | 1 | 1 |
-| / | 1 | 0 | 5.00 | 0 | 1 |
-
-**`/about` is burning budget.** 33 paid clicks, every single one left after a
-single page, zero enquiries. Strategy §6 lists a `קצת עליי` sitelink - this is
-it. A sitelink is meant to support the ad, not absorb a tenth of the clicks
-into a page with no next step.
-
-**`/services/parent-guidance` is the only page that holds anyone.** 4.50 pages
-per session and not one bounce. The sample is 4 sessions, so it proves
-nothing on its own - but it is the approved landing page, it is the one page
-where visitors go deeper, and it is receiving 1% of the traffic.
-
-**82% bounce on the money page.** `/services/adult-therapy` takes 270 sessions
-and loses 222 of them immediately, 97% of them on mobile.
-
-## 4. Conversion rate in context
-
-| Source | Sessions | Enquiries | Rate |
+| Landing page | Sessions | Share | Plan status |
 |---|---|---|---|
-| Paid | 340 | 7 | 2.1% |
-| Direct | 120 | 2 | 1.7% |
-| Organic | 43 | 1 | 2.3% |
-| Social | 33 | 1 | 3.0% |
+| /services/adult-therapy | 270 | 79% | was deferred |
+| /about | 33 | 10% | sitelink, not a landing page |
+| /services/couples-therapy | 17 | 5% | was deferred |
+| /services/cbt | 10 | 3% | was deferred |
+| /clinic | 4 | 1% | - |
+| /services/parent-guidance | 4 | 1% | approved ad group 1 |
+| /contact, / | 2 | <1% | - |
+| /services/teen-therapy | 0 | 0% | approved ad group 3 |
 
-Paid is not worse than anything else. With 11 enquiries in total the spread
-between 1.7% and 3.0% is noise and must not be read as a ranking. The useful
-conclusion is only that no channel converts well, which points at the site's
-contact step rather than at traffic quality.
+87% of traffic went to the deferred segments, 1.2% to the approved ones.
+Ad group 2 cannot have run at all: `/services/child-therapy` does not exist.
+`lib/services.ts` has adult-therapy, couples-therapy, parent-guidance, cbt,
+teen-therapy, sex-therapy, and no child page.
 
-## 5. What to change, in order
+**Resolved by owner decision §0.1.** Recorded here because it explains why the
+account looks nothing like the plan, and because the three approved ad groups
+still have no traffic and no ads.
 
-**1. Stop the deferred segments or re-approve them.** This is the decision that
-governs everything else. Either adult/couples/CBT are now a deliberate choice
-worth 87% of the budget, or the campaign gets rebuilt on the approved three.
-It should not stay accidental. Note that adult therapy produced all 7
-enquiries, so "just pause it" is not automatically right - but it was never
-chosen, and cost per *qualified* lead (not per enquiry) is what the strategy
-says decides this, which needs Nira's `/manage` lead statuses.
+## 3. Keywords
 
-**2. Turn off the `/about` sitelink, or point it somewhere with a next step.**
-33 clicks, 100% bounce, 0 enquiries. No judgement call needed.
+13 keywords, 363 paid sessions, 26 days. Bots excluded. `utm_term` holds the
+matched KEYWORD, not the user's search term; see §7.
 
-**3. Check the match types.** Strategy §3: phrase + exact only. If
-`פסיכותרפיה` is on broad, change it. Then run the search-terms report and
-apply the campaign negative list from `docs/ads-keyword-research-2026-07.md`
-§4 - it is already written and covers exactly the study/definition queries a
-term like `פסיכותרפיה` attracts (קורס, לימודים, הכשרה, תואר, מה זה, ויקיפדיה).
+| Keyword | Sessions | Conv. events | Pages/session | Bounced | Mobile |
+|---|---|---|---|---|---|
+| פסיכותרפיה | 291 | 7 | 1.45 | 244 (84%) | 284 |
+| מטפלת רגשית | 35 | 1 | 1.49 | 29 | 35 |
+| טיפול פסיכותרפי | 12 | 0 | 1.33 | 11 | 10 |
+| טיפול זוגי | 6 | 0 | 1.00 | 6 | 6 |
+| טיפול זוגי בירושלים | 4 | 0 | 2.50 | 2 | 4 |
+| מדריכת הורים | 4 | 0 | 3.00 | 1 | 3 |
+| מטפלת זוגית | 4 | 0 | 2.25 | 3 | 3 |
+| טיפולים זוגיים | 2 | 0 | 1.00 | 2 | 2 |
+| מדריכת הורים ירושלים | 1 | 0 | 7.00 | 0 | 1 |
+| ייעוץ זוגי בירושלים | 1 | 0 | 1.00 | 1 | 1 |
+| טיפול רגשי ירושלים | 1 | 0 | 1.00 | 1 | 1 |
+| ייעוץ זוגי | 1 | 0 | 1.00 | 1 | 1 |
+| טיפול זוגי ירושלים | 1 | 0 | 1.00 | 1 | 1 |
 
-**4. Fund the local long tail.** The ירושלים-modified terms get one session
-each. Check whether that is a bid problem or genuinely no volume.
+**`פסיכותרפיה` is 80% of the campaign and bounces 84% of it.** One keyword
+absorbing 291 sessions is the signature of broad match, which strategy §3
+ruled out ("phrase + exact only"). Those 291 sessions are 291 search terms
+nobody has looked at.
 
-**5. Bidding: not yet, and the strategy already said so.** §3 sets the gate at
-~30 conversions before evaluating tCPA; we are at 7 in 26 days, roughly 8 a
-month. Target CPA would be learning on noise. Maximize Conversions without a
-target is defensible if the campaign is currently on Maximize Clicks - 8 is a
-weak signal, but it beats optimising for the wrong thing - and Maximize Clicks
-is literally an instruction to buy visitors. Confirm what the campaign is on
-before deciding.
+**Engagement rises as the term narrows, and budget does the opposite.**
+`מדריכת הורים ירושלים` 7.00 pages and no bounce on 1 session,
+`מדריכת הורים` 3.00, `טיפול זוגי בירושלים` 2.50, against the head term's 1.45.
+The terms that hold people get 1-4 sessions in 26 days.
 
-**6. Fix `/services/adult-therapy` on mobile** if it stays a paid destination.
-82% bounce across 262 mobile sessions is the largest single number in this
-review.
+**Couples: 19 sessions across 7 keywords, no conversions.** No single one
+clears the strategy's own 15-20 click guardrail, so none can be judged alone.
+They need consolidating into one funded ad group or closing.
 
-## 6. Precondition to verify before any bidding change
+Negative keywords were updated by the owner on 2026-09-19.
 
-Conversions reach Google Ads by importing GA4 key events, not by a conversion
-tag in the code (see the comment in `lib/conversions.ts`). Strategy §4 lists
-`contact_whatsapp` and `contact_phone` as PRIMARY imports and `generate_lead`
-as secondary.
+**Do not bid on `פסיכולוג` / `פסיכולוגית`.** Nira is not a psychologist. If
+`פסיכותרפיה` is on broad match it may already be matching those queries, which
+is both wasted spend and a misrepresentation. These belong in the negative
+list.
 
-Confirm in the Ads UI that those key events are actually imported and marked
-primary. If they are not, Ads has no conversion signal at all, no bidding
-change is possible, and that alone explains a campaign that delivers visitors.
+## 4. Landing pages
 
-## 7. What this review cannot tell you
+| Landing | Sessions | Pages/session | Bounced | Mobile |
+|---|---|---|---|---|
+| /services/adult-therapy | 270 | 1.50 | 222 (82%) | 262 |
+| /about | 33 | 1.00 | 33 (100%) | 33 |
+| /services/couples-therapy | 17 | 1.65 | 14 | 16 |
+| /services/cbt | 10 | 1.20 | 9 | 10 |
+| /clinic | 4 | 2.00 | 3 | 4 |
+| /services/parent-guidance | 4 | 4.50 | 0 | 3 |
+| /contact | 1 | 1.00 | 1 | 1 |
+| / | 1 | 5.00 | 0 | 1 |
 
-- **Cost.** No spend, CPC or CPA. Cost per qualified lead per ad group - the
-  day-60 gate in the strategy - cannot be computed here.
-- **Lead quality.** The strategy is explicit that lead quality outranks volume.
-  7 enquiries is not 7 clients. The `/manage` lead statuses
-  (new / spoke / started therapy / ongoing / irrelevant) are what turn this
-  into a real decision, and they need to be filled in.
-- **Anything at keyword level below ~15 clicks.** The strategy's own guardrail:
-  no decisions on under 15-20 clicks per keyword. That covers every row in
-  section 2 except the top two.
+`/about` takes a tenth of the paid clicks and every single visitor leaves
+after one page. Strategy §6 lists a `קצת עליי` sitelink; this is it.
+
+`/services/parent-guidance` is the only page that holds anyone (4.50 pages, no
+bounces). The sample is 4 sessions and proves nothing alone, but it is the
+approved landing page and it receives 1% of the traffic.
+
+## 5. Conversions: the click is not the conversation
+
+Eight conversion events on paid traffic in 26 days:
+
+| When (IDT) | Event | Landing |
+|---|---|---|
+| 24.08 10:25 | contact_phone | /services/adult-therapy |
+| 02.09 01:04 | contact_whatsapp | /services/cbt |
+| 02.09 03:59 | contact_whatsapp | /about |
+| 04.09 06:51 | contact_whatsapp | /services/adult-therapy |
+| 06.09 02:04 | contact_whatsapp | /services/adult-therapy |
+| 15.09 05:51 | contact_whatsapp | /services/adult-therapy |
+| 16.09 04:36 | contact_whatsapp | /services/adult-therapy |
+| 18.09 10:05 | contact_form_submit | /services/adult-therapy |
+
+All mobile. Six of the eight are WhatsApp taps between 01:04 and 06:51.
+
+`contact_messages` - where an actual enquiry leaves a record - holds exactly
+one row from paid traffic in this period: the form submit of 18.09 10:05, from
+`פסיכותרפיה`, landing `/services/adult-therapy`, status `new`, with a gclid.
+WhatsApp and phone taps leave no row by construction, because they hand off to
+another app. Strategy §8 flagged this gap in advance.
+
+By hour:
+
+| Hours (IDT) | Sessions | Conversion events | Rate |
+|---|---|---|---|
+| 00:00-07:59 | 66 | 6 | 9.1% |
+| 08:00-23:59 | 298 | 2 | 0.7% |
+
+18% of the traffic produces 75% of the conversion events, at thirteen times
+the rate. At these counts that is not noise.
+
+## 6. Why: the traffic is substantially not in Israel
+
+Google's own audience insight for this campaign:
+
+| Segment | Share of clicks | Index |
+|---|---|---|
+| **Trips to Israel** (in-market) | 21.5% | **452.7x** |
+| Romance & Drama Movie Fans | 42.5% | 4.9x |
+| TV Drama Fans | 28.7% | 3.5x |
+| Shopping Enthusiasts | 52.5% | 2.9x |
+| Mother's Day Flowers & Greeting Cards | 45.2% | 2.8x |
+
+A 452x index on "planning a trip to Israel" is not a local clinic's audience.
+
+**01:00-07:00 in Israel is 18:00-00:00 on the US east coast.** The six
+overnight WhatsApp taps land squarely in North American evening hours. The
+hour anomaly in §5 and the audience anomaly here are the same fact seen twice.
+
+The likely cause is a campaign setting. Strategy §3 specifies
+**"Presence" targeting only (not "interest")**. Google's default is "presence
+or interest", which shows ads to people merely *interested in* the targeted
+locations - diaspora, tourists, anyone reading about Jerusalem. That is
+precisely what produces a "Trips to Israel" segment at 452x.
+
+**Two readings, and they lead to opposite actions.**
+
+**(a) Waste.** Out-of-area clicks that can never become clinic clients, with
+overnight WhatsApp taps that are accidental or invalid. Then this is roughly a
+fifth of the budget to cut, and the real September CPA is around ₪597 for one
+enquiry rather than the ₪49.80 Ads reports.
+
+**(b) A market.** Hebrew speakers abroad looking for therapy in Hebrew over
+Zoom, messaging in their evening. Strategy §3 already treats Zoom as a
+supporting message. If real, these are genuine enquiries that the campaign is
+reaching by accident and serving badly, and the right response is a separate
+campaign built for them, not a geo cut.
+
+Both readings fit every number in this document. They are separated by one
+question, in §7.
+
+## 7. The open question, and how to close it
+
+**Did WhatsApp messages actually arrive at these times?** 02.09 ~01:04 and
+~03:59, 04.09 ~06:51, 06.09 ~02:04, 15.09 ~05:51, 16.09 ~04:36. Nira's phone
+answers this in two minutes and it decides reading (a) versus reading (b).
+
+Two further gaps worth closing:
+
+- **The search terms report.** Not obtainable from our data: `utm_term` stores
+  the matched keyword, not the query. It exists only in Google Ads
+  (Insights & reports → Search terms). The account's own category widget shows
+  **101 uncategorized search terms**, which is where the 291 head-term sessions
+  actually went.
+- **The location report** (Locations → where users were located) confirms or
+  refutes §6 directly, in seconds.
+
+## 8. What to change
+
+**Before anything else**
+
+1. **Locations → "Presence" only.** The single highest-impact setting, and it
+   restores what strategy §3 already specified.
+2. **Open the location report** and quantify how much spend went out of area.
+3. **Ask Nira about the overnight WhatsApp messages** (§7).
+
+**Reject all three of Google's current recommendations**
+
+4. Search Partners (+2.5%) and Display expansion (+0.9%) are off and should
+   stay off; strategy §3 is Search-only.
+5. **Maximize Conversions (+10.5%): not yet.** Not because WhatsApp is a weak
+   channel, but because the conversion signal currently being counted is
+   dominated by six overnight taps of unknown validity. Automated bidding
+   trains on whatever it is fed. Revisit the moment §7 is answered: if the
+   WhatsApp enquiries are real, the signal is sound and this becomes a
+   reasonable move well before the 30-conversion gate in strategy §3.
+
+**Then**
+
+6. **Match types.** Move `פסיכותרפיה` to phrase. Negatives are whack-a-mole
+   while broad match keeps finding new queries.
+7. **Turn off the `/about` sitelink** or point it at a page with a next step.
+8. **Fix the tracking template** so `{campaignid}` and `{creative}` populate
+   `utm_campaign` and `utm_content`, which makes ad-level analysis possible.
+9. **Consolidate or close the couples keywords** (§3).
+10. **`/services/adult-therapy` on mobile.** 82% bounce across 262 mobile
+    sessions is the largest single number in this review, and it is a site
+    job rather than an Ads one.
+
+## 9. What this review cannot tell you
+
+- **Cost per keyword or per ad.** Ads reports account-level spend; the
+  tracking template gaps in §1 prevent finer attribution from our side.
+- **Lead quality.** Strategy §7 makes cost per *qualified* lead the day-60
+  gate. That needs the `/manage` lead statuses
+  (new / spoke / started therapy / ongoing / irrelevant) filled in. One row
+  exists, at status `new`.
+- **Anything per-keyword below ~15 clicks**, per the strategy's own guardrail.
+  That covers every row in §3 except the top two.
