@@ -28,6 +28,8 @@ Last updated 2026-09-19.
 | Display expansion | off |
 | Bidding | not automated (Google is recommending Maximize Conversions) |
 | Ads-reported, 13-19 Sept | ₪199, 4 conversions, CPA ₪49.80 |
+| Campaign to date (12 Jul - 20 Sep) | ₪866.70, 388 clicks, 9,182 impressions |
+| CTR / avg CPC / cost per conversion | 4.23% / **₪2.23** / **₪96.30** |
 
 `utm_campaign` arrives as the literal string `search-he`, not `{campaignid}`
 as the strategy's URL convention specifies, and `utm_content` is empty on
@@ -81,10 +83,14 @@ matched KEYWORD, not the user's search term; see §7.
 | ייעוץ זוגי | 1 | 0 | 1.00 | 1 | 1 |
 | טיפול זוגי ירושלים | 1 | 0 | 1.00 | 1 | 1 |
 
-**`פסיכותרפיה` is 80% of the campaign and bounces 84% of it.** One keyword
-absorbing 291 sessions is the signature of broad match, which strategy §3
-ruled out ("phrase + exact only"). Those 291 sessions are 291 search terms
-nobody has looked at.
+**`פסיכותרפיה` is 80% of the campaign and bounces 84% of it - but it is not
+underperforming.** It converts at 2.4% (7 events on 291 sessions) against
+`מטפלת רגשית` at 2.9% (1 on 35); every other keyword has too little volume to
+rate. The head term is simply the only one with reach, and at ₪2.23 a click
+(§6) a high bounce rate is affordable. The real objection is visibility, not
+waste: one keyword absorbing 291 sessions is the signature of broad match,
+which strategy §3 ruled out ("phrase + exact only"), and those 291 sessions
+are 291 search terms nobody has looked at.
 
 **Engagement rises as the term narrows, and budget does the opposite.**
 `מדריכת הורים ירושלים` 7.00 pages and no bounce on 1 session,
@@ -153,95 +159,125 @@ By hour:
 | 08:00-23:59 | 298 | 2 | 0.7% |
 
 18% of the traffic produces 75% of the conversion events, at thirteen times
-the rate. At these counts that is not noise.
+the rate. With 8 events and an 18% overnight share, the chance of six landing
+there by accident is about 0.07%, so the pattern is real.
 
-## 6. Why: the traffic is substantially not in Israel
+What it is *not* is evidence about location: paid traffic runs 18.1% overnight
+against 13.7% for organic and direct, a gap of 1.4 standard errors and not
+significant, and §6 shows every click came from inside the radius. The
+ordinary reading is the right one - people reach out about therapy at night.
 
-Google's own audience insight for this campaign:
+## 6. Geo targeting: checked, and it is working
 
-| Segment | Share of clicks | Index |
+An earlier version of this review argued from Google's audience insight
+("Trips to Israel" at 21.5% of clicks and a 452.7x index) plus the overnight
+conversion clustering in §5 that a large share of the traffic was outside the
+clinic's catchment. **That was wrong.** The location report settles it:
+
+| Location | Clicks | Impressions | Cost |
+|---|---|---|---|
+| 25.0 km around הדולב 132, שואבה | 388 | 9,182 | ₪866.70 |
+| **All other locations** | **0** | **0** | **₪0.00** |
+
+Not one click came from outside the radius. The geo setting is correct and
+needs no change. The "Trips to Israel" segment is people inside the radius
+whom Google classifies that way; it was over-read.
+
+Two conclusions follow, and both matter more than the thing I got wrong.
+
+**The overnight conversions are local people.** Once location is ruled out,
+the ordinary explanation is the right one: people reach out about therapy at
+night. Someone awake and distressed at 3am is a plausible enquirer, not noise.
+§5's hour anomaly is real but it is a fact about when people ask for help,
+not about where they are.
+
+**The economics are much better than the July plan assumed.**
+
+| | Planned | Actual |
 |---|---|---|
-| **Trips to Israel** (in-market) | 21.5% | **452.7x** |
-| Romance & Drama Movie Fans | 42.5% | 4.9x |
-| TV Drama Fans | 28.7% | 3.5x |
-| Shopping Enthusiasts | 52.5% | 2.9x |
-| Mother's Day Flowers & Greeting Cards | 45.2% | 2.8x |
+| CPC | 8-20 ILS (assumption) | **₪2.23** |
+| Clicks | ~60-180/month | 388 over the campaign |
+| CTR | - | 4.23% |
+| Cost per conversion | - | **₪96.30** |
 
-A 452x index on "planning a trip to Israel" is not a local clinic's audience.
+Total spend 12 July to 20 September: ₪866.70 for 388 clicks and 9 conversions.
+Against the strategy's target of ₪1,000-2,000 CAC per acquired client, an
+enquiry-to-client rate of even 1 in 4 puts CAC around ₪385, well inside
+target. At ₪2.23 a click and ₪30/day, the campaign buys about 13 clicks a day,
+which makes **budget the binding constraint rather than campaign quality** -
+conditional on §7.
 
-**01:00-07:00 in Israel is 18:00-00:00 on the US east coast.** The six
-overnight WhatsApp taps land squarely in North American evening hours. The
-hour anomaly in §5 and the audience anomaly here are the same fact seen twice.
+## 7. The one open question
 
-The likely cause is a campaign setting. Strategy §3 specifies
-**"Presence" targeting only (not "interest")**. Google's default is "presence
-or interest", which shows ads to people merely *interested in* the targeted
-locations - diaspora, tourists, anyone reading about Jerusalem. That is
-precisely what produces a "Trips to Israel" segment at 452x.
-
-**Two readings, and they lead to opposite actions.**
-
-**(a) Waste.** Out-of-area clicks that can never become clinic clients, with
-overnight WhatsApp taps that are accidental or invalid. Then this is roughly a
-fifth of the budget to cut, and the real September CPA is around ₪597 for one
-enquiry rather than the ₪49.80 Ads reports.
-
-**(b) A market.** Hebrew speakers abroad looking for therapy in Hebrew over
-Zoom, messaging in their evening. Strategy §3 already treats Zoom as a
-supporting message. If real, these are genuine enquiries that the campaign is
-reaching by accident and serving badly, and the right response is a separate
-campaign built for them, not a geo cut.
-
-Both readings fit every number in this document. They are separated by one
-question, in §7.
-
-## 7. The open question, and how to close it
-
-**Did WhatsApp messages actually arrive at these times?** 02.09 ~01:04 and
+**Did the six overnight WhatsApp taps become conversations?** 02.09 ~01:04 and
 ~03:59, 04.09 ~06:51, 06.09 ~02:04, 15.09 ~05:51, 16.09 ~04:36. Nira's phone
-answers this in two minutes and it decides reading (a) versus reading (b).
+answers this in two minutes, and with geo ruled out in §6 it is now the only
+thing standing between this campaign and a verdict:
 
-Two further gaps worth closing:
+- **They arrived.** Cost per enquiry is ₪96.30, the campaign is working, and
+  the correct move is more budget (§8.1).
+- **They did not.** Then ₪866.70 bought one verified enquiry, the conversion
+  signal in Ads is inflated roughly ninefold, and the work is on the tap-to-
+  conversation step rather than on the campaign.
 
-- **The search terms report.** Not obtainable from our data: `utm_term` stores
-  the matched keyword, not the query. It exists only in Google Ads
-  (Insights & reports → Search terms). The account's own category widget shows
-  **101 uncategorized search terms**, which is where the 291 head-term sessions
-  actually went.
-- **The location report** (Locations → where users were located) confirms or
-  refutes §6 directly, in seconds.
+Note the question is no longer about invalid traffic. It is the ordinary
+question of how many people who tap a WhatsApp button actually send the
+message, which strategy §8 anticipated ("WhatsApp conversions measure the
+CLICK, not a conversation").
+
+One further gap worth closing: **the search terms report**, which is not
+obtainable from our data because `utm_term` stores the matched keyword rather
+than the query. It exists only in Google Ads (Insights & reports → Search
+terms). The account's own category widget shows **101 uncategorized search
+terms**, which is where the 291 head-term sessions went.
 
 ## 8. What to change
 
-**Before anything else**
+**First, because it decides everything else**
 
-1. **Locations → "Presence" only.** The single highest-impact setting, and it
-   restores what strategy §3 already specified.
-2. **Open the location report** and quantify how much spend went out of area.
-3. **Ask Nira about the overnight WhatsApp messages** (§7).
+1. **Ask Nira about the overnight WhatsApp messages** (§7). If they arrived,
+   the next action is a budget increase, not an optimisation: at ₪2.23 a click
+   and ₪30/day the campaign buys ~13 clicks a day, and the strategy's own
+   scaling gate (day 90, cost per started-therapy client) is within reach.
 
-**Reject all three of Google's current recommendations**
+**Settled, no action needed**
 
-4. Search Partners (+2.5%) and Display expansion (+0.9%) are off and should
-   stay off; strategy §3 is Search-only.
-5. **Maximize Conversions (+10.5%): not yet.** Not because WhatsApp is a weak
-   channel, but because the conversion signal currently being counted is
-   dominated by six overnight taps of unknown validity. Automated bidding
-   trains on whatever it is fed. Revisit the moment §7 is answered: if the
-   WhatsApp enquiries are real, the signal is sound and this becomes a
-   reasonable move well before the 30-conversion gate in strategy §3.
+2. **Geo targeting is correct.** 388 of 388 clicks came from inside the 25 km
+   radius (§6). Leave it alone.
+3. **Search Partners (+2.5%) and Display expansion (+0.9%) are off** and should
+   stay off; strategy §3 is Search-only. Decline both recommendations.
 
-**Then**
+**Worth doing regardless of §7**
 
-6. **Match types.** Move `פסיכותרפיה` to phrase. Negatives are whack-a-mole
-   while broad match keeps finding new queries.
-7. **Turn off the `/about` sitelink** or point it at a page with a next step.
-8. **Fix the tracking template** so `{campaignid}` and `{creative}` populate
-   `utm_campaign` and `utm_content`, which makes ad-level analysis possible.
-9. **Consolidate or close the couples keywords** (§3).
+4. **Turn off the `/about` sitelink** or point it at a page with a next step.
+   33 paid clicks, 100% bounce, no enquiries (§4).
+5. **Move `פסיכותרפיה` to phrase match.** Not because it performs badly - it
+   converts at 2.4%, in line with everything else - but because 291 sessions
+   behind one broad-matched keyword means nobody can see what is being bought.
+   Pair with the search terms report.
+6. **Add `פסיכולוג` and `פסיכולוגית` as negatives.** Nira is not a
+   psychologist; these queries are both wasted spend and a misrepresentation.
+7. **Fix the tracking template** so `{campaignid}` and `{creative}` populate
+   `utm_campaign` and `utm_content`, which makes ad-level analysis possible at
+   the next review.
+8. **Consolidate or close the couples keywords** (§3): 19 sessions across 7
+   keywords, none clearing the strategy's 15-20 click guardrail.
+
+**Hold**
+
+9. **Maximize Conversions (+10.5%): wait for §7.** Not because WhatsApp is a
+   weak channel - it is a primary conversion by owner decision and by strategy
+   §4 - but because automated bidding trains on whatever it is fed, and six of
+   the nine conversions are taps nobody has verified. If Nira confirms them,
+   the signal is sound and this becomes reasonable well before the
+   30-conversion gate in strategy §3.
+
+**Site work, not Ads work**
+
 10. **`/services/adult-therapy` on mobile.** 82% bounce across 262 mobile
-    sessions is the largest single number in this review, and it is a site
-    job rather than an Ads one.
+    sessions. Lower priority than it looks: the page still converts at 2.4%
+    and clicks cost ₪2.23, so the bounce is affordable. It matters if and only
+    if §7 comes back negative.
 
 ## 9. What this review cannot tell you
 
