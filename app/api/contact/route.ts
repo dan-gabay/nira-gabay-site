@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { normalizeIsraeliPhone, PHONE_ERROR } from '@/lib/phone';
-import { sendLeadEmail } from '@/lib/leadNotify';
+import { notifyNewLead } from '@/lib/leadNotify';
 
 export const runtime = 'nodejs';
 
@@ -108,11 +108,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Notify Nira. Failure here must never fail the lead itself - it is already
-  // in the database, which is the part that matters - but it IS logged with
-  // the reason, so a notification pipeline that has quietly stopped working
-  // can be found. /api/manage/notify-test answers the same question on demand.
-  const notified = await sendLeadEmail({
+  // Notify Nira on every configured channel. Failure here must never fail the
+  // lead itself - it is already in the database, which is the part that
+  // matters - but it IS logged with the reason, so a notification path that
+  // has quietly stopped working can be found in the runtime logs.
+  const notified = await notifyNewLead({
     name,
     phone: normalizedPhone,
     email,
@@ -123,8 +123,12 @@ export async function POST(req: NextRequest) {
         ? 'Google Ads'
         : attribution.utm_source || null,
   });
-  if (!notified.ok) {
-    console.error(`lead email not sent (${notified.reason}): ${notified.detail}`);
+  for (const [channel, r] of Object.entries(notified)) {
+    // 'not_configured' is a choice, not a fault: a channel nobody has set up
+    // should not fill the log with the news every time a lead arrives.
+    if (!r.ok && r.reason !== 'not_configured') {
+      console.error(`lead ${channel} not sent (${r.reason}): ${r.detail}`);
+    }
   }
 
   return NextResponse.json({ ok: true });

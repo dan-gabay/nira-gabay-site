@@ -12,6 +12,8 @@
 // decides: the public route logs and moves on, the diagnostic route in
 // /manage shows the result.
 
+import { toWhatsAppNumber } from './phone';
+
 export type NotifyResult =
   | { ok: true; to: string[] }
   | { ok: false; reason: 'not_configured' | 'send_failed'; detail: string };
@@ -113,4 +115,97 @@ export async function sendLeadEmail(
       detail: e instanceof Error ? e.message : String(e),
     };
   }
+}
+
+// ─────────────────────────────────────────────────────── Telegram
+
+// Email arrives in minutes and sometimes in a spam folder. A lead is worth
+// about two thousand shekels here and the first reply is most of the job, so
+// the notification wants to be instant. Telegram is: free, no domain to
+// verify, no second phone number, and no template to get approved.
+//
+// Sending to a GROUP rather than to a person is deliberate. A bot cannot
+// message someone who has never started a chat with it, and if they block it
+// the notifications stop with no sign that anything is wrong. A group both
+// people are in has neither failure mode, and means the lead is seen by
+// whoever gets there first.
+//
+// Silent when TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is unset, so this costs
+// nothing until it is configured, exactly like the email path.
+
+/** Telegram's HTML mode: only these five need escaping. */
+function esc(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+export function telegramMessage(lead: LeadNotice, isTest = false): string {
+  const wa = toWhatsAppNumber(lead.phone);
+  const lines = [
+    isTest ? '<b>בדיקה</b> - לא הגיעה פנייה אמיתית.' : '<b>פנייה חדשה מהאתר</b>',
+    '',
+    `<b>${esc(lead.name)}</b>`,
+    esc(lead.phone),
+  ];
+  if (lead.email) lines.push(esc(lead.email));
+  if (lead.source) lines.push(`מקור: ${esc(lead.source)}`);
+  lines.push('', esc(lead.message));
+  // One tap to answer, which is the whole point of putting this on a phone.
+  if (wa) lines.push('', `<a href="https://wa.me/${wa}">מענה בוואטסאפ</a>`);
+  return lines.join('\n');
+}
+
+export async function sendLeadTelegram(
+  lead: LeadNotice,
+  opts: { isTest?: boolean } = {},
+): Promise<NotifyResult> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chatId) {
+    return {
+      ok: false,
+      reason: 'not_configured',
+      detail: 'TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is not set.',
+    };
+  }
+
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: telegramMessage(lead, opts.isTest === true),
+        parse_mode: 'HTML',
+        // The wa.me link is the action; a link preview card under it would
+        // push the lead's details off a phone screen for nothing.
+        link_preview_options: { is_disabled: true },
+      }),
+    });
+
+    if (!res.ok) {
+      // Telegram explains refusals in the body ("chat not found" when the id
+      // is wrong or the bot was removed, "Unauthorized" for a revoked token),
+      // and that sentence is the only thing that makes this debuggable.
+      const text = await res.text().catch(() => '');
+      return { ok: false, reason: 'send_failed', detail: `${res.status}: ${text.slice(0, 400)}` };
+    }
+    return { ok: true, to: [chatId] };
+  } catch (e) {
+    return { ok: false, reason: 'send_failed', detail: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+/**
+ * Tell whoever needs to know that a lead arrived, on every channel that is
+ * configured. Both are attempted even if one fails: they are independent, and
+ * an email bouncing is no reason to skip the message that arrives in a second.
+ */
+export async function notifyNewLead(
+  lead: LeadNotice,
+): Promise<{ email: NotifyResult; telegram: NotifyResult }> {
+  const [email, telegram] = await Promise.all([
+    sendLeadEmail(lead),
+    sendLeadTelegram(lead),
+  ]);
+  return { email, telegram };
 }

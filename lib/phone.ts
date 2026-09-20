@@ -74,6 +74,19 @@ export function normalizePhone(raw: string): string | null {
 }
 
 /**
+ * The number in the form wa.me and tel: links want: country code, no plus, no
+ * separators. Returns null for anything not dialable, so a caller can leave
+ * the link out rather than build a broken one.
+ */
+export function toWhatsAppNumber(raw: string): string | null {
+  const israeli = normalizeIsraeliPhone(raw);
+  if (israeli) return `972${israeli.slice(1)}`;
+
+  const other = normalizePhone(raw);
+  return other && other.startsWith('+') ? other.slice(1) : null;
+}
+
+/**
  * What to tell someone whose number was rejected. Hebrew, and specific.
  *
  * The example carries no hyphens on purpose. The field is half-width, and in
