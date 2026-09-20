@@ -30,7 +30,7 @@ export type LeadNotice = {
  * Recipients, from CONTACT_NOTIFY_EMAIL. Comma separated, so the owner and
  * whoever chases leads can both be on it without a code change.
  */
-export function notifyRecipients(): string[] {
+function notifyRecipients(): string[] {
   const raw = process.env.CONTACT_NOTIFY_EMAIL || 'niraga1123@gmail.com';
   return raw
     .split(',')
