@@ -20,6 +20,9 @@ import {
   type Slot,
 } from '@/components/manage/Charts';
 import TrafficSources, { GROUP_LABELS, type TrafficRow } from '@/components/manage/TrafficSources';
+import ArticleEngagementCard, {
+  type ArticleEngagement,
+} from '@/components/manage/ArticleEngagement';
 import {
   ReturningVisitors,
   SourceQuality,
@@ -277,6 +280,11 @@ export default function AnalyticsPage() {
   // the longer ranges are one click away and answer a different question.
   const [range, setRange] = useState(1);
   const [data, setData] = useState<Payload | null>(null);
+  // Fetched alongside the payload above, not folded into it: see the comment in
+  // app/api/manage/article-engagement/route.ts. It is allowed to be null - if
+  // this one call fails the article card is simply absent and every other card
+  // on the page still renders.
+  const [articles, setArticles] = useState<ArticleEngagement | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
 
@@ -288,6 +296,20 @@ export default function AnalyticsPage() {
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error('load failed'))))
       .then((d) => { if (live) { setData(d); setLoading(false); } })
       .catch(() => { if (live) { setFailed(true); setLoading(false); } });
+    return () => { live = false; };
+  }, [range]);
+
+  useEffect(() => {
+    let live = true;
+    // Deliberately no setArticles(null) here to clear the previous range: the
+    // payload carries the range it was built for, and the card is rendered only
+    // when that matches the range the page is showing. Same effect - a stale
+    // card never appears under a new range - without a synchronous setState in
+    // an effect body.
+    fetch(`/api/manage/article-engagement?range=${range}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('load failed'))))
+      .then((d) => { if (live) setArticles(d); })
+      .catch(() => { /* the card is optional - the page must not fail with it */ });
     return () => { live = false; };
   }, [range]);
 
@@ -350,12 +372,14 @@ export default function AnalyticsPage() {
     }))
     .filter((s) => s.total > 0)
     .sort((a, b) => b.total - a.total);
-  const sourcePoints = data
-    ? fillSeries(
-        trafficRows,
-        isHourly ? bucketKeys(24, 'hour') : bucketKeys(data.range_days, 'day'),
-      )
+  // Every bucket in the range, empty ones included. Shared by the two stacked
+  // charts on the page so their columns sit on the same x-axis.
+  const rangeBuckets = data
+    ? isHourly
+      ? bucketKeys(24, 'hour')
+      : bucketKeys(data.range_days, 'day')
     : [];
+  const sourcePoints = data ? fillSeries(trafficRows, rangeBuckets) : [];
 
   const noData = Boolean(data) && (data?.totals.events ?? 0) === 0;
 
@@ -578,6 +602,23 @@ export default function AnalyticsPage() {
               totalVisits={data.totals.visits}
             />
           </Card>
+
+          {/* Everything above this point counts arrivals. This is the only card
+              that counts what happened after one - whether the article was read,
+              finished, shared, and whether it led to a second one.
+
+              It is the same three-stage funnel the "מעורבות באתר" tile pair
+              summarises for the whole site, but per article and over time, which
+              is what makes it actionable: a title that pulls people in and loses
+              them is invisible in a total and obvious in a column.
+
+              Rendered only once its own call has landed, and absent rather than
+              broken if that call failed. */}
+          {articles && articles.range_days === data.range_days && (
+            <Card title="איך קוראים את המאמרים" sub={rangeLabel}>
+              <ArticleEngagementCard data={articles} buckets={rangeBuckets} />
+            </Card>
+          )}
 
           {hasClock && (
             <Card title="מתי נכנסים ומתי פונים" sub="שעון ישראל">

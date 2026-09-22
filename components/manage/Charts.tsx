@@ -1,8 +1,15 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
-import { enquiries, visits as visitCount } from '@/lib/heCount';
+import {
+  enquiries,
+  visits as visitCount,
+  openings as openingCount,
+  shares as shareCount,
+  likes as likeCount,
+  comments as commentCount,
+} from '@/lib/heCount';
 
 // Charts for the admin analytics page, hand-built in SVG - the whole dashboard
 // is two chart shapes, and a library would cost more than it saves.
@@ -560,32 +567,88 @@ export function fillSeries(
   return buckets.map((day) => ({ day, values: by.get(day) || {} }));
 }
 
+
 /**
- * Visits per bucket, stacked by traffic source.
+ * fillDays/fillHours for the one-row-per-bucket shape, where the row is a whole
+ * record rather than a single number.
  *
- * A stack rather than one line per source, because the question the card above
- * cannot answer is "how much traffic came in, and what was it made of". A stack
- * answers both at once: the column height is the day's total, the segments are
- * the split. Lines gave the split but never the total - the reader had to add
- * five values by eye.
+ * Two charts need the same buckets as each other, not only as the range: the
+ * reading-depth columns and the reaction markers underneath them are drawn from
+ * separate queries and must line up index for index, or a reaction lands under
+ * the wrong day.
+ */
+export function alignToBuckets<T extends { day: string }>(
+  rows: T[],
+  buckets: string[],
+  empty: () => Omit<T, 'day'>,
+): T[] {
+  const by = new Map(rows.map((r) => [r.day, r]));
+  return buckets.map((day) => by.get(day) ?? ({ day, ...empty() } as T));
+}
+
+/**
+ * The stacked-column engine, shared by the two charts that are the same picture
+ * of different data: visits split by where they came from, and article readings
+ * split by how far the reader got.
+ *
+ * A stack rather than one line per series, because the question a totals card
+ * cannot answer is "how much came in, and what was it made of". A stack answers
+ * both at once: the column height is the bucket's total, the segments are the
+ * split. Lines gave the split but never the total - the reader had to add five
+ * values by eye.
  *
  * What a stack gives up is the shape of an individual series: only the segment
  * sitting on the baseline has a straight edge to be read against. That is the
- * accepted trade, and it decides the stack order below.
+ * accepted trade, and it is what decides the stack order at each call site.
+ *
+ * Every geometry number below was tuned against the traffic chart. The wrappers
+ * under it change the words and, for reading depth, add one row of marks below
+ * the baseline; nothing else.
  */
-export function SourceBars({
+function StackedBars({
   data,
   series,
   height = 210,
+  aria,
+  emptyText,
+  emptyBucketText,
+  formatTotal,
+  tooltipOrder = 'value',
+  footerHeight = 0,
+  footer,
+  tooltipExtra,
 }: {
   data: SeriesPoint[];
   series: Array<{ key: string; label: string; color: string }>;
   height?: number;
+  aria: string;
+  emptyText: string;
+  emptyBucketText: string;
+  formatTotal: (n: number) => string;
+  /**
+   * How the tooltip orders its lines. 'value' for an unordered set, where the
+   * useful reading is which one was biggest; 'series' where the series are
+   * themselves an ordered scale and re-sorting them by size would scramble the
+   * order the chart is about.
+   */
+  tooltipOrder?: 'value' | 'series';
+  /** Room under the baseline for `footer`. The day labels move below it. */
+  footerHeight?: number;
+  footer?: (g: {
+    bx: (i: number) => number;
+    band: number;
+    bw: number;
+    iw: number;
+    y0: number;
+    h: number;
+  }) => ReactNode;
+  /** Extra lines in the tooltip for the hovered bucket, under the segments. */
+  tooltipExtra?: (i: number) => ReactNode;
 }) {
   const [ref, w] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
 
-  const pad = { t: 12, r: 10, b: 26, l: 34 };
+  const pad = { t: 12, r: 10, b: 26 + footerHeight, l: 34 };
   const iw = Math.max(0, w - pad.l - pad.r);
   const ih = height - pad.t - pad.b;
 
@@ -610,7 +673,7 @@ export function SourceBars({
   const every = Math.max(1, Math.ceil(data.length / (w < 420 ? 4 : 8)));
 
   if (series.length === 0) {
-    return <p className="text-xs md:text-sm text-stone-400 py-2">אין עדיין תנועה בטווח הזה.</p>;
+    return <p className="text-xs md:text-sm text-stone-400 py-2">{emptyText}</p>;
   }
 
   // The surface gap - white, never a stroke around the segment. One consistent
@@ -622,7 +685,7 @@ export function SourceBars({
   /**
    * The segments of one column, bottom-up, in the order `series` arrives in.
    *
-   * Sources with no visits in this bucket are dropped rather than drawn as a
+   * Series with no value in this bucket are dropped rather than drawn as a
    * zero-height sliver, so `topmost` is the last one that actually has height
    * and gets the rounded end. Everything below it is shaved by the gap.
    */
@@ -636,7 +699,7 @@ export function SourceBars({
       const top = y(base + v);
       const isTop = j === present.length - 1;
       // The gap goes above every segment that has one above it. The topmost
-      // keeps its full height so the column still measures the day's total.
+      // keeps its full height so the column still measures the bucket's total.
       const shave = isTop ? 0 : GAP;
       out.push({ ...s, value: v, y: top, h: Math.max(1, bottom - top - shave), top: isTop });
       base += v;
@@ -651,13 +714,15 @@ export function SourceBars({
     return `M${x},${b} L${x},${top + r} Q${x},${top} ${x + r},${top} L${x + bw - r},${top} Q${x + bw},${top} ${x + bw},${top + r} L${x + bw},${b} Z`;
   };
 
-  // Tooltip rows: biggest first, and a source that sent nobody in that bucket
-  // is left out rather than listed as a zero.
-  const rowsAt = (i: number) =>
-    series
+  // A series with nothing in that bucket is left out rather than listed as a
+  // zero. Order is the caller's, because the right one depends on whether the
+  // series mean anything as a sequence - see `tooltipOrder`.
+  const rowsAt = (i: number) => {
+    const rows = series
       .map((s) => ({ ...s, value: at(data[i], s.key) }))
-      .filter((r) => r.value > 0)
-      .sort((a, b) => b.value - a.value);
+      .filter((r) => r.value > 0);
+    return tooltipOrder === 'value' ? rows.sort((a, b) => b.value - a.value) : rows;
+  };
 
   return (
     <div ref={ref} className="w-full">
@@ -683,7 +748,7 @@ export function SourceBars({
           width={w}
           height={height}
           role="img"
-          aria-label={`מבקרים לפי מקור הגעה לאורך זמן, עמודות נערמות: ${series.map((s) => s.label).join(', ')}`}
+          aria-label={aria}
           onMouseLeave={() => setHover(null)}
         >
           <g transform={`translate(${pad.l},${pad.t})`}>
@@ -698,7 +763,14 @@ export function SourceBars({
 
             {data.map((p, i) =>
               i % every === 0 ? (
-                <text key={p.day} x={bx(i) + bw / 2} y={ih + 17} textAnchor="middle" fontSize={10} fill={MUTED}>
+                <text
+                  key={p.day}
+                  x={bx(i) + bw / 2}
+                  y={ih + 17 + footerHeight}
+                  textAnchor="middle"
+                  fontSize={10}
+                  fill={MUTED}
+                >
                   {heDay(p.day)}
                 </text>
               ) : null,
@@ -711,7 +783,7 @@ export function SourceBars({
                 every comparison is a washed column against a full-strength one.
                 A backdrop leaves all six hues exactly as validated. */}
             {hover !== null && (
-              <rect x={hover * band} y={0} width={band} height={ih} fill="#f5f5f4" />
+              <rect x={hover * band} y={0} width={band} height={ih + footerHeight} fill="#f5f5f4" />
             )}
 
             {data.map((p, i) => (
@@ -726,6 +798,11 @@ export function SourceBars({
               </g>
             ))}
 
+            {/* A second row of marks under the baseline, on the same bands, for
+                the chart that has something to say about a bucket beyond its
+                height. Drawn after the columns and before the hit targets. */}
+            {footerHeight > 0 && footer?.({ bx, band, bw, iw, y0: ih + 2, h: footerHeight })}
+
             {/* Hit targets are the full band and the full plot height, so a
                 column of two visits is as easy to hover as a column of forty.
                 They sit last so they are above every mark. */}
@@ -735,7 +812,7 @@ export function SourceBars({
                 x={i * band}
                 y={0}
                 width={band}
-                height={ih}
+                height={ih + footerHeight}
                 fill="transparent"
                 onMouseEnter={() => setHover(i)}
               />
@@ -755,11 +832,11 @@ export function SourceBars({
           <div className="font-semibold text-stone-800">
             {heDay(data[hover].day)}
             {totalAt(data[hover]) > 0 && (
-              <span className="font-normal text-stone-500"> · {visitCount(totalAt(data[hover]))}</span>
+              <span className="font-normal text-stone-500"> · {formatTotal(totalAt(data[hover]))}</span>
             )}
           </div>
           {rowsAt(hover).length === 0 ? (
-            <div className="text-stone-400">אין מבקרים</div>
+            <div className="text-stone-400">{emptyBucketText}</div>
           ) : (
             rowsAt(hover).map((r) => (
               <div key={r.key} className="flex items-center gap-1.5 whitespace-nowrap">
@@ -768,9 +845,171 @@ export function SourceBars({
               </div>
             ))
           )}
+          {tooltipExtra?.(hover)}
         </div>
       )}
       </div>
     </div>
+  );
+}
+
+/** Visits per bucket, stacked by traffic source. */
+export function SourceBars({
+  data,
+  series,
+  height = 210,
+}: {
+  data: SeriesPoint[];
+  series: Array<{ key: string; label: string; color: string }>;
+  height?: number;
+}) {
+  return (
+    <StackedBars
+      data={data}
+      series={series}
+      height={height}
+      aria={`מבקרים לפי מקור הגעה לאורך זמן, עמודות נערמות: ${series.map((s) => s.label).join(', ')}`}
+      emptyText="אין עדיין תנועה בטווח הזה."
+      emptyBucketText="אין מבקרים"
+      formatTotal={visitCount}
+    />
+  );
+}
+
+// ─────────────────────────────────────────── reading depth over time
+
+/** One bucket of readings, split into how far each one got. */
+export type DepthPoint = { day: string; opened: number; read: number; finished: number };
+
+/** One bucket of deliberate actions. Aligned to the same buckets as DepthPoint. */
+export type ReactionPoint = { day: string; shares: number; likes: number; comments: number };
+
+/**
+ * Reading depth is an ORDERED variable, so one hue in three steps rather than
+ * three colours competing for meaning: darker is deeper, and the order reads
+ * without the legend. Teal because it is this dashboard's measure hue already -
+ * the visits line and the returning-visitor ramp are both teal - and depth is
+ * that measure told properly, not a new one.
+ *
+ * The steps are Tailwind teal 400/600/800 and not 500/600/700. The adjacent
+ * pair 500-600 separates by ΔE 10.5 to normal vision, under the 15 floor, and
+ * on a 3px bar at 90 days those two segments stopped reading as two. 400/600/800
+ * is ΔE 16.7 normal and 16.3 under deuteranopia on its worst pair of all three,
+ * measured against every pair and not only the adjacent ones.
+ *
+ * The lightest step is 1.8:1 against the card, under the 3:1 bar, which is
+ * allowed only with relief. There are three: the legend is always present, the
+ * tooltip names every segment under the cursor, and the per-article table below
+ * the chart carries the same numbers as text.
+ *
+ * Order is the stack order, baseline first. `finished` sits on the baseline
+ * because it is the only position with a straight edge to read a trend against,
+ * and a trend in finishes is the entire point of the card; floated in the
+ * middle of the stack it would be a few pixels adrift on a moving base.
+ */
+export const DEPTH_SERIES = [
+  { key: 'finished', label: 'נקרא עד הסוף', color: '#115e59' },
+  { key: 'read', label: 'נקרא', color: '#0d9488' },
+  { key: 'opened', label: 'נפתח בלבד', color: '#2dd4bf' },
+];
+
+/** The amber the dashboard already uses for "a person did something". */
+export const ACTION_COLOR = '#B45309';
+
+/**
+ * Readings per bucket, stacked by depth, with one mark under the baseline for
+ * every bucket in which somebody shared, liked or commented.
+ *
+ * The marks are a row rather than a fourth segment because they are not part of
+ * the column: a share is an act during a reading, not a deeper kind of one, and
+ * stacking it would have added it to a height that means readings. They are one
+ * colour and one shape for all three kinds - the tiles above the chart say how
+ * many of each, and the tooltip says which ones happened on that day. What the
+ * row is for is the question the tiles cannot answer, which is *when*.
+ */
+export function DepthBars({
+  data,
+  reactions,
+  height = 210,
+}: {
+  data: DepthPoint[];
+  reactions: ReactionPoint[];
+  height?: number;
+}) {
+  const points: SeriesPoint[] = data.map((d) => ({
+    day: d.day,
+    values: { opened: d.opened, read: d.read, finished: d.finished },
+  }));
+
+  const reactionAt = (i: number) => {
+    const r = reactions[i];
+    return r ? r.shares + r.likes + r.comments : 0;
+  };
+  const anyReaction = reactions.some((r) => r.shares + r.likes + r.comments > 0);
+
+  return (
+    <StackedBars
+      data={points}
+      series={DEPTH_SERIES}
+      height={height}
+      aria={`פתיחות מאמר לאורך זמן, עמודות נערמות לפי עומק קריאה: ${DEPTH_SERIES.map((s) => s.label).join(', ')}`}
+      emptyText="אין עדיין קריאות בטווח הזה."
+      emptyBucketText="אין פתיחות"
+      formatTotal={openingCount}
+      // Depth is a scale, not a set of categories: listing the biggest first put
+      // "נפתח בלבד" above "נקרא" on a busy day and read as a ranking of three
+      // unrelated things. The stack order is the meaning, so the tooltip keeps it.
+      tooltipOrder="series"
+      // The row is drawn even when nothing happened in the range, as an empty
+      // track: "nobody reacted" is an answer, and a row that appears only on
+      // the ranges with a mark in it makes the chart change height instead.
+      footerHeight={16}
+      footer={({ bx, bw, iw, y0, h }) => (
+        <g>
+          {/* The track is the row's baseline when there is anything on it. With
+              nothing on it the sentence takes its place rather than sitting on
+              top of a rule. */}
+          {anyReaction && (
+            <line x1={0} x2={iw} y1={y0 + h / 2} y2={y0 + h / 2} stroke={GRID} strokeWidth={1} />
+          )}
+          {data.map((p, i) =>
+            reactionAt(i) > 0 ? (
+              // A surface ring, because at 90 days the band is thinner than the
+              // mark and neighbouring marks touch. 8px across is the floor for
+              // a mark that has to be found before it can be read.
+              <circle
+                key={p.day}
+                cx={bx(i) + bw / 2}
+                cy={y0 + h / 2}
+                r={4}
+                fill={ACTION_COLOR}
+                stroke="#fff"
+                strokeWidth={1.5}
+              />
+            ) : null,
+          )}
+          {!anyReaction && (
+            <text x={iw / 2} y={y0 + h / 2} dy="0.32em" textAnchor="middle" fontSize={9} fill={MUTED}>
+              אף אחד לא הגיב, שיתף או עשה לייק בטווח הזה
+            </text>
+          )}
+        </g>
+      )}
+      tooltipExtra={(i) => {
+        const r = reactions[i];
+        if (!r || r.shares + r.likes + r.comments === 0) return null;
+        const parts = [
+          r.shares > 0 ? shareCount(r.shares) : null,
+          r.likes > 0 ? likeCount(r.likes) : null,
+          r.comments > 0 ? commentCount(r.comments) : null,
+        ].filter(Boolean);
+        return (
+          <div className="flex items-center gap-1.5 whitespace-nowrap mt-1 pt-1 border-t border-stone-100">
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: ACTION_COLOR }} />
+            {parts.join(' · ')}
+          </div>
+        );
+      }}
+    />
   );
 }
