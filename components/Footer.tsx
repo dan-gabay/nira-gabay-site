@@ -72,10 +72,10 @@ export default function Footer() {
                 תחומי טיפול
               </Link>
             </h3>
-            {/* Two columns on mobile: five services stacked singly made this
-                the tallest block in the footer. One column again from md up,
-                where the footer is already side-by-side. */}
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-2 md:grid-cols-1 md:gap-y-3">
+            {/* One per row, like every other footer column. A two-column grid
+                on mobile was shorter but read as a cramped block of labels
+                instead of a list - owner call, height is not worth it. */}
+            <ul className="space-y-3">
               {SERVICES.filter((s) => !s.discreet).map((s) => (
                 <li key={s.slug}>
                   <Link
