@@ -11,9 +11,10 @@ export default function Footer() {
     { name: 'דף הבית', href: '/' },
     { name: 'קצת עליי', href: '/about' },
     // Hidden until the service pages are approved (lib/publish.ts).
-    ...(SERVICES_LIVE
-      ? [{ name: 'תחומי טיפול', href: '/services' }, { name: 'הקליניקה', href: '/clinic' }]
-      : []),
+    // '/services' is deliberately absent: the "תחומי טיפול" column heading
+    // below links there, so listing it here too repeated the same label
+    // twice in one footer - and cost a row of height on mobile.
+    ...(SERVICES_LIVE ? [{ name: 'הקליניקה', href: '/clinic' }] : []),
     { name: 'מאמרים', href: '/articles' },
     { name: 'צרו קשר', href: '/contact' },
   ];
@@ -62,13 +63,24 @@ export default function Footer() {
               on every page of the site. */}
           {SERVICES_LIVE && (
           <div>
-            <h3 className="text-base md:text-xl font-bold text-white mb-3 md:mb-4 font-serif">תחומי טיפול</h3>
-            <ul className="space-y-3">
+            <h3 className="text-base md:text-xl font-bold text-white mb-3 md:mb-4 font-serif">
+              <Link
+                href="/services"
+                className="hover:text-amber-200 transition-colors"
+                onClick={() => trackFooterLinkClick('תחומי טיפול')}
+              >
+                תחומי טיפול
+              </Link>
+            </h3>
+            {/* Two columns on mobile: five services stacked singly made this
+                the tallest block in the footer. One column again from md up,
+                where the footer is already side-by-side. */}
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-2 md:grid-cols-1 md:gap-y-3">
               {SERVICES.filter((s) => !s.discreet).map((s) => (
                 <li key={s.slug}>
                   <Link
                     href={`/services/${s.slug}`}
-                    className="text-stone-400 hover:text-white transition-colors"
+                    className="text-sm md:text-base text-stone-400 hover:text-white transition-colors"
                     onClick={() => trackFooterLinkClick(s.navLabel)}
                   >
                     {s.navLabel}
