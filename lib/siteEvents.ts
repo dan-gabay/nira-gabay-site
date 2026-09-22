@@ -23,6 +23,13 @@ export const TRACKED_EVENTS = [
   'article_completed',
   'article_like',
   'share',
+  // Stored from 2026-09-22. It had been firing into GA4 only, so a comment
+  // existed in the comments table and nowhere in the event store - which made
+  // it the one reader action the dashboard could not place in time or
+  // attribute to a source. The comments table stays the record of a comment
+  // (it holds the text and the approval state, and it predates this store);
+  // this row is the act of writing one.
+  'comment_submit',
   'search',
   'service_interest',
   'cta_click',
@@ -64,6 +71,7 @@ export const EVENT_LABELS: Record<string, string> = {
   article_completed: 'סיום קריאה',
   article_like: 'לייק',
   share: 'שיתוף',
+  comment_submit: 'תגובה נשלחה',
   search: 'חיפוש באתר',
   service_interest: 'עניין בשירות',
   cta_click: 'לחיצה על קריאה לפעולה',

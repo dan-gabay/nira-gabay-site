@@ -25,12 +25,14 @@ import { openings as openingCount, shares, likes, comments } from '@/lib/heCount
 //   נקרא עד הסוף  article_completed - the end of the body was on screen and 40%
 //                 of the estimated reading time was spent with the tab visible
 //
-// Three things it deliberately does not claim, because nothing stores them:
+// Two things it deliberately does not claim, because nothing stores them:
 // scroll percentage (the 'scroll' event is not on the allowlist in
-// lib/siteEvents.ts, so no row is ever written), time on page, and which
-// network a share went to (the platform lives in a GA-only parameter). The note
-// at the bottom of the card says so out loud rather than leaving Nira to assume
-// the numbers mean more than they do.
+// lib/siteEvents.ts, so no row is ever written - it is a GA4-only signal) and
+// time on page. A third, the network a share went to, is stored from
+// 2026-09-22 and so is known for new shares and unknowable for the earlier
+// ones; those are left without a channel rather than bucketed as "unknown".
+// The note at the bottom of the card says all of it out loud rather than
+// leaving Nira to assume the numbers mean more than they do.
 
 /** One reading: a session and an article. Not a page view - see the SQL. */
 export type ArticleEngagement = {
@@ -72,6 +74,8 @@ export type ArticleEngagement = {
     multi_article_sessions: number;
     hops: number;
   };
+  /** Only the shares whose channel we know; see the SQL. */
+  share_channels: Array<{ channel: string; n: number }>;
   top_hops: Array<{ src: string; src_title: string; dst: string; dst_title: string; n: number }>;
   first_event: string | null;
 };
@@ -87,6 +91,18 @@ const share = (part: number, whole: number) => (whole > 0 ? Math.round((part / w
 const DEPTH_COLOR = Object.fromEntries(DEPTH_SERIES.map((s) => [s.key, s.color]));
 
 const ROWS_SHOWN = 6;
+
+// The share buttons on an article, as lib/analytics.ts names them. 'native' is
+// the phone's own share sheet, which is where most of them go on a site this
+// mobile - and the one case where the network is genuinely the visitor's
+// choice after the fact, so it is named as the sheet and not as a network.
+const CHANNEL_LABELS: Record<string, string> = {
+  whatsapp: 'ווטסאפ',
+  facebook: 'פייסבוק',
+  instagram: 'אינסטגרם',
+  copy_link: 'העתקת קישור',
+  native: 'תפריט השיתוף',
+};
 
 function Tile({ label, value, rate }: { label: string; value: number; rate: number | null }) {
   return (
@@ -209,6 +225,9 @@ export default function ArticleEngagementCard({
   const readRate = t.openings >= MIN_FOR_RATE ? share(t.reads, t.openings) : null;
   const doneRate = t.openings >= MIN_FOR_RATE ? share(t.finishes, t.openings) : null;
   const actions = t.shares + t.likes + t.comments;
+  // Empty until a share happens with the channel stored, which is why the
+  // breakdown appears rather than standing as a row of zeroes.
+  const channels = data.share_channels || [];
   const prevActions = p.shares + p.likes + p.comments;
 
   const rows = data.per_article;
@@ -262,7 +281,15 @@ export default function ArticleEngagementCard({
           <span>
             {data.granularity === 'hour' ? 'שעה' : 'יום'} שבו מישהו הגיב, עשה לייק או שיתף
             {' · '}
-            {shares(t.shares)}, {likes(t.likes)}, {comments(t.comments)}
+            {shares(t.shares)}
+            {channels.length > 0 && (
+              <>
+                {' ('}
+                {channels.map((c) => `${CHANNEL_LABELS[c.channel] || c.channel} ${c.n}`).join(', ')}
+                {')'}
+              </>
+            )}
+            , {likes(t.likes)}, {comments(t.comments)}
           </span>
         </p>
       )}
@@ -334,8 +361,8 @@ export default function ArticleEngagementCard({
       <p className="mt-3.5 pt-3 border-t border-stone-100 text-[10px] text-stone-400 leading-relaxed">
         &quot;נקרא&quot; = חצי מהעמוד נגלל, או 30 שניות בעמוד. &quot;עד הסוף&quot; = סוף גוף
         המאמר היה על המסך וגם עברו לפחות 40% מזמן הקריאה המשוער, בלשונית פעילה.
-        אחוזי גלילה מדויקים וזמן קריאה אינם נשמרים, ולכן אינם מופיעים כאן, וגם לא
-        לאיזו רשת בוצע שיתוף.
+        אחוזי גלילה מדויקים וזמן קריאה אינם נשמרים ולכן אינם מופיעים כאן. לאיזו
+        רשת בוצע שיתוף נשמר רק מ-22.9.2026, ולכן שיתופים קודמים מופיעים בלי רשת.
       </p>
     </div>
   );

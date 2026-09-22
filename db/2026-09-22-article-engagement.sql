@@ -27,9 +27,11 @@
 --     ones this function reports.
 --   * time on page. Nothing writes a duration. article_completed implies at
 --     least 40% of the reading time but the number itself is not stored.
---   * which network a share went to. trackArticleShare puts the platform in
---     `method`, and /api/track keeps only `source`, which carries the article
---     title. So "someone shared this" is answerable and "to WhatsApp" is not.
+--   * which network a share BEFORE 2026-09-22 went to. trackArticleShare put
+--     the platform in `method` while /api/track kept only `source`, which
+--     carried the article title - a value `entity` already holds as a slug.
+--     lib/analytics.ts now stores `method` there for `share` and nothing else,
+--     so shares from that date carry their channel and earlier ones cannot.
 --   * whether a second article was reached by clicking an internal link. We
 --     store the referrer host, never its path. A hop below means "the same
 --     session opened another article afterwards", nothing more.
@@ -110,9 +112,10 @@ as $$
   --   * a like writes an article_likes row AND fires article_like, but the
   --     table goes back to December 2025 and the event store starts on
   --     2026-08-22. The table is the record.
-  --   * a comment fires 'comment_submit', which is not on the allowlist in
-  --     lib/siteEvents.ts, so it is never written to site_events at all. The
-  --     comments table is the only place a comment exists.
+  --   * a comment writes a comments row and, from 2026-09-22, also fires
+  --     'comment_submit' into the event store. The table stays the source here:
+  --     it holds the text and the approval state, it goes back further than the
+  --     event, and it is the one that survives a beacon being dropped.
   --   * a share has no table. site_events is the only record of it.
   --
   -- Counting likes from the table and not also from the event would double
@@ -123,8 +126,17 @@ as $$
   -- unpublished still happened, and must still be counted in the totals even
   -- though it can no longer be attributed to a row in the per-article table.
   reactions as (
-    select ts, kind, slug from (
-        select e.created_at as ts, 'share'::text as kind, e.entity as slug
+    select ts, kind, slug, channel from (
+        -- The allowlist is repeated from lib/analytics.ts on purpose. Before
+        -- 2026-09-22 this column held the article title, and grouping by it
+        -- unfiltered would print an article's name in the UI as if it were a
+        -- social network. Anything unrecognised is a null channel: honestly
+        -- unknown, still counted as a share.
+        select e.created_at as ts, 'share'::text as kind, e.entity as slug,
+               case
+                 when e.source in ('whatsapp', 'facebook', 'instagram', 'copy_link', 'native')
+                 then e.source
+               end as channel
           from site_events e, bounds b
           where e.created_at >= b.prev_from
             and e.bot_kind is null
@@ -132,13 +144,13 @@ as $$
             and e.event_name = 'share'
             and e.entity is not null
       union all
-        select l.created_date, 'like', a.slug
+        select l.created_date, 'like', a.slug, null::text
           from article_likes l
           left join articles a on a.id = l.article_id
           cross join bounds b
           where l.created_date >= b.prev_from
       union all
-        select c.created_date, 'comment', a.slug
+        select c.created_date, 'comment', a.slug, null::text
           from comments c
           left join articles a on a.id = c.article_id
           cross join bounds b
@@ -227,6 +239,16 @@ as $$
         from cur c
         left join articles a on a.slug = c.entity
         group by c.entity, a.title) p),
+
+    -- Which button was pressed, for the shares where we know. A share whose
+    -- channel is null predates the measurement and is left out rather than
+    -- reported as an "unknown" network, which would be a row about us and not
+    -- about the reader.
+    'share_channels', (select coalesce(json_agg(c order by c.n desc, c.channel), '[]'::json) from (
+        select channel, count(*) as n
+        from react_cur
+        where kind = 'share' and channel is not null
+        group by channel) c),
 
     'navigation', json_build_object(
         'article_sessions',       (select count(distinct session_id) from cur),

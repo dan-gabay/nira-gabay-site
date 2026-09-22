@@ -129,12 +129,23 @@ function mirrorToStore(
     // Counts this session once, however many events it goes on to send.
     const visitor = visitorState();
 
+    // `share` is the one tracked event whose useful dimension is not its label.
+    // The label is the article title, which `entity` already carries as a slug,
+    // while `method` is the button that was actually pressed - whatsapp,
+    // facebook, instagram, copy_link or the native share sheet. Storing the
+    // title meant the store could say somebody shared and never say from where,
+    // which is the half of the question worth answering.
+    const source =
+      eventName === 'share'
+        ? (params?.method ?? null)
+        : (params?.event_label ?? params?.source ?? null);
+
     const payload: SiteEventPayload = {
       event_name: eventName,
       path,
       page_type: pageTypeFor(path),
       entity: entityFor(path),
-      source: params?.event_label ?? params?.source ?? null,
+      source,
       session_id: sessionId(),
       referrer_host: ref ? new URL(ref).hostname : null,
       // Set by every browser under automation. The server decides what to do
