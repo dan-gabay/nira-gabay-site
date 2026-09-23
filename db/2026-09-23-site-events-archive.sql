@@ -56,3 +56,23 @@ alter table public.site_events_archive enable row level security;
 -- enquiries across 12 distinct sessions - so every enquiry now on record is a
 -- different person. All four contact_email clicks belonged to that session,
 -- which is why the email channel now reads zero and should.
+
+-- Second move, same day, same method: session hwvxozratumtjoqlo8, 10 rows.
+--
+-- 2 September was the only day that ever showed three enquiries, and one of
+-- them was Nira. The session is the visit that POSTED an article to Facebook -
+-- a share fired from it at 08:58:32 with an internal referrer, and nine
+-- Facebook sessions landed on that exact article between 08:59 and 09:08.
+-- Forty-eight minutes later the same session walked the service pages, tapped
+-- the phone number, and reloaded /services/adult-therapy three times in thirty
+-- seconds. That is someone checking a site, not someone choosing a therapist,
+-- and the owner confirmed whose it was.
+--
+-- It also held one of the four shares on record, so the share count is now 3.
+-- That is the correct number: a share by the author is a publication, not a
+-- reader passing an article on, and the card that counts shares is about
+-- readers.
+--
+-- Verified the same way, and after it: 2 September reads 2 enquiries, and the
+-- site total is 12 - eleven survivors plus one that arrived from Google Ads
+-- while the removal was being made.
