@@ -30,6 +30,16 @@ const SAME_AS = [
   'https://www.instagram.com/niragabay',
 ];
 
+// The practice's Google Business Profile, by its CID - the stable form of a
+// Maps listing URL, unlike share links, which are redirects that expire.
+//
+// The profile already links to the site. This is the other direction, and it
+// belongs on the practice node only: the listing is the clinic, not the
+// person, and putting it on the Person would tell Google the two are the same
+// entity. Name and phone match the listing exactly; the street address does
+// not appear here by owner decision (lib/clinic.ts) and that is unchanged.
+const GOOGLE_BUSINESS_PROFILE = 'https://www.google.com/maps?cid=4881524504119124831';
+
 const SERVICE_NAMES: Array<{ slug: string; name: string; description: string }> = [
   { slug: 'teen-therapy', name: 'טיפול במתבגרים', description: 'ליווי מקצועי ורגיש בתקופה מאתגרת של התבגרות' },
   { slug: 'adult-therapy', name: 'טיפול במבוגרים', description: 'מרחב בטוח לעיבוד רגשי והתמודדות עם אתגרי החיים' },
@@ -118,7 +128,8 @@ export const practiceSchema = {
   image: 'https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png',
   telephone: CLINIC.phone,
   email: 'niraga1123@gmail.com',
-  sameAs: SAME_AS,
+  sameAs: [...SAME_AS, GOOGLE_BUSINESS_PROFILE],
+  hasMap: GOOGLE_BUSINESS_PROFILE,
   founder: { '@id': PERSON_ID },
   employee: { '@id': PERSON_ID },
   address: {
