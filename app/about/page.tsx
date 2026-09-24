@@ -3,6 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { GraduationCap, Award, Heart, MapPin, Users, BookOpen, Monitor } from 'lucide-react';
+import ArticleCtaBanner from '@/components/ArticleCtaBanner';
 
 const milestones = [
   {
@@ -294,6 +295,14 @@ export default function About() {
           </div>
         </div>
       </section>
+
+      {/* The page had no next step at all: not one link or contact option in
+          its own content. It is the second most viewed page on the site and
+          the page people open to check who Nira is before they write, so it
+          ends the way /services does. The spacer is stone-50, not the white
+          gradient /services uses, because the section above is dark. */}
+      <div className="bg-stone-50 h-8 md:h-12" />
+      <ArticleCtaBanner source="about" />
     </div>
   );
 }
