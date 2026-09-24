@@ -243,6 +243,15 @@ export default function About() {
       </section>
 
       {/* Clinic Section */}
+      {/* The page had no next step at all: not one link or contact option in
+          its own content. It is the second most viewed page on the site and
+          the page people open to check who Nira is before they write. The
+          banner is the one /services closes on, with the same white-to-stone
+          lead-in, placed before the clinic block rather than after it so the
+          invitation comes while the reader is still reading about her. */}
+      <div className="bg-gradient-to-b from-white to-stone-50 h-6 md:h-10" />
+      <ArticleCtaBanner source="about" />
+
       <section className="py-12 md:py-24 bg-gradient-to-br from-stone-800 to-stone-900 text-white">
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-5xl mx-auto">
@@ -295,14 +304,6 @@ export default function About() {
           </div>
         </div>
       </section>
-
-      {/* The page had no next step at all: not one link or contact option in
-          its own content. It is the second most viewed page on the site and
-          the page people open to check who Nira is before they write, so it
-          ends the way /services does. The spacer is stone-50, not the white
-          gradient /services uses, because the section above is dark. */}
-      <div className="bg-stone-50 h-8 md:h-12" />
-      <ArticleCtaBanner source="about" />
     </div>
   );
 }
