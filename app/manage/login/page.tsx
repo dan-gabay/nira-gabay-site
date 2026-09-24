@@ -33,6 +33,8 @@ function LoginForm() {
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'שגיאה בהתחברות');
+      // A wrong code is retyped from scratch, not edited digit by digit.
+      setPassword('');
       setIsLoading(false);
     }
   }
@@ -59,11 +61,18 @@ function LoginForm() {
           <input
             id="manage-password"
             type="password"
+            // The password is digits only, so phones open the number pad
+            // instead of the full keyboard. Anything else typed or pasted is
+            // dropped rather than sent.
+            inputMode="numeric"
+            pattern="[0-9]*"
+            autoComplete="current-password"
+            dir="ltr"
             autoFocus
             placeholder="סיסמה"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+            onChange={(e) => setPassword(e.target.value.replace(/\D/g, ''))}
+            className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg text-center text-xl tracking-[0.5em] placeholder:text-base placeholder:tracking-normal focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
           <button
             type="submit"
