@@ -58,14 +58,20 @@ export type InsightInput = {
 const pct = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
 const round1 = (n: number) => (Math.round(n * 10) / 10).toString();
 
-export function buildInsights(d: InsightInput, serviceName: (slug: string) => string): Insight[] {
+export function buildInsights(
+  d: InsightInput,
+  serviceName: (slug: string) => string,
+  opts: { skipHeadline?: boolean; limit?: number } = {},
+): Insight[] {
   const out: Insight[] = [];
   const { totals, previous } = d;
   const visits = totals.visits;
 
   // 1. The headline rate. Everything else is a variation on it, so it goes
-  //    first and the rest of the list is allowed to assume it.
-  if (visits >= 20) {
+  //    first and the rest of the list is allowed to assume it. Skipped when the
+  //    page already shows the rate as a figure right above the list, where the
+  //    sentence would only repeat it.
+  if (visits >= 20 && !opts.skipHeadline) {
     const r = pct(totals.conversions, visits);
     const prevR = previous.visits >= 20 ? pct(previous.conversions, previous.visits) : null;
     out.push({
@@ -209,5 +215,5 @@ export function buildInsights(d: InsightInput, serviceName: (slug: string) => st
     }
   }
 
-  return out.slice(0, 6);
+  return out.slice(0, opts.limit ?? 6);
 }

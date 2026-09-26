@@ -2,480 +2,168 @@
 
 import { useEffect, useState } from 'react';
 import {
-  Eye, Users, MessageCircle, Mail, Percent, Layers,
-  TrendingUp, TrendingDown, Minus, Lightbulb, AlertTriangle, CheckCircle2,
-} from 'lucide-react';
-import {
-  LineChart,
-  BarChart,
-  RankedList,
-  SlotBars,
   SourceBars,
   SOURCE_SERIES,
   bucketKeys,
   fillDays,
   fillHours,
   fillSeries,
-  type DayPoint,
-  type Slot,
 } from '@/components/manage/Charts';
-import TrafficSources, { GROUP_LABELS, type TrafficRow } from '@/components/manage/TrafficSources';
+import { GROUP_LABELS } from '@/components/manage/TrafficSources';
 import OrganicSearchCard, { type OrganicSearch } from '@/components/manage/OrganicSearch';
-import ArticleEngagementCard, {
-  type ArticleEngagement,
-} from '@/components/manage/ArticleEngagement';
-import {
-  ReturningVisitors,
-  SourceQuality,
-  type ReturningSummary,
-  type ReturningBucket,
-  type SourceQualityRow,
-} from '@/components/manage/Audience';
-import { EVENT_LABELS, PAGE_TYPE_LABELS } from '@/lib/siteEvents';
-import { SERVICES } from '@/lib/services';
+import ArticleEngagementCard, { type ArticleEngagement } from '@/components/manage/ArticleEngagement';
 import { buildInsights } from '@/lib/analyticsInsights';
-import { enquiries, readers } from '@/lib/heCount';
 import { BOT_KIND_LABELS, type StoredBotKind } from '@/lib/botDetect';
+import { Card, Section, Segmented } from '@/components/manage/analytics/ui';
+import { serviceName } from '@/components/manage/analytics/labels';
+import { Overview, heDate } from '@/components/manage/analytics/Overview';
+import { Enquiries } from '@/components/manage/analytics/Enquiries';
+import { SourcesTable } from '@/components/manage/analytics/SourcesTable';
+import { PagesTable } from '@/components/manage/analytics/PagesTable';
+import { AudienceSection } from '@/components/manage/analytics/AudienceSection';
+import type { EnquiryRow, Payload } from '@/components/manage/analytics/types';
 
-type Totals = { views: number; visits: number; conversions: number; signups: number; events?: number };
-
-type Payload = {
-  range_days: number;
-  totals: Totals;
-  /** Automated clients that ran the page's JavaScript, counted apart from the
-   *  numbers above. A small and unrepresentative slice of the automated
-   *  traffic - see `bot_fetches`. */
-  bots?: Array<{ kind: string; hits: number; sessions: number }>;
-  /** Added 2026-09-15, so guarded. Every automated request the server saw,
-   *  written at the edge by proxy.ts rather than by the page's JavaScript.
-   *  `paths` is distinct pages, `hits` is requests. */
-  bot_fetches?: Array<{ kind: string; hits: number; paths: number }>;
-  previous: Totals;
-  granularity?: 'hour' | 'day';
-  daily: DayPoint[];
-  top_articles: Array<{ slug: string; title: string; views: number; readers: number }>;
-  by_event: Array<{ name: string; n: number }>;
-  by_page_type: Array<{ page_type: string; views: number; conversions: number }>;
-  top_pages: Array<{ path: string; page_type: string; views: number }>;
-  conversions_by_source: Array<{ name: string; source: string; n: number }>;
-  referrers: Array<{ host: string; n: number }>;
-  campaigns: Array<{
-    channel: string;
-    utm_campaign: string | null;
-    utm_content: string | null;
-    utm_term: string | null;
-    visits: number;
-    conversions: number;
-  }>;
-  devices: Array<{ device: string; n: number }>;
-  // Added 2026-09-02. An older cached response will not carry them, so every
-  // read of these is guarded.
-  traffic?: TrafficRow[];
-  // Added 2026-09-05, so guarded like the rest of this block.
-  traffic_daily?: Array<{ day: string; grp: string; visits: number; conversions: number }>;
-  landing_pages?: Array<{ path: string; page_type: string; visits: number; conversions: number }>;
-  service_funnel?: Array<{ slug: string; views: number; visits: number; conversions: number }>;
-  by_hour?: Array<{ hour: number; visits: number; conversions: number }>;
-  by_weekday?: Array<{ dow: number; visits: number; conversions: number }>;
-  engagement?: {
-    visits: number;
-    one_page_visits: number;
-    deep_visits: number;
-    article_reads: number;
-    article_completed: number;
-  };
-  // Added 2026-09-14 with the visitor counter, so guarded the same way: a
-  // response cached before it landed simply has no returning section.
-  returning?: ReturningSummary;
-  returning_buckets?: ReturningBucket[];
-  engagement_by_source?: SourceQualityRow[];
-  first_event: string | null;
-};
+// The admin's landing screen, read top to bottom as a chain of questions:
+//
+//   1. תמונת מצב  - is it working? Four figures, what they mean, their shape.
+//   2. פניות      - what produced the enquiries, down to each one.
+//   3. מקורות     - which traffic is worth having.
+//   4. עמודים     - which pages turn a visit into an enquiry.
+//   5. מאמרים     - whether the content is read.
+//   6. קהל        - who the visitors are and when they come.
+//
+// It replaced about twenty flat cards in which the same data appeared up to
+// three times (landing pages, source quality, enquiries per day). Every section
+// here answers one question, and a figure that did not help answer one was
+// cut rather than given a card of its own.
+//
+// Four calls, not one: the main payload, plus article engagement, organic
+// search and the enquiry log, each its own RPC so that one failing leaves the
+// rest of the page standing. Each result is stored with the range it was asked
+// for, and "loading" is derived by comparing that to the selected range - no
+// setState in an effect body, and the previous range stays on screen, dimmed,
+// until the new one lands.
 
 const RANGES = [
-  { days: 1, label: '24 שעות' },
-  { days: 7, label: '7 ימים' },
-  { days: 30, label: '30 יום' },
-  { days: 90, label: '90 יום' },
+  { value: 1, label: '24 שעות' },
+  { value: 7, label: '7 ימים' },
+  { value: 30, label: '30 יום' },
+  { value: 90, label: '90 יום' },
 ];
 
-const DEVICE_LABELS: Record<string, string> = {
-  mobile: 'טלפון',
-  desktop: 'מחשב',
-  tablet: 'טאבלט',
-  unknown: 'לא ידוע',
-};
+const SECTIONS = [
+  { id: 'overview', label: 'תמונת מצב' },
+  { id: 'enquiries', label: 'פניות' },
+  { id: 'sources', label: 'מקורות' },
+  { id: 'pages', label: 'עמודים' },
+  { id: 'articles', label: 'מאמרים' },
+  { id: 'audience', label: 'קהל' },
+];
+const SECTION_IDS = SECTIONS.map((s) => s.id);
 
-const WEEKDAYS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+type Loaded<T> = { range: number; data: T | null; failed?: boolean };
 
-// What a response from before the visitor counter looks like. Zero known
-// visits is the card's own "not measured yet" state, so an old cached payload
-// degrades to the same honest sentence as a fresh install.
-const EMPTY_RETURNING: ReturningSummary = {
-  known_visits: 0,
-  new_visits: 0,
-  returning_visits: 0,
-  loyal_visits: 0,
-  new_conversions: 0,
-  returning_conversions: 0,
-  median_visit_at_conversion: null,
-  median_days_at_conversion: null,
-};
-
-const SERVICE_TITLES = new Map(SERVICES.map((s) => [s.slug, s.title]));
-const serviceName = (slug: string) => SERVICE_TITLES.get(slug) || slug;
-
-const pct = (part: number, whole: number) => (whole > 0 ? (part / whole) * 100 : 0);
-const one = (n: number) => (Math.round(n * 10) / 10).toString();
-
-function Trend({ now, prev, unit }: { now: number; prev: number; unit?: string }) {
-  const isRate = unit !== undefined;
-  if (now === prev) {
-    return (
-      <span className="inline-flex items-center gap-0.5 text-[11px] text-stone-400">
-        <Minus className="w-3 h-3" aria-hidden="true" />
-        ללא שינוי
-      </span>
-    );
-  }
-  const up = now > prev;
-  // A rate is compared in points, not in percent of a percent: "3% up from 2%"
-  // is a 50% rise and saying so is true and useless.
-  if (isRate) {
-    const delta = Math.round((now - prev) * 10) / 10;
-    return (
-      <span className={`inline-flex items-center gap-0.5 text-[11px] ${up ? 'text-emerald-600' : 'text-rose-600'}`}>
-        {up ? <TrendingUp className="w-3 h-3" aria-hidden="true" /> : <TrendingDown className="w-3 h-3" aria-hidden="true" />}
-        {delta > 0 ? '+' : ''}{delta}{unit}
-      </span>
-    );
-  }
-  const p = prev === 0 ? null : Math.round(((now - prev) / prev) * 100);
-  return (
-    <span className={`inline-flex items-center gap-0.5 text-[11px] ${up ? 'text-emerald-600' : 'text-rose-600'}`}>
-      {up ? <TrendingUp className="w-3 h-3" aria-hidden="true" /> : <TrendingDown className="w-3 h-3" aria-hidden="true" />}
-      {p === null
-        ? `${now - prev >= 0 ? '+' : ''}${Math.round((now - prev) * 10) / 10}`
-        : `${p > 0 ? '+' : ''}${p}%`}
-    </span>
-  );
+function useRangeFetch<T>(url: string, range: number): Loaded<T> | null {
+  const [state, setState] = useState<Loaded<T> | null>(null);
+  useEffect(() => {
+    let live = true;
+    fetch(`${url}?range=${range}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('load failed'))))
+      .then((d: T) => { if (live) setState({ range, data: d }); })
+      .catch(() => { if (live) setState({ range, data: null, failed: true }); });
+    return () => { live = false; };
+  }, [url, range]);
+  return state;
 }
 
-function Tile({
-  icon: Icon, label, value, prev, display, unit, hint,
-}: {
-  icon: typeof Eye; label: string; value: number; prev: number;
-  display?: string; unit?: string; hint?: string;
-}) {
-  return (
-    <div className="bg-white rounded-2xl border border-stone-200 p-3.5 md:p-5">
-      <div className="flex items-center gap-1.5 text-stone-400 mb-1">
-        <Icon className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
-        <span className="text-[11px] md:text-sm truncate">{label}</span>
-      </div>
-      <p className="text-xl md:text-3xl font-bold text-stone-800 leading-none tabular-nums">
-        {display ?? value}
-      </p>
-      <div className="mt-1"><Trend now={value} prev={prev} unit={unit} /></div>
-      {hint && <p className="text-[10px] md:text-[11px] text-stone-400 mt-1.5 leading-snug">{hint}</p>}
-    </div>
-  );
-}
-
-function Hero({ label, value, display, prev, unit }: {
-  label: string; value: number; display?: string; prev: number; unit?: string;
-}) {
-  return (
-    <div>
-      <p className="text-[11px] text-stone-400">{label}</p>
-      {/* Number and trend share a baseline. Stacked, the gap under a 30px
-          figure read as an empty band and cost a whole row per headline. */}
-      <p className="flex items-baseline gap-2 mt-1">
-        <span className="text-[28px] font-bold text-stone-800 leading-none tabular-nums">
-          {display ?? value}
-        </span>
-        <Trend now={value} prev={prev} unit={unit} />
-      </p>
-    </div>
-  );
-}
-
-function Mini({ label, value, display, prev, unit }: {
-  label: string; value: number; display?: string; prev: number; unit?: string;
-}) {
-  return (
-    <div className="flex items-baseline justify-between gap-2">
-      <span className="text-[11px] text-stone-500 truncate">{label}</span>
-      <span className="flex items-baseline gap-1.5 flex-shrink-0">
-        <span className="text-sm font-bold text-stone-800 tabular-nums">{display ?? value}</span>
-        <Trend now={value} prev={prev} unit={unit} />
-      </span>
-    </div>
-  );
-}
-
-/**
- * The six tiles, folded into one card for the phone.
- *
- * The grid is right on a desktop and wrong at 390px: six bordered cards, each
- * spending about 165px of height on a two-digit number, push every chart on
- * this page below three screens of scrolling. Worse, it hands a standing zero
- * (list signups) exactly as much room as the one figure the page exists for.
- *
- * So on a phone the same six numbers are ranked rather than tiled. Two get the
- * headline - did anyone come, and did anyone write - and the four that qualify
- * them get a line each. Nothing is dropped and nothing is rounded differently;
- * only the weight changes. The bot note moves in here too, because it is a
- * caveat on these numbers and belongs next to them, not above the tabs where
- * it was the first thing the screen showed.
- */
-function SummaryMobile({
-  visits, prevVisits, conversions, prevConversions,
-  convRate, prevConvRate, perVisit, prevPerVisit,
-  views, prevViews, signups, prevSignups, note,
-}: {
-  visits: number; prevVisits: number; conversions: number; prevConversions: number;
-  convRate: number; prevConvRate: number; perVisit: number; prevPerVisit: number;
-  views: number; prevViews: number; signups: number; prevSignups: number;
-  note?: string;
-}) {
-  return (
-    <div className="md:hidden bg-white rounded-2xl border border-stone-200 p-4">
-      <div className="grid grid-cols-2 gap-3">
-        <Hero label="ביקורים" value={visits} prev={prevVisits} />
-        <Hero label="פניות" value={conversions} prev={prevConversions} />
-      </div>
-      <div className="mt-3.5 pt-3 border-t border-stone-100 grid gap-2">
-        <Mini label="שיעור פנייה" value={convRate} display={`${one(convRate)}%`}
-              prev={prevConvRate} unit=" נק'" />
-        <Mini label="עמודים לביקור" value={perVisit} display={one(perVisit)}
-              prev={prevPerVisit} unit="" />
-        <Mini label="צפיות בעמודים" value={views} prev={prevViews} />
-        <Mini label="הרשמות לרשימה" value={signups} prev={prevSignups} />
-      </div>
-      {note && (
-        <p className="text-[10px] text-stone-400 mt-3 pt-2.5 border-t border-stone-100 leading-snug">
-          {note}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function Card({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
-  return (
-    <section className="bg-white rounded-2xl border border-stone-200 p-3.5 md:p-5">
-      <div className="flex items-baseline justify-between gap-3 mb-3">
-        <h2 className="text-sm md:text-base font-bold text-stone-800">{title}</h2>
-        {sub && <span className="text-[11px] text-stone-400 text-end">{sub}</span>}
-      </div>
-      {children}
-    </section>
-  );
+/** The section whose heading was last scrolled past, for the chip row. */
+function useActiveSection(ids: string[]) {
+  const [active, setActive] = useState(ids[0]);
+  useEffect(() => {
+    const onScroll = () => {
+      // 190px: the admin header plus this page's sticky bar, plus a little.
+      let current = ids[0];
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top <= 190) current = id;
+      }
+      setActive(current);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [ids]);
+  return active;
 }
 
 export default function AnalyticsPage() {
-  // 24 hours is the default because this is now the landing screen of the
-  // admin (app/manage/page.tsx redirects here). The first question on opening
-  // it is "what happened since I last looked", not "what did the month do" -
-  // the longer ranges are one click away and answer a different question.
+  // 24 hours is the default because this is the landing screen of the admin
+  // (app/manage/page.tsx redirects here): the first question on opening it is
+  // "what happened since I last looked".
   const [range, setRange] = useState(1);
-  const [data, setData] = useState<Payload | null>(null);
-  // Fetched alongside the payload above, not folded into it: see the comment in
-  // app/api/manage/article-engagement/route.ts. It is allowed to be null - if
-  // this one call fails the article card is simply absent and every other card
-  // on the page still renders.
-  const [articles, setArticles] = useState<ArticleEngagement | null>(null);
-  // Same contract as `articles`: its own call, optional, range-checked on render.
-  const [organic, setOrganic] = useState<OrganicSearch | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [failed, setFailed] = useState(false);
+  const main = useRangeFetch<Payload>('/api/manage/analytics', range);
+  const articlesRes = useRangeFetch<ArticleEngagement>('/api/manage/article-engagement', range);
+  const organicRes = useRangeFetch<OrganicSearch>('/api/manage/organic-search', range);
+  const logRes = useRangeFetch<EnquiryRow[]>('/api/manage/enquiry-log', range);
+  const active = useActiveSection(SECTION_IDS);
 
-  useEffect(() => {
-    let live = true;
-    setLoading(true);
-    setFailed(false);
-    fetch(`/api/manage/analytics?range=${range}`)
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('load failed'))))
-      .then((d) => { if (live) { setData(d); setLoading(false); } })
-      .catch(() => { if (live) { setFailed(true); setLoading(false); } });
-    return () => { live = false; };
-  }, [range]);
+  const loading = !main || main.range !== range;
+  const failed = !loading && Boolean(main?.failed);
+  const data = main?.data ?? null;
+  // The optional payloads are shown only when they were built for the range
+  // the main payload is showing, so the page never mixes two ranges. A failed
+  // log reads as an empty one rather than as loading forever.
+  const shownRange = main?.range;
+  const articles = articlesRes?.range === shownRange ? articlesRes?.data ?? null : null;
+  const organic = organicRes?.range === shownRange ? organicRes?.data ?? null : null;
+  const log =
+    logRes?.range === shownRange ? (logRes?.data ?? (logRes?.failed ? [] : null)) : null;
 
-  useEffect(() => {
-    let live = true;
-    // Deliberately no setArticles(null) here to clear the previous range: the
-    // payload carries the range it was built for, and the card is rendered only
-    // when that matches the range the page is showing. Same effect - a stale
-    // card never appears under a new range - without a synchronous setState in
-    // an effect body.
-    fetch(`/api/manage/article-engagement?range=${range}`)
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('load failed'))))
-      .then((d) => { if (live) setArticles(d); })
-      .catch(() => { /* the card is optional - the page must not fail with it */ });
-    return () => { live = false; };
-  }, [range]);
-
-  useEffect(() => {
-    let live = true;
-    fetch(`/api/manage/organic-search?range=${range}`)
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('load failed'))))
-      .then((d) => { if (live) setOrganic(d); })
-      .catch(() => { /* optional, like the article card */ });
-    return () => { live = false; };
-  }, [range]);
-
-  // A 24-hour range comes back in hourly buckets, so it needs the hourly fill,
-  // and both chart labels follow from the same flag - "1 ימים" and "פניות לפי
-  // יום" were both wrong on that range.
   const isHourly = data?.granularity === 'hour';
-  const rangeLabel = isHourly ? '24 שעות' : `${data?.range_days ?? range} ימים`;
-
-  // Bots, kept out of every number above and named here instead. Sessions, not
-  // hits: one crawler fetching forty pages is one client, not forty visitors.
-  const bots = data?.bots ?? [];
-  const botSessions = bots.reduce((a, b) => a + b.sessions, 0);
-  const botSummary = bots
-    .slice()
-    .sort((a, b) => b.sessions - a.sessions)
-    .slice(0, 3)
-    .map((b) => `${BOT_KIND_LABELS[b.kind as StoredBotKind] ?? b.kind} ${b.sessions}`)
-    .join(', ');
-  // Pulled out of the caveat above and given a sentence of its own further
-  // down the page. `ai_answer` is the one bot bucket that is not a nuisance to
-  // be discounted: it is an assistant opening the page mid-conversation
-  // because a person asked it something, which is a reader the site otherwise
-  // has no way of seeing. Everything else here is a machine reading on its own
-  // schedule.
-  //
-  // Read from `bot_fetches` and deliberately NOT from `bots`. An assistant
-  // fetches the HTML and reads it; it does not run the page's JavaScript, and
-  // `bots` is built from site_events, which only exists because that
-  // JavaScript ran. So `bots` would report zero for exactly the event this
-  // line is about. `bot_fetches` is written at the edge, before any of that.
-  //
-  // Rows written before 2026-09-15 carry the old coarse 'ai' and cannot be
-  // re-sorted, so they stay out of this figure rather than inflate it - see
-  // lib/botDetect.ts.
-  const botFetches = data?.bot_fetches ?? [];
-  const aiAnswer = botFetches.filter((b) => b.kind === 'ai_answer');
-  const aiAnswerHits = aiAnswer.reduce((a, b) => a + b.hits, 0);
-  const aiAnswerPaths = aiAnswer.reduce((a, b) => a + b.paths, 0);
-  // A 24-hour range comes back in hourly buckets, so it needs the hourly fill.
-  const days = data
-    ? data.granularity === 'hour'
-      ? fillHours(data.daily || [], 24)
-      : fillDays(data.daily || [], data.range_days)
-    : [];
-  // Visitors by source, over the same buckets the chart above uses.
-  //
-  // Only the groups that actually sent someone in this range get a line: a
-  // source with no traffic would otherwise be a flat zero along the baseline,
-  // which is a line that says nothing and one more hue competing for the eye.
-  // The colours are pinned per group in SOURCE_SERIES, so a group appearing or
-  // disappearing never repaints the ones that stayed.
-  const trafficRows = data?.traffic_daily || [];
-  const sourceSeries = Object.keys(SOURCE_SERIES)
-    .map((key) => ({
-      key,
-      label: GROUP_LABELS[key] || key,
-      color: SOURCE_SERIES[key],
-      total: trafficRows.reduce((a, r) => a + (r.grp === key ? r.visits : 0), 0),
-    }))
-    .filter((s) => s.total > 0)
-    .sort((a, b) => b.total - a.total);
-  // Every bucket in the range, empty ones included. Shared by the two stacked
-  // charts on the page so their columns sit on the same x-axis.
-  const rangeBuckets = data
-    ? isHourly
-      ? bucketKeys(24, 'hour')
-      : bucketKeys(data.range_days, 'day')
-    : [];
-  const sourcePoints = data ? fillSeries(trafficRows, rangeBuckets) : [];
-
-  const noData = Boolean(data) && (data?.totals.events ?? 0) === 0;
-
-  const insights = data
-    ? buildInsights(
-        {
-          totals: data.totals,
-          previous: data.previous,
-          range_days: data.range_days,
-          traffic: data.traffic,
-          service_funnel: data.service_funnel,
-          by_hour: data.by_hour,
-          devices: data.devices,
-          engagement: data.engagement,
-          landing_pages: data.landing_pages,
-          engagement_by_source: data.engagement_by_source,
-          returning: data.returning,
-        },
-        serviceName,
-      )
-    : [];
-
-  // Rates, computed here rather than in SQL so the previous window uses exactly
-  // the same formula as the current one.
-  const convRate = data ? pct(data.totals.conversions, data.totals.visits) : 0;
-  const prevConvRate = data ? pct(data.previous.conversions, data.previous.visits) : 0;
-  const perVisit = data && data.totals.visits > 0 ? data.totals.views / data.totals.visits : 0;
-  const prevPerVisit = data && data.previous.visits > 0 ? data.previous.views / data.previous.visits : 0;
-
-  // Hour-of-day is what the range chart already shows when the range IS a day,
-  // so it only earns a card on the longer ranges.
-  const hourSlots: Slot[] = Array.from({ length: 24 }, (_, h) => {
-    const row = (data?.by_hour || []).find((x) => x.hour === h);
-    return { label: String(h).padStart(2, '0'), visits: row?.visits ?? 0, conversions: row?.conversions ?? 0 };
-  });
-  const weekSlots: Slot[] = WEEKDAYS.map((label, dow) => {
-    const row = (data?.by_weekday || []).find((x) => x.dow === dow);
-    return { label, visits: row?.visits ?? 0, conversions: row?.conversions ?? 0 };
-  });
-  const hasClock = (data?.by_hour || []).length > 0 && !isHourly;
-
-  const eng = data?.engagement;
+  const rangeLabel = isHourly ? '24 השעות האחרונות' : `${data?.range_days ?? range} הימים האחרונים`;
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-lg md:text-2xl font-bold text-stone-800">נתוני האתר</h1>
-          <p className="hidden md:block text-sm text-stone-500 mt-0.5">
-            נמדד ישירות באתר, לא דרך גוגל או פייסבוק
-          </p>
-          {/* Said out loud rather than left implicit: every figure on this page
-              counts people only. A crawler is still served, still stored and
-              still listed here - it just is not a visit. */}
-          {botSessions > 0 && (
-            <p className="hidden md:block text-[11px] text-stone-400 mt-1">
-              ללא {botSessions.toLocaleString('he-IL')} כניסות אוטומטיות
-              {botSummary && <> ({botSummary})</>}
-            </p>
-          )}
-        </div>
-        {/* Four equal segments across the full width on a phone, where the
-            left-aligned pill row left a ragged gap and gave each tab a target
-            narrower than a thumb. Unchanged from md up. */}
-        <div className="grid grid-cols-4 gap-1.5 w-full md:flex md:w-auto" role="group" aria-label="טווח זמן">
-          {RANGES.map((r) => (
-            <button
-              key={r.days}
-              type="button"
-              onClick={() => setRange(r.days)}
-              aria-pressed={range === r.days}
-              className={`min-h-[38px] px-1.5 md:px-3 rounded-xl text-xs md:text-sm font-medium transition-colors ${
-                range === r.days
-                  ? 'bg-stone-800 text-white'
-                  : 'bg-white border border-stone-300 text-stone-600 hover:bg-stone-50'
-              }`}
-            >
-              {r.label}
-            </button>
-          ))}
+    <div className="space-y-6 md:space-y-10">
+      <div>
+        <h1 className="text-lg md:text-2xl font-bold text-stone-800">נתוני האתר</h1>
+        <p className="text-[12px] md:text-sm text-stone-500 mt-0.5">
+          נמדד ישירות באתר, בלי גוגל אנליטיקס. אנשים בלבד, בלי בוטים.
+        </p>
+      </div>
+
+      {/* The range and the section chips stay under the admin header while
+          scrolling: the range is the one control on the page, and most of this
+          page is a long way from the top on a phone. */}
+      <div className="sticky top-14 md:top-16 z-30 -mx-4 md:-mx-6 px-4 md:px-6 py-2 bg-stone-100/95 backdrop-blur-sm border-b border-stone-200/80 !mt-3">
+        <div className="md:flex md:items-center md:gap-4">
+          <div className="md:w-[380px] md:flex-shrink-0">
+            <Segmented label="טווח זמן" options={RANGES} value={range} onChange={setRange} />
+          </div>
+          <nav
+            aria-label="קפיצה לחלק בעמוד"
+            className="mt-2 md:mt-0 -mx-4 px-4 md:mx-0 md:px-0 overflow-x-auto [scrollbar-width:none]"
+          >
+            <ul className="flex gap-1.5 w-max">
+              {SECTIONS.map((s) => (
+                <li key={s.id}>
+                  <a
+                    href={`#${s.id}`}
+                    aria-current={active === s.id ? 'true' : undefined}
+                    className={`inline-flex items-center min-h-[32px] px-3 rounded-full text-[12px] md:text-[13px] font-medium whitespace-nowrap transition-colors ${
+                      active === s.id
+                        ? 'bg-stone-800 text-white'
+                        : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
+                    }`}
+                  >
+                    {s.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
       </div>
 
-      {loading && <p className="text-sm text-stone-400">טוען...</p>}
+      {!data && !failed && <p className="text-sm text-stone-400">טוען...</p>}
 
       {failed && (
         <div className="bg-white rounded-2xl border border-rose-200 p-4 text-sm text-stone-700">
@@ -483,313 +171,214 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      {data && !loading && (
-        <>
-          {noData && (
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 md:p-5">
-              <p className="font-semibold text-stone-800 text-sm md:text-base">עדיין אין נתונים</p>
-              <p className="text-xs md:text-sm text-stone-600 mt-1 leading-relaxed">
-                המדידה מתחילה לאסוף מרגע שהעמודים עלו לאוויר, אז היא לא מכילה
-                היסטוריה. כל ביקור מכאן והלאה נספר. תן לזה יום או יומיים.
-              </p>
-            </div>
-          )}
+      {data && !failed && (
+        <div
+          className={`space-y-8 md:space-y-12 transition-opacity ${loading ? 'opacity-50 pointer-events-none' : ''}`}
+          aria-busy={loading}
+        >
+          <Dashboard data={data} articles={articles} organic={organic} log={log} rangeLabel={rangeLabel} />
+        </div>
+      )}
 
-          <SummaryMobile
-            visits={data.totals.visits} prevVisits={data.previous.visits}
-            conversions={data.totals.conversions} prevConversions={data.previous.conversions}
-            convRate={convRate} prevConvRate={prevConvRate}
-            perVisit={perVisit} prevPerVisit={prevPerVisit}
-            views={data.totals.views} prevViews={data.previous.views}
-            signups={data.totals.signups} prevSignups={data.previous.signups}
-            note={
-              botSessions > 0
-                ? `ללא ${botSessions.toLocaleString('he-IL')} כניסות אוטומטיות${botSummary ? ` (${botSummary})` : ''}`
-                : undefined
-            }
-          />
-
-          <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2.5 md:gap-4">
-            <Tile icon={Users} label="ביקורים" value={data.totals.visits} prev={data.previous.visits}
-                  hint="מבקרים שונים, לפי ביקור" />
-            <Tile icon={Eye} label="צפיות בעמודים" value={data.totals.views} prev={data.previous.views} />
-            <Tile icon={MessageCircle} label="פניות" value={data.totals.conversions} prev={data.previous.conversions}
-                  hint="ווטסאפ, טלפון, מייל וטופס" />
-            <Tile icon={Percent} label="שיעור פנייה" value={convRate} prev={prevConvRate}
-                  display={`${one(convRate)}%`} unit=" נק'"
-                  hint="כמה מהביקורים הפכו לפנייה" />
-            <Tile icon={Mail} label="הרשמות לרשימה" value={data.totals.signups} prev={data.previous.signups} />
-            <Tile icon={Layers} label="עמודים לביקור" value={perVisit} prev={prevPerVisit}
-                  display={one(perVisit)} unit=""
-                  hint="כמה עמודים נקראים בממוצע" />
-          </div>
-
-          {/* The numbers above, said out loud. Silent when the sample is too
-              small to support a sentence - see lib/analyticsInsights.ts. */}
-          {insights.length > 0 && (
-            <section className="bg-white rounded-2xl border border-stone-200 p-3.5 md:p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Lightbulb className="w-4 h-4 text-amber-500" aria-hidden="true" />
-                <h2 className="text-sm md:text-base font-bold text-stone-800">מה עולה מהנתונים</h2>
-              </div>
-              <ul className="space-y-2">
-                {insights.map((ins) => (
-                  <li key={ins.text} className="flex items-start gap-2 text-[13px] md:text-sm text-stone-700 leading-relaxed">
-                    {ins.tone === 'warn' ? (
-                      <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
-                    ) : ins.tone === 'good' ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
-                    ) : (
-                      <span className="w-1.5 h-1.5 rounded-full bg-stone-300 flex-shrink-0 mt-2" aria-hidden="true" />
-                    )}
-                    <span className="min-w-0">{ins.text}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          <Card title="תנועה לאורך זמן" sub={rangeLabel}>
-            <LineChart data={days} labels={{ primary: 'צפיות', secondary: 'ביקורים' }} />
-          </Card>
-
-          {/* Conversions get their own chart rather than a second axis: they
-              are two orders of magnitude below pageviews, and a shared scale
-              would flatten them into the baseline. */}
-          <Card title={isHourly ? 'פניות לפי שעה' : 'פניות לפי יום'} sub="ווטסאפ, טלפון, מייל וטופס">
-            <BarChart data={days} />
-          </Card>
-
-          <Card title="מאיפה הגיעו המבקרים" sub="לחיצה על שורה פותחת את הפירוט">
-            <TrafficSources rows={data.traffic || []} />
-            {/* The other half of the AI story, and it belongs here rather than
-                in a card of its own: the row above counts a person who clicked
-                through from an answer, and this counts the assistant that
-                wrote that answer opening the page to do it. Same event, two
-                ends, and neither one means much without the other.
-
-                Deliberately not added to any total. There is no person on the
-                site during one of these, so calling it a visit would corrupt
-                every rate on the page. */}
-            {aiAnswerHits > 0 && (
-              <p className="mt-3.5 pt-3 border-t border-stone-100 text-[11px] text-stone-500 leading-relaxed">
-                בנוסף, כלי AI פתח עמוד באתר {aiAnswerHits.toLocaleString('he-IL')} פעמים
-                {aiAnswerPaths > 1 && <> ({aiAnswerPaths.toLocaleString('he-IL')} עמודים שונים)</>}
-                {' '}תוך כדי שענה למישהו. זה לא נספר כביקור - אין אדם על האתר - אבל זה
-                אומר שהאתר נשלף כדי לענות. מי שילחץ על הקישור בתשובה יופיע למעלה
-                כ&quot;{GROUP_LABELS.ai_referral}&quot;.
-              </p>
-            )}
-          </Card>
-
-          {/* The card above is the totals for the range: who sent the most.
-              This is the same split over time - which is the question the
-              totals cannot answer. A campaign that was paused, a post that
-              went out on one day, a slow drift in organic: all of them are a
-              single number in the card above and a visible shape here.
-
-              Stacked rather than one line per source, so the column height is
-              the day's total and the segments are what it was made of. The
-              sort above puts the biggest source first, which places it on the
-              baseline - the only position in a stack with a straight edge to
-              read a trend against. */}
-          <Card title="מבקרים לפי מקור הגעה, לאורך זמן" sub={rangeLabel}>
-            <SourceBars data={sourcePoints} series={sourceSeries} />
-          </Card>
-
-          {/* Volume is the question the two cards above answer. This is the one
-              they cannot: a paid click and a search arrival are the same single
-              number up there, and nothing on the page said that one of them
-              reads three pages and the other reads one. */}
-          <Card title="איכות התנועה לפי מקור" sub="כמה עמודים נקראים בפועל">
-            <SourceQuality rows={data.engagement_by_source || []} />
-          </Card>
-
-          {/* The cards above say how many came from search and how deep they
-              went as a group. This one opens that group up: which page Google
-              sent each of them to, and whether that page kept them. */}
-          {organic && organic.range_days === data.range_days && (
-            <Card title="חיפוש אורגני" sub={`${rangeLabel} · גוגל ומנועי חיפוש, בלי מודעות`}>
-              <OrganicSearchCard data={organic} />
-            </Card>
-          )}
-
-          {/* Every other card on this page counts visits, and a visit cannot
-              tell forty people who came once from ten who came four times. */}
-          <Card title="מבקרים חוזרים" sub="לפי דפדפן, בלי IP">
-            <ReturningVisitors
-              summary={data.returning ?? EMPTY_RETURNING}
-              buckets={data.returning_buckets || []}
-              totalVisits={data.totals.visits}
-            />
-          </Card>
-
-          {/* Everything above this point counts arrivals. This is the only card
-              that counts what happened after one - whether the article was read,
-              finished, shared, and whether it led to a second one.
-
-              It is the same three-stage funnel the "מעורבות באתר" tile pair
-              summarises for the whole site, but per article and over time, which
-              is what makes it actionable: a title that pulls people in and loses
-              them is invisible in a total and obvious in a column.
-
-              Rendered only once its own call has landed, and absent rather than
-              broken if that call failed. */}
-          {articles && articles.range_days === data.range_days && (
-            <Card title="איך קוראים את המאמרים" sub={rangeLabel}>
-              <ArticleEngagementCard data={articles} buckets={rangeBuckets} />
-            </Card>
-          )}
-
-          {hasClock && (
-            <Card title="מתי נכנסים ומתי פונים" sub="שעון ישראל">
-              <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
-                <div>
-                  <p className="text-[11px] text-stone-400 mb-1">לפי שעה ביום</p>
-                  <SlotBars slots={hourSlots} />
-                </div>
-                <div>
-                  <p className="text-[11px] text-stone-400 mb-1">לפי יום בשבוע</p>
-                  <SlotBars slots={weekSlots} />
-                </div>
-              </div>
-            </Card>
-          )}
-
-          {/* grid-cols-1 is not decoration: without an explicit column count the
-              single implicit track sizes to its widest content - one long
-              article title - and pushed the whole page ~75px past the phone's
-              screen edge. Tailwind's grid-cols-* are minmax(0,1fr), which is
-              what stops that. */}
-          <div className="grid grid-cols-1 gap-2.5 md:gap-4 lg:grid-cols-2">
-            {/* The pages the ad budget lands on, as a funnel. This is the card
-                the campaign is judged by. */}
-            <Card title="עמודי השירות: מביקור לפנייה" sub="ביקורים · פניות">
-              <RankedList
-                emptyText="אין עדיין ביקורים בעמודי השירות בטווח הזה."
-                rows={(data.service_funnel || []).map((s) => ({
-                  label: serviceName(s.slug),
-                  meta:
-                    s.conversions === 0
-                      ? 'ללא פניות'
-                      : `${enquiries(s.conversions)} · ${one(pct(s.conversions, s.visits))}%`,
-                  value: s.visits,
-                }))}
-              />
-            </Card>
-
-            {/* Where a visit starts, which is a different question from which
-                page collects the most views. */}
-            <Card title="דפי כניסה" sub="העמוד שבו התחיל הביקור">
-              <RankedList
-                emptyText="אין עדיין נתונים."
-                rows={(data.landing_pages || []).map((l) => ({
-                  label: l.path,
-                  sub: PAGE_TYPE_LABELS[l.page_type] || l.page_type,
-                  meta: l.conversions > 0 ? enquiries(l.conversions) : undefined,
-                  value: l.visits,
-                }))}
-              />
-            </Card>
-
-            {/* Which articles were actually read in the selected window,
-                answered by title rather than by slug. */}
-            <Card title="המאמרים הנקראים ביותר" sub="בתקופה שנבחרה">
-              <RankedList
-                emptyText="אין עדיין צפיות במאמרים בתקופה הזו."
-                rows={(data.top_articles || []).map((a) => ({
-                  label: a.title,
-                  sub: readers(a.readers),
-                  value: a.views,
-                }))}
-              />
-            </Card>
-
-            {/* Articles are excluded here - they have their own card above, and
-                listing them twice made this one a slightly worse copy of it. */}
-            <Card title="העמודים הנצפים ביותר" sub="ללא מאמרים">
-              <RankedList
-                emptyText="אין עדיין צפיות בטווח הזה."
-                rows={(data.top_pages || [])
-                  .filter((p) => p.page_type !== 'article')
-                  .map((p) => ({
-                    label: p.path,
-                    sub: PAGE_TYPE_LABELS[p.page_type] || p.page_type,
-                    value: p.views,
-                  }))}
-              />
-            </Card>
-
-            <Card title="מאיפה הגיעו הפניות" sub="הכפתור שנלחץ">
-              <RankedList
-                emptyText="אין עדיין פניות בטווח הזה."
-                rows={(data.conversions_by_source || []).map((c) => ({
-                  label: EVENT_LABELS[c.name] || c.name,
-                  sub: c.source,
-                  value: c.n,
-                }))}
-              />
-            </Card>
-
-            <Card title="לפי סוג עמוד">
-              <RankedList
-                emptyText="אין עדיין נתונים."
-                rows={(data.by_page_type || []).map((p) => ({
-                  label: PAGE_TYPE_LABELS[p.page_type] || p.page_type,
-                  meta: p.conversions > 0 ? enquiries(p.conversions) : undefined,
-                  value: p.views,
-                }))}
-              />
-            </Card>
-
-            {/* Depth and actions in one card: both answer "did anything happen
-                after the page loaded", and split across two cards neither had
-                enough rows to be worth a heading. */}
-            <Card title="מעורבות באתר">
-              {eng && eng.visits > 0 ? (
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  <div className="bg-stone-50 rounded-xl p-2.5">
-                    <p className="text-[11px] text-stone-400">עמוד אחד ויצאו</p>
-                    <p className="text-base font-bold text-stone-800 tabular-nums">
-                      {eng.one_page_visits}
-                      <span className="text-[11px] font-normal text-stone-400"> · {Math.round(pct(eng.one_page_visits, eng.visits))}%</span>
-                    </p>
-                  </div>
-                  <div className="bg-stone-50 rounded-xl p-2.5">
-                    <p className="text-[11px] text-stone-400">3 עמודים ומעלה</p>
-                    <p className="text-base font-bold text-stone-800 tabular-nums">
-                      {eng.deep_visits}
-                      <span className="text-[11px] font-normal text-stone-400"> · {Math.round(pct(eng.deep_visits, eng.visits))}%</span>
-                    </p>
-                  </div>
-                </div>
-              ) : null}
-              <RankedList
-                emptyText="אין עדיין נתונים."
-                rows={(data.by_event || [])
-                  .filter((e) => e.name !== 'page_view')
-                  .map((e) => ({ label: EVENT_LABELS[e.name] || e.name, value: e.n }))}
-              />
-            </Card>
-
-            <Card title="מכשירים" sub="לפי ביקור">
-              <RankedList
-                emptyText="אין עדיין נתונים."
-                rows={(data.devices || []).map((d) => ({
-                  label: DEVICE_LABELS[d.device] || d.device,
-                  value: d.n,
-                }))}
-              />
-            </Card>
-          </div>
-
-          <p className="text-[11px] text-stone-400 leading-relaxed">
-            הנתונים נאספים ישירות באתר ולכן כוללים גם מבקרים שחוסמים את גוגל
-            אנליטיקס ואת הפיקסל של מטא. לא נשמרות כתובות IP ולא פרטים מזהים.
-            {data.first_event && ` המדידה פועלת מ-${data.first_event}.`}
-          </p>
-        </>
+      {loading && data && (
+        <p
+          role="status"
+          className="fixed bottom-20 md:bottom-6 inset-x-0 mx-auto w-max z-40 bg-stone-800 text-white text-[12px] px-3 py-1.5 rounded-full shadow"
+        >
+          מעדכן...
+        </p>
       )}
     </div>
+  );
+}
+
+function Dashboard({
+  data,
+  articles,
+  organic,
+  log,
+  rangeLabel,
+}: {
+  data: Payload;
+  articles: ArticleEngagement | null;
+  organic: OrganicSearch | null;
+  log: EnquiryRow[] | null;
+  rangeLabel: string;
+}) {
+  const isHourly = data.granularity === 'hour';
+
+  if ((data.totals.events ?? 0) === 0) {
+    return (
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 md:p-5">
+        <p className="font-semibold text-stone-800 text-sm md:text-base">עדיין אין נתונים בטווח הזה</p>
+        <p className="text-xs md:text-sm text-stone-600 mt-1 leading-relaxed">
+          כל ביקור מכאן והלאה נספר. אפשר לבחור טווח ארוך יותר למעלה.
+        </p>
+      </div>
+    );
+  }
+
+  // A comparison is shown only when the previous window of the same length was
+  // measured in full. Before that, a month was compared against the eight days
+  // that existed before it and read "+701%".
+  // eslint-disable-next-line react-hooks/purity -- a render-time clock is the point: it is what "now" means for the window.
+  const prevStart = Date.now() - 2 * data.range_days * 86_400_000;
+  const prevComplete =
+    Boolean(data.first_event) && Date.parse(`${data.first_event}T00:00:00+03:00`) <= prevStart;
+  const previous = prevComplete ? data.previous : { views: 0, visits: 0, conversions: 0, signups: 0 };
+
+  const insights = buildInsights(
+    {
+      totals: data.totals,
+      previous,
+      range_days: data.range_days,
+      traffic: data.traffic,
+      service_funnel: data.service_funnel,
+      by_hour: data.by_hour,
+      devices: data.devices,
+      engagement: data.engagement,
+      landing_pages: data.landing_pages,
+      engagement_by_source: data.engagement_by_source,
+      returning: data.returning,
+    },
+    serviceName,
+    // The rate is the KPI right above the list; the sentence would repeat it.
+    { skipHeadline: true, limit: 4 },
+  );
+
+  const timeline = isHourly ? fillHours(data.daily || [], 24) : fillDays(data.daily || [], data.range_days);
+  const buckets = isHourly ? bucketKeys(24, 'hour') : bucketKeys(data.range_days, 'day');
+
+  // Source mix over time. Only groups that sent someone get a series, and the
+  // colours are pinned per group so one appearing never repaints the others.
+  const trafficDaily = data.traffic_daily || [];
+  const sourceSeries = Object.keys(SOURCE_SERIES)
+    .map((key) => ({
+      key,
+      label: GROUP_LABELS[key] || key,
+      color: SOURCE_SERIES[key],
+      total: trafficDaily.reduce((a, r) => a + (r.grp === key ? r.visits : 0), 0),
+    }))
+    .filter((s) => s.total > 0)
+    .sort((a, b) => b.total - a.total);
+  const sourcePoints = fillSeries(trafficDaily, buckets);
+
+  const articleTitles = new Map((data.top_articles || []).map((a) => [a.slug, a.title]));
+
+  // Bots: kept out of every figure, and named in the footer instead.
+  const bots = data.bots ?? [];
+  const botSessions = bots.reduce((a, b) => a + b.sessions, 0);
+  const botSummary = bots
+    .slice()
+    .sort((a, b) => b.sessions - a.sessions)
+    .slice(0, 3)
+    .map((b) => `${BOT_KIND_LABELS[b.kind as StoredBotKind] ?? b.kind} ${b.sessions}`)
+    .join(', ');
+  // An assistant opening a page mid-answer, counted at the edge (bot_fetches)
+  // because it never runs the page's JavaScript. Not a visit - nobody is on
+  // the site - but the one automated reader worth knowing about.
+  const aiAnswer = (data.bot_fetches ?? []).filter((b) => b.kind === 'ai_answer');
+  const aiAnswerHits = aiAnswer.reduce((a, b) => a + b.hits, 0);
+  const aiAnswerPaths = aiAnswer.reduce((a, b) => a + b.paths, 0);
+
+  return (
+    <>
+      <Section id="overview" title="תמונת מצב" question={`איך הולך? ${rangeLabel}.`}>
+        <Overview
+          totals={data.totals}
+          previous={data.previous}
+          prevComplete={prevComplete}
+          firstEvent={data.first_event}
+          insights={insights}
+          timeline={timeline}
+          rangeLabel={rangeLabel}
+        />
+      </Section>
+
+      <Section id="enquiries" title="פניות" question="מה הביא את הפניות, ומי פנה.">
+        <Enquiries byButton={data.conversions_by_source || []} log={log} articleTitles={articleTitles} />
+      </Section>
+
+      <Section id="sources" title="מקורות תנועה" question="איזו תנועה שווה: כמה מביא כל מקור, כמה מזה פונה, וכמה קוראים.">
+        <Card>
+          <SourcesTable
+            rows={data.engagement_by_source || []}
+            details={data.traffic || []}
+            siteVisits={data.totals.visits}
+            siteConversions={data.totals.conversions}
+          />
+          {aiAnswerHits > 0 && (
+            <p className="mt-3 pt-3 border-t border-stone-100 text-[11px] text-stone-500 leading-relaxed">
+              בנוסף, כלי AI פתח עמוד באתר {aiAnswerHits.toLocaleString('he-IL')} פעמים
+              {aiAnswerPaths > 1 && <> ({aiAnswerPaths.toLocaleString('he-IL')} עמודים שונים)</>} תוך כדי שענה
+              למישהו. זה לא ביקור, אבל זה אומר שהאתר שימש מקור לתשובה.
+            </p>
+          )}
+        </Card>
+
+        {sourceSeries.length > 1 && (
+          <Card title="תמהיל המקורות לאורך זמן" sub={rangeLabel}>
+            <SourceBars data={sourcePoints} series={sourceSeries} />
+          </Card>
+        )}
+
+        {organic && (
+          <details className="group bg-white rounded-2xl border border-stone-200">
+            <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer select-none flex items-center justify-between gap-3 p-4 md:p-5 min-h-[44px]">
+              <span>
+                <span className="block text-[13px] md:text-sm font-semibold text-stone-800">חיפוש אורגני - פירוט</span>
+                <span className="block text-[11px] text-stone-400 mt-0.5">לאיזה עמוד גוגל שלח, והאם העמוד החזיק</span>
+              </span>
+              <span
+                className="text-stone-400 text-xl leading-none transition-transform group-open:rotate-45"
+                aria-hidden="true"
+              >
+                +
+              </span>
+            </summary>
+            <div className="px-4 pb-4 md:px-5 md:pb-5">
+              <OrganicSearchCard data={organic} />
+            </div>
+          </details>
+        )}
+      </Section>
+
+      <Section id="pages" title="עמודים" question="אילו עמודים הופכים ביקור לפנייה.">
+        <PagesTable data={data} articleTitles={articleTitles} />
+      </Section>
+
+      <Section id="articles" title="מאמרים" question="האם קוראים את המאמרים עד הסוף, ומה קורה אחרי.">
+        <Card>
+          {articles ? (
+            <ArticleEngagementCard data={articles} buckets={buckets} />
+          ) : (
+            <p className="text-xs md:text-sm text-stone-400 py-2">טוען...</p>
+          )}
+        </Card>
+      </Section>
+
+      <Section id="audience" title="קהל" question="מאיזה מכשיר, האם חוזרים, ומתי.">
+        <AudienceSection data={data} isHourly={isHourly} />
+      </Section>
+
+      <details className="text-[11px] text-stone-500 leading-relaxed">
+        <summary className="cursor-pointer select-none min-h-[44px] inline-flex items-center font-medium">
+          על הנתונים
+        </summary>
+        <div className="space-y-1.5 pb-2">
+          <p>
+            הנתונים נאספים ישירות באתר, ולכן כוללים גם מבקרים שחוסמים את גוגל אנליטיקס ואת הפיקסל של מטא. לא נשמרות
+            כתובות IP ולא פרטים מזהים. כל השעות הן שעון ישראל.
+          </p>
+          <p>ביקור הוא רצף צפיות של אותו דפדפן. פנייה היא לחיצה על ווטסאפ, טלפון או מייל, או שליחת טופס.</p>
+          {botSessions > 0 && (
+            <p>
+              לא נספרו {botSessions.toLocaleString('he-IL')} כניסות אוטומטיות{botSummary && <> ({botSummary})</>}.
+            </p>
+          )}
+          {data.first_event && <p>המדידה פועלת מ-{heDate(data.first_event)}.</p>}
+        </div>
+      </details>
+    </>
   );
 }

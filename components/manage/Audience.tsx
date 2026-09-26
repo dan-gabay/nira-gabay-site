@@ -1,20 +1,14 @@
 'use client';
 
 import { SplitBar } from './Charts';
-import { GROUP_LABELS } from './TrafficSources';
 import { enquiries } from '@/lib/heCount';
 
-// Two cards that answer questions the rest of the dashboard cannot:
+// Is anyone coming back? Every other card treats a visit as the unit and so
+// cannot tell forty people who came once from ten who came four times.
 //
-//   1. Is anyone coming back? Every other card treats a visit as the unit and
-//      so cannot tell forty people who came once from ten who came four times.
-//   2. Which source sends people who actually read? "מאיפה הגיעו" ranks by
-//      volume, and volume is exactly the measure on which a paid click and a
-//      search arrival look identical.
-//
-// Both are deliberately conservative about small samples: a rate over eight
-// visits is noise dressed as a finding, and this dashboard is read as if every
-// number on it means something.
+// Deliberately conservative about small samples: a rate over eight visits is
+// noise dressed as a finding, and this dashboard is read as if every number on
+// it means something.
 
 const MIN_FOR_RATE = 10;
 
@@ -138,99 +132,6 @@ export function ReturningVisitors({
       <p className="text-[11px] text-stone-400 mt-3 leading-relaxed">
         נמדד על {known.toLocaleString('he-IL')} מתוך {totalVisits.toLocaleString('he-IL')} ביקורים בטווח.
         הספירה היא לפי דפדפן, לא לפי אדם: מי שמנקה היסטוריה או מגיע ממכשיר אחר נספר כחדש, ואין כאן כתובות IP.
-      </p>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────── quality by source
-
-export type SourceQualityRow = {
-  grp: string;
-  visits: number;
-  views: number;
-  one_page_visits: number;
-  deep_visits: number;
-  conversions: number;
-};
-
-export function SourceQuality({ rows }: { rows: SourceQualityRow[] }) {
-  if (rows.length === 0) {
-    return <p className="text-xs md:text-sm text-stone-400 py-2">אין עדיין תנועה בטווח הזה.</p>;
-  }
-
-  const ranked = rows
-    .slice()
-    .sort((a, b) => b.visits - a.visits)
-    .map((r) => ({ ...r, perVisit: r.visits > 0 ? r.views / r.visits : 0 }));
-  const maxPerVisit = Math.max(...ranked.map((r) => r.perVisit), 1);
-
-  return (
-    <div className="overflow-x-auto -mx-1 px-1">
-      <table className="w-full text-[12px] md:text-[13px]">
-        <thead>
-          {/* nowrap on every header and every figure: at 390px "ביקורים"
-              broke across two lines and 284 rendered as 28 over 4. The
-              bounce column is the one that can go on a phone - it is the
-              least load-bearing of the four and the row is unreadable with
-              five. */}
-          <tr className="text-stone-400 text-[11px]">
-            <th className="text-start font-normal pb-2 pe-2">מקור</th>
-            <th className="text-end font-normal pb-2 ps-2 whitespace-nowrap">ביקורים</th>
-            <th className="text-end font-normal pb-2 ps-2 whitespace-nowrap w-[38%]">עמודים לביקור</th>
-            <th className="text-end font-normal pb-2 ps-2 whitespace-nowrap hidden sm:table-cell">עמוד אחד ויצאו</th>
-            <th className="text-end font-normal pb-2 ps-3 whitespace-nowrap">פניות</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ranked.map((r) => {
-            const enough = r.visits >= MIN_FOR_RATE;
-            return (
-              <tr key={r.grp} className="border-t border-stone-100">
-                <td className="py-2 pe-2 text-stone-700">{GROUP_LABELS[r.grp] || r.grp}</td>
-                <td className="py-2 ps-2 text-end tabular-nums text-stone-800 font-semibold whitespace-nowrap">
-                  {r.visits}
-                </td>
-                <td className="py-2 ps-2">
-                  {/* The one column worth drawing: it is the whole point of the
-                      card, and a bar compares four numbers faster than four
-                      decimals do. */}
-                  <div className="flex items-center gap-2 justify-end">
-                    <span
-                      className={`tabular-nums font-semibold w-8 text-end ${
-                        enough ? 'text-stone-800' : 'text-stone-400'
-                      }`}
-                    >
-                      {one(r.perVisit)}
-                    </span>
-                    {/* No bar under the threshold. An average over three
-                        visits drawn at the same weight as one over 284 is the
-                        chart telling a lie the number does not. */}
-                    {enough && (
-                      <span className="flex-1 h-1.5 rounded-full bg-stone-100 overflow-hidden max-w-[120px]">
-                        <span
-                          className="block h-full rounded-full"
-                          style={{ width: `${(r.perVisit / maxPerVisit) * 100}%`, background: '#0d9488' }}
-                          aria-hidden="true"
-                        />
-                      </span>
-                    )}
-                  </div>
-                </td>
-                <td className="py-2 ps-2 text-end tabular-nums text-stone-500 whitespace-nowrap hidden sm:table-cell">
-                  {enough ? `${share(r.one_page_visits, r.visits)}%` : <span title="מעט מדי ביקורים">-</span>}
-                </td>
-                <td className="py-2 ps-2 text-end tabular-nums text-stone-500 whitespace-nowrap">
-                  {r.conversions || '-'}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      <p className="text-[11px] text-stone-400 mt-3 leading-relaxed">
-        מספרים מוצגים מלאים רק ממקור עם {MIN_FOR_RATE} ביקורים ומעלה. מקור שמביא הרבה ביקורים עם עמוד אחד לביקור
-        מביא תנועה, לא קוראים.
       </p>
     </div>
   );

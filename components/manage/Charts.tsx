@@ -138,203 +138,6 @@ function fillPoints(rows: DayPoint[], keys: string[]): DayPoint[] {
   );
 }
 
-// ─────────────────────────────────────────────── two-series line
-
-export function LineChart({
-  data,
-  labels,
-  height = 190,
-}: {
-  data: DayPoint[];
-  labels: { primary: string; secondary: string };
-  height?: number;
-}) {
-  const [ref, w] = useWidth<HTMLDivElement>();
-  const [hover, setHover] = useState<number | null>(null);
-
-  const pad = { t: 12, r: 10, b: 26, l: 34 };
-  const iw = Math.max(0, w - pad.l - pad.r);
-  const ih = height - pad.t - pad.b;
-  const max = niceMax(Math.max(1, ...data.map((d) => Math.max(d.views, d.visits))));
-
-  const x = (i: number) => (data.length <= 1 ? iw / 2 : (i / (data.length - 1)) * iw);
-  const y = (v: number) => ih - (v / max) * ih;
-  const line = (key: 'views' | 'visits') =>
-    data.map((d, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(d[key]).toFixed(1)}`).join(' ');
-
-  const ticks = [0, max / 2, max];
-  const every = Math.max(1, Math.ceil(data.length / (w < 420 ? 4 : 8)));
-
-  return (
-    <div ref={ref} className="relative w-full">
-      {/* Legend: two series, so identity is never colour alone. */}
-      <div className="flex items-center gap-4 mb-1.5 text-[11px] md:text-xs" style={{ color: INK }}>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm" style={{ background: SERIES.primary }} />
-          {labels.primary}
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm" style={{ background: SERIES.secondary }} />
-          {labels.secondary}
-        </span>
-      </div>
-
-      {w > 0 && (
-        <svg
-          width={w}
-          height={height}
-          role="img"
-          aria-label={`${labels.primary} ו${labels.secondary} לאורך זמן`}
-          onMouseLeave={() => setHover(null)}
-          onMouseMove={(e) => {
-            const r = e.currentTarget.getBoundingClientRect();
-            const px = e.clientX - r.left - pad.l;
-            const i = Math.round((px / Math.max(1, iw)) * (data.length - 1));
-            setHover(Math.min(data.length - 1, Math.max(0, i)));
-          }}
-        >
-          <g transform={`translate(${pad.l},${pad.t})`}>
-            {ticks.map((t) => (
-              <g key={t}>
-                <line x1={0} x2={iw} y1={y(t)} y2={y(t)} stroke={GRID} strokeWidth={1} />
-                <text x={-8} y={y(t)} dy="0.32em" textAnchor="end" fontSize={10} fill={MUTED}>
-                  {Math.round(t)}
-                </text>
-              </g>
-            ))}
-
-            {data.map((d, i) =>
-              i % every === 0 ? (
-                <text key={d.day} x={x(i)} y={ih + 17} textAnchor="middle" fontSize={10} fill={MUTED}>
-                  {heDay(d.day)}
-                </text>
-              ) : null,
-            )}
-
-            <path d={line('views')} fill="none" stroke={SERIES.primary} strokeWidth={2}
-                  strokeLinejoin="round" strokeLinecap="round" />
-            <path d={line('visits')} fill="none" stroke={SERIES.secondary} strokeWidth={2}
-                  strokeLinejoin="round" strokeLinecap="round" />
-
-            {hover !== null && (
-              <g>
-                <line x1={x(hover)} x2={x(hover)} y1={0} y2={ih} stroke={MUTED} strokeWidth={1} strokeDasharray="3 3" />
-                {(['views', 'visits'] as const).map((k) => (
-                  <circle
-                    key={k}
-                    cx={x(hover)}
-                    cy={y(data[hover][k])}
-                    r={4.5}
-                    fill={k === 'views' ? SERIES.primary : SERIES.secondary}
-                    stroke="#fff"
-                    strokeWidth={2}
-                  />
-                ))}
-              </g>
-            )}
-          </g>
-        </svg>
-      )}
-
-      {hover !== null && data[hover] && (
-        <div
-          className="pointer-events-none absolute top-0 bg-white border border-stone-200 rounded-lg shadow-sm px-2.5 py-1.5 text-[11px] leading-relaxed"
-          style={{
-            // `left`, not `insetInlineStart`: x() is measured from the SVG's
-            // left edge and this page is RTL, so an inline-start offset put the
-            // tooltip on the opposite side of the chart from the cursor.
-            left: Math.min(Math.max(0, x(hover) + pad.l - 45), Math.max(0, w - 110)),
-            color: INK,
-          }}
-        >
-          <div className="font-semibold text-stone-800">{heDay(data[hover].day)}</div>
-          <div>{labels.primary}: <strong>{data[hover].views}</strong></div>
-          <div>{labels.secondary}: <strong>{data[hover].visits}</strong></div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────── conversion bars
-
-export function BarChart({ data, height = 150 }: { data: DayPoint[]; height?: number }) {
-  const [ref, w] = useWidth<HTMLDivElement>();
-  const [hover, setHover] = useState<number | null>(null);
-
-  const pad = { t: 10, r: 10, b: 26, l: 34 };
-  const iw = Math.max(0, w - pad.l - pad.r);
-  const ih = height - pad.t - pad.b;
-  const max = niceMax(Math.max(1, ...data.map((d) => d.conversions)));
-
-  // 2px of surface between bars, per the mark spec.
-  const step = data.length ? iw / data.length : iw;
-  const bw = Math.max(2, step - 2);
-  const y = (v: number) => ih - (v / max) * ih;
-  const ticks = [0, max];
-  const every = Math.max(1, Math.ceil(data.length / (w < 420 ? 4 : 8)));
-
-  return (
-    <div ref={ref} className="relative w-full">
-      {w > 0 && (
-        <svg width={w} height={height} role="img" aria-label="פניות לפי יום"
-             onMouseLeave={() => setHover(null)}>
-          <g transform={`translate(${pad.l},${pad.t})`}>
-            {ticks.map((t) => (
-              <g key={t}>
-                <line x1={0} x2={iw} y1={y(t)} y2={y(t)} stroke={GRID} strokeWidth={1} />
-                <text x={-8} y={y(t)} dy="0.32em" textAnchor="end" fontSize={10} fill={MUTED}>
-                  {Math.round(t)}
-                </text>
-              </g>
-            ))}
-
-            {data.map((d, i) =>
-              i % every === 0 ? (
-                <text key={d.day} x={i * step + bw / 2} y={ih + 17} textAnchor="middle" fontSize={10} fill={MUTED}>
-                  {heDay(d.day)}
-                </text>
-              ) : null,
-            )}
-
-            {data.map((d, i) => (
-              <g key={d.day} onMouseEnter={() => setHover(i)}>
-                {/* Full-height hit target: a 1-conversion bar is 4px tall. */}
-                <rect x={i * step} y={0} width={Math.max(bw, 6)} height={ih} fill="transparent" />
-                {d.conversions > 0 && (
-                  <rect
-                    x={i * step}
-                    y={y(d.conversions)}
-                    width={bw}
-                    height={Math.max(3, ih - y(d.conversions))}
-                    rx={2}
-                    fill={SERIES.primary}
-                    opacity={hover === null || hover === i ? 1 : 0.55}
-                  />
-                )}
-              </g>
-            ))}
-          </g>
-        </svg>
-      )}
-
-      {hover !== null && data[hover] && (
-        <div
-          className="pointer-events-none absolute top-0 bg-white border border-stone-200 rounded-lg shadow-sm px-2.5 py-1.5 text-[11px]"
-          style={{
-            insetInlineStart: Math.min(Math.max(0, hover * step + pad.l - 30), Math.max(0, w - 90)),
-            color: INK,
-          }}
-        >
-          <span className="font-semibold text-stone-800">{heDay(data[hover].day)}</span>
-          {' · '}
-          <strong>{data[hover].conversions}</strong> פניות
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─────────────────────────────────────────────── proportion bar
 
 /**
@@ -450,47 +253,6 @@ export function SlotBars({ slots, height = 110 }: { slots: Slot[]; height?: numb
         )}
       </div>
     </div>
-  );
-}
-
-// ─────────────────────────────────────────────── ranked list
-
-export function RankedList({
-  rows,
-  emptyText,
-}: {
-  rows: Array<{ label: string; sub?: string; value: number; meta?: string }>;
-  emptyText: string;
-}) {
-  if (rows.length === 0) {
-    return <p className="text-xs md:text-sm text-stone-400 py-2">{emptyText}</p>;
-  }
-  const max = Math.max(...rows.map((r) => r.value), 1);
-
-  return (
-    <ol className="space-y-1.5">
-      {rows.map((r) => (
-        <li key={`${r.label}-${r.sub || ''}`} className="relative">
-          {/* Magnitude as a single-hue bar behind the row: one measure, so one
-              hue at varying strength rather than a categorical palette. */}
-          <span
-            aria-hidden="true"
-            className="absolute inset-y-0 start-0 rounded-md"
-            style={{ width: `${(r.value / max) * 100}%`, background: '#0D948814' }}
-          />
-          <span className="relative flex items-center gap-2 px-2 py-1.5 text-[13px] md:text-sm">
-            <span className="flex-1 min-w-0 truncate text-stone-700" title={r.label}>
-              {r.label}
-              {r.sub && <span className="text-stone-400"> · {r.sub}</span>}
-            </span>
-            {r.meta && (
-              <span className="flex-shrink-0 text-[11px] text-stone-500 tabular-nums">{r.meta}</span>
-            )}
-            <span className="font-semibold text-stone-800 tabular-nums flex-shrink-0">{r.value}</span>
-          </span>
-        </li>
-      ))}
-    </ol>
   );
 }
 
@@ -1011,5 +773,144 @@ export function DepthBars({
         );
       }}
     />
+  );
+}
+
+// ─────────────────────────────────────────── visits with enquiry marks
+
+/**
+ * The overview's one chart: visits per bucket as a line, and a row of marks
+ * under the baseline for every bucket in which somebody enquired.
+ *
+ * It replaces two charts - views and visits as two lines, and enquiries as a
+ * bar chart of their own - and the reason is the scale. Enquiries are two
+ * orders of magnitude below visits, so on a shared axis they are a flat line on
+ * the floor, and a second axis is the one thing a chart must never do. A mark
+ * row says what the bars said (when, and how many, in the tooltip and the mark
+ * size) without pretending the two share a scale.
+ *
+ * Views were dropped as a line: at 1.4 pages a visit they ran parallel to
+ * visits and drew the same shape twice. The count is in the tooltip.
+ */
+export function VisitsTimeline({ data, height = 200 }: { data: DayPoint[]; height?: number }) {
+  const [ref, w] = useWidth<HTMLDivElement>();
+  const [hover, setHover] = useState<number | null>(null);
+
+  const ROW = 18; // the enquiry row under the baseline
+  const pad = { t: 10, r: 8, b: 24 + ROW, l: 30 };
+  const iw = Math.max(0, w - pad.l - pad.r);
+  const ih = height - pad.t - pad.b;
+  const max = niceMax(Math.max(1, ...data.map((d) => d.visits)));
+
+  const x = (i: number) => (data.length <= 1 ? iw / 2 : (i / (data.length - 1)) * iw);
+  const y = (v: number) => ih - (v / max) * ih;
+  const line = data.map((d, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(d.visits).toFixed(1)}`).join(' ');
+  const area = data.length ? `${line} L${x(data.length - 1).toFixed(1)},${ih} L${x(0).toFixed(1)},${ih} Z` : '';
+
+  const ticks = [0, max / 2, max];
+  const every = Math.max(1, Math.ceil(data.length / (w < 420 ? 4 : 8)));
+  const rowY = ih + ROW / 2 + 2;
+  const anyEnquiry = data.some((d) => d.conversions > 0);
+
+  return (
+    <div ref={ref} className="relative w-full">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-1.5 text-[11px] md:text-xs" style={{ color: INK }}>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="w-3 h-[2px] rounded-full" style={{ background: SERIES.primary }} />
+          ביקורים
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full" style={{ background: ACTION_COLOR }} />
+          התקבלה פנייה
+        </span>
+      </div>
+
+      {w > 0 && (
+        <svg
+          width={w}
+          height={height}
+          role="img"
+          aria-label="ביקורים לאורך זמן, עם סימון של הימים שבהם התקבלה פנייה"
+          onMouseLeave={() => setHover(null)}
+          onMouseMove={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            const px = e.clientX - r.left - pad.l;
+            const i = Math.round((px / Math.max(1, iw)) * (data.length - 1));
+            setHover(Math.min(data.length - 1, Math.max(0, i)));
+          }}
+        >
+          <g transform={`translate(${pad.l},${pad.t})`}>
+            {ticks.map((t) => (
+              <g key={t}>
+                <line x1={0} x2={iw} y1={y(t)} y2={y(t)} stroke={GRID} strokeWidth={1} />
+                <text x={-8} y={y(t)} dy="0.32em" textAnchor="end" fontSize={10} fill={MUTED}>
+                  {Math.round(t)}
+                </text>
+              </g>
+            ))}
+
+            {data.map((d, i) =>
+              i % every === 0 ? (
+                <text key={d.day} x={x(i)} y={ih + ROW + 16} textAnchor="middle" fontSize={10} fill={MUTED}>
+                  {heDay(d.day)}
+                </text>
+              ) : null,
+            )}
+
+            <path d={area} fill={SERIES.primary} opacity={0.08} />
+            <path d={line} fill="none" stroke={SERIES.primary} strokeWidth={2}
+                  strokeLinejoin="round" strokeLinecap="round" />
+
+            {/* The enquiry row. A track when there is anything on it; a
+                sentence in its place when there is not, because "nobody wrote"
+                is an answer and the row should not silently vanish. */}
+            {anyEnquiry ? (
+              <line x1={0} x2={iw} y1={rowY} y2={rowY} stroke={GRID} strokeWidth={1} />
+            ) : (
+              <text x={iw / 2} y={rowY} dy="0.32em" textAnchor="middle" fontSize={9} fill={MUTED}>
+                לא התקבלו פניות בטווח הזה
+              </text>
+            )}
+            {data.map((d, i) =>
+              d.conversions > 0 ? (
+                <circle
+                  key={`c-${d.day}`}
+                  cx={x(i)}
+                  cy={rowY}
+                  r={d.conversions > 1 ? 5.5 : 4}
+                  fill={ACTION_COLOR}
+                  stroke="#fff"
+                  strokeWidth={1.5}
+                />
+              ) : null,
+            )}
+
+            {hover !== null && data[hover] && (
+              <g>
+                <line x1={x(hover)} x2={x(hover)} y1={0} y2={ih + ROW} stroke={MUTED} strokeWidth={1} strokeDasharray="3 3" />
+                <circle cx={x(hover)} cy={y(data[hover].visits)} r={4.5} fill={SERIES.primary} stroke="#fff" strokeWidth={2} />
+              </g>
+            )}
+          </g>
+        </svg>
+      )}
+
+      {hover !== null && data[hover] && (
+        <div
+          className="pointer-events-none absolute top-0 bg-white border border-stone-200 rounded-lg shadow-sm px-2.5 py-1.5 text-[11px] leading-relaxed"
+          style={{ left: Math.min(Math.max(0, x(hover) + pad.l - 55), Math.max(0, w - 130)), color: INK }}
+        >
+          <div className="font-semibold text-stone-800">{heDay(data[hover].day)}</div>
+          <div>{visitCount(data[hover].visits)}</div>
+          <div className="text-stone-400">{data[hover].views} צפיות בעמודים</div>
+          {data[hover].conversions > 0 && (
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="w-2 h-2 rounded-full" style={{ background: ACTION_COLOR }} />
+              <strong>{enquiries(data[hover].conversions)}</strong>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
