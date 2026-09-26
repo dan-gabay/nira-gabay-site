@@ -14,31 +14,35 @@ import OrganicSearchCard, { type OrganicSearch } from '@/components/manage/Organ
 import ArticleEngagementCard, { type ArticleEngagement } from '@/components/manage/ArticleEngagement';
 import { buildInsights } from '@/lib/analyticsInsights';
 import { BOT_KIND_LABELS, type StoredBotKind } from '@/lib/botDetect';
-import { Card, Section, Segmented } from '@/components/manage/analytics/ui';
+import { Card, Disclosure, Empty, Section, Segmented } from '@/components/manage/analytics/ui';
 import { serviceName } from '@/components/manage/analytics/labels';
 import { Overview, heDate } from '@/components/manage/analytics/Overview';
 import { Enquiries } from '@/components/manage/analytics/Enquiries';
 import { SourcesTable } from '@/components/manage/analytics/SourcesTable';
 import { PagesTable } from '@/components/manage/analytics/PagesTable';
 import { AudienceSection } from '@/components/manage/analytics/AudienceSection';
-import type { EnquiryRow, Payload } from '@/components/manage/analytics/types';
+import { AiSection } from '@/components/manage/analytics/AiSection';
+import { VisitDepth } from '@/components/manage/analytics/VisitDepth';
+import type { EnquiryRow, Payload, SiteBehavior } from '@/components/manage/analytics/types';
 
 // The admin's landing screen, read top to bottom as a chain of questions:
 //
 //   1. תמונת מצב  - is it working? Four figures, what they mean, their shape.
 //   2. פניות      - what produced the enquiries, down to each one.
 //   3. מקורות     - which traffic is worth having.
-//   4. עמודים     - which pages turn a visit into an enquiry.
-//   5. מאמרים     - whether the content is read.
-//   6. קהל        - who the visitors are and when they come.
+//   4. כלי AI     - whether AI tools read the site, and answer from it.
+//   5. עמודים     - which pages turn a visit into an enquiry, and how deep
+//                   a visit goes.
+//   6. מאמרים     - whether the content is read.
+//   7. קהל        - who the visitors are and when they come.
 //
 // It replaced about twenty flat cards in which the same data appeared up to
 // three times (landing pages, source quality, enquiries per day). Every section
 // here answers one question, and a figure that did not help answer one was
 // cut rather than given a card of its own.
 //
-// Four calls, not one: the main payload, plus article engagement, organic
-// search and the enquiry log, each its own RPC so that one failing leaves the
+// Five calls, not one: the main payload, plus article engagement, organic
+// search, the enquiry log and site behaviour (AI tools, visit depth), each its own RPC so that one failing leaves the
 // rest of the page standing. Each result is stored with the range it was asked
 // for, and "loading" is derived by comparing that to the selected range - no
 // setState in an effect body, and the previous range stays on screen, dimmed,
@@ -55,6 +59,7 @@ const SECTIONS = [
   { id: 'overview', label: 'תמונת מצב' },
   { id: 'enquiries', label: 'פניות' },
   { id: 'sources', label: 'מקורות' },
+  { id: 'ai', label: 'כלי AI' },
   { id: 'pages', label: 'עמודים' },
   { id: 'articles', label: 'מאמרים' },
   { id: 'audience', label: 'קהל' },
@@ -104,6 +109,7 @@ export default function AnalyticsPage() {
   const articlesRes = useRangeFetch<ArticleEngagement>('/api/manage/article-engagement', range);
   const organicRes = useRangeFetch<OrganicSearch>('/api/manage/organic-search', range);
   const logRes = useRangeFetch<EnquiryRow[]>('/api/manage/enquiry-log', range);
+  const behaviorRes = useRangeFetch<SiteBehavior>('/api/manage/site-behavior', range);
   const active = useActiveSection(SECTION_IDS);
 
   const loading = !main || main.range !== range;
@@ -117,6 +123,8 @@ export default function AnalyticsPage() {
   const organic = organicRes?.range === shownRange ? organicRes?.data ?? null : null;
   const log =
     logRes?.range === shownRange ? (logRes?.data ?? (logRes?.failed ? [] : null)) : null;
+  const behavior = behaviorRes?.range === shownRange ? behaviorRes?.data ?? null : null;
+  const behaviorFailed = behaviorRes?.range === shownRange && Boolean(behaviorRes?.failed);
 
   const isHourly = data?.granularity === 'hour';
   const rangeLabel = isHourly ? '24 השעות האחרונות' : `${data?.range_days ?? range} הימים האחרונים`;
@@ -176,7 +184,15 @@ export default function AnalyticsPage() {
           className={`space-y-8 md:space-y-12 transition-opacity ${loading ? 'opacity-50 pointer-events-none' : ''}`}
           aria-busy={loading}
         >
-          <Dashboard data={data} articles={articles} organic={organic} log={log} rangeLabel={rangeLabel} />
+          <Dashboard
+            data={data}
+            articles={articles}
+            organic={organic}
+            log={log}
+            behavior={behavior}
+            behaviorFailed={behaviorFailed}
+            rangeLabel={rangeLabel}
+          />
         </div>
       )}
 
@@ -197,12 +213,16 @@ function Dashboard({
   articles,
   organic,
   log,
+  behavior,
+  behaviorFailed,
   rangeLabel,
 }: {
   data: Payload;
   articles: ArticleEngagement | null;
   organic: OrganicSearch | null;
   log: EnquiryRow[] | null;
+  behavior: SiteBehavior | null;
+  behaviorFailed: boolean;
   rangeLabel: string;
 }) {
   const isHourly = data.granularity === 'hour';
@@ -226,6 +246,9 @@ function Dashboard({
   const prevComplete =
     Boolean(data.first_event) && Date.parse(`${data.first_event}T00:00:00+03:00`) <= prevStart;
   const previous = prevComplete ? data.previous : { views: 0, visits: 0, conversions: 0, signups: 0 };
+  // The same rule for the AI figures, against when bot_hits started.
+  const aiPrevComplete =
+    Boolean(behavior?.ai_first_hit) && Date.parse(`${behavior?.ai_first_hit}T00:00:00+03:00`) <= prevStart;
 
   const insights = buildInsights(
     {
@@ -274,12 +297,6 @@ function Dashboard({
     .slice(0, 3)
     .map((b) => `${BOT_KIND_LABELS[b.kind as StoredBotKind] ?? b.kind} ${b.sessions}`)
     .join(', ');
-  // An assistant opening a page mid-answer, counted at the edge (bot_fetches)
-  // because it never runs the page's JavaScript. Not a visit - nobody is on
-  // the site - but the one automated reader worth knowing about.
-  const aiAnswer = (data.bot_fetches ?? []).filter((b) => b.kind === 'ai_answer');
-  const aiAnswerHits = aiAnswer.reduce((a, b) => a + b.hits, 0);
-  const aiAnswerPaths = aiAnswer.reduce((a, b) => a + b.paths, 0);
 
   return (
     <>
@@ -307,13 +324,6 @@ function Dashboard({
             siteVisits={data.totals.visits}
             siteConversions={data.totals.conversions}
           />
-          {aiAnswerHits > 0 && (
-            <p className="mt-3 pt-3 border-t border-stone-100 text-[11px] text-stone-500 leading-relaxed">
-              בנוסף, כלי AI פתח עמוד באתר {aiAnswerHits.toLocaleString('he-IL')} פעמים
-              {aiAnswerPaths > 1 && <> ({aiAnswerPaths.toLocaleString('he-IL')} עמודים שונים)</>} תוך כדי שענה
-              למישהו. זה לא ביקור, אבל זה אומר שהאתר שימש מקור לתשובה.
-            </p>
-          )}
         </Card>
 
         {sourceSeries.length > 1 && (
@@ -323,28 +333,25 @@ function Dashboard({
         )}
 
         {organic && (
-          <details className="group bg-white rounded-2xl border border-stone-200">
-            <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer select-none flex items-center justify-between gap-3 p-4 md:p-5 min-h-[44px]">
-              <span>
-                <span className="block text-[13px] md:text-sm font-semibold text-stone-800">חיפוש אורגני - פירוט</span>
-                <span className="block text-[11px] text-stone-400 mt-0.5">לאיזה עמוד גוגל שלח, והאם העמוד החזיק</span>
-              </span>
-              <span
-                className="text-stone-400 text-xl leading-none transition-transform group-open:rotate-45"
-                aria-hidden="true"
-              >
-                +
-              </span>
-            </summary>
-            <div className="px-4 pb-4 md:px-5 md:pb-5">
-              <OrganicSearchCard data={organic} />
-            </div>
-          </details>
+          <Disclosure title="חיפוש אורגני - פירוט" sub="לאיזה עמוד גוגל שלח, והאם העמוד החזיק">
+            <OrganicSearchCard data={organic} />
+          </Disclosure>
         )}
       </Section>
 
-      <Section id="pages" title="עמודים" question="אילו עמודים הופכים ביקור לפנייה.">
+      <Section id="ai" title="כלי AI" question="האם כלים כמו ChatGPT קוראים את האתר, ועונים ממנו.">
+        {behaviorFailed ? (
+          <Card>
+            <Empty>לא הצלחתי לטעון את הנתונים של כלי AI.</Empty>
+          </Card>
+        ) : (
+          <AiSection data={behavior} buckets={buckets} prevComplete={aiPrevComplete} articleTitles={articleTitles} />
+        )}
+      </Section>
+
+      <Section id="pages" title="עמודים" question="אילו עמודים הופכים ביקור לפנייה, וכמה עמוק הולך ביקור.">
         <PagesTable data={data} articleTitles={articleTitles} />
+        {!behaviorFailed && <VisitDepth data={behavior} />}
       </Section>
 
       <Section id="articles" title="מאמרים" question="האם קוראים את המאמרים עד הסוף, ומה קורה אחרי.">
@@ -352,7 +359,7 @@ function Dashboard({
           {articles ? (
             <ArticleEngagementCard data={articles} buckets={buckets} />
           ) : (
-            <p className="text-xs md:text-sm text-stone-400 py-2">טוען...</p>
+            <Empty>טוען...</Empty>
           )}
         </Card>
       </Section>

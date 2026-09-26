@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
 import { ACTION_COLOR, SOURCE_SERIES } from '@/components/manage/Charts';
 import { GROUP_LABELS } from '@/components/manage/TrafficSources';
-import { BarList, Card, Empty, type BarRow } from './ui';
+import { BarList, Card, Empty, ShowMore, SubHead, type BarRow } from './ui';
 import { CHANNEL_LABELS, DEVICE_LABELS, buttonLabel, pageName } from './labels';
 import type { EnquiryRow } from './types';
 
@@ -90,11 +89,11 @@ export function Enquiries({
         </ul>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           <div>
-            <h4 className="text-[11px] text-stone-400 mb-1.5">באיזה כפתור</h4>
+            <SubHead title="באיזה כפתור" />
             <BarList color={ACTION_COLOR} rows={toRows(buttons, buttonLabel)} limit={6} />
           </div>
           <div>
-            <h4 className="text-[11px] text-stone-400 mb-1.5">באיזה עמוד</h4>
+            <SubHead title="באיזה עמוד" />
             {log ? (
               <BarList color={ACTION_COLOR} rows={toRows(pages, (k) => pageName(k, articleTitles))} limit={6} />
             ) : (
@@ -133,15 +132,11 @@ export function Enquiries({
             </ol>
 
             {rows.length > LOG_PREVIEW && (
-              <button
-                type="button"
-                onClick={() => setShowAll((v) => !v)}
-                aria-expanded={showAll}
-                className="mt-2 w-full min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-xl text-[13px] font-medium text-stone-600 hover:bg-stone-50"
-              >
-                {showAll ? 'הצג פחות' : `הצג את כל ${rows.length} הפניות`}
-                <ChevronDown className={`w-4 h-4 transition-transform ${showAll ? 'rotate-180' : ''}`} aria-hidden="true" />
-              </button>
+              <ShowMore
+                open={showAll}
+                onToggle={() => setShowAll((v) => !v)}
+                more={`הצג את כל ${rows.length} הפניות`}
+              />
             )}
           </>
         )}

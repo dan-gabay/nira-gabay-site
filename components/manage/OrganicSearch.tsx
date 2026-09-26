@@ -5,6 +5,20 @@ import { DEPTH_SERIES } from './Charts';
 import { SERVICES } from '@/lib/services';
 import { PAGE_TYPE_LABELS } from '@/lib/siteEvents';
 import { visits as visitCount, enquiries } from '@/lib/heCount';
+import {
+  CardPart,
+  Empty,
+  Legend,
+  MIN_FOR_RATE,
+  Note,
+  ShowMore,
+  StackBar,
+  Stat,
+  StatGrid,
+  SubHead,
+  duration,
+  wholePct,
+} from './analytics/ui';
 
 // Visits from a search engine's organic results: where they landed and what
 // they did next. Data from manage_organic_search, see
@@ -40,12 +54,7 @@ export type OrganicSearch = {
   first_event: string | null;
 };
 
-// Below this a percentage is one visitor wearing a costume. Same threshold as
-// the article card.
-const MIN_FOR_RATE = 10;
 const ROWS_SHOWN = 6;
-
-const share = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
 
 const ENGINE_LABELS: Record<string, string> = {
   google: 'גוגל',
@@ -74,34 +83,10 @@ function pageName(p: Page): string {
   return PAGE_TYPE_LABELS[p.page_type] || p.path;
 }
 
-function duration(seconds: number): string {
-  if (seconds < 60) return `${seconds} שנ׳`;
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${String(s).padStart(2, '0')} דק׳`;
-}
-
-function Tile({ label, value, rate, sub }: { label: string; value: number; rate?: number | null; sub?: string }) {
-  return (
-    <div className="bg-stone-50 rounded-xl p-2.5">
-      <p className="text-[11px] text-stone-400 truncate">{label}</p>
-      <p className="text-base font-bold text-stone-800 tabular-nums">
-        {value}
-        {rate !== null && rate !== undefined && (
-          <span className="text-[11px] font-normal text-stone-400"> · {rate}%</span>
-        )}
-      </p>
-      {sub && <p className="text-[10px] text-stone-400 truncate">{sub}</p>}
-    </div>
-  );
-}
-
 function LandingRow({ row, max }: { row: OrganicSearch['landings'][number]; max: number }) {
   const name = pageName(row);
   const left = row.visits - row.continued - row.read_stayed;
   const parts = { continued: row.continued, read_stayed: row.read_stayed, left };
-  const width = max > 0 ? (row.visits / max) * 100 : 0;
-  const seg = (v: number) => (row.visits > 0 ? (v / row.visits) * 100 : 0);
 
   const details = [
     `${row.continued} המשיכו`,
@@ -124,19 +109,12 @@ function LandingRow({ row, max }: { row: OrganicSearch['landings'][number]; max:
         </span>
       </div>
       <p className="sm:hidden text-[11px] text-stone-400 tabular-nums">{details}</p>
-      <div
-        className="mt-1 h-1.5 rounded-full bg-stone-100 overflow-hidden"
-        role="img"
-        aria-label={`${name}: ${visitCount(row.visits)}, ${details}`}
-      >
-        <div className="flex h-full rounded-full overflow-hidden gap-px" style={{ width: `${width}%` }}>
-          {SEGMENTS.map((s) =>
-            parts[s.key] > 0 ? (
-              <span key={s.key} style={{ width: `${seg(parts[s.key])}%`, background: s.color }} />
-            ) : null,
-          )}
-        </div>
-      </div>
+      <StackBar
+        of={row.visits}
+        max={max}
+        label={`${name}: ${visitCount(row.visits)}, ${details}`}
+        parts={SEGMENTS.map((sg) => ({ key: sg.key, value: parts[sg.key], color: sg.color }))}
+      />
     </li>
   );
 }
@@ -147,9 +125,7 @@ export default function OrganicSearchCard({ data }: { data: OrganicSearch }) {
 
   if (t.visits === 0) {
     return (
-      <p className="text-xs md:text-sm text-stone-400 py-2">
-        לא הגיעו ביקורים מחיפוש אורגני בטווח הזה.
-      </p>
+      <Empty>לא הגיעו ביקורים מחיפוש אורגני בטווח הזה.</Empty>
     );
   }
 
@@ -165,61 +141,48 @@ export default function OrganicSearchCard({ data }: { data: OrganicSearch }) {
 
   return (
     <div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-        <Tile label="כניסות מחיפוש" value={t.visits} sub={engines} />
-        <Tile label="המשיכו לעמוד נוסף" value={t.continued} rate={rated ? share(t.continued, t.visits) : null} />
-        <Tile label="הגיעו למאמר" value={t.reached_article} rate={rated ? share(t.reached_article, t.visits) : null} />
-        <Tile label="פניות" value={t.conversions} />
-      </div>
+      <StatGrid>
+        <Stat label="כניסות מחיפוש" value={t.visits} sub={engines} />
+        <Stat label="המשיכו לעמוד נוסף" value={t.continued} rate={rated ? wholePct(t.continued, t.visits) : null} />
+        <Stat label="הגיעו למאמר" value={t.reached_article} rate={rated ? wholePct(t.reached_article, t.visits) : null} />
+        <Stat label="פניות" value={t.conversions} />
+      </StatGrid>
 
-      <p className="mt-2 text-[11px] text-stone-400 leading-relaxed">
-        זמן חציוני באתר {duration(t.median_seconds)} · {share(t.mobile, t.visits)}% מהטלפון ·{' '}
+      <Note>
+        זמן חציוני באתר {duration(t.median_seconds)} · {wholePct(t.mobile, t.visits)}% מהטלפון ·{' '}
         {data.previous_complete
           ? `בתקופה הקודמת באותו אורך: ${visitCount(data.previous_visits)}.`
           : `אין עדיין תקופה קודמת מלאה להשוואה (המדידה פועלת מ-${data.first_event}).`}
-      </p>
+      </Note>
 
-      <div className="mt-4">
-        <div className="flex items-baseline justify-between gap-2 mb-2">
-          <p className="text-[12px] font-medium text-stone-600">לאיזה עמוד הגיעו מהחיפוש</p>
-        </div>
-        <div className="flex flex-wrap gap-x-3 gap-y-1 mb-2 text-[11px] text-stone-500">
-          {SEGMENTS.filter((s) => s.key !== 'read_stayed' || anyRead).map((s) => (
-            <span key={s.key} className="inline-flex items-center gap-1">
-              <span className="w-2 h-2 rounded-sm" style={{ background: s.color }} aria-hidden="true" />
-              {s.label}
-            </span>
-          ))}
-        </div>
+      <CardPart>
+        <SubHead title="לאיזה עמוד הגיעו מהחיפוש" />
+        <Legend items={SEGMENTS.filter((sg) => sg.key !== 'read_stayed' || anyRead).map((sg) => ({ ...sg }))} />
         <ul className="space-y-2.5">
           {shown.map((row) => (
             <LandingRow key={row.path} row={row} max={max} />
           ))}
         </ul>
         {rows.length > ROWS_SHOWN && (
-          <button
-            type="button"
-            onClick={() => setShowAll((v) => !v)}
-            className="mt-2 text-[12px] text-stone-500 underline underline-offset-2 min-h-[32px]"
-          >
-            {showAll ? 'פחות' : `כל ${rows.length} העמודים`}
-          </button>
+          <ShowMore open={showAll} onToggle={() => setShowAll((v) => !v)} more={`הצג את כל ${rows.length} העמודים`} />
         )}
-      </div>
+      </CardPart>
 
       {data.next_pages.length > 0 && (
-        <p className="mt-3 text-[12px] text-stone-600 leading-relaxed">
-          <span className="text-stone-400">לאן המשיכו אחרי עמוד הכניסה: </span>
-          {data.next_pages.map((p) => `${pageName(p)} (${p.n})`).join(' · ')}
-        </p>
+        <CardPart>
+          <SubHead title="לאן המשיכו אחרי עמוד הכניסה" />
+          <p className="text-[12px] md:text-[13px] text-stone-600 leading-relaxed">
+            {data.next_pages.map((p) => `${pageName(p)} (${p.n})`).join(' · ')}
+          </p>
+        </CardPart>
       )}
 
-      <p className="mt-3 text-[11px] text-stone-400 leading-relaxed">
+      <Note>
         מה חיפשו בגוגל לא מופיע כאן: גוגל לא מעבירה את מילות החיפוש לאתר, ולכן הן
         לא נשמרות אצלנו בשום צורה. הן זמינות רק ב-Search Console, כסיכום לפי ביטוי
         ועמוד. זמן באתר נמדד מהפעולה הראשונה לאחרונה, ולכן ביקור של עמוד אחד בלי
         פעולה נוספת נרשם כ-0.
-      </p>
+      </Note>
     </div>
   );
 }

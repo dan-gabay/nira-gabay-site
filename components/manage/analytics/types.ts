@@ -70,3 +70,18 @@ export type EnquiryRow = {
   visit_number: number | null;
   device: string | null;
 };
+
+/** /api/manage/site-behavior - see db/2026-09-27-site-behavior.sql. */
+export type SiteBehavior = {
+  granularity: 'hour' | 'day';
+  /** Per bucket, the same keys as the main payload's `daily`. */
+  ai_daily: Array<{ day: string; crawler: number; answer: number; search: number }>;
+  ai_totals: { crawler: number; answer: number; search: number; crawler_paths: number; answer_paths: number };
+  ai_previous: { crawler: number; answer: number; search: number };
+  ai_pages: Array<{ path: string; title: string | null; answer: number; crawler: number }>;
+  /** 'YYYY-MM-DD', the first day bot_hits recorded anything. */
+  ai_first_hit: string | null;
+  /** ord 1 = one page, 2 = two, 3 = three or four, 5 = five and more. */
+  depth: Array<{ ord: number; visits: number; median_secs: number; converted: number; with_article: number }>;
+  multi_page_median_secs: number | null;
+};

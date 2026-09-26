@@ -776,6 +776,79 @@ export function DepthBars({
   );
 }
 
+// ─────────────────────────────────────────── AI tools reading the site
+
+/**
+ * AI crawlers and, for scale, classic search crawlers, as the two segments of
+ * one column; below the baseline, a mark for every bucket in which an AI
+ * assistant opened a page while answering somebody.
+ *
+ * Magenta because it is already what AI means on this page: it is the
+ * ai_referral slot of SOURCE_SERIES, validated there against the six source
+ * hues. Search is neutral stone, because it is here as the yardstick and not
+ * as a subject; a second hue would ask to be read as a second story. The
+ * validator flags the stone for its chroma, which is the point of it; against
+ * the magenta it clears CVD (ΔE 13.4 deutan), normal vision and 3:1 contrast.
+ *
+ * The answer fetches are marks and not a third segment for the same reason the
+ * reactions are under the reading chart: they are a different act. A crawler
+ * reads on its own schedule; an answer fetch means a person just asked an
+ * assistant something and the site was part of the answer. Thirteen of those
+ * stacked on a column of 1,500 crawls would be invisible, and they are the
+ * part worth seeing.
+ */
+export const AI_SERIES = [
+  { key: 'crawler', label: 'סריקה של כלי AI', color: '#d025ca' },
+  { key: 'search', label: 'סריקה של מנוע חיפוש', color: '#78716c' },
+];
+/** Darker step of the same magenta: the mark has to hold against the track. */
+export const AI_ANSWER_COLOR = '#86198f';
+
+export type AiPoint = { day: string; crawler: number; answer: number; search: number };
+
+export function AiFetchBars({ data, height = 190 }: { data: AiPoint[]; height?: number }) {
+  const points: SeriesPoint[] = data.map((d) => ({ day: d.day, values: { crawler: d.crawler, search: d.search } }));
+  const anyAnswer = data.some((d) => d.answer > 0);
+  return (
+    <StackedBars
+      data={points}
+      series={AI_SERIES}
+      height={height}
+      aria="פניות של כלי AI ומנועי חיפוש לאתר לאורך זמן, עמודות נערמות, ומתחתיהן סימון לימים שבהם כלי AI פתח עמוד תוך כדי תשובה"
+      emptyText="אין עדיין נתונים בטווח הזה."
+      emptyBucketText="אין סריקות"
+      formatTotal={(n) => (n === 1 ? 'סריקה אחת' : `${n.toLocaleString('he-IL')} סריקות`)}
+      tooltipOrder="series"
+      footerHeight={16}
+      footer={({ bx, bw, iw, y0, h }) => (
+        <g>
+          {anyAnswer && <line x1={0} x2={iw} y1={y0 + h / 2} y2={y0 + h / 2} stroke={GRID} strokeWidth={1} />}
+          {data.map((p, i) =>
+            p.answer > 0 ? (
+              <circle key={p.day} cx={bx(i) + bw / 2} cy={y0 + h / 2} r={4} fill={AI_ANSWER_COLOR} stroke="#fff" strokeWidth={1.5} />
+            ) : null,
+          )}
+          {!anyAnswer && (
+            <text x={iw / 2} y={y0 + h / 2} dy="0.32em" textAnchor="middle" fontSize={9} fill={MUTED}>
+              אף כלי AI לא פתח עמוד תוך כדי תשובה בטווח הזה
+            </text>
+          )}
+        </g>
+      )}
+      tooltipExtra={(i) => {
+        const a = data[i]?.answer ?? 0;
+        if (a === 0) return null;
+        return (
+          <div className="flex items-center gap-1.5 whitespace-nowrap mt-1 pt-1 border-t border-stone-100">
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: AI_ANSWER_COLOR }} />
+            {a === 1 ? 'פתיחה אחת תוך כדי תשובה' : `${a} פתיחות תוך כדי תשובה`}
+          </div>
+        );
+      }}
+    />
+  );
+}
+
 // ─────────────────────────────────────────── visits with enquiry marks
 
 /**

@@ -10,6 +10,19 @@ import {
   type ReactionPoint,
 } from './Charts';
 import { openings as openingCount, shares, likes, comments } from '@/lib/heCount';
+import {
+  CardPart,
+  Empty,
+  Legend,
+  MIN_FOR_RATE,
+  Note,
+  ShowMore,
+  StackBar,
+  Stat,
+  StatGrid,
+  SubHead,
+  wholePct,
+} from './analytics/ui';
 
 // What happens after an article loads.
 //
@@ -80,14 +93,6 @@ export type ArticleEngagement = {
   first_event: string | null;
 };
 
-// Borrowed from Audience.tsx and for the same reason: a rate over eight
-// readings is noise dressed as a finding, and this dashboard is read as if
-// every number on it means something. Under the floor the counts still show;
-// only the percentage is withheld.
-const MIN_FOR_RATE = 10;
-
-const share = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
-
 const DEPTH_COLOR = Object.fromEntries(DEPTH_SERIES.map((s) => [s.key, s.color]));
 
 const ROWS_SHOWN = 6;
@@ -103,20 +108,6 @@ const CHANNEL_LABELS: Record<string, string> = {
   copy_link: 'העתקת קישור',
   native: 'תפריט השיתוף',
 };
-
-function Tile({ label, value, rate }: { label: string; value: number; rate: number | null }) {
-  return (
-    <div className="bg-stone-50 rounded-xl p-2.5">
-      <p className="text-[11px] text-stone-400 truncate">{label}</p>
-      <p className="text-base font-bold text-stone-800 tabular-nums">
-        {value}
-        {rate !== null && (
-          <span className="text-[11px] font-normal text-stone-400"> · {rate}%</span>
-        )}
-      </p>
-    </div>
-  );
-}
 
 /**
  * One article's readings: magnitude across rows and composition within one, in
@@ -140,8 +131,6 @@ function ArticleRow({
   // A finisher passed through "read" on the way, so the middle segment is the
   // ones who got that far and no further. Same arithmetic as the SQL.
   const readOnly = row.reads - row.finishes;
-  const width = max > 0 ? (row.openings / max) * 100 : 0;
-  const seg = (v: number) => (row.openings > 0 ? (v / row.openings) * 100 : 0);
 
   const reactionTitle = [
     row.shares > 0 ? shares(row.shares) : null,
@@ -173,29 +162,16 @@ function ArticleRow({
           {row.finishes}
         </span>
       </div>
-      <div
-        className="mt-1 h-1.5 rounded-full bg-stone-100 overflow-hidden"
-        role="img"
-        aria-label={`${row.title}: ${openingCount(row.openings)}, ${row.reads} נקראו, ${row.finishes} עד הסוף`}
-      >
-        {/* gap-px, not a border: the same 1px of card showing between fills that
-            the stacked columns above use, and the one thing that keeps a two-
-            reading sliver from merging into the segment beside it. */}
-        <div
-          className="flex h-full rounded-full overflow-hidden gap-px"
-          style={{ width: `${width}%` }}
-        >
-          {row.finishes > 0 && (
-            <span style={{ width: `${seg(row.finishes)}%`, background: DEPTH_COLOR.finished }} />
-          )}
-          {readOnly > 0 && (
-            <span style={{ width: `${seg(readOnly)}%`, background: DEPTH_COLOR.read }} />
-          )}
-          {opened > 0 && (
-            <span style={{ width: `${seg(opened)}%`, background: DEPTH_COLOR.opened }} />
-          )}
-        </div>
-      </div>
+      <StackBar
+        of={row.openings}
+        max={max}
+        label={`${row.title}: ${openingCount(row.openings)}, ${row.reads} נקראו, ${row.finishes} עד הסוף`}
+        parts={[
+          { key: 'finished', value: row.finishes, color: DEPTH_COLOR.finished },
+          { key: 'read', value: readOnly, color: DEPTH_COLOR.read },
+          { key: 'opened', value: opened, color: DEPTH_COLOR.opened },
+        ]}
+      />
     </li>
   );
 }
@@ -215,15 +191,15 @@ export default function ArticleEngagementCard({
 
   if (t.openings === 0) {
     return (
-      <p className="text-xs md:text-sm text-stone-400 py-2">
+      <Empty>
         אף מאמר לא נפתח בטווח הזה.
         {data.first_event && ` המדידה של המאמרים פועלת מ-${data.first_event}.`}
-      </p>
+      </Empty>
     );
   }
 
-  const readRate = t.openings >= MIN_FOR_RATE ? share(t.reads, t.openings) : null;
-  const doneRate = t.openings >= MIN_FOR_RATE ? share(t.finishes, t.openings) : null;
+  const readRate = t.openings >= MIN_FOR_RATE ? wholePct(t.reads, t.openings) : null;
+  const doneRate = t.openings >= MIN_FOR_RATE ? wholePct(t.finishes, t.openings) : null;
   const actions = t.shares + t.likes + t.comments;
   // Empty until a share happens with the channel stored, which is why the
   // breakdown appears rather than standing as a row of zeroes.
@@ -238,20 +214,19 @@ export default function ArticleEngagementCard({
 
   return (
     <div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-        <Tile label="פתיחות מאמר" value={t.openings} rate={null} />
-        <Tile label="נקראו" value={t.reads} rate={readRate} />
-        <Tile label="נקראו עד הסוף" value={t.finishes} rate={doneRate} />
-        <Tile label="שיתופים, לייקים ותגובות" value={actions} rate={null} />
-      </div>
+      <StatGrid>
+        <Stat label="פתיחות מאמר" value={t.openings} sub={`${t.articles} מאמרים`} />
+        <Stat label="נקראו" value={t.reads} rate={readRate} color={DEPTH_COLOR.read} />
+        <Stat label="נקראו עד הסוף" value={t.finishes} rate={doneRate} color={DEPTH_COLOR.finished} />
+        <Stat label="שיתופים, לייקים ותגובות" value={actions} color={ACTION_COLOR} />
+      </StatGrid>
 
       {/* The previous window as one sentence rather than four arrow chips. At
           this volume most of those arrows would be a jump from nothing to
           nothing, which reads as a finding and is not one. */}
-      <p className="mt-2 text-[11px] text-stone-400 leading-relaxed">
-          בתקופה הקודמת באותו אורך: {p.openings} פתיחות, {p.reads} נקראו,{' '}
-          {p.finishes} עד הסוף, {prevActions} פעולות.
-      </p>
+      <Note>
+        בתקופה הקודמת באותו אורך: {p.openings} פתיחות, {p.reads} נקראו, {p.finishes} עד הסוף, {prevActions} פעולות.
+      </Note>
 
       <div className="mt-4">
         <DepthBars
@@ -272,32 +247,29 @@ export default function ArticleEngagementCard({
           says so in words, and a legend for a mark that is nowhere on the
           screen is one line of furniture. */}
       {actions > 0 && (
-        <p className="mt-1.5 text-[11px] text-stone-500 leading-relaxed flex items-center gap-1.5 flex-wrap">
-          <span
-            className="w-2 h-2 rounded-full flex-shrink-0"
-            style={{ background: ACTION_COLOR }}
-            aria-hidden="true"
+        <div className="mt-1.5">
+          <Legend
+            items={[
+              {
+                key: 'reaction',
+                round: true,
+                color: ACTION_COLOR,
+                label: `${data.granularity === 'hour' ? 'שעה' : 'יום'} שבו מישהו הגיב, עשה לייק או שיתף · ${shares(t.shares)}${
+                  channels.length > 0
+                    ? ` (${channels.map((c) => `${CHANNEL_LABELS[c.channel] || c.channel} ${c.n}`).join(', ')})`
+                    : ''
+                }, ${likes(t.likes)}, ${comments(t.comments)}`,
+              },
+            ]}
           />
-          <span>
-            {data.granularity === 'hour' ? 'שעה' : 'יום'} שבו מישהו הגיב, עשה לייק או שיתף
-            {' · '}
-            {shares(t.shares)}
-            {channels.length > 0 && (
-              <>
-                {' ('}
-                {channels.map((c) => `${CHANNEL_LABELS[c.channel] || c.channel} ${c.n}`).join(', ')}
-                {')'}
-              </>
-            )}
-            , {likes(t.likes)}, {comments(t.comments)}
-          </span>
-        </p>
+        </div>
       )}
 
       {/* Did one article lead to another. This is the only question on the card
           that is about the site's shape rather than a single page, and it is the
           one the internal links were placed to move. */}
-      <div className="mt-3.5 pt-3 border-t border-stone-100">
+      <CardPart>
+        <SubHead title="ממאמר למאמר" />
         <p className="text-[12px] md:text-[13px] text-stone-600 leading-relaxed">
           {nav.multi_article_sessions === 0 ? (
             <>אף אחד לא עבר ממאמר אחד לשני באותו ביקור.</>
@@ -326,18 +298,13 @@ export default function ArticleEngagementCard({
             ))}
           </ul>
         )}
-      </div>
+      </CardPart>
 
       {/* Which article holds a reader. The card above this one on the page ranks
           articles by views; this ranks the same articles by what happened after
           the view, which is the part a ranking by volume hides. */}
-      <div className="mt-3.5 pt-3 border-t border-stone-100">
-        <div className="flex items-baseline justify-between gap-2 mb-2">
-          <h3 className="text-[12px] md:text-[13px] font-semibold text-stone-700">לפי מאמר</h3>
-          <span className="text-[10px] md:text-[11px] text-stone-400 tabular-nums">
-            פתיחות · נקרא · עד הסוף
-          </span>
-        </div>
+      <CardPart>
+        <SubHead title="לפי מאמר" aside="פתיחות · נקרא · עד הסוף" />
 
         <ul className="space-y-2">
           {shown.map((row) => (
@@ -346,24 +313,18 @@ export default function ArticleEngagementCard({
         </ul>
 
         {rows.length > ROWS_SHOWN && (
-          <button
-            type="button"
-            onClick={() => setShowAll((v) => !v)}
-            className="mt-2.5 text-[11px] md:text-xs text-stone-500 hover:text-stone-800 transition-colors"
-          >
-            {showAll ? 'הצג פחות' : `כל ${rows.length} המאמרים`}
-          </button>
+          <ShowMore open={showAll} onToggle={() => setShowAll((v) => !v)} more={`הצג את כל ${rows.length} המאמרים`} />
         )}
-      </div>
+      </CardPart>
 
       {/* Said out loud, because the two words on the chart are doing a lot of
           work and neither means what it sounds like on its own. */}
-      <p className="mt-3.5 pt-3 border-t border-stone-100 text-[10px] text-stone-400 leading-relaxed">
+      <Note>
         &quot;נקרא&quot; = חצי מהעמוד נגלל, או 30 שניות בעמוד. &quot;עד הסוף&quot; = סוף גוף
         המאמר היה על המסך וגם עברו לפחות 40% מזמן הקריאה המשוער, בלשונית פעילה.
         אחוזי גלילה מדויקים וזמן קריאה אינם נשמרים ולכן אינם מופיעים כאן. לאיזו
         רשת בוצע שיתוף נשמר רק מ-22.9.2026, ולכן שיתופים קודמים מופיעים בלי רשת.
-      </p>
+      </Note>
     </div>
   );
 }

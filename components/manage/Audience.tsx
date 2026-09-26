@@ -2,18 +2,11 @@
 
 import { SplitBar } from './Charts';
 import { enquiries } from '@/lib/heCount';
+import { Empty, MIN_FOR_RATE, Note, one, wholePct } from './analytics/ui';
 
 // Is anyone coming back? Every other card treats a visit as the unit and so
 // cannot tell forty people who came once from ten who came four times.
-//
-// Deliberately conservative about small samples: a rate over eight visits is
-// noise dressed as a finding, and this dashboard is read as if every number on
-// it means something.
-
-const MIN_FOR_RATE = 10;
-
-const one = (n: number) => (Math.round(n * 10) / 10).toString();
-const share = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
+// Rates stay under the page's MIN_FOR_RATE floor, like everywhere else.
 
 // ─────────────────────────────────────────── returning visitors
 
@@ -61,10 +54,10 @@ export function ReturningVisitors({
   const known = summary.known_visits;
   if (known === 0) {
     return (
-      <p className="text-xs md:text-sm text-stone-400 py-2">
+      <Empty>
         המדידה של מבקרים חוזרים התחילה עכשיו, ולכן היא עוד לא מכסה את הטווח הזה.
         ביקור חוזר נספר רק מהפעם הבאה שאותו דפדפן חוזר.
-      </p>
+      </Empty>
     );
   }
 
@@ -78,9 +71,9 @@ export function ReturningVisitors({
       color: BUCKET_COLORS[b.ord] || '#a8a29e',
     }));
 
-  const newRate = summary.new_visits >= MIN_FOR_RATE ? share(summary.new_conversions, summary.new_visits) : null;
+  const newRate = summary.new_visits >= MIN_FOR_RATE ? wholePct(summary.new_conversions, summary.new_visits) : null;
   const retRate =
-    summary.returning_visits >= MIN_FOR_RATE ? share(summary.returning_conversions, summary.returning_visits) : null;
+    summary.returning_visits >= MIN_FOR_RATE ? wholePct(summary.returning_conversions, summary.returning_visits) : null;
 
   return (
     <div>
@@ -129,10 +122,10 @@ export function ReturningVisitors({
       {/* Said plainly, because the gap is real and will stay real for a while:
           the counter only exists on browsers that have been here since it was
           added, and nothing can be back-filled. */}
-      <p className="text-[11px] text-stone-400 mt-3 leading-relaxed">
+      <Note>
         נמדד על {known.toLocaleString('he-IL')} מתוך {totalVisits.toLocaleString('he-IL')} ביקורים בטווח.
         הספירה היא לפי דפדפן, לא לפי אדם: מי שמנקה היסטוריה או מגיע ממכשיר אחר נספר כחדש, ואין כאן כתובות IP.
-      </p>
+      </Note>
     </div>
   );
 }

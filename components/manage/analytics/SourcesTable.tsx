@@ -5,7 +5,7 @@ import { ChevronDown } from 'lucide-react';
 import { SOURCE_SERIES } from '@/components/manage/Charts';
 import { GROUP_LABELS, type TrafficRow } from '@/components/manage/TrafficSources';
 import { enquiries as enquiryCount } from '@/lib/heCount';
-import { Empty, one, pct, rateText } from './ui';
+import { Empty, MIN_FOR_RATE, Note, one, pct, rateText } from './ui';
 import type { SourceRow } from './types';
 
 // "איזו תנועה שווה?" as one table. It used to be two cards about the same seven
@@ -17,8 +17,6 @@ import type { SourceRow } from './types';
 // The benchmark is the site's own average, not an industry figure. There is no
 // honest outside number for "a therapist's site in Jerusalem", and the question
 // the row answers is relative anyway: where is the next shekel better spent.
-
-const MIN_FOR_RATE = 10;
 
 const DETAIL_LABELS: Record<string, string> = {
   google_ads: 'לפי מילת החיפוש',
@@ -203,10 +201,10 @@ export function SourcesTable({
         })}
       </ul>
 
-      <p className="text-[11px] text-stone-400 mt-3 leading-relaxed">
+      <Note>
         הממוצע של האתר בטווח הזה: {rateText(siteConversions, siteVisits)} מהביקורים הסתיימו בפנייה. שיעורים מוצגים רק
         למקור עם {MIN_FOR_RATE} ביקורים ומעלה. לחיצה על מקור פותחת את הפירוט שלו.
-      </p>
+      </Note>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { SlotBars, SplitBar, SERIES, type Slot } from '@/components/manage/Charts';
 import { ReturningVisitors, type ReturningSummary } from '@/components/manage/Audience';
-import { Card } from './ui';
+import { Card, SubHead } from './ui';
 import { DEVICE_LABELS } from './labels';
 import type { Payload } from './types';
 
@@ -75,11 +75,11 @@ export function AudienceSection({ data, isHourly }: { data: Payload; isHourly: b
         <Card title="מתי נכנסים ומתי פונים" sub="שעון ישראל">
           <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
             <div>
-              <p className="text-[11px] text-stone-400 mb-1">לפי שעה ביום</p>
+              <SubHead title="לפי שעה ביום" />
               <SlotBars slots={hourSlots} />
             </div>
             <div>
-              <p className="text-[11px] text-stone-400 mb-1">לפי יום בשבוע</p>
+              <SubHead title="לפי יום בשבוע" />
               <SlotBars slots={weekSlots} />
             </div>
           </div>

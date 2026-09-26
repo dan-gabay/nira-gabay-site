@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { enquiries as enquiryCount } from '@/lib/heCount';
-import { BarList, Card, Segmented, pct, rateText, type BarRow } from './ui';
+import { BarList, Card, MIN_FOR_RATE, Segmented, pct, rateText, type BarRow } from './ui';
 import { pageName, pageTypeName, serviceName } from './labels';
 import type { Payload } from './types';
 
@@ -12,8 +12,6 @@ import type { Payload } from './types';
 // open at once. Articles are not here: they have their own section.
 
 type Mode = 'services' | 'landing' | 'types';
-
-const MIN_FOR_RATE = 10;
 
 function meta(conv: number, visits: number, siteRate: number) {
   if (conv === 0) return <span className="text-stone-400">ללא פניות</span>;
