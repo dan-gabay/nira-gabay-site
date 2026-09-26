@@ -20,6 +20,7 @@ import {
   type Slot,
 } from '@/components/manage/Charts';
 import TrafficSources, { GROUP_LABELS, type TrafficRow } from '@/components/manage/TrafficSources';
+import OrganicSearchCard, { type OrganicSearch } from '@/components/manage/OrganicSearch';
 import ArticleEngagementCard, {
   type ArticleEngagement,
 } from '@/components/manage/ArticleEngagement';
@@ -285,6 +286,8 @@ export default function AnalyticsPage() {
   // this one call fails the article card is simply absent and every other card
   // on the page still renders.
   const [articles, setArticles] = useState<ArticleEngagement | null>(null);
+  // Same contract as `articles`: its own call, optional, range-checked on render.
+  const [organic, setOrganic] = useState<OrganicSearch | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
 
@@ -310,6 +313,15 @@ export default function AnalyticsPage() {
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error('load failed'))))
       .then((d) => { if (live) setArticles(d); })
       .catch(() => { /* the card is optional - the page must not fail with it */ });
+    return () => { live = false; };
+  }, [range]);
+
+  useEffect(() => {
+    let live = true;
+    fetch(`/api/manage/organic-search?range=${range}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('load failed'))))
+      .then((d) => { if (live) setOrganic(d); })
+      .catch(() => { /* optional, like the article card */ });
     return () => { live = false; };
   }, [range]);
 
@@ -592,6 +604,15 @@ export default function AnalyticsPage() {
           <Card title="איכות התנועה לפי מקור" sub="כמה עמודים נקראים בפועל">
             <SourceQuality rows={data.engagement_by_source || []} />
           </Card>
+
+          {/* The cards above say how many came from search and how deep they
+              went as a group. This one opens that group up: which page Google
+              sent each of them to, and whether that page kept them. */}
+          {organic && organic.range_days === data.range_days && (
+            <Card title="חיפוש אורגני" sub={`${rangeLabel} · גוגל ומנועי חיפוש, בלי מודעות`}>
+              <OrganicSearchCard data={organic} />
+            </Card>
+          )}
 
           {/* Every other card on this page counts visits, and a visit cannot
               tell forty people who came once from ten who came four times. */}
