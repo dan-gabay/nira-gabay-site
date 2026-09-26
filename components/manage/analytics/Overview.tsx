@@ -103,7 +103,11 @@ export function Overview({
       )}
 
       <Card title="ביקורים ופניות לאורך זמן" sub={rangeLabel}>
-        <VisitsTimeline data={timeline} granularity={timeline[0]?.day.includes('T') ? 'hour' : 'day'} />
+        <VisitsTimeline
+          data={timeline}
+          granularity={timeline[0]?.day.includes('T') ? 'hour' : 'day'}
+          measuredFrom={firstEvent}
+        />
       </Card>
     </div>
   );

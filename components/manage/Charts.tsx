@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react';
 
 import {
   enquiries,
@@ -833,45 +833,271 @@ export function AiFetchBars({
 
 // ─────────────────────────────────────────── visits with enquiry marks
 
+/** Views, as a second line beside visits. Indigo because amber is already the
+ *  page's word for an enquiry; validated against the teal and the amber. */
+const VIEWS_COLOR = '#6366f1';
+
 /**
- * The overview's one chart: visits per bucket as columns, and a row of marks
- * under the baseline for every bucket in which somebody enquired.
+ * The overview's one chart: visits and page views as two lines, and a row of
+ * marks under the baseline for every bucket in which somebody enquired.
  *
- * Columns and not a line, so that every chart over time on the page is the
- * same picture - a column is a bucket's count, a dot under it is an act - and
- * the reader learns it once. Enquiries are two orders of magnitude below
- * visits, so on a shared axis they would be a flat line on the floor; the mark
- * row says when, and the tooltip how many, without a second axis.
+ * A line rather than columns: this is the page's one "how is it going over
+ * time" picture, the two measures move together and the eye follows a line
+ * more easily than two sets of columns. Everything around the plot is the same
+ * as the column charts - legend above, the mark row, the tooltip - so it still
+ * reads as one family. Enquiries are two orders of magnitude below visits, so
+ * on a shared axis they would be a flat line on the floor; the mark row says
+ * when, and the tooltip how many, without a second axis.
+ *
+ * Buckets before `measuredFrom` are not drawn as zero: they are not a quiet
+ * stretch, nothing was measuring yet. The line starts where measurement did and
+ * the stretch before it is shaded and named.
  */
 export function VisitsTimeline({
   data,
-  height = 200,
+  height = 210,
   granularity = 'day',
+  measuredFrom,
 }: {
   data: DayPoint[];
   height?: number;
   granularity?: 'hour' | 'day';
+  /** YYYY-MM-DD of the first recorded event, if known. */
+  measuredFrom?: string | null;
 }) {
-  const points: SeriesPoint[] = data.map((d) => ({ day: d.day, values: { visits: d.visits } }));
+  const [ref, w] = useWidth<HTMLDivElement>();
+  const [hover, setHover] = useState<number | null>(null);
+
+  const pad = { t: 12, r: 10, b: 26 + MARK_ROW, l: 34 };
+  const iw = Math.max(0, w - pad.l - pad.r);
+  const ih = height - pad.t - pad.b;
+  const n = data.length;
+
+  // First bucket inside measurement. Hour keys compare on their date part.
+  const firstIdx = measuredFrom
+    ? Math.max(0, data.findIndex((d) => d.day.slice(0, 10) >= measuredFrom))
+    : 0;
+  const start = measuredFrom && data.every((d) => d.day.slice(0, 10) < measuredFrom) ? n : firstIdx;
+  const measured = (i: number) => i >= start;
+
+  const max = niceMax(Math.max(1, ...data.map((d) => Math.max(d.views, d.visits))));
+  const x = (i: number) => (n <= 1 ? iw / 2 : (i / (n - 1)) * iw);
+  const y = (v: number) => ih - (v / max) * ih;
+  const ticks = [0, max / 2, max];
+  const every = n <= 12 ? 1 : Math.max(1, Math.ceil(n / (w < 420 ? 4 : 8)));
+
+  // Said inside the measured box rather than returned early: an early return
+  // leaves the ref unattached on first render, and the width is never measured
+  // once data arrives.
+  if (n === 0 || data.every((d) => d.visits === 0 && d.views === 0)) {
+    return (
+      <div ref={ref} className="w-full">
+        <p className="text-xs md:text-sm text-stone-400 py-2">אין עדיין תנועה בטווח הזה.</p>
+      </div>
+    );
+  }
+
+  const pts = data.map((d, i) => ({ ...d, i })).filter((d) => measured(d.i));
+  const seg = (list: typeof pts, key: 'visits' | 'views') =>
+    list.map((d, j) => `${j ? 'L' : 'M'}${x(d.i).toFixed(1)},${y(d[key]).toFixed(1)}`).join(' ');
+  const path = (key: 'visits' | 'views') => seg(pts, key);
+  // The last bucket is the current one and is still filling, so its segment
+  // is dashed: otherwise every evening the line appears to crash to zero.
+  const done = pts.length > 2 ? pts.slice(0, -1) : pts;
+  const tail = pts.length > 2 ? pts.slice(-2) : [];
+  const isNow = (i: number) => i === n - 1;
+  const area =
+    pts.length > 1
+      ? `${path('visits')} L${x(pts[pts.length - 1].i).toFixed(1)},${ih} L${x(pts[0].i).toFixed(1)},${ih} Z`
+      : '';
+
+  const onMove = (e: PointerEvent<SVGSVGElement>) => {
+    const box = e.currentTarget.getBoundingClientRect();
+    const px = e.clientX - box.left - pad.l;
+    const i = n <= 1 ? 0 : Math.round((px / iw) * (n - 1));
+    setHover(Math.min(n - 1, Math.max(0, i)));
+  };
+
+  const cy = ih + 2 + MARK_ROW / 2;
+  const anyMark = data.some((d) => d.conversions > 0);
+  const unit = granularity === 'hour' ? 'שעה' : 'יום';
+  // Wide enough to name the unmeasured stretch rather than just shade it.
+  const preW = start > 0 ? (start >= n ? iw : x(start) - (n > 1 ? iw / (n - 1) / 2 : 0)) : 0;
+
+  const series = [
+    { key: 'views' as const, label: 'צפיות בעמודים', color: VIEWS_COLOR },
+    { key: 'visits' as const, label: 'ביקורים', color: SERIES.primary },
+  ];
+
   return (
-    <StackedBars
-      data={points}
-      series={[{ key: 'visits', label: 'ביקורים', color: SERIES.primary }]}
-      height={height}
-      aria="ביקורים לאורך זמן, עם סימון של הימים שבהם התקבלה פנייה"
-      emptyText="אין עדיין תנועה בטווח הזה."
-      emptyBucketText="אין ביקורים"
-      formatTotal={visitCount}
-      tooltipExtra={(i) =>
-        data[i].views > 0 ? <div className="text-stone-400">{data[i].views} צפיות בעמודים</div> : null
-      }
-      marks={{
-        color: ACTION_COLOR,
-        label: `${granularity === 'hour' ? 'שעה' : 'יום'} שבו התקבלה פנייה`,
-        counts: data.map((d) => d.conversions),
-        empty: 'לא התקבלו פניות בטווח הזה',
-        describe: (i) => enquiries(data[i].conversions),
-      }}
-    />
+    <div ref={ref} className="w-full">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2 text-[11px] md:text-xs" style={{ color: INK }}>
+        {series.map((s) => (
+          <span key={s.key} className="inline-flex items-center gap-1.5">
+            <span className="w-3 h-[3px] rounded-full flex-shrink-0" style={{ background: s.color }} />
+            {s.label}
+          </span>
+        ))}
+        <span className="inline-flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: ACTION_COLOR }} />
+          {unit} שבו התקבלה פנייה
+        </span>
+      </div>
+
+      <div className="relative">
+        {w > 0 && (
+          <svg
+            width={w}
+            height={height}
+            role="img"
+            aria-label="ביקורים וצפיות לאורך זמן, עם סימון של הימים שבהם התקבלה פנייה"
+            onPointerMove={onMove}
+            onPointerDown={onMove}
+            onPointerLeave={() => setHover(null)}
+            style={{ touchAction: 'pan-y' }}
+          >
+            <g transform={`translate(${pad.l},${pad.t})`}>
+              {preW > 0 && (
+                <g>
+                  <rect x={0} y={0} width={preW} height={ih} fill="#f5f5f4" />
+                  {preW > 70 && (
+                    <text x={preW / 2} y={ih / 2} dy="0.32em" textAnchor="middle" fontSize={10} fill={MUTED}>
+                      לפני תחילת המדידה
+                    </text>
+                  )}
+                </g>
+              )}
+
+              {ticks.map((t) => (
+                <g key={t}>
+                  <line x1={0} x2={iw} y1={y(t)} y2={y(t)} stroke={GRID} strokeWidth={1} />
+                  <text x={-8} y={y(t)} dy="0.32em" textAnchor="end" fontSize={10} fill={MUTED}>
+                    {Math.round(t)}
+                  </text>
+                </g>
+              ))}
+
+              {data.map((d, i) =>
+                i % every === 0 ? (
+                  <text
+                    key={d.day}
+                    x={x(i)}
+                    y={ih + 17 + MARK_ROW}
+                    textAnchor={n > 1 && i === 0 ? 'start' : 'middle'}
+                    fontSize={10}
+                    fill={MUTED}
+                  >
+                    {heDay(d.day)}
+                  </text>
+                ) : null,
+              )}
+
+              {area && <path d={area} fill={SERIES.primary} opacity={0.08} />}
+              {pts.length > 1 ? (
+                series.map((s) => (
+                  <g key={s.key}>
+                    <path
+                      d={seg(done, s.key)}
+                      fill="none"
+                      stroke={s.color}
+                      strokeWidth={2}
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                    />
+                    {tail.length > 0 && (
+                      <path d={seg(tail, s.key)} fill="none" stroke={s.color} strokeWidth={2} strokeDasharray="3 4" />
+                    )}
+                  </g>
+                ))
+              ) : (
+                pts.map((d) =>
+                  series.map((s) => <circle key={s.key} cx={x(d.i)} cy={y(d[s.key])} r={3.5} fill={s.color} />),
+                )
+              )}
+
+              {/* The enquiry row, the same track and marks as the column charts. */}
+              {anyMark ? (
+                <line x1={0} x2={iw} y1={cy} y2={cy} stroke={GRID} strokeWidth={1} />
+              ) : (
+                <text x={iw / 2} y={cy} dy="0.32em" textAnchor="middle" fontSize={9} fill={MUTED}>
+                  לא התקבלו פניות בטווח הזה
+                </text>
+              )}
+              {data.map((d, i) =>
+                d.conversions > 0 ? (
+                  <circle
+                    key={`m-${d.day}`}
+                    cx={x(i)}
+                    cy={cy}
+                    r={markR(d.conversions)}
+                    fill={ACTION_COLOR}
+                    stroke="#fff"
+                    strokeWidth={1.5}
+                  />
+                ) : null,
+              )}
+
+              {/* Crosshair and the two values on it. */}
+              {hover !== null && (
+                <g pointerEvents="none">
+                  <line
+                    x1={x(hover)}
+                    x2={x(hover)}
+                    y1={0}
+                    y2={ih + MARK_ROW}
+                    stroke={MUTED}
+                    strokeWidth={1}
+                    strokeDasharray="3 3"
+                  />
+                  {measured(hover) &&
+                    series.map((s) => (
+                      <circle
+                        key={s.key}
+                        cx={x(hover)}
+                        cy={y(data[hover][s.key])}
+                        r={4.5}
+                        fill={s.color}
+                        stroke="#fff"
+                        strokeWidth={2}
+                      />
+                    ))}
+                </g>
+              )}
+            </g>
+          </svg>
+        )}
+
+        {hover !== null && data[hover] && (
+          <div
+            className="pointer-events-none absolute top-0 bg-white border border-stone-200 rounded-lg shadow-sm px-2.5 py-1.5 text-[11px] leading-relaxed"
+            style={{
+              left: Math.min(Math.max(0, x(hover) + pad.l - 55), Math.max(0, w - 170)),
+              color: INK,
+            }}
+          >
+            <div className="font-semibold text-stone-800">
+              {heDay(data[hover].day)}
+              {isNow(hover) && <span className="font-normal text-stone-500"> · עד עכשיו</span>}
+            </div>
+            {!measured(hover) ? (
+              <div className="text-stone-400">לפני תחילת המדידה</div>
+            ) : (
+              series.map((s) => (
+                <div key={s.key} className="flex items-center gap-1.5 whitespace-nowrap">
+                  <span className="w-2.5 h-[3px] rounded-full flex-shrink-0" style={{ background: s.color }} />
+                  {s.label}: <strong>{data[hover][s.key]}</strong>
+                </div>
+              ))
+            )}
+            {data[hover].conversions > 0 && (
+              <div className="flex items-center gap-1.5 whitespace-nowrap mt-1 pt-1 border-t border-stone-100">
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: ACTION_COLOR }} />
+                <strong>{enquiries(data[hover].conversions)}</strong>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
