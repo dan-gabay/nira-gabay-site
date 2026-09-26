@@ -12,6 +12,7 @@
 // payload is gclid, which names a click on an ad rather than a person.
 
 import { getStoredAttribution } from './attribution';
+import { isOptedOut } from './ownerOptOut';
 
 export type ContactChannel = 'whatsapp' | 'phone' | 'email';
 
@@ -23,7 +24,8 @@ export type ContactChannel = 'whatsapp' | 'phone' | 'email';
  * which is the whole reason the attribution was missing in the first place.
  */
 export function recordContactIntent(channel: ContactChannel): void {
-  if (typeof window === 'undefined') return;
+  // The owner testing the WhatsApp button is not a lead.
+  if (typeof window === 'undefined' || isOptedOut()) return;
 
   try {
     // Null when the visitor has no stored attribution - a direct visit, or

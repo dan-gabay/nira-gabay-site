@@ -7,8 +7,7 @@ import JsonLd from "@/components/JsonLd";
 import { personSchema, practiceSchema, webSiteSchema } from "@/lib/identitySchema";
 import { BING_SITE_VERIFICATION } from "@/lib/verification";
 import SiteChrome from "@/components/SiteChrome";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import VercelInsights from "@/components/VercelInsights";
 
 const heebo = Heebo({
   subsets: ["hebrew", "latin"],
@@ -159,8 +158,7 @@ export default function RootLayout({
           דלגו לתוכן הראשי
         </a>
         <SiteChrome>{children}</SiteChrome>
-        <Analytics />
-        <SpeedInsights />
+        <VercelInsights />
       </body>
     </html>
   );

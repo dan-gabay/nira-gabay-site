@@ -14,6 +14,7 @@ import {
   entityFor,
   type SiteEventPayload,
 } from './siteEvents';
+import { isOptedOut } from './ownerOptOut';
 
 declare global {
   interface Window {
@@ -181,6 +182,8 @@ export const trackEvent = (
   eventParams?: Record<string, any>
 ) => {
   if (typeof window === 'undefined') return;
+  // The owner's own browsing, switched off in /manage (lib/ownerOptOut.ts).
+  if (isOptedOut()) return;
 
   // Our own store gets the event either way - it is independent of which ad
   // platform is loaded, and of whether one loaded at all.

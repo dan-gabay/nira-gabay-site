@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
+import { OPT_OUT_COOKIE, optedOutFromCookie } from '@/lib/ownerOptOut';
 
 export const runtime = 'nodejs';
 
@@ -48,6 +49,12 @@ function deviceFrom(ua: string | null): string {
 }
 
 export async function POST(req: NextRequest) {
+  // The owner's own browsing (lib/ownerOptOut.ts). The client already sends
+  // nothing, this catches a tab that was open before the switch was flipped.
+  if (optedOutFromCookie(req.cookies.get(OPT_OUT_COOKIE)?.value)) {
+    return new NextResponse(null, { status: 204 });
+  }
+
   try {
     // sendBeacon sets the Blob's type, but a fallback fetch or a future caller
     // may not, so the body is parsed rather than content-type negotiated.

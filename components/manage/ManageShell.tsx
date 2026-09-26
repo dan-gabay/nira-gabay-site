@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState, createContext, useContext, useCallback } from 'react';
+import TrackingToggle from '@/components/manage/TrackingToggle';
 import { LayoutDashboard, Inbox, FileText, MessageSquare, Tag, LogOut, BarChart3 } from 'lucide-react';
 
 export type ManageSummary = {
@@ -99,6 +100,7 @@ export default function ManageShell({ children }: { children: React.ReactNode })
             </nav>
 
             <div className="flex items-center gap-1">
+              <TrackingToggle />
               <Link
                 href="/"
                 target="_blank"

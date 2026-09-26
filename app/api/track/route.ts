@@ -7,6 +7,7 @@ import {
   type SiteEventPayload,
 } from '@/lib/siteEvents';
 import { botKindFromUserAgent } from '@/lib/botDetect';
+import { OPT_OUT_COOKIE, optedOutFromCookie } from '@/lib/ownerOptOut';
 
 export const runtime = 'nodejs';
 
@@ -46,6 +47,12 @@ function deviceFrom(ua: string | null): string {
 }
 
 export async function POST(req: NextRequest) {
+  // The owner's own browsing (lib/ownerOptOut.ts). The client already sends
+  // nothing, this catches a tab that was open before the switch was flipped.
+  if (optedOutFromCookie(req.cookies.get(OPT_OUT_COOKIE)?.value)) {
+    return new NextResponse(null, { status: 204 });
+  }
+
   try {
     let body: SiteEventPayload;
     try {

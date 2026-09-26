@@ -6,6 +6,7 @@ import { getUserIdentifier } from '@/lib/userIdentifier';
 import { supabase as supabaseClient } from '@/lib/supabaseClient';
 import { trackArticleLike, trackCommentSubmit, trackArticleShare } from '@/lib/analytics';
 import { FACEBOOK_APP_ID } from '@/lib/facebook';
+import { isOptedOut } from '@/lib/ownerOptOut';
 
 type ArticleInteractionsProps = {
   articleId: string;
@@ -83,6 +84,8 @@ export default function ArticleInteractions({
   }
 
   async function incrementViewCount() {
+    // The owner rereading an article is not a view (lib/ownerOptOut.ts).
+    if (isOptedOut()) return;
     // עדכון ספירת הצפיות (רק אם טרם נספר היום)
     const lastViewedKey = `article_viewed_${articleId}`;
     const lastViewed = localStorage.getItem(lastViewedKey);
