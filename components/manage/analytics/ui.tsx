@@ -336,9 +336,10 @@ export type BarRow = {
 };
 
 /**
- * One measure over a handful of rows, as a bar behind each row. The bar is a
- * tint of the measure's colour, so the text over it keeps full ink contrast and
- * the list still reads as a list.
+ * One measure over a handful of rows: the name and the number on one line, and
+ * under them the same 6px bar every ranked row on the page uses (articles,
+ * search landings, visit depth), scaled to the biggest row. One grammar for
+ * "how much, compared with the others", wherever the list is.
  */
 export function BarList({
   rows,
@@ -355,27 +356,28 @@ export function BarList({
   const max = Math.max(...rows.map((r) => r.value), 1);
   const shown = limit ? rows.slice(0, limit) : rows;
   return (
-    <ol className="space-y-1">
+    <ol className="space-y-2.5">
       {shown.map((r) => (
-        <li key={r.key} className="relative">
-          <span
-            aria-hidden="true"
-            className="absolute inset-y-0 start-0 rounded-md"
-            style={{ width: `${Math.max(2, (r.value / max) * 100)}%`, background: `${color}1f` }}
-          />
-          <span className="relative flex items-center gap-2 px-2 py-1.5 min-h-[34px] text-[13px] md:text-sm">
+        <li key={r.key}>
+          <div className="flex items-baseline gap-2 text-[12px] md:text-[13px]">
             {r.swatch && (
-              <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: r.swatch }} aria-hidden="true" />
+              <span className="w-2 h-2 rounded-sm flex-shrink-0 self-center" style={{ background: r.swatch }} aria-hidden="true" />
             )}
             <span className="flex-1 min-w-0 truncate text-stone-700" title={r.label}>
               {r.label}
               {r.sub && <span className="text-stone-400"> · {r.sub}</span>}
             </span>
             {r.meta && <span className="flex-shrink-0 text-[11px] text-stone-500 tabular-nums">{r.meta}</span>}
-            <span className="font-semibold text-stone-800 tabular-nums flex-shrink-0 min-w-[1.5rem] text-end">
+            <strong className="text-stone-800 font-semibold tabular-nums flex-shrink-0 min-w-[1.5rem] text-end">
               {r.value}
-            </span>
-          </span>
+            </strong>
+          </div>
+          <StackBar
+            of={r.value}
+            max={max}
+            label={`${r.label}: ${r.value}`}
+            parts={[{ key: 'v', value: r.value, color: r.swatch || color }]}
+          />
         </li>
       ))}
     </ol>

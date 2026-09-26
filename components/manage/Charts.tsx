@@ -156,7 +156,9 @@ export function SplitBar({
 
   return (
     <div>
-      <div className="flex h-3 rounded-full overflow-hidden bg-stone-100" role="img"
+      {/* gap-px between parts: the same sliver of surface the stacked columns
+          and the row bars use, so neighbouring parts never merge. */}
+      <div className="flex h-2.5 gap-px rounded-full overflow-hidden bg-stone-100" role="img"
            aria-label={shown.map((p) => `${p.label} ${Math.round((p.value / total) * 100)}%`).join(', ')}>
         {shown.map((p) => (
           <span key={p.key} style={{ width: `${(p.value / total) * 100}%`, background: p.color }} />
@@ -181,8 +183,9 @@ export function SplitBar({
 export type Slot = { label: string; visits: number; conversions: number };
 
 /**
- * Visits per slot as bars, with the slots that produced an enquiry marked by a
- * dot above the bar. Used for hour-of-day and day-of-week, where the x axis is
+ * Visits per slot as columns, with the slots that produced an enquiry marked in
+ * the row under the baseline - the same columns, marks and tooltip as every
+ * chart over time on the page. Used for hour-of-day and day-of-week, where the x axis is
  * a fixed cycle rather than a timeline - the same shape would be misleading as
  * a line, because there is no continuity between 23:00 and 00:00.
  *
@@ -190,69 +193,26 @@ export type Slot = { label: string; visits: number; conversions: number };
  * converted made four of seven weekdays amber, which reads as a second
  * category rather than as a mark on the first.
  */
-export function SlotBars({ slots, height = 110 }: { slots: Slot[]; height?: number }) {
-  const [ref, w] = useWidth<HTMLDivElement>();
-  const [hover, setHover] = useState<number | null>(null);
-  const pad = { t: 10, r: 2, b: 18, l: 2 };
-  const iw = Math.max(0, w - pad.l - pad.r);
-  const ih = height - pad.t - pad.b;
-  const max = Math.max(1, ...slots.map((s) => s.visits));
-  const step = slots.length ? iw / slots.length : iw;
-  // Seven bars across a full-width card are 95px each and read as a wall, so
-  // the bar is capped and centred in its slot instead of filling it.
-  const bw = Math.max(2, Math.min(step - 2, 30));
-  const every = slots.length > 12 ? (w < 420 ? 4 : 2) : 1;
-  const bx = (i: number) => i * step + (step - bw) / 2;
-
+export function SlotBars({ slots, height = 150 }: { slots: Slot[]; height?: number }) {
+  const points: SeriesPoint[] = slots.map((sl) => ({ day: sl.label, values: { visits: sl.visits } }));
   return (
-    <div ref={ref} className="relative w-full">
-      {w > 0 && (
-        <svg width={w} height={height} role="img" aria-label="ביקורים ופניות לפי משבצת זמן"
-             onMouseLeave={() => setHover(null)}>
-          <g transform={`translate(${pad.l},${pad.t})`}>
-            {slots.map((s, i) => {
-              const h = (s.visits / max) * ih;
-              return (
-                <g key={s.label} onMouseEnter={() => setHover(i)}>
-                  <rect x={i * step} y={0} width={Math.max(step, 6)} height={ih} fill="transparent" />
-                  <rect
-                    x={bx(i)}
-                    y={ih - h}
-                    width={bw}
-                    height={Math.max(s.visits > 0 ? 2 : 0, h)}
-                    rx={2}
-                    fill={SERIES.primary}
-                    opacity={hover === null || hover === i ? 1 : 0.5}
-                  />
-                  {s.conversions > 0 && (
-                    <circle cx={bx(i) + bw / 2} cy={Math.max(4, ih - h - 6)} r={3.5} fill={SERIES.secondary} />
-                  )}
-                  {i % every === 0 && (
-                    <text x={bx(i) + bw / 2} y={ih + 13} textAnchor="middle" fontSize={9} fill={MUTED}>
-                      {s.label}
-                    </text>
-                  )}
-                </g>
-              );
-            })}
-          </g>
-        </svg>
-      )}
-      <div className="mt-1 text-[11px]" style={{ color: INK }}>
-        {hover !== null && slots[hover] ? (
-          <span>
-            <strong className="text-stone-800">{slots[hover].label}</strong>
-            {' · '}{visitCount(slots[hover].visits)}
-            {slots[hover].conversions > 0 && <> · {enquiries(slots[hover].conversions)}</>}
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1.5 text-stone-400">
-            <span className="w-2 h-2 rounded-full" style={{ background: SERIES.secondary }} />
-            נקודה = התקבלה פנייה
-          </span>
-        )}
-      </div>
-    </div>
+    <StackedBars
+      data={points}
+      series={[{ key: 'visits', label: 'ביקורים', color: SERIES.primary }]}
+      height={height}
+      aria="ביקורים ופניות לפי משבצת זמן"
+      emptyText="אין עדיין תנועה בטווח הזה."
+      emptyBucketText="אין ביקורים"
+      formatTotal={visitCount}
+      xLabel={(k) => k}
+      marks={{
+        color: ACTION_COLOR,
+        label: 'התקבלה פנייה',
+        counts: slots.map((sl) => sl.conversions),
+        empty: 'לא התקבלו פניות בטווח הזה',
+        describe: (i) => enquiries(slots[i].conversions),
+      }}
+    />
   );
 }
 
@@ -367,18 +327,45 @@ export function alignToBuckets<T extends { day: string }>(
  * under it change the words and, for reading depth, add one row of marks below
  * the baseline; nothing else.
  */
-function StackedBars({
+/**
+ * A row of marks under the baseline, on the same bands as the columns: the
+ * dashboard's one way of saying "in this bucket, somebody did something" about
+ * an act that is not part of the column's height - an enquiry under visits, a
+ * reaction under readings, an assistant's answer under crawls. One shape, one
+ * size rule and one track everywhere, so a dot means the same thing in every
+ * chart on the page and only its colour says which act.
+ */
+export type MarkRow = {
+  /** Mark colour; also the legend swatch. */
+  color: string;
+  /** Legend text for one mark. */
+  label: string;
+  /** Count per bucket, index-aligned with the chart's data. */
+  counts: number[];
+  /** Said in the row's place when nothing happened in the whole range. */
+  empty: string;
+  /** The tooltip line for a bucket with a mark in it. */
+  describe: (i: number) => string;
+};
+
+const MARK_ROW = 16;
+
+/** Mark radius: 8px across is the floor for a mark that has to be found; a
+ *  bucket with more than one gets a size step, the count is in the tooltip. */
+const markR = (n: number) => (n > 1 ? 5.5 : 4);
+
+export function StackedBars({
   data,
   series,
-  height = 210,
+  height = 200,
   aria,
   emptyText,
   emptyBucketText,
   formatTotal,
   tooltipOrder = 'value',
-  footerHeight = 0,
-  footer,
+  marks,
   tooltipExtra,
+  xLabel = heDay,
 }: {
   data: SeriesPoint[];
   series: Array<{ key: string; label: string; color: string }>;
@@ -394,19 +381,14 @@ function StackedBars({
    * order the chart is about.
    */
   tooltipOrder?: 'value' | 'series';
-  /** Room under the baseline for `footer`. The day labels move below it. */
-  footerHeight?: number;
-  footer?: (g: {
-    bx: (i: number) => number;
-    band: number;
-    bw: number;
-    iw: number;
-    y0: number;
-    h: number;
-  }) => ReactNode;
+  /** The row of marks under the baseline, if the chart has one. */
+  marks?: MarkRow;
   /** Extra lines in the tooltip for the hovered bucket, under the segments. */
   tooltipExtra?: (i: number) => ReactNode;
+  /** The x label for a bucket key. Dates by default; a slot chart passes its own. */
+  xLabel?: (key: string) => string;
 }) {
+  const footerHeight = marks ? MARK_ROW : 0;
   const [ref, w] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
 
@@ -432,7 +414,8 @@ function StackedBars({
   const y = (v: number) => ih - (v / max) * ih;
 
   const ticks = [0, max / 2, max];
-  const every = Math.max(1, Math.ceil(data.length / (w < 420 ? 4 : 8)));
+  // A short fixed cycle (the week) labels every bucket; a timeline thins out.
+  const every = data.length <= 12 ? 1 : Math.max(1, Math.ceil(data.length / (w < 420 ? 4 : 8)));
 
   if (series.length === 0) {
     return <p className="text-xs md:text-sm text-stone-400 py-2">{emptyText}</p>;
@@ -497,6 +480,12 @@ function StackedBars({
             {s.label}
           </span>
         ))}
+        {marks && (
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: marks.color }} />
+            {marks.label}
+          </span>
+        )}
       </div>
 
       {/* The tooltip is positioned against the plot box, so it can never ride
@@ -533,7 +522,7 @@ function StackedBars({
                   fontSize={10}
                   fill={MUTED}
                 >
-                  {heDay(p.day)}
+                  {xLabel(p.day)}
                 </text>
               ) : null,
             )}
@@ -563,7 +552,40 @@ function StackedBars({
             {/* A second row of marks under the baseline, on the same bands, for
                 the chart that has something to say about a bucket beyond its
                 height. Drawn after the columns and before the hit targets. */}
-            {footerHeight > 0 && footer?.({ bx, band, bw, iw, y0: ih + 2, h: footerHeight })}
+            {marks && (() => {
+              const cy = ih + 2 + MARK_ROW / 2;
+              const any = marks.counts.some((n) => n > 0);
+              return (
+                <g>
+                  {/* A track when there is anything on it; the sentence in its
+                      place when there is not, because "nothing happened" is an
+                      answer and a row that appears only sometimes makes the
+                      chart change height instead. */}
+                  {any ? (
+                    <line x1={0} x2={iw} y1={cy} y2={cy} stroke={GRID} strokeWidth={1} />
+                  ) : (
+                    <text x={iw / 2} y={cy} dy="0.32em" textAnchor="middle" fontSize={9} fill={MUTED}>
+                      {marks.empty}
+                    </text>
+                  )}
+                  {/* A surface ring, because at 90 days the band is thinner
+                      than the mark and neighbouring marks touch. */}
+                  {data.map((p, i) =>
+                    (marks.counts[i] || 0) > 0 ? (
+                      <circle
+                        key={p.day}
+                        cx={bx(i) + bw / 2}
+                        cy={cy}
+                        r={markR(marks.counts[i])}
+                        fill={marks.color}
+                        stroke="#fff"
+                        strokeWidth={1.5}
+                      />
+                    ) : null,
+                  )}
+                </g>
+              );
+            })()}
 
             {/* Hit targets are the full band and the full plot height, so a
                 column of two visits is as easy to hover as a column of forty.
@@ -592,14 +614,14 @@ function StackedBars({
           }}
         >
           <div className="font-semibold text-stone-800">
-            {heDay(data[hover].day)}
+            {xLabel(data[hover].day)}
             {totalAt(data[hover]) > 0 && (
               <span className="font-normal text-stone-500"> · {formatTotal(totalAt(data[hover]))}</span>
             )}
           </div>
           {rowsAt(hover).length === 0 ? (
             <div className="text-stone-400">{emptyBucketText}</div>
-          ) : (
+          ) : series.length === 1 ? null : (
             rowsAt(hover).map((r) => (
               <div key={r.key} className="flex items-center gap-1.5 whitespace-nowrap">
                 <span className="w-2 h-2 rounded-sm flex-shrink-0" style={{ background: r.color }} />
@@ -608,6 +630,12 @@ function StackedBars({
             ))
           )}
           {tooltipExtra?.(hover)}
+          {marks && (marks.counts[hover] || 0) > 0 && (
+            <div className="flex items-center gap-1.5 whitespace-nowrap mt-1 pt-1 border-t border-stone-100">
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: marks.color }} />
+              <strong>{marks.describe(hover)}</strong>
+            </div>
+          )}
         </div>
       )}
       </div>
@@ -692,22 +720,22 @@ export const ACTION_COLOR = '#B45309';
 export function DepthBars({
   data,
   reactions,
-  height = 210,
+  height = 200,
+  granularity = 'day',
 }: {
   data: DepthPoint[];
   reactions: ReactionPoint[];
   height?: number;
+  granularity?: 'hour' | 'day';
 }) {
   const points: SeriesPoint[] = data.map((d) => ({
     day: d.day,
     values: { opened: d.opened, read: d.read, finished: d.finished },
   }));
-
   const reactionAt = (i: number) => {
     const r = reactions[i];
     return r ? r.shares + r.likes + r.comments : 0;
   };
-  const anyReaction = reactions.some((r) => r.shares + r.likes + r.comments > 0);
 
   return (
     <StackedBars
@@ -722,55 +750,21 @@ export function DepthBars({
       // "נפתח בלבד" above "נקרא" on a busy day and read as a ranking of three
       // unrelated things. The stack order is the meaning, so the tooltip keeps it.
       tooltipOrder="series"
-      // The row is drawn even when nothing happened in the range, as an empty
-      // track: "nobody reacted" is an answer, and a row that appears only on
-      // the ranges with a mark in it makes the chart change height instead.
-      footerHeight={16}
-      footer={({ bx, bw, iw, y0, h }) => (
-        <g>
-          {/* The track is the row's baseline when there is anything on it. With
-              nothing on it the sentence takes its place rather than sitting on
-              top of a rule. */}
-          {anyReaction && (
-            <line x1={0} x2={iw} y1={y0 + h / 2} y2={y0 + h / 2} stroke={GRID} strokeWidth={1} />
-          )}
-          {data.map((p, i) =>
-            reactionAt(i) > 0 ? (
-              // A surface ring, because at 90 days the band is thinner than the
-              // mark and neighbouring marks touch. 8px across is the floor for
-              // a mark that has to be found before it can be read.
-              <circle
-                key={p.day}
-                cx={bx(i) + bw / 2}
-                cy={y0 + h / 2}
-                r={4}
-                fill={ACTION_COLOR}
-                stroke="#fff"
-                strokeWidth={1.5}
-              />
-            ) : null,
-          )}
-          {!anyReaction && (
-            <text x={iw / 2} y={y0 + h / 2} dy="0.32em" textAnchor="middle" fontSize={9} fill={MUTED}>
-              אף אחד לא הגיב, שיתף או עשה לייק בטווח הזה
-            </text>
-          )}
-        </g>
-      )}
-      tooltipExtra={(i) => {
-        const r = reactions[i];
-        if (!r || r.shares + r.likes + r.comments === 0) return null;
-        const parts = [
-          r.shares > 0 ? shareCount(r.shares) : null,
-          r.likes > 0 ? likeCount(r.likes) : null,
-          r.comments > 0 ? commentCount(r.comments) : null,
-        ].filter(Boolean);
-        return (
-          <div className="flex items-center gap-1.5 whitespace-nowrap mt-1 pt-1 border-t border-stone-100">
-            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: ACTION_COLOR }} />
-            {parts.join(' · ')}
-          </div>
-        );
+      marks={{
+        color: ACTION_COLOR,
+        label: `${granularity === 'hour' ? 'שעה' : 'יום'} עם תגובה, לייק או שיתוף`,
+        counts: data.map((_, i) => reactionAt(i)),
+        empty: 'אף אחד לא הגיב, שיתף או עשה לייק בטווח הזה',
+        describe: (i) => {
+          const r = reactions[i];
+          return [
+            r.shares > 0 ? shareCount(r.shares) : null,
+            r.likes > 0 ? likeCount(r.likes) : null,
+            r.comments > 0 ? commentCount(r.comments) : null,
+          ]
+            .filter(Boolean)
+            .join(' · ');
+        },
       }}
     />
   );
@@ -806,9 +800,16 @@ export const AI_ANSWER_COLOR = '#86198f';
 
 export type AiPoint = { day: string; crawler: number; answer: number; search: number };
 
-export function AiFetchBars({ data, height = 190 }: { data: AiPoint[]; height?: number }) {
+export function AiFetchBars({
+  data,
+  height = 200,
+  granularity = 'day',
+}: {
+  data: AiPoint[];
+  height?: number;
+  granularity?: 'hour' | 'day';
+}) {
   const points: SeriesPoint[] = data.map((d) => ({ day: d.day, values: { crawler: d.crawler, search: d.search } }));
-  const anyAnswer = data.some((d) => d.answer > 0);
   return (
     <StackedBars
       data={points}
@@ -819,31 +820,12 @@ export function AiFetchBars({ data, height = 190 }: { data: AiPoint[]; height?: 
       emptyBucketText="אין סריקות"
       formatTotal={(n) => (n === 1 ? 'סריקה אחת' : `${n.toLocaleString('he-IL')} סריקות`)}
       tooltipOrder="series"
-      footerHeight={16}
-      footer={({ bx, bw, iw, y0, h }) => (
-        <g>
-          {anyAnswer && <line x1={0} x2={iw} y1={y0 + h / 2} y2={y0 + h / 2} stroke={GRID} strokeWidth={1} />}
-          {data.map((p, i) =>
-            p.answer > 0 ? (
-              <circle key={p.day} cx={bx(i) + bw / 2} cy={y0 + h / 2} r={4} fill={AI_ANSWER_COLOR} stroke="#fff" strokeWidth={1.5} />
-            ) : null,
-          )}
-          {!anyAnswer && (
-            <text x={iw / 2} y={y0 + h / 2} dy="0.32em" textAnchor="middle" fontSize={9} fill={MUTED}>
-              אף כלי AI לא פתח עמוד תוך כדי תשובה בטווח הזה
-            </text>
-          )}
-        </g>
-      )}
-      tooltipExtra={(i) => {
-        const a = data[i]?.answer ?? 0;
-        if (a === 0) return null;
-        return (
-          <div className="flex items-center gap-1.5 whitespace-nowrap mt-1 pt-1 border-t border-stone-100">
-            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: AI_ANSWER_COLOR }} />
-            {a === 1 ? 'פתיחה אחת תוך כדי תשובה' : `${a} פתיחות תוך כדי תשובה`}
-          </div>
-        );
+      marks={{
+        color: AI_ANSWER_COLOR,
+        label: `${granularity === 'hour' ? 'שעה' : 'יום'} שבו כלי AI פתח עמוד תוך כדי תשובה`,
+        counts: data.map((d) => d.answer),
+        empty: 'אף כלי AI לא פתח עמוד תוך כדי תשובה בטווח הזה',
+        describe: (i) => (data[i].answer === 1 ? 'פתיחה אחת תוך כדי תשובה' : `${data[i].answer} פתיחות תוך כדי תשובה`),
       }}
     />
   );
@@ -852,138 +834,44 @@ export function AiFetchBars({ data, height = 190 }: { data: AiPoint[]; height?: 
 // ─────────────────────────────────────────── visits with enquiry marks
 
 /**
- * The overview's one chart: visits per bucket as a line, and a row of marks
+ * The overview's one chart: visits per bucket as columns, and a row of marks
  * under the baseline for every bucket in which somebody enquired.
  *
- * It replaces two charts - views and visits as two lines, and enquiries as a
- * bar chart of their own - and the reason is the scale. Enquiries are two
- * orders of magnitude below visits, so on a shared axis they are a flat line on
- * the floor, and a second axis is the one thing a chart must never do. A mark
- * row says what the bars said (when, and how many, in the tooltip and the mark
- * size) without pretending the two share a scale.
- *
- * Views were dropped as a line: at 1.4 pages a visit they ran parallel to
- * visits and drew the same shape twice. The count is in the tooltip.
+ * Columns and not a line, so that every chart over time on the page is the
+ * same picture - a column is a bucket's count, a dot under it is an act - and
+ * the reader learns it once. Enquiries are two orders of magnitude below
+ * visits, so on a shared axis they would be a flat line on the floor; the mark
+ * row says when, and the tooltip how many, without a second axis.
  */
-export function VisitsTimeline({ data, height = 200 }: { data: DayPoint[]; height?: number }) {
-  const [ref, w] = useWidth<HTMLDivElement>();
-  const [hover, setHover] = useState<number | null>(null);
-
-  const ROW = 18; // the enquiry row under the baseline
-  const pad = { t: 10, r: 8, b: 24 + ROW, l: 30 };
-  const iw = Math.max(0, w - pad.l - pad.r);
-  const ih = height - pad.t - pad.b;
-  const max = niceMax(Math.max(1, ...data.map((d) => d.visits)));
-
-  const x = (i: number) => (data.length <= 1 ? iw / 2 : (i / (data.length - 1)) * iw);
-  const y = (v: number) => ih - (v / max) * ih;
-  const line = data.map((d, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(d.visits).toFixed(1)}`).join(' ');
-  const area = data.length ? `${line} L${x(data.length - 1).toFixed(1)},${ih} L${x(0).toFixed(1)},${ih} Z` : '';
-
-  const ticks = [0, max / 2, max];
-  const every = Math.max(1, Math.ceil(data.length / (w < 420 ? 4 : 8)));
-  const rowY = ih + ROW / 2 + 2;
-  const anyEnquiry = data.some((d) => d.conversions > 0);
-
+export function VisitsTimeline({
+  data,
+  height = 200,
+  granularity = 'day',
+}: {
+  data: DayPoint[];
+  height?: number;
+  granularity?: 'hour' | 'day';
+}) {
+  const points: SeriesPoint[] = data.map((d) => ({ day: d.day, values: { visits: d.visits } }));
   return (
-    <div ref={ref} className="relative w-full">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-1.5 text-[11px] md:text-xs" style={{ color: INK }}>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="w-3 h-[2px] rounded-full" style={{ background: SERIES.primary }} />
-          ביקורים
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full" style={{ background: ACTION_COLOR }} />
-          התקבלה פנייה
-        </span>
-      </div>
-
-      {w > 0 && (
-        <svg
-          width={w}
-          height={height}
-          role="img"
-          aria-label="ביקורים לאורך זמן, עם סימון של הימים שבהם התקבלה פנייה"
-          onMouseLeave={() => setHover(null)}
-          onMouseMove={(e) => {
-            const r = e.currentTarget.getBoundingClientRect();
-            const px = e.clientX - r.left - pad.l;
-            const i = Math.round((px / Math.max(1, iw)) * (data.length - 1));
-            setHover(Math.min(data.length - 1, Math.max(0, i)));
-          }}
-        >
-          <g transform={`translate(${pad.l},${pad.t})`}>
-            {ticks.map((t) => (
-              <g key={t}>
-                <line x1={0} x2={iw} y1={y(t)} y2={y(t)} stroke={GRID} strokeWidth={1} />
-                <text x={-8} y={y(t)} dy="0.32em" textAnchor="end" fontSize={10} fill={MUTED}>
-                  {Math.round(t)}
-                </text>
-              </g>
-            ))}
-
-            {data.map((d, i) =>
-              i % every === 0 ? (
-                <text key={d.day} x={x(i)} y={ih + ROW + 16} textAnchor="middle" fontSize={10} fill={MUTED}>
-                  {heDay(d.day)}
-                </text>
-              ) : null,
-            )}
-
-            <path d={area} fill={SERIES.primary} opacity={0.08} />
-            <path d={line} fill="none" stroke={SERIES.primary} strokeWidth={2}
-                  strokeLinejoin="round" strokeLinecap="round" />
-
-            {/* The enquiry row. A track when there is anything on it; a
-                sentence in its place when there is not, because "nobody wrote"
-                is an answer and the row should not silently vanish. */}
-            {anyEnquiry ? (
-              <line x1={0} x2={iw} y1={rowY} y2={rowY} stroke={GRID} strokeWidth={1} />
-            ) : (
-              <text x={iw / 2} y={rowY} dy="0.32em" textAnchor="middle" fontSize={9} fill={MUTED}>
-                לא התקבלו פניות בטווח הזה
-              </text>
-            )}
-            {data.map((d, i) =>
-              d.conversions > 0 ? (
-                <circle
-                  key={`c-${d.day}`}
-                  cx={x(i)}
-                  cy={rowY}
-                  r={d.conversions > 1 ? 5.5 : 4}
-                  fill={ACTION_COLOR}
-                  stroke="#fff"
-                  strokeWidth={1.5}
-                />
-              ) : null,
-            )}
-
-            {hover !== null && data[hover] && (
-              <g>
-                <line x1={x(hover)} x2={x(hover)} y1={0} y2={ih + ROW} stroke={MUTED} strokeWidth={1} strokeDasharray="3 3" />
-                <circle cx={x(hover)} cy={y(data[hover].visits)} r={4.5} fill={SERIES.primary} stroke="#fff" strokeWidth={2} />
-              </g>
-            )}
-          </g>
-        </svg>
-      )}
-
-      {hover !== null && data[hover] && (
-        <div
-          className="pointer-events-none absolute top-0 bg-white border border-stone-200 rounded-lg shadow-sm px-2.5 py-1.5 text-[11px] leading-relaxed"
-          style={{ left: Math.min(Math.max(0, x(hover) + pad.l - 55), Math.max(0, w - 130)), color: INK }}
-        >
-          <div className="font-semibold text-stone-800">{heDay(data[hover].day)}</div>
-          <div>{visitCount(data[hover].visits)}</div>
-          <div className="text-stone-400">{data[hover].views} צפיות בעמודים</div>
-          {data[hover].conversions > 0 && (
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="w-2 h-2 rounded-full" style={{ background: ACTION_COLOR }} />
-              <strong>{enquiries(data[hover].conversions)}</strong>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+    <StackedBars
+      data={points}
+      series={[{ key: 'visits', label: 'ביקורים', color: SERIES.primary }]}
+      height={height}
+      aria="ביקורים לאורך זמן, עם סימון של הימים שבהם התקבלה פנייה"
+      emptyText="אין עדיין תנועה בטווח הזה."
+      emptyBucketText="אין ביקורים"
+      formatTotal={visitCount}
+      tooltipExtra={(i) =>
+        data[i].views > 0 ? <div className="text-stone-400">{data[i].views} צפיות בעמודים</div> : null
+      }
+      marks={{
+        color: ACTION_COLOR,
+        label: `${granularity === 'hour' ? 'שעה' : 'יום'} שבו התקבלה פנייה`,
+        counts: data.map((d) => d.conversions),
+        empty: 'לא התקבלו פניות בטווח הזה',
+        describe: (i) => enquiries(data[i].conversions),
+      }}
+    />
   );
 }

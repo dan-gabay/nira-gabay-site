@@ -13,7 +13,6 @@ import { openings as openingCount, shares, likes, comments } from '@/lib/heCount
 import {
   CardPart,
   Empty,
-  Legend,
   MIN_FOR_RATE,
   Note,
   ShowMore,
@@ -236,33 +235,19 @@ export default function ArticleEngagementCard({
             likes: 0,
             comments: 0,
           }))}
+          granularity={data.granularity}
         />
       </div>
 
-      {/* The marker row has no legend inside the chart, because one shape and
-          one colour need a sentence and not a swatch. This is it, and it
-          carries the breakdown the tile above can only total.
-
-          Only when something happened: with an empty row the chart already
-          says so in words, and a legend for a mark that is nowhere on the
-          screen is one line of furniture. */}
+      {/* The mark row's own legend is inside the chart; this is the breakdown
+          the tile above can only total. Only when something happened. */}
       {actions > 0 && (
-        <div className="mt-1.5">
-          <Legend
-            items={[
-              {
-                key: 'reaction',
-                round: true,
-                color: ACTION_COLOR,
-                label: `${data.granularity === 'hour' ? 'שעה' : 'יום'} שבו מישהו הגיב, עשה לייק או שיתף · ${shares(t.shares)}${
-                  channels.length > 0
-                    ? ` (${channels.map((c) => `${CHANNEL_LABELS[c.channel] || c.channel} ${c.n}`).join(', ')})`
-                    : ''
-                }, ${likes(t.likes)}, ${comments(t.comments)}`,
-              },
-            ]}
-          />
-        </div>
+        <Note>
+          {shares(t.shares)}
+          {channels.length > 0 &&
+            ` (${channels.map((c) => `${CHANNEL_LABELS[c.channel] || c.channel} ${c.n}`).join(', ')})`}
+          , {likes(t.likes)}, {comments(t.comments)}.
+        </Note>
       )}
 
       {/* Did one article lead to another. This is the only question on the card

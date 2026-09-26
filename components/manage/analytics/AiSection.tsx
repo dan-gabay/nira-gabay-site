@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { AiFetchBars, AI_ANSWER_COLOR, AI_SERIES, alignToBuckets } from '@/components/manage/Charts';
-import { BarList, Card, CardPart, Empty, Legend, Note, ShowMore, Stat, StatGrid, SubHead, type BarRow } from './ui';
+import { BarList, Card, CardPart, Empty, Note, ShowMore, Stat, StatGrid, SubHead, type BarRow } from './ui';
 import { heDate } from './Overview';
 import { pageName } from './labels';
 import type { SiteBehavior } from './types';
@@ -103,21 +103,10 @@ export function AiSection({
       </StatGrid>
 
       <div className="mt-4">
-        <AiFetchBars data={alignToBuckets(data.ai_daily, buckets, () => ({ crawler: 0, answer: 0, search: 0 }))} />
-        {t.answer > 0 && (
-          <div className="mt-1.5">
-            <Legend
-              items={[
-                {
-                  key: 'answer',
-                  label: `${data.granularity === 'hour' ? 'שעה' : 'יום'} שבו כלי AI פתח עמוד באמצע תשובה למישהו`,
-                  color: AI_ANSWER_COLOR,
-                  round: true,
-                },
-              ]}
-            />
-          </div>
-        )}
+        <AiFetchBars
+          data={alignToBuckets(data.ai_daily, buckets, () => ({ crawler: 0, answer: 0, search: 0 }))}
+          granularity={data.granularity}
+        />
       </div>
 
       <CardPart>
