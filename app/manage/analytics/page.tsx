@@ -321,6 +321,8 @@ function Dashboard({
           <SourcesTable
             rows={data.engagement_by_source || []}
             details={data.traffic || []}
+            landings={behavior?.source_landings || []}
+            articleTitles={articleTitles}
             siteVisits={data.totals.visits}
             siteConversions={data.totals.conversions}
           />

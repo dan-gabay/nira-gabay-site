@@ -84,4 +84,6 @@ export type SiteBehavior = {
   /** ord 1 = one page, 2 = two, 3 = three or four, 5 = five and more. */
   depth: Array<{ ord: number; visits: number; median_secs: number; converted: number; with_article: number }>;
   multi_page_median_secs: number | null;
+  /** Per source detail (as in the traffic list), the page the visit landed on. */
+  source_landings?: Array<{ grp: string; detail: string; landing: string; visits: number }>;
 };

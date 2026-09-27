@@ -6,7 +6,10 @@ import { SOURCE_SERIES } from '@/components/manage/Charts';
 import { GROUP_LABELS, type TrafficRow } from '@/components/manage/TrafficSources';
 import { enquiries as enquiryCount } from '@/lib/heCount';
 import { Empty, MIN_FOR_RATE, Note, one, pct, rateText } from './ui';
-import type { SourceRow } from './types';
+import { pageName } from './labels';
+import type { SiteBehavior, SourceRow } from './types';
+
+type Landing = NonNullable<SiteBehavior['source_landings']>[number];
 
 // "איזו תנועה שווה?" as one table. It used to be two cards about the same seven
 // groups - one ranked by volume, one by pages per visit - and the reader had to
@@ -53,11 +56,15 @@ function VerdictTag({ v }: { v: Verdict }) {
 export function SourcesTable({
   rows,
   details,
+  landings = [],
+  articleTitles,
   siteVisits,
   siteConversions,
 }: {
   rows: SourceRow[];
   details: TrafficRow[];
+  landings?: Landing[];
+  articleTitles?: Map<string, string>;
   siteVisits: number;
   siteConversions: number;
 }) {
@@ -71,6 +78,20 @@ export function SourcesTable({
 
   const detailsFor = (grp: string) =>
     details.filter((t) => t.grp === grp && t.detail).sort((a, b) => b.visits - a.visits);
+
+  // "נחתו ב:" - the top two pages a detail's visits landed on, with counts
+  // only when there is more than one page.
+  const landedOn = (grp: string, detail: string | null) => {
+    const top = landings
+      .filter((l) => l.grp === grp && l.detail === detail)
+      .sort((a, b) => b.visits - a.visits);
+    if (top.length === 0) return null;
+    if (top.length === 1) return pageName(top[0].landing, articleTitles);
+    return top
+      .slice(0, 2)
+      .map((l) => `${pageName(l.landing, articleTitles)} (${l.visits})`)
+      .join(' · ') + (top.length > 2 ? ' ועוד' : '');
+  };
 
   return (
     <div>
@@ -182,17 +203,25 @@ export function SourcesTable({
                 <div className="pb-3 ps-8 pe-2 md:ps-10">
                   <p className="text-[11px] text-stone-400 mb-1.5">{DETAIL_LABELS[r.grp] || 'פירוט'}</p>
                   <ol className="space-y-1">
-                    {sub.map((t) => (
-                      <li key={`${t.grp}-${t.detail}`} className="flex items-center gap-2 text-[12px] md:text-[13px] text-stone-600">
-                        <span className="flex-1 min-w-0 truncate" title={t.detail || ''}>{t.detail}</span>
-                        {t.conversions > 0 && (
-                          <span className="flex-shrink-0 text-[11px] font-medium text-amber-800 tabular-nums">
-                            {enquiryCount(t.conversions)}
+                    {sub.map((t) => {
+                      const landed = landedOn(t.grp, t.detail);
+                      return (
+                        <li key={`${t.grp}-${t.detail}`} className="flex items-center gap-2 text-[12px] md:text-[13px] text-stone-600">
+                          <span className="flex-1 min-w-0">
+                            <span className="block truncate" title={t.detail || ''}>{t.detail}</span>
+                            {landed && (
+                              <span className="block text-[11px] leading-snug text-stone-400">נחתו ב: {landed}</span>
+                            )}
                           </span>
-                        )}
-                        <span className="flex-shrink-0 tabular-nums text-stone-800 w-8 text-end">{t.visits}</span>
-                      </li>
-                    ))}
+                          {t.conversions > 0 && (
+                            <span className="flex-shrink-0 text-[11px] font-medium text-amber-800 tabular-nums">
+                              {enquiryCount(t.conversions)}
+                            </span>
+                          )}
+                          <span className="flex-shrink-0 tabular-nums text-stone-800 w-8 text-end">{t.visits}</span>
+                        </li>
+                      );
+                    })}
                   </ol>
                 </div>
               )}
