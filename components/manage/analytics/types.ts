@@ -54,6 +54,8 @@ export type Payload = {
 
 /** One row of /api/manage/enquiry-log - see db/2026-09-26-enquiry-log.sql. */
 export type EnquiryRow = {
+  /** Random per visit; opens the row's journey. Never shown. */
+  session_id?: string;
   ts?: string;
   /** Israel time, 'YYYY-MM-DDTHH:MI'. */
   at: string;
@@ -72,6 +74,32 @@ export type EnquiryRow = {
 };
 
 /** /api/manage/site-behavior - see db/2026-09-27-site-behavior.sql. */
+/** One enquiry's visit, event by event - db/2026-09-28-enquiry-journey.sql. */
+export type EnquiryJourney = {
+  events: Array<{
+    /** Israel time, 'YYYY-MM-DDTHH:MI:SS'. */
+    ts: string;
+    event_name: string;
+    path: string | null;
+    source: string | null;
+    entity: string | null;
+    is_conversion: boolean;
+  }>;
+  paid: boolean | null;
+  utm_term: string | null;
+  /** Earlier visits that are probably the same visitor, newest first. */
+  earlier: Array<{
+    visit_number: number;
+    /** Israel time, 'YYYY-MM-DDTHH:MI'. */
+    started: string;
+    ended: string;
+    utm_term: string | null;
+    referrer_host: string | null;
+    paid: boolean;
+    pages: string[];
+  }>;
+};
+
 export type SiteBehavior = {
   granularity: 'hour' | 'day';
   /** Per bucket, the same keys as the main payload's `daily`. */

@@ -75,3 +75,39 @@ export const DEVICE_LABELS: Record<string, string> = {
   tablet: 'טאבלט',
   unknown: 'לא ידוע',
 };
+
+/**
+ * One event of an enquiry's visit, as a line of its timeline. Nouns rather than
+ * verbs, so no line has to guess who the visitor is.
+ */
+export function journeyLabel(
+  e: { event_name: string; path: string | null; source: string | null },
+  articleTitles?: Map<string, string>,
+): string {
+  const page = pageName(e.path, articleTitles);
+  if (CHANNEL_LABELS[e.event_name]) return `פנייה ב${CHANNEL_LABELS[e.event_name]} - ${buttonLabel(e.source)}`;
+  switch (e.event_name) {
+    case 'page_view':
+      return page;
+    case 'cta_click':
+      return 'לחיצה על כפתור יצירת קשר';
+    case 'article_read':
+      return 'קריאה במאמר';
+    case 'article_completed':
+      return 'קריאת המאמר עד הסוף';
+    case 'service_interest':
+      return 'עניין בשירות';
+    case 'search':
+      return 'חיפוש באתר';
+    case 'share':
+      return 'שיתוף';
+    case 'article_like':
+      return 'לייק';
+    case 'comment_submit':
+      return 'תגובה נשלחה';
+    case 'sign_up':
+      return 'הרשמה לרשימה';
+    default:
+      return e.event_name;
+  }
+}

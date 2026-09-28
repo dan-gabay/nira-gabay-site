@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { ACTION_COLOR, SOURCE_SERIES } from '@/components/manage/Charts';
 import { GROUP_LABELS } from '@/components/manage/TrafficSources';
 import { BarList, Card, Empty, ShowMore, SubHead, type BarRow } from './ui';
 import { CHANNEL_LABELS, DEVICE_LABELS, buttonLabel, pageName } from './labels';
+import { EnquiryJourneyLoader } from './EnquiryJourney';
 import type { EnquiryRow } from './types';
 
 // "מה הביא פניות?" At a dozen enquiries a month every one of them is worth
@@ -146,46 +148,71 @@ export function Enquiries({
 }
 
 function LogRow({ row: r, articleTitles }: { row: EnquiryRow; articleTitles: Map<string, string> }) {
+  const [open, setOpen] = useState(false);
   const [date, time] = r.at.split('T');
   const [, m, d] = date.split('-').map(Number);
   const landedElsewhere = r.landing && r.path && r.landing !== r.path;
   const visit =
     r.visit_number === null ? null : r.visit_number === 1 ? 'ביקור ראשון' : `ביקור ${r.visit_number}`;
 
+  // Rows from before the log carried the visit id cannot open.
+  const expandable = !!r.session_id;
+
   return (
-    <li className="py-2.5 flex gap-3">
-      <div className="flex-shrink-0 w-11 text-center pt-0.5">
-        <p className="text-[13px] font-semibold text-stone-800 tabular-nums leading-tight">
-          {d}.{m}
-        </p>
-        <p className="text-[11px] text-stone-400 tabular-nums">{time}</p>
-      </div>
-      <div className="min-w-0 flex-1 text-[12px] md:text-[13px] leading-relaxed">
-        <p className="text-stone-800">
-          <strong className="font-semibold">{CHANNEL_LABELS[r.event_name] || r.event_name}</strong>
-          <span className="text-stone-500"> · {buttonLabel(r.source)}</span>
-        </p>
-        <p className="text-stone-600 flex items-baseline gap-1.5 min-w-0">
-          <span
-            className="w-2 h-2 rounded-sm flex-shrink-0 translate-y-[-1px]"
-            style={{ background: SOURCE_SERIES[r.grp] || '#a8a29e' }}
+    <li>
+      <button
+        type="button"
+        onClick={() => expandable && setOpen((v) => !v)}
+        aria-expanded={expandable ? open : undefined}
+        disabled={!expandable}
+        className={`w-full text-start py-2.5 min-h-[44px] flex gap-3 rounded-lg ${
+          expandable ? 'hover:bg-stone-50' : 'cursor-default'
+        }`}
+      >
+        <div className="flex-shrink-0 w-11 text-center pt-0.5">
+          <p className="text-[13px] font-semibold text-stone-800 tabular-nums leading-tight">
+            {d}.{m}
+          </p>
+          <p className="text-[11px] text-stone-400 tabular-nums">{time}</p>
+        </div>
+        <div className="min-w-0 flex-1 text-[12px] md:text-[13px] leading-relaxed">
+          <p className="text-stone-800">
+            <strong className="font-semibold">{CHANNEL_LABELS[r.event_name] || r.event_name}</strong>
+            <span className="text-stone-500"> · {buttonLabel(r.source)}</span>
+          </p>
+          <p className="text-stone-600 flex items-baseline gap-1.5 min-w-0">
+            <span
+              className="w-2 h-2 rounded-sm flex-shrink-0 translate-y-[-1px]"
+              style={{ background: SOURCE_SERIES[r.grp] || '#a8a29e' }}
+              aria-hidden="true"
+            />
+            <span className="min-w-0">
+              {GROUP_LABELS[r.grp] || r.grp}
+              {r.detail && <span className="text-stone-500"> · &quot;{r.detail}&quot;</span>}
+            </span>
+          </p>
+          <p className="text-stone-400">
+            {landedElsewhere
+              ? `כניסה: ${pageName(r.landing, articleTitles)} · פנייה: ${pageName(r.path, articleTitles)}`
+              : pageName(r.path, articleTitles)}
+            {' · '}
+            {r.views === 1 ? 'עמוד אחד' : `${r.views} עמודים`}
+            {visit && <> · {visit}</>}
+            {r.device && DEVICE_LABELS[r.device] && <> · {DEVICE_LABELS[r.device]}</>}
+          </p>
+        </div>
+        {expandable && (
+          <ChevronDown
+            className={`w-4 h-4 mt-1 flex-shrink-0 text-stone-400 transition-transform ${open ? 'rotate-180' : ''}`}
             aria-hidden="true"
           />
-          <span className="min-w-0">
-            {GROUP_LABELS[r.grp] || r.grp}
-            {r.detail && <span className="text-stone-500"> · &quot;{r.detail}&quot;</span>}
-          </span>
-        </p>
-        <p className="text-stone-400">
-          {landedElsewhere
-            ? `כניסה: ${pageName(r.landing, articleTitles)} · פנייה: ${pageName(r.path, articleTitles)}`
-            : pageName(r.path, articleTitles)}
-          {' · '}
-          {r.views === 1 ? 'עמוד אחד' : `${r.views} עמודים`}
-          {visit && <> · {visit}</>}
-          {r.device && DEVICE_LABELS[r.device] && <> · {DEVICE_LABELS[r.device]}</>}
-        </p>
-      </div>
+        )}
+      </button>
+      {open && r.session_id && (
+        <div className="ps-14 pe-1">
+          <EnquiryJourneyLoader session={r.session_id} articleTitles={articleTitles} />
+        </div>
+      )}
     </li>
   );
 }
