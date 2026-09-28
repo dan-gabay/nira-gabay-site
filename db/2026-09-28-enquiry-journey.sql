@@ -5,6 +5,7 @@
 -- events  - every event of that visit, in order: the pages, the clicks, the
 --           enquiry itself and whatever came after it.
 -- earlier - up to three earlier visits that are PROBABLY the same visitor.
+-- titles  - slug -> title for the articles among those pages.
 --
 -- WHY "PROBABLY". The event store deliberately keeps no visitor id (see
 -- lib/siteEvents.ts): session_id is per visit and nothing links two visits.
@@ -97,7 +98,17 @@ as $$
                     from site_events e
                    where e.session_id = m.session_id and e.event_name = 'page_view' and e.bot_kind is null)
       ) order by m.visit_number desc), '[]'::json)
-      from (select * from matched order by visit_number desc limit 3) m)
+      from (select * from matched order by visit_number desc limit 3) m),
+    -- Article titles for every article path above, so the panel names them
+    -- wherever it is opened, not only where the page happens to know them.
+    'titles', (select coalesce(json_object_agg(a.slug, a.title), '{}'::json)
+                 from articles a
+                where '/articles/' || a.slug in (
+                  select path from ev
+                  union
+                  select e.path from site_events e
+                   where e.session_id in (select session_id from (select * from matched order by visit_number desc limit 3) x)
+                     and e.event_name = 'page_view'))
   )
 $$;
 

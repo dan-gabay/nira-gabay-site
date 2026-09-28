@@ -15,6 +15,7 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import { useManageSummary } from '@/components/manage/ManageShell';
+import { EnquiryJourneyLoader } from '@/components/manage/analytics/EnquiryJourney';
 
 type LeadStatus = 'new' | 'spoke' | 'started_therapy' | 'ongoing' | 'irrelevant';
 
@@ -39,6 +40,8 @@ type ContactMessage = {
   landing_page?: string | null;
   referrer?: string | null;
   source_page?: string | null;
+  /** The site visit this lead came from, when it could be matched. */
+  session_id?: string | null;
 };
 
 // A tap on WhatsApp/phone/email, recorded server-side with the ad click that
@@ -634,9 +637,35 @@ export default function ManageContactsPage() {
                     </p>
                   </details>
                 )}
+
+                {m.session_id && <LeadVisit session={m.session_id} />}
               </article>
             );
           })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// The visit the lead came from, page by page - the same panel as a row in the
+// analytics enquiry log. Loaded only when opened.
+function LeadVisit({ session }: { session: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-t border-stone-100">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="w-full flex items-center justify-between gap-2 px-3.5 md:px-5 py-2.5 min-h-[44px] text-start text-[11px] md:text-xs text-stone-500"
+      >
+        הביקור באתר
+        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
+      </button>
+      {open && (
+        <div className="px-3.5 md:px-5 pb-3">
+          <EnquiryJourneyLoader session={session} />
         </div>
       )}
     </div>

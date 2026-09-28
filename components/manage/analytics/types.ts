@@ -98,6 +98,8 @@ export type EnquiryJourney = {
     paid: boolean;
     pages: string[];
   }>;
+  /** slug -> title for the articles among the pages above. */
+  titles?: Record<string, string>;
 };
 
 export type SiteBehavior = {

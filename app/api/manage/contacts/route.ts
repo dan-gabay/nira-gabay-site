@@ -46,7 +46,17 @@ export async function GET(req: NextRequest) {
   // aid to logging a lead, not the lead itself.
   if (intentsError) console.error('manage contact intents list failed:', intentsError.message);
 
-  return NextResponse.json({ messages: data || [], intents: intents || [] });
+  // The site visit each lead came from, so it can open the same "whole story"
+  // panel as the analytics enquiry log - see db/2026-09-28-lead-sessions.sql.
+  // Optional like the taps: a failure leaves the leads without the panel.
+  const { data: sessions, error: sessionsError } = await supabase.rpc('manage_lead_sessions');
+  if (sessionsError) console.error('manage lead sessions failed:', sessionsError.message);
+  const sessionOf = new Map(
+    ((sessions as Array<{ id: string; session_id: string }> | null) || []).map((r) => [r.id, r.session_id]),
+  );
+  const messages = (data || []).map((m) => ({ ...m, session_id: sessionOf.get(m.id) ?? null }));
+
+  return NextResponse.json({ messages, intents: intents || [] });
 }
 
 const LEAD_STATUSES = ['new', 'spoke', 'started_therapy', 'ongoing', 'irrelevant'] as const;

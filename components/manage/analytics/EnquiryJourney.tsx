@@ -22,7 +22,7 @@ export function EnquiryJourneyLoader({
   articleTitles,
 }: {
   session: string;
-  articleTitles: Map<string, string>;
+  articleTitles?: Map<string, string>;
 }) {
   const [state, setState] = useState<State>({ status: 'loading' });
 
@@ -63,11 +63,12 @@ function foldPages(paths: string[]): Array<{ path: string; n: number }> {
 
 export function JourneyPanel({
   journey,
-  articleTitles,
+  articleTitles: known,
 }: {
   journey: EnquiryJourney;
-  articleTitles: Map<string, string>;
+  articleTitles?: Map<string, string>;
 }) {
+  const articleTitles = new Map([...Object.entries(journey.titles || {}), ...(known || new Map())]);
   const events = journey.events || [];
   const earlier = journey.earlier || [];
 
