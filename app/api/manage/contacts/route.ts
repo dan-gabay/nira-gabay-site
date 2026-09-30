@@ -56,7 +56,16 @@ export async function GET(req: NextRequest) {
   );
   const messages = (data || []).map((m) => ({ ...m, session_id: sessionOf.get(m.id) ?? null }));
 
-  return NextResponse.json({ messages, intents: intents || [] });
+  // The same for the pending taps, so the "הגיע" form can show the visit
+  // while the lead is being logged - see db/2026-09-30-intent-sessions.sql.
+  const { data: intentSessions, error: intentSessionsError } = await supabase.rpc('manage_intent_sessions');
+  if (intentSessionsError) console.error('manage intent sessions failed:', intentSessionsError.message);
+  const intentSessionOf = new Map(
+    ((intentSessions as Array<{ id: number; session_id: string }> | null) || []).map((r) => [r.id, r.session_id]),
+  );
+  const pending = (intents || []).map((i) => ({ ...i, session_id: intentSessionOf.get(i.id) ?? null }));
+
+  return NextResponse.json({ messages, intents: pending });
 }
 
 const LEAD_STATUSES = ['new', 'spoke', 'started_therapy', 'ongoing', 'irrelevant'] as const;
@@ -134,14 +143,15 @@ export async function POST(req: NextRequest) {
 
   const name = (body.name || '').trim();
   const phone = (body.phone || '').trim();
-  if (!name || !phone) {
-    return NextResponse.json({ error: 'נא למלא שם וטלפון' }, { status: 400 });
+  if (!name) {
+    return NextResponse.json({ error: 'נא למלא שם' }, { status: 400 });
   }
-  // normalizePhone rather than the strict Israeli check: Nira is transcribing
-  // a number from a message she already has, so a foreign one written with a
-  // country code is real and refusing to record her would be the worse error.
-  const normalizedPhone = normalizePhone(phone);
-  if (!normalizedPhone) {
+  // The phone is optional: often only a name is at hand when the lead is
+  // logged. When one is given, normalizePhone rather than the strict Israeli
+  // check: Nira is transcribing a number from a message she already has, so a
+  // foreign one written with a country code is real.
+  const normalizedPhone = phone ? normalizePhone(phone) : null;
+  if (phone && !normalizedPhone) {
     return NextResponse.json({ error: PHONE_ERROR }, { status: 400 });
   }
   const channel =

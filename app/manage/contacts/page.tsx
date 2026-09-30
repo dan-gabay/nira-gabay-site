@@ -59,6 +59,8 @@ type ContactIntent = {
   utm_term?: string | null;
   gclid?: string | null;
   landing_page?: string | null;
+  /** The site visit this tap came from, when it could be matched. */
+  session_id?: string | null;
 };
 
 // Lead lifecycle - the quality signal campaign optimization is judged by.
@@ -247,8 +249,8 @@ export default function ManageContactsPage() {
   }
 
   async function addManualLead() {
-    if (!newLead.name || !newLead.phone) {
-      alert('נא למלא שם וטלפון');
+    if (!newLead.name.trim()) {
+      alert('נא למלא שם');
       return;
     }
     setIsAddingLead(true);
@@ -397,13 +399,21 @@ export default function ManageContactsPage() {
                 משויך ללחיצה מ{timeAgo(linkedIntent.created_at)} · {intentSource(linkedIntent)}
               </p>
               <p className="text-[11px] text-emerald-800/80 mt-0.5">
-                המקור כבר נשמר - אין צורך למלא אותו. נשאר רק שם וטלפון מההודעה.
+                המקור כבר נשמר - אין צורך למלא אותו. נשאר רק שם מההודעה.
               </p>
             </div>
           ) : (
             <p className="text-xs md:text-sm text-stone-500">
               לתיעוד פנייה שהגיעה בטלפון או בוואטסאפ, כדי שתיספר יחד עם השאר.
             </p>
+          )}
+          {/* The visit behind the tap, open from the start: seeing what they
+              read is the point of this screen while the lead is logged. */}
+          {linkedIntent?.session_id && (
+            <section className="rounded-xl border border-stone-200 px-3.5 pt-2.5">
+              <h3 className="text-xs md:text-sm font-semibold text-stone-800">המסע באתר</h3>
+              <EnquiryJourneyLoader key={linkedIntent.session_id} session={linkedIntent.session_id} />
+            </section>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <input
@@ -416,7 +426,7 @@ export default function ManageContactsPage() {
             <input
               value={newLead.phone}
               onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
-              placeholder="טלפון *"
+              placeholder="טלפון (לא חובה)"
               aria-label="טלפון"
               dir="ltr"
               inputMode="tel"
