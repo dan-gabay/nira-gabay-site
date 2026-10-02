@@ -5,6 +5,7 @@ import { dateToScheduleIso, formatScheduleDate, scheduleIsoToDate, todayLocalDat
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
+import ArticleGoogle from '@/components/manage/ArticleGoogle';
 import { Save, Copy, Check, ImageOff, Clock, X } from 'lucide-react';
 
 type DraftMetadata = {
@@ -27,6 +28,7 @@ export default function EditArticlePage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [draftMetadata, setDraftMetadata] = useState<DraftMetadata | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -113,6 +115,10 @@ export default function EditArticlePage() {
         meta_description: data.meta_description || '',
         focus_keyword: data.focus_keyword || '',
       });
+
+      // Google data is only asked for the stored, published slug, not for
+      // whatever is in the form while editing.
+      setPublishedSlug(data.is_published && data.slug ? data.slug : null);
 
       // SEO review (read-only) from the generated package + validation.
       const pkg = data.seo_package || {};
@@ -546,6 +552,8 @@ export default function EditArticlePage() {
             {seoReview && seoReview.faqCount > 0 && (
               <p className="text-xs text-stone-500 mt-4">FAQ: {seoReview.faqCount} שאלות נשמרו עבור מאמר זה (יוצגו כ-schema).</p>
             )}
+
+            {!loading && <ArticleGoogle slug={publishedSlug} />}
           </div>
 
           {/* Content */}

@@ -1,5 +1,6 @@
 import { unstable_cache } from 'next/cache';
 import { googleToken } from './auth';
+import type { GoogleIndexStatus as IndexStatus } from './types';
 
 // Search Console, read-only: Search Analytics rows and URL Inspection.
 // Cached so opening the admin repeatedly does not spend quota; the data
@@ -30,18 +31,6 @@ async function fetchSearchAnalytics(q: Query): Promise<GscRow[]> {
 export const searchAnalytics = unstable_cache(fetchSearchAnalytics, ['gsc-search-analytics'], {
   revalidate: 6 * 3600,
 });
-
-export type IndexStatus = {
-  verdict: string | null;
-  coverageState: string | null;
-  lastCrawlTime: string | null;
-  googleCanonical: string | null;
-  userCanonical: string | null;
-  robotsTxtState: string | null;
-  indexingState: string | null;
-  pageFetchState: string | null;
-};
-
 async function fetchInspection(url: string): Promise<IndexStatus> {
   const token = await googleToken('gsc');
   const res = await fetch('https://searchconsole.googleapis.com/v1/urlInspection/index:inspect', {

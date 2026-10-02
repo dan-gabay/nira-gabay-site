@@ -22,3 +22,26 @@ export type GoogleSearch =
       }>;
       far: Array<GoogleSearchQuery & { path: string | null; competing: Array<{ path: string; position: number }> }>;
     };
+
+export type GoogleIndexStatus = {
+  verdict: string | null;
+  coverageState: string | null;
+  lastCrawlTime: string | null;
+  googleCanonical: string | null;
+  userCanonical: string | null;
+  robotsTxtState: string | null;
+  indexingState: string | null;
+  pageFetchState: string | null;
+};
+
+export type GoogleArticle =
+  | { configured: false }
+  | {
+      configured: true;
+      days: number;
+      /** Null when the search report failed; zeros when Google never showed the page. */
+      totals: { clicks: number; impressions: number; position: number | null } | null;
+      queries: GoogleSearchQuery[];
+      /** Null when URL Inspection failed. */
+      index: GoogleIndexStatus | null;
+    };
