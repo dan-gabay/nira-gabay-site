@@ -11,7 +11,8 @@ import {
 } from '@/components/manage/Charts';
 import { GROUP_LABELS } from '@/components/manage/TrafficSources';
 import OrganicSearchCard, { type OrganicSearch } from '@/components/manage/OrganicSearch';
-import type { GoogleSearch } from '@/lib/google/types';
+import type { GoogleAds, GoogleSearch } from '@/lib/google/types';
+import GoogleSection from '@/components/manage/analytics/GoogleSection';
 import ArticleEngagementCard, { type ArticleEngagement } from '@/components/manage/ArticleEngagement';
 import { buildInsights } from '@/lib/analyticsInsights';
 import { BOT_KIND_LABELS, type StoredBotKind } from '@/lib/botDetect';
@@ -31,19 +32,22 @@ import type { EnquiryRow, Payload, SiteBehavior } from '@/components/manage/anal
 //   1. תמונת מצב  - is it working? Four figures, what they mean, their shape.
 //   2. פניות      - what produced the enquiries, down to each one.
 //   3. מקורות     - which traffic is worth having.
-//   4. כלי AI     - whether AI tools read the site, and answer from it.
-//   5. עמודים     - which pages turn a visit into an enquiry, and how deep
+//   4. גוגל       - what an enquiry from the ads costs, and where organic
+//                   search is missing (live from Google, see lib/google).
+//   5. כלי AI     - whether AI tools read the site, and answer from it.
+//   6. עמודים     - which pages turn a visit into an enquiry, and how deep
 //                   a visit goes.
-//   6. מאמרים     - whether the content is read.
-//   7. קהל        - who the visitors are and when they come.
+//   7. מאמרים     - whether the content is read.
+//   8. קהל        - who the visitors are and when they come.
 //
 // It replaced about twenty flat cards in which the same data appeared up to
 // three times (landing pages, source quality, enquiries per day). Every section
 // here answers one question, and a figure that did not help answer one was
 // cut rather than given a card of its own.
 //
-// Five calls, not one: the main payload, plus article engagement, organic
-// search, the enquiry log and site behaviour (AI tools, visit depth), each its own RPC so that one failing leaves the
+// Seven calls, not one: the main payload, plus article engagement, organic
+// search, the enquiry log, site behaviour (AI tools, visit depth) and the two
+// Google routes, each its own call so that one failing leaves the
 // rest of the page standing. Each result is stored with the range it was asked
 // for, and "loading" is derived by comparing that to the selected range - no
 // setState in an effect body, and the previous range stays on screen, dimmed,
@@ -60,6 +64,7 @@ const SECTIONS = [
   { id: 'overview', label: 'תמונת מצב' },
   { id: 'enquiries', label: 'פניות' },
   { id: 'sources', label: 'מקורות' },
+  { id: 'google', label: 'גוגל' },
   { id: 'ai', label: 'כלי AI' },
   { id: 'pages', label: 'עמודים' },
   { id: 'articles', label: 'מאמרים' },
@@ -110,6 +115,7 @@ export default function AnalyticsPage() {
   const articlesRes = useRangeFetch<ArticleEngagement>('/api/manage/article-engagement', range);
   const organicRes = useRangeFetch<OrganicSearch>('/api/manage/organic-search', range);
   const googleSearchRes = useRangeFetch<GoogleSearch>('/api/manage/google/search', range);
+  const googleAdsRes = useRangeFetch<GoogleAds>('/api/manage/google/ads', range);
   const logRes = useRangeFetch<EnquiryRow[]>('/api/manage/enquiry-log', range);
   const behaviorRes = useRangeFetch<SiteBehavior>('/api/manage/site-behavior', range);
   const active = useActiveSection(SECTION_IDS);
@@ -125,6 +131,8 @@ export default function AnalyticsPage() {
   const organic = organicRes?.range === shownRange ? organicRes?.data ?? null : null;
   const googleSearch = googleSearchRes?.range === shownRange ? googleSearchRes?.data ?? null : null;
   const googleSearchFailed = googleSearchRes?.range === shownRange && Boolean(googleSearchRes?.failed);
+  const googleAds = googleAdsRes?.range === shownRange ? googleAdsRes?.data ?? null : null;
+  const googleAdsFailed = googleAdsRes?.range === shownRange && Boolean(googleAdsRes?.failed);
   const log =
     logRes?.range === shownRange ? (logRes?.data ?? (logRes?.failed ? [] : null)) : null;
   const behavior = behaviorRes?.range === shownRange ? behaviorRes?.data ?? null : null;
@@ -194,6 +202,8 @@ export default function AnalyticsPage() {
             organic={organic}
             googleSearch={googleSearch}
             googleSearchFailed={googleSearchFailed}
+            googleAds={googleAds}
+            googleAdsFailed={googleAdsFailed}
             log={log}
             behavior={behavior}
             behaviorFailed={behaviorFailed}
@@ -220,6 +230,8 @@ function Dashboard({
   organic,
   googleSearch,
   googleSearchFailed,
+  googleAds,
+  googleAdsFailed,
   log,
   behavior,
   behaviorFailed,
@@ -230,6 +242,8 @@ function Dashboard({
   organic: OrganicSearch | null;
   googleSearch: GoogleSearch | null;
   googleSearchFailed: boolean;
+  googleAds: GoogleAds | null;
+  googleAdsFailed: boolean;
   log: EnquiryRow[] | null;
   behavior: SiteBehavior | null;
   behaviorFailed: boolean;
@@ -354,6 +368,10 @@ function Dashboard({
             />
           </Disclosure>
         )}
+      </Section>
+
+      <Section id="google" title="גוגל" question="כמה עולה פנייה מהפרסום, על מה משלמים לשווא, ואיפה האורגני חסר.">
+        <GoogleSection data={googleAds} failed={googleAdsFailed} />
       </Section>
 
       <Section id="ai" title="כלי AI" question="האם כלים כמו ChatGPT קוראים את האתר, ועונים ממנו.">
