@@ -11,6 +11,7 @@ import {
 } from '@/components/manage/Charts';
 import { GROUP_LABELS } from '@/components/manage/TrafficSources';
 import OrganicSearchCard, { type OrganicSearch } from '@/components/manage/OrganicSearch';
+import type { GoogleSearch } from '@/lib/google/types';
 import ArticleEngagementCard, { type ArticleEngagement } from '@/components/manage/ArticleEngagement';
 import { buildInsights } from '@/lib/analyticsInsights';
 import { BOT_KIND_LABELS, type StoredBotKind } from '@/lib/botDetect';
@@ -108,6 +109,7 @@ export default function AnalyticsPage() {
   const main = useRangeFetch<Payload>('/api/manage/analytics', range);
   const articlesRes = useRangeFetch<ArticleEngagement>('/api/manage/article-engagement', range);
   const organicRes = useRangeFetch<OrganicSearch>('/api/manage/organic-search', range);
+  const googleSearchRes = useRangeFetch<GoogleSearch>('/api/manage/google/search', range);
   const logRes = useRangeFetch<EnquiryRow[]>('/api/manage/enquiry-log', range);
   const behaviorRes = useRangeFetch<SiteBehavior>('/api/manage/site-behavior', range);
   const active = useActiveSection(SECTION_IDS);
@@ -121,6 +123,8 @@ export default function AnalyticsPage() {
   const shownRange = main?.range;
   const articles = articlesRes?.range === shownRange ? articlesRes?.data ?? null : null;
   const organic = organicRes?.range === shownRange ? organicRes?.data ?? null : null;
+  const googleSearch = googleSearchRes?.range === shownRange ? googleSearchRes?.data ?? null : null;
+  const googleSearchFailed = googleSearchRes?.range === shownRange && Boolean(googleSearchRes?.failed);
   const log =
     logRes?.range === shownRange ? (logRes?.data ?? (logRes?.failed ? [] : null)) : null;
   const behavior = behaviorRes?.range === shownRange ? behaviorRes?.data ?? null : null;
@@ -188,6 +192,8 @@ export default function AnalyticsPage() {
             data={data}
             articles={articles}
             organic={organic}
+            googleSearch={googleSearch}
+            googleSearchFailed={googleSearchFailed}
             log={log}
             behavior={behavior}
             behaviorFailed={behaviorFailed}
@@ -212,6 +218,8 @@ function Dashboard({
   data,
   articles,
   organic,
+  googleSearch,
+  googleSearchFailed,
   log,
   behavior,
   behaviorFailed,
@@ -220,6 +228,8 @@ function Dashboard({
   data: Payload;
   articles: ArticleEngagement | null;
   organic: OrganicSearch | null;
+  googleSearch: GoogleSearch | null;
+  googleSearchFailed: boolean;
   log: EnquiryRow[] | null;
   behavior: SiteBehavior | null;
   behaviorFailed: boolean;
@@ -336,7 +346,12 @@ function Dashboard({
 
         {organic && (
           <Disclosure title="חיפוש אורגני - פירוט" sub="לאיזה עמוד גוגל שלח, והאם העמוד החזיק">
-            <OrganicSearchCard data={organic} />
+            <OrganicSearchCard
+              data={organic}
+              google={googleSearch}
+              googleFailed={googleSearchFailed}
+              articleTitles={articleTitles}
+            />
           </Disclosure>
         )}
       </Section>

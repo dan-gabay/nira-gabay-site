@@ -19,11 +19,13 @@ import {
   duration,
   wholePct,
 } from './analytics/ui';
+import GoogleSearchParts from './analytics/GoogleSearchParts';
+import type { GoogleSearch } from '@/lib/google/types';
 
 // Visits from a search engine's organic results: where they landed and what
 // they did next. Data from manage_organic_search, see
-// db/2026-09-26-organic-search.sql, which also explains what is missing: the
-// search terms themselves, which Google does not pass to the site at all.
+// db/2026-09-26-organic-search.sql. The search terms themselves never reach
+// the site; they come from Search Console, under it (GoogleSearchParts).
 
 type Page = { path: string; page_type: string; entity: string | null; title: string | null };
 
@@ -119,13 +121,27 @@ function LandingRow({ row, max }: { row: OrganicSearch['landings'][number]; max:
   );
 }
 
-export default function OrganicSearchCard({ data }: { data: OrganicSearch }) {
+export default function OrganicSearchCard({
+  data,
+  google,
+  googleFailed = false,
+  articleTitles,
+}: {
+  data: OrganicSearch;
+  google?: GoogleSearch | null;
+  googleFailed?: boolean;
+  articleTitles?: Map<string, string>;
+}) {
   const [showAll, setShowAll] = useState(false);
   const t = data.totals;
+  const googleParts = <GoogleSearchParts data={google ?? null} failed={googleFailed} articleTitles={articleTitles} />;
 
   if (t.visits === 0) {
     return (
-      <Empty>לא הגיעו ביקורים מחיפוש אורגני בטווח הזה.</Empty>
+      <div>
+        <Empty>לא הגיעו ביקורים מחיפוש אורגני בטווח הזה.</Empty>
+        {googleParts}
+      </div>
     );
   }
 
@@ -178,11 +194,11 @@ export default function OrganicSearchCard({ data }: { data: OrganicSearch }) {
       )}
 
       <Note>
-        מה חיפשו בגוגל לא מופיע כאן: גוגל לא מעבירה את מילות החיפוש לאתר, ולכן הן
-        לא נשמרות אצלנו בשום צורה. הן זמינות רק ב-Search Console, כסיכום לפי ביטוי
-        ועמוד. זמן באתר נמדד מהפעולה הראשונה לאחרונה, ולכן ביקור של עמוד אחד בלי
-        פעולה נוספת נרשם כ-0.
+        זמן באתר נמדד מהפעולה הראשונה לאחרונה, ולכן ביקור של עמוד אחד בלי פעולה
+        נוספת נרשם כ-0.
       </Note>
+
+      {googleParts}
     </div>
   );
 }
