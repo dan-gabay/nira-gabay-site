@@ -11,7 +11,6 @@ import ArticleViewTracker from '@/components/ArticleViewTracker';
 import ArticleTag from '@/components/ArticleTag';
 import ArticleFaq from '@/components/ArticleFaq';
 import RelatedArticles from '../RelatedArticles';
-import NewsletterSignup from '@/components/NewsletterSignup';
 import ArticleCtaBanner from '@/components/ArticleCtaBanner';
 import { TOPIC_BY_TAG } from '@/lib/topics';
 import ReactMarkdown, { type Components } from 'react-markdown';
@@ -461,9 +460,6 @@ export default async function ArticlePage({ params }: Props) {
             initialLikesCount={article.likes_count || 0}
             initialViewsCount={article.views_count || 0}
           />
-
-          {/* Newsletter Signup */}
-          <NewsletterSignup source="article" />
 
           {/* Visible FAQ - same content as the FAQPage JSON-LD above */}
           <ArticleFaq faq={article.faq} />
