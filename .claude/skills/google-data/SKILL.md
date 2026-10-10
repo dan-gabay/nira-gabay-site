@@ -32,7 +32,7 @@ measure different halves of the same visit.
 | Impressions, CTR, average position | **Search Console** only |
 | How many arrived, what they read, did they enquire | **site_events** (Supabase, always available) |
 | Which ad group and keyword a PAID click came from | **GA4** (`ads-check.ts`), or `site_events.utm_term` |
-| Spend, cost per conversion, geography | Google Ads UI - not scripted here |
+| Spend, cost per conversion, geography, campaigns | **Google Ads MCP** (`google-ads` in `.mcp.json`, read-only; see `docs/google-ads-mcp-setup.md`) |
 
 Two traps worth naming, because both have been hit:
 
