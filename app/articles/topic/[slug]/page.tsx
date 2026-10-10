@@ -5,6 +5,8 @@ import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { supabaseServer } from '../../../../lib/supabaseServer';
 import { TOPICS, TOPIC_BY_SLUG } from '../../../../lib/topics';
+import { getService } from '@/lib/services';
+import { SERVICES_LIVE } from '@/lib/publish';
 import {
   TEAL_DARK,
   MINT,
@@ -89,6 +91,8 @@ export default async function TopicPage({
 
   const articles = await getTopicArticles(topic.tag);
   const url = `${BASE_URL}/articles/topic/${topic.slug}`;
+  const service =
+    SERVICES_LIVE && topic.serviceSlug ? getService(topic.serviceSlug) : undefined;
 
   const collectionSchema = {
     '@context': 'https://schema.org',
@@ -209,6 +213,18 @@ export default async function TopicPage({
                 {p}
               </p>
             ))}
+            {service && (
+              <p className="text-sm md:text-base text-stone-600 leading-relaxed">
+                מחפשים ליווי אישי?{' '}
+                <Link
+                  href={`/services/${service.slug}`}
+                  className="font-semibold underline underline-offset-4 hover:no-underline"
+                  style={{ color: TEAL_DARK }}
+                >
+                  {service.h1 ?? service.title}
+                </Link>
+              </p>
+            )}
           </div>
         </div>
       </section>

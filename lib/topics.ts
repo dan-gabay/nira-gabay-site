@@ -10,11 +10,16 @@ export interface Topic {
   metaTitle: string; // <=60 chars incl. brand
   metaDescription: string; // 120-158 chars
   intro: string[]; // paragraphs rendered above the article grid
+  // The service page this hub's readers would book, linked under the intro.
+  // Hubs rank for broad terms ("טיפול רגשי", "גישה קוגניטיבית") that the
+  // service pages compete for too; the link passes that relevance on.
+  serviceSlug?: string;
 }
 
 export const TOPICS: Topic[] = [
   {
     slug: 'anxiety',
+    serviceSlug: 'cbt',
     tag: 'חרדה',
     title: 'חרדה אצל ילדים, מתבגרים ומבוגרים',
     subtitle: 'מאמרים וכלים מעשיים להתמודדות עם חרדה, בבית ובקליניקה',
@@ -28,6 +33,7 @@ export const TOPICS: Topic[] = [
   },
   {
     slug: 'parenting',
+    serviceSlug: 'parent-guidance',
     tag: 'הורות',
     title: 'הורות והדרכת הורים',
     subtitle: 'כלים מעשיים להורות בטוחה, מחברת ומציבת גבולות',
@@ -41,6 +47,7 @@ export const TOPICS: Topic[] = [
   },
   {
     slug: 'teens',
+    serviceSlug: 'teen-therapy',
     tag: 'מתבגרים',
     title: 'גיל ההתבגרות - מדריכים להורים למתבגרים',
     subtitle: 'להבין את הסערה, להישאר עוגן: מדריכים להורים למתבגרים',
@@ -67,6 +74,7 @@ export const TOPICS: Topic[] = [
   },
   {
     slug: 'relationships',
+    serviceSlug: 'couples-therapy',
     tag: 'זוגיות',
     title: 'זוגיות',
     subtitle: 'על קשר, תקשורת והדפוסים שאנחנו מביאים מהבית',
@@ -80,6 +88,7 @@ export const TOPICS: Topic[] = [
   },
   {
     slug: 'emotional-therapy',
+    serviceSlug: 'adult-therapy',
     tag: 'טיפול רגשי',
     title: 'טיפול רגשי והתפתחות אישית',
     subtitle: 'מסע אל העולם הפנימי: דפוסים, רגשות והדרך לשינוי',
@@ -93,6 +102,7 @@ export const TOPICS: Topic[] = [
   },
   {
     slug: 'cbt',
+    serviceSlug: 'cbt',
     tag: 'CBT',
     title: 'טיפול CBT - טיפול קוגניטיבי התנהגותי',
     subtitle: 'טיפול קוגניטיבי התנהגותי: כך זה עובד בפועל',
