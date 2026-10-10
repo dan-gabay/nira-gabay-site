@@ -11,7 +11,9 @@ import VercelInsights from "@/components/VercelInsights";
 
 const heebo = Heebo({
   subsets: ["hebrew", "latin"],
-  weight: ["300", "400", "500", "700"],
+  // No `weight`: Heebo and Assistant are variable fonts, so one file per
+  // subset covers every weight the site uses. Listing weights made Next emit
+  // and preload a file per weight (11 preloads on every page).
   variable: "--font-heebo",
   display: "optional",
   preload: true,
@@ -20,7 +22,6 @@ const heebo = Heebo({
 
 const assistant = Assistant({
   subsets: ["hebrew", "latin"],
-  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-assistant",
   display: "optional",
   preload: true,
@@ -33,7 +34,7 @@ export const metadata: Metadata = {
     default: 'נירה גבאי - פסיכותרפיה והדרכת הורים',
     template: '%s | נירה גבאי'
   },
-  description: 'מטפלת בפסיכותרפיה ומדריכת הורים. מלווה מתבגרים, מבוגרים וזוגות בדרכם להגשמה עצמית. התמחות בטיפול זוגי, CBT וטיפול מיני.',
+  description: 'מטפלת בפסיכותרפיה ומדריכת הורים. מלווה מתבגרים, מבוגרים וזוגות בדרכם להגשמה עצמית. התמחות בטיפול זוגי, CBT והדרכת הורים.',
   keywords: [
     'פסיכותרפיה',
     'הדרכת הורים', 

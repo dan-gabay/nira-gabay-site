@@ -17,9 +17,36 @@ import type { Metadata } from 'next';
 // Refresh the latest-articles section every 5 minutes (ISR)
 export const revalidate = 300;
 
+// The homepage is where most organic visitors land, and almost all of them
+// searched Nira's name. The title keeps the name first for them and adds what
+// she does and where, which the root default ("נירה גבאי - פסיכותרפיה והדרכת
+// הורים") left out. Sex therapy stays out of the snippet: it is a discreet
+// service (lib/services.ts) and is not promoted.
+const HOME_TITLE = 'נירה גבאי - פסיכותרפיה, טיפול זוגי והדרכת הורים ליד ירושלים';
+const HOME_DESCRIPTION =
+  'נירה גבאי, מטפלת בפסיכותרפיה ומדריכת הורים. טיפול רגשי למבוגרים ולמתבגרים, טיפול זוגי, CBT והדרכת הורים בקליניקה במושב שואבה, רבע שעה מירושלים, וגם בזום.';
+
 export const metadata: Metadata = {
+  title: { absolute: HOME_TITLE },
+  description: HOME_DESCRIPTION,
   alternates: {
     canonical: 'https://www.niragabay.com',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'he_IL',
+    url: 'https://www.niragabay.com',
+    siteName: 'נירה גבאי',
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
+    images: [
+      {
+        url: 'https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png',
+        width: 1200,
+        height: 630,
+        alt: 'נירה גבאי - פסיכותרפיה והדרכת הורים',
+      },
+    ],
   },
 };
 

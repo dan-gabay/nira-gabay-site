@@ -205,7 +205,7 @@ export default async function ServicePage({
               className="text-2xl md:text-5xl font-bold mb-2 md:mb-4 leading-tight"
               style={{ color: MINT }}
             >
-              {service.title}
+              {service.h1 ?? service.title}
             </h1>
             <p className="text-sm md:text-lg text-white/80 leading-relaxed">
               {service.tagline}
