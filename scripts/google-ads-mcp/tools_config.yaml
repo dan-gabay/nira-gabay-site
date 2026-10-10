@@ -1,0 +1,16 @@
+# Read-only tool allowlist for the Google Ads MCP server.
+# Any namespace not listed here is disabled, so a future server release that
+# adds write tools does not expose them until they are added here on purpose.
+namespaces:
+  customers:
+    enabled: true
+    enabled_tools:
+      - list_accessible_customers: true
+  search:
+    enabled: true
+    enabled_tools:
+      - search: true
+  metadata:
+    enabled: true
+    enabled_tools:
+      - get_resource_metadata: true
