@@ -54,10 +54,10 @@ All get their token from `scripts/google-token.ts` (local `.env.local`, or proxy
 | Script | Needs | Does |
 |---|---|---|
 | `google-check.ts` | GSC_CLIENT_ID, GSC_CLIENT_SECRET, GSC_REFRESH_TOKEN, GA_PROPERTY_ID | Diagnostic. Exports `accessToken()`, which the GA scripts import. Run first. |
-| `gsc-query.ts` | + GSC_SITE_URL | `searchanalytics.query`. `[days] [dimensions]`, dimensions from query,page,date,device,country |
+| `gsc-query.ts` | + GSC_SITE_URL | `searchanalytics.query`. `[days] [dimensions]` or `--start/--end`, dimensions from query,page,date,device,country. Prints TOTAL and flags provisional days |
 | `gsc-report.ts` | GSC_SITE_URL | Summarised GSC report |
 | `ads-check.ts` | GA_PROPERTY_ID (+ the GSC trio, via google-check) | GA4 Paid Search only, by ad group and keyword |
-| `ga-query.ts` | GSC_CLIENT_ID, GSC_CLIENT_SECRET, GA_REFRESH_TOKEN, GA_PROPERTY_ID | Arbitrary GA4 report |
+| `ga-query.ts` | GSC_CLIENT_ID, GSC_CLIENT_SECRET, GA_REFRESH_TOKEN, GA_PROPERTY_ID | Arbitrary GA4 report. `[days]` or `--start/--end`; prints the window and a TOTAL row |
 | `ga-report.ts` / `ga-verify-setup.ts` | GA_PROPERTY_ID | Standard report / setup audit |
 | `ga-list-properties.ts` | GSC client pair + GA_REFRESH_TOKEN | Lists GA4 properties, to find the id |
 | `ga-setup.ts`, `ga-add-key-event.ts` | GA_PROPERTY_ID (+ auth) | **Write** to GA4 config. Ask before running. |
@@ -68,7 +68,16 @@ Examples:
 npx tsx scripts/gsc-query.ts 28 query,page   # 28 days, query and landing page
 npx tsx scripts/gsc-query.ts 90 query        # 90 days, queries only
 npx tsx scripts/ads-check.ts                 # GA4 paid search by ad group
+npx tsx scripts/ga-query.ts --start 2026-09-28 --end 2026-10-04 sessionDefaultChannelGroup sessions,keyEvents
 ```
+
+**Date windows.** `[days]` means the last N *complete* days ending yesterday
+in Asia/Jerusalem (`scripts/google-dates.ts`). For weekly or monthly reports
+pass `--start`/`--end` so every source covers the same days. Search Console
+dates are Pacific Time and the last ~3 days are provisional; `gsc-query.ts`
+says so and defaults to `--data-state all`. Before this, `ga-query.ts 28`
+silently covered 29 days plus today, which is how a 483-session breakdown was
+once compared with a 468-session total.
 
 Note the OAuth client is shared: `GSC_CLIENT_ID` and `GSC_CLIENT_SECRET` serve
 GA4 too, and only the refresh token differs (`GSC_REFRESH_TOKEN` against

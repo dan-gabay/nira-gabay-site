@@ -5,21 +5,29 @@
  * scripts/ga-list-properties.ts.
  *
  * Usage:
- *   npx tsx scripts/ga-query.ts [days] [dimensions] [metrics]
+ *   npx tsx scripts/ga-query.ts [days] [dimensions] [metrics] [--limit N]
+ *   npx tsx scripts/ga-query.ts --start YYYY-MM-DD --end YYYY-MM-DD [dimensions] [metrics]
  *
- *   days       lookback window, default 28
+ *   days       last N complete days ending yesterday, Asia/Jerusalem (default 28)
+ *   --start/--end  explicit inclusive window (use these for weekly/monthly reports)
  *   dimensions comma-separated GA4 dimension names (default: pagePath)
  *   metrics    comma-separated GA4 metric names
  *              (default: screenPageViews,activeUsers,engagementRate)
+ *   --limit    max rows (default 100)
+ *
+ * Prints the exact window and a TOTAL row computed by GA4, so a breakdown can
+ * be checked against the total. Windows are complete days only (see
+ * scripts/google-dates.ts).
  *
  * Examples:
  *   npx tsx scripts/ga-query.ts                                   # last 28 days, by page
  *   npx tsx scripts/ga-query.ts 90 date sessions,activeUsers       # daily trend, 90 days
- *   npx tsx scripts/ga-query.ts 28 sessionDefaultChannelGroup sessions,conversions
+ *   npx tsx scripts/ga-query.ts --start 2026-09-28 --end 2026-10-04 sessionDefaultChannelGroup sessions,keyEvents
  */
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import { accessTokenFor } from './google-token';
+import { parseWindowArgs, todayInReportTz } from './google-dates';
 
 dotenv.config({ path: path.join(process.cwd(), '.env.local') });
 
@@ -34,16 +42,11 @@ async function getAccessToken(): Promise<string> {
   return accessTokenFor('ga');
 }
 
-function isoDaysAgo(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return d.toISOString().slice(0, 10);
-}
-
 async function main() {
-  const days = Number(process.argv[2]) || 28;
-  const dimensions = (process.argv[3] || 'pagePath').split(',').map((d) => d.trim());
-  const metrics = (process.argv[4] || 'screenPageViews,activeUsers,engagementRate').split(',').map((m) => m.trim());
+  const { window, positionals, flags } = parseWindowArgs(process.argv.slice(2));
+  const dimensions = (positionals[0] || 'pagePath').split(',').map((d) => d.trim());
+  const metrics = (positionals[1] || 'screenPageViews,activeUsers,engagementRate').split(',').map((m) => m.trim());
+  const limit = Number(flags.limit) || 100;
 
   const accessToken = await getAccessToken();
 
@@ -55,10 +58,11 @@ async function main() {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      dateRanges: [{ startDate: isoDaysAgo(days), endDate: 'today' }],
+      dateRanges: [{ startDate: window.start, endDate: window.end }],
       dimensions: dimensions.map((name) => ({ name })),
       metrics: metrics.map((name) => ({ name })),
-      limit: 100,
+      metricAggregations: ['TOTAL'],
+      limit,
       orderBys: [{ metric: { metricName: metrics[0] }, desc: true }],
     }),
   });
@@ -70,20 +74,31 @@ async function main() {
 
   const data = (await res.json()) as {
     rows?: Array<{ dimensionValues: Array<{ value: string }>; metricValues: Array<{ value: string }> }>;
+    totals?: Array<{ metricValues: Array<{ value: string }> }>;
+    rowCount?: number;
+    metadata?: { samplingMetadatas?: unknown[]; subjectToThresholding?: boolean; timeZone?: string };
   };
 
+  const label = `${window.start} to ${window.end} (${window.days} days)`;
   if (!data.rows || data.rows.length === 0) {
-    console.log(`No data for property ${PROPERTY_ID} in the last ${days} days (dimensions: ${dimensions.join(', ')}).`);
+    console.log(`No data for property ${PROPERTY_ID}, ${label} (dimensions: ${dimensions.join(', ')}).`);
     return;
   }
 
-  console.log(`property ${PROPERTY_ID} | last ${days} days | dimensions: ${dimensions.join(', ')} | metrics: ${metrics.join(', ')}\n`);
+  console.log(`property ${PROPERTY_ID} | ${label}, ${data.metadata?.timeZone ?? 'property time zone'} | dimensions: ${dimensions.join(', ')} | metrics: ${metrics.join(', ')}`);
+  if (window.end >= todayInReportTz()) console.log('NOTE: window includes today - partial day, figures will change.');
+  if (data.metadata?.samplingMetadatas?.length) console.log('NOTE: GA4 sampled this report.');
+  if (data.metadata?.subjectToThresholding) console.log('NOTE: GA4 applied thresholding; small rows may be withheld.');
+  if (data.rowCount && data.rowCount > data.rows.length) console.log(`NOTE: showing ${data.rows.length} of ${data.rowCount} rows (raise --limit).`);
+  console.log('');
   console.log(dimensions.join('\t') + '\t' + metrics.join('\t'));
   for (const row of data.rows) {
     const dims = row.dimensionValues.map((v) => v.value).join('\t');
     const mets = row.metricValues.map((v) => v.value).join('\t');
     console.log(`${dims}\t${mets}`);
   }
+  const totals = data.totals?.[0]?.metricValues;
+  if (totals) console.log(`${dimensions.map((_, i) => (i === 0 ? 'TOTAL' : '')).join('\t')}\t${totals.map((v) => v.value).join('\t')}`);
 }
 
 main().catch((err) => {
