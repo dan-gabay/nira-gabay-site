@@ -30,7 +30,7 @@ async function main() {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!sitesRes.ok) {
-    console.log(`search console         FAILED (${sitesRes.status}) - is the Search Console API enabled on the Cloud project?`);
+    console.log(`search console         FAILED (${sitesRes.status}) - token lacks the Search Console scope, or the API is not enabled on the Cloud project`);
   } else {
     const j = (await sitesRes.json()) as {
       siteEntry?: Array<{ siteUrl: string; permissionLevel: string }>;

@@ -13,13 +13,20 @@
  *          and refresh token stored as network secrets for the token host.
  *          Only GSC_CLIENT_ID (public) is needed. See docs/google-ads-mcp-setup.md.
  *
- * GOOGLE_TOKEN_URL (not a secret) picks the token endpoint, default
- * oauth2.googleapis.com. It exists so a second network secret can sit on
- * another Google token host without touching the Google Ads one.
+ * Always Google's documented token endpoint (oauth2.googleapis.com), the
+ * same host and network secret the Google Ads MCP uses, so one combined
+ * refresh token (adwords + webmasters.readonly + analytics.readonly) serves
+ * all three.
+ *
+ * In proxy mode the refresh goes through curl, which honours HTTPS_PROXY.
+ * Node's built-in fetch ignores it unless NODE_USE_ENV_PROXY=1 is set for the
+ * whole process, and a request that skips the proxy reaches Google with the
+ * bare placeholder.
  *
  * Never prints a token. /manage on Vercel does not use this file
  * (lib/google/auth.ts reads its own env vars there).
  */
+import { execFile } from 'child_process';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
@@ -27,15 +34,7 @@ dotenv.config({ path: path.join(process.cwd(), '.env.local') });
 
 export const PROXY_PLACEHOLDER = 'INJECTED_BY_AGENT_PROXY';
 
-const DEFAULT_TOKEN_URL = 'https://oauth2.googleapis.com/token';
-
-// Google's refresh-token endpoints. Anything else is refused so a typo can
-// never send the request (and the injected secret) somewhere unexpected.
-const ALLOWED_TOKEN_URLS = [
-  DEFAULT_TOKEN_URL,
-  'https://accounts.google.com/o/oauth2/token',
-  'https://www.googleapis.com/oauth2/v4/token',
-];
+export const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 
 export const SCOPES = {
   ads: 'https://www.googleapis.com/auth/adwords',
@@ -55,18 +54,13 @@ export function tokenRequest(api: GoogleApi, env: NodeJS.ProcessEnv = process.en
   const clientId = env.GSC_CLIENT_ID;
   if (!clientId) throw new Error('Missing GSC_CLIENT_ID (public OAuth client id)');
 
-  const url = env.GOOGLE_TOKEN_URL || DEFAULT_TOKEN_URL;
-  if (!ALLOWED_TOKEN_URLS.includes(url)) {
-    throw new Error(`GOOGLE_TOKEN_URL must be one of: ${ALLOWED_TOKEN_URLS.join(', ')}`);
-  }
-
   const secret = env.GSC_CLIENT_SECRET;
   const refresh = api === 'ga' ? env.GA_REFRESH_TOKEN || env.GSC_REFRESH_TOKEN : env.GSC_REFRESH_TOKEN;
   const local = Boolean(secret && refresh);
 
   return {
     mode: local ? 'local' : 'proxy',
-    url,
+    url: TOKEN_URL,
     body: new URLSearchParams({
       client_id: clientId,
       client_secret: local ? secret! : PROXY_PLACEHOLDER,
@@ -76,31 +70,44 @@ export function tokenRequest(api: GoogleApi, env: NodeJS.ProcessEnv = process.en
   };
 }
 
-export type GoogleToken = { token: string; scopes: string[]; mode: 'local' | 'proxy' };
+type TokenResponse = { access_token?: string; scope?: string; error?: string; error_description?: string };
 
-export async function googleToken(api: GoogleApi, opts: { requireScope?: boolean } = {}): Promise<GoogleToken> {
-  const req = tokenRequest(api);
-  // Node's built-in fetch ignores HTTPS_PROXY unless told otherwise, and a
-  // request that skips the proxy reaches Google with the bare placeholder.
-  if (req.mode === 'proxy' && (process.env.HTTPS_PROXY || process.env.https_proxy) && !process.env.NODE_USE_ENV_PROXY) {
-    throw new Error('cloud session: run with NODE_USE_ENV_PROXY=1 so the request goes through the agent proxy');
-  }
+async function viaFetch(req: TokenRequest): Promise<TokenResponse> {
   const res = await fetch(req.url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: req.body,
   });
-  const j = (await res.json()) as {
-    access_token?: string;
-    scope?: string;
-    error?: string;
-    error_description?: string;
-  };
+  return (await res.json()) as TokenResponse;
+}
+
+// Arguments carry only the public client id and placeholders; the response
+// (with the access token) stays in memory.
+function viaCurl(req: TokenRequest): Promise<TokenResponse> {
+  const args = ['-sS', '--max-time', '30', '-X', 'POST', req.url];
+  for (const [k, v] of req.body) args.push('--data-urlencode', `${k}=${v}`);
+  return new Promise((resolve, reject) => {
+    execFile('curl', args, (err, stdout) => {
+      if (err) return reject(new Error(`token refresh failed (proxy): curl ${err.message.split('\n')[0]}`));
+      try {
+        resolve(JSON.parse(stdout) as TokenResponse);
+      } catch {
+        reject(new Error('token refresh failed (proxy): response was not JSON'));
+      }
+    });
+  });
+}
+
+export type GoogleToken = { token: string; scopes: string[]; mode: 'local' | 'proxy' };
+
+export async function googleToken(api: GoogleApi, opts: { requireScope?: boolean } = {}): Promise<GoogleToken> {
+  const req = tokenRequest(api);
+  const j = req.mode === 'proxy' ? await viaCurl(req) : await viaFetch(req);
   if (!j.access_token) {
-    const why = `${j.error || res.status}${j.error_description ? `: ${j.error_description}` : ''}`;
+    const why = `${j.error || 'no access_token'}${j.error_description ? `: ${j.error_description}` : ''}`;
     const hint =
       req.mode === 'proxy'
-        ? ' - no local secret, so this relied on a network secret for that token host; check it exists in the cloud environment'
+        ? ' - no local secret, so this relied on a network secret for that token host; check it exists in the cloud environment for oauth2.googleapis.com'
         : '';
     throw new Error(`token refresh failed (${req.mode}): ${why}${hint}`);
   }

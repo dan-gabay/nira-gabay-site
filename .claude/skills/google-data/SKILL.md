@@ -11,7 +11,7 @@ the fastest way to waste a turn is to reason about that instead of checking.
 ## Check first, always
 
 ```bash
-for v in GSC_CLIENT_ID GSC_CLIENT_SECRET GSC_REFRESH_TOKEN GA_REFRESH_TOKEN GA_PROPERTY_ID GSC_SITE_URL GOOGLE_TOKEN_URL NODE_USE_ENV_PROXY; do
+for v in GSC_CLIENT_ID GSC_CLIENT_SECRET GSC_REFRESH_TOKEN GA_REFRESH_TOKEN GA_PROPERTY_ID GSC_SITE_URL; do
   [ -n "${!v}" ] && echo "$v set" || echo "$v MISSING"
 done; ls .env.local 2>/dev/null || echo "no .env.local"
 ```
@@ -81,10 +81,11 @@ container never has it and nothing carries over between sessions.
 
 Cloud sessions use network secrets, never env vars, for the client secret and
 refresh token. The setup (one combined adwords + webmasters.readonly +
-analytics.readonly token on the existing OAuth client, staged on the
-`accounts.google.com` token host so the Google Ads secret is untouched) is in
-`docs/google-data-cloud-setup.md`. `GA_PROPERTY_ID`, `GSC_SITE_URL`,
-`GOOGLE_TOKEN_URL` and `NODE_USE_ENV_PROXY=1` are plain, non-secret env vars.
+analytics.readonly token on the existing OAuth client, in the same
+`oauth2.googleapis.com` network secret the Google Ads MCP uses) is in
+`docs/google-data-cloud-setup.md`. `GA_PROPERTY_ID=544891595` (the property;
+400597258 is the account id) and `GSC_SITE_URL=sc-domain:niragabay.com` are
+plain, non-secret env vars.
 
 **Never ask for a token or secret to be pasted into the chat**, and never print
 one. If `google-check.ts` says a scope is "no", the token needs re-granting by
@@ -95,9 +96,9 @@ localhost:53682) and `google-auth-paste.ts` still mint local tokens into
 `.env.local`.
 
 Network is not the blocker: outbound to `oauth2.googleapis.com`,
-`accounts.google.com`, `searchconsole.googleapis.com` and `www.googleapis.com`
-is open. Node's fetch only uses the agent proxy with `NODE_USE_ENV_PROXY=1`;
-without it the scripts stop with a message saying so.
+`searchconsole.googleapis.com` and `www.googleapis.com` is open. In proxy mode
+the token refresh goes through `curl` on purpose: Node's built-in fetch skips
+the agent proxy, so the placeholder would reach Google unswapped.
 
 ## Gotchas
 

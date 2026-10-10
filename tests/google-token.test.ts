@@ -4,7 +4,7 @@
 //
 // The point is the mode switch. Locally the real secret goes in the body; in a
 // cloud session the body must carry only the proxy placeholder, so no secret
-// ever exists in the VM, and the request may only go to a Google token host.
+// ever exists in the VM, and the request only goes to Google's documented token endpoint.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -41,10 +41,12 @@ test('proxy mode: a secret without a refresh token is not sent half-filled', () 
   assert.equal(req.body.get('client_secret'), PROXY_PLACEHOLDER);
 });
 
-test('GOOGLE_TOKEN_URL: other Google token hosts allowed, anything else refused', () => {
-  const url = 'https://accounts.google.com/o/oauth2/token';
-  assert.equal(tokenRequest('gsc', { GSC_CLIENT_ID: CLIENT, GOOGLE_TOKEN_URL: url }).url, url);
-  assert.throws(() => tokenRequest('gsc', { GSC_CLIENT_ID: CLIENT, GOOGLE_TOKEN_URL: 'https://example.com/token' }));
+test('always the documented token endpoint, in both modes', () => {
+  assert.equal(tokenRequest('gsc', { GSC_CLIENT_ID: CLIENT }).url, 'https://oauth2.googleapis.com/token');
+  assert.equal(
+    tokenRequest('ga', { GSC_CLIENT_ID: CLIENT, GOOGLE_TOKEN_URL: 'https://example.com/token' }).url,
+    'https://oauth2.googleapis.com/token',
+  );
 });
 
 test('client id is required', () => {
