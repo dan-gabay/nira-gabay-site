@@ -2,9 +2,10 @@
 # Starts the official Google Ads MCP server (googleads/google-ads-mcp) over stdio,
 # limited to its read-only tools.
 #
-# This script and the files it writes hold no secrets. The OAuth client secret,
-# refresh token and developer token are stored as network secrets on the cloud
-# environment, and the agent proxy attaches them to requests outside the VM.
+# This script and the files it writes hold no secrets. The OAuth client secret
+# and refresh token are stored as network secrets on the cloud environment, and
+# the agent proxy attaches them to requests outside the VM. No developer token
+# is used: Google sunset them on 2026-09-09 and the API ignores the header.
 # The ADC file below carries only the public client id and placeholders.
 # See docs/google-ads-mcp-setup.md.
 set -euo pipefail
@@ -30,8 +31,8 @@ with open(sys.argv[2], "w") as f:
     }, f)
 PY
 
-# Keep the server in stdio mode and keep any stray token out of the process:
-# the developer token is attached by the proxy, never read from the environment.
+# Keep the server in stdio mode, and keep any stray developer token out of the
+# process (no longer needed; access is tied to the Cloud project instead).
 unset GOOGLE_ADS_DEVELOPER_TOKEN GOOGLE_ADS_MCP_OAUTH_CLIENT_ID GOOGLE_ADS_MCP_OAUTH_CLIENT_SECRET
 export GOOGLE_APPLICATION_CREDENTIALS="$adc"
 export GOOGLE_ADS_MCP_TOOLS_CONFIG="$here/tools_config.yaml"
