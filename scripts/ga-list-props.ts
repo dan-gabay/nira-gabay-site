@@ -19,7 +19,7 @@ type Summary = {
 };
 
 async function main() {
-  const token = await accessToken();
+  const token = await accessToken('ga');
   const res = await fetch(
     'https://analyticsadmin.googleapis.com/v1beta/accountSummaries?pageSize=200',
     { headers: { Authorization: `Bearer ${token}` } },

@@ -47,7 +47,7 @@ async function run(token: string, dimensions: string[], metrics: string[]) {
 
 async function main() {
   if (!PROP) throw new Error('GA_PROPERTY_ID not set in .env.local');
-  const token = await accessToken();
+  const token = await accessToken('ga');
   console.log(`\nPaid Search only · property ${PROP} · last ${DAYS} days\n`);
 
   const groups: Array<[string, string[], string[]]> = [

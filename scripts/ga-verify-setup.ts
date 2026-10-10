@@ -34,7 +34,7 @@ async function get<T>(url: string, token: string): Promise<T | { __error: string
 
 async function main() {
   if (!PROP) throw new Error('GA_PROPERTY_ID not set');
-  const token = await accessToken();
+  const token = await accessToken('ga');
   const base = `https://analyticsadmin.googleapis.com/v1beta/properties/${PROP}`;
 
   // ── key events ────────────────────────────────────────────────────

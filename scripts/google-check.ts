@@ -8,36 +8,22 @@
  *
  *   npx tsx scripts/google-check.ts
  */
-import * as dotenv from 'dotenv';
-import * as path from 'path';
+import { googleToken, SCOPES, type GoogleApi } from './google-token';
 
-dotenv.config({ path: path.join(process.cwd(), '.env.local') });
-
-export async function accessToken(): Promise<string> {
-  const { GSC_CLIENT_ID, GSC_CLIENT_SECRET, GSC_REFRESH_TOKEN } = process.env;
-  if (!GSC_CLIENT_ID || !GSC_CLIENT_SECRET || !GSC_REFRESH_TOKEN) {
-    throw new Error('Missing GSC_CLIENT_ID / GSC_CLIENT_SECRET / GSC_REFRESH_TOKEN in .env.local');
-  }
-  const r = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: GSC_CLIENT_ID,
-      client_secret: GSC_CLIENT_SECRET,
-      refresh_token: GSC_REFRESH_TOKEN,
-      grant_type: 'refresh_token',
-    }),
-  });
-  const j = (await r.json()) as { access_token?: string; error_description?: string; error?: string };
-  if (!j.access_token) {
-    throw new Error(`token refresh failed: ${j.error_description || j.error || r.status}`);
-  }
-  return j.access_token;
+// Kept for the scripts that import it. Default stays Search Console, as before;
+// GA4 readers pass 'ga'. Works locally (.env.local) and in cloud sessions
+// (network secrets), see scripts/google-token.ts.
+export async function accessToken(api: GoogleApi = 'gsc'): Promise<string> {
+  return (await googleToken(api)).token;
 }
 
 async function main() {
-  const token = await accessToken();
-  console.log('token refresh          OK');
+  const { token, scopes, mode } = await googleToken('gsc', { requireScope: false });
+  console.log(`token refresh          OK (${mode})`);
+  // Scope names only - never the token.
+  for (const [name, scope] of Object.entries(SCOPES)) {
+    console.log(`  scope ${name.padEnd(16)} ${scopes.includes(scope) ? 'yes' : 'no'}`);
+  }
 
   // ── Search Console ────────────────────────────────────────────────
   const sitesRes = await fetch('https://www.googleapis.com/webmasters/v3/sites', {
@@ -60,7 +46,7 @@ async function main() {
   // ── GA4 ───────────────────────────────────────────────────────────
   const prop = process.env.GA_PROPERTY_ID;
   if (!prop) {
-    console.log('ga4                    SKIPPED - GA_PROPERTY_ID not set in .env.local');
+    console.log('ga4                    SKIPPED - GA_PROPERTY_ID not set (.env.local or environment)');
     return;
   }
   const gaRes = await fetch(
