@@ -11,15 +11,19 @@ the fastest way to waste a turn is to reason about that instead of checking.
 ## Check first, always
 
 ```bash
-for v in GSC_CLIENT_ID GSC_CLIENT_SECRET GSC_REFRESH_TOKEN GA_REFRESH_TOKEN GA_PROPERTY_ID; do
+for v in GSC_CLIENT_ID GSC_CLIENT_SECRET GSC_REFRESH_TOKEN GA_REFRESH_TOKEN GA_PROPERTY_ID GSC_SITE_URL; do
   [ -n "${!v}" ] && echo "$v set" || echo "$v MISSING"
 done; ls .env.local 2>/dev/null || echo "no .env.local"
 ```
 
-If anything is set, run `npx tsx scripts/google-check.ts`. It separates the
-three failures that all look identical in a report - a broken token, an
-unverified property, and genuinely no data - and it is the right first move
-whenever a result looks empty or wrong.
+Then run `npx tsx scripts/google-check.ts`. In a cloud session no secret is in
+the VM: with only `GSC_CLIENT_ID` set, the scripts run in **proxy mode** and the
+agent proxy injects the client secret and refresh token from network secrets
+(`scripts/google-token.ts`, `docs/google-data-cloud-setup.md`). The check prints
+the mode and which scopes the token carries (ads / gsc / ga, yes or no). It
+separates the failures that all look identical in a report - a missing secret,
+a token without the scope, an unverified property, and genuinely no data - and
+it is the right first move whenever a result looks empty or wrong.
 
 ## Which source answers which question
 
@@ -45,7 +49,7 @@ Two traps worth naming, because both have been hit:
 
 ## The scripts
 
-All read `.env.local` via dotenv, all are read-only unless noted.
+All get their token from `scripts/google-token.ts` (local `.env.local`, or proxy mode in a cloud session), all are read-only unless noted. The "Needs" column is the local mode; in proxy mode only `GSC_CLIENT_ID` plus the non-secret ids are needed.
 
 | Script | Needs | Does |
 |---|---|---|
@@ -75,24 +79,26 @@ Search Console, `GA_REFRESH_TOKEN` against the GA4 Data API).
 This runs in a cloud container. `.env.local` is gitignored, so a fresh
 container never has it and nothing carries over between sessions.
 
-Ask the owner to add the variables in the environment settings - the cloud
-environment menu in the session title bar, then Edit. **Never ask for a token
-to be pasted into the chat.** A new session picks them up.
+Cloud sessions use network secrets, never env vars, for the client secret and
+refresh token. The setup (one combined adwords + webmasters.readonly +
+analytics.readonly token on the existing OAuth client, in the same
+`oauth2.googleapis.com` network secret the Google Ads MCP uses) is in
+`docs/google-data-cloud-setup.md`. `GA_PROPERTY_ID=544891595` (the property;
+400597258 is the account id) and `GSC_SITE_URL=sc-domain:niragabay.com` are
+plain, non-secret env vars.
 
-Two auth routes to the refresh token, and the choice matters here:
+**Never ask for a token or secret to be pasted into the chat**, and never print
+one. If `google-check.ts` says a scope is "no", the token needs re-granting by
+the owner; do not work around it.
 
-- `gsc-auth.ts` / `ga-auth.ts` open a loopback listener on localhost:53682.
-  That only works when the browser and the shell are the same machine, so it
-  works on the owner's computer and never in the container.
-- `google-auth-paste.ts` exists for the split case: step `url` prints a consent
-  URL, the owner approves, the redirect to localhost fails (expected), and the
-  code sits in the address bar for step `exchange`. Usable from the container
-  with only the client id and secret, but it routes a credential through the
-  chat - prefer having the owner run the loopback script locally and copy the
-  token into the environment settings.
+For the owner's own computer, `gsc-auth.ts` / `ga-auth.ts` (loopback on
+localhost:53682) and `google-auth-paste.ts` still mint local tokens into
+`.env.local`.
 
 Network is not the blocker: outbound to `oauth2.googleapis.com`,
-`searchconsole.googleapis.com` and `www.googleapis.com` is open.
+`searchconsole.googleapis.com` and `www.googleapis.com` is open. In proxy mode
+the token refresh goes through `curl` on purpose: Node's built-in fetch skips
+the agent proxy, so the placeholder would reach Google unswapped.
 
 ## Gotchas
 

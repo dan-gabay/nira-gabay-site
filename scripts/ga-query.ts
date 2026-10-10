@@ -19,35 +19,19 @@
  */
 import * as dotenv from 'dotenv';
 import * as path from 'path';
+import { accessTokenFor } from './google-token';
 
 dotenv.config({ path: path.join(process.cwd(), '.env.local') });
 
-const CLIENT_ID = process.env.GSC_CLIENT_ID;
-const CLIENT_SECRET = process.env.GSC_CLIENT_SECRET;
-const REFRESH_TOKEN = process.env.GA_REFRESH_TOKEN;
 const PROPERTY_ID = process.env.GA_PROPERTY_ID;
 
-if (!CLIENT_ID || !CLIENT_SECRET || !REFRESH_TOKEN) {
-  throw new Error('Missing GSC_CLIENT_ID / GSC_CLIENT_SECRET / GA_REFRESH_TOKEN in .env.local - run scripts/ga-auth.ts first');
-}
 if (!PROPERTY_ID) {
   throw new Error('Missing GA_PROPERTY_ID in .env.local - run scripts/ga-list-properties.ts to find it');
 }
 
+// Local .env.local or cloud network secrets - see scripts/google-token.ts.
 async function getAccessToken(): Promise<string> {
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: CLIENT_ID!,
-      client_secret: CLIENT_SECRET!,
-      refresh_token: REFRESH_TOKEN!,
-      grant_type: 'refresh_token',
-    }),
-  });
-  const data = (await res.json()) as { access_token?: string; error?: string; error_description?: string };
-  if (!data.access_token) throw new Error(`Token refresh failed: ${data.error} ${data.error_description || ''}`);
-  return data.access_token;
+  return accessTokenFor('ga');
 }
 
 function isoDaysAgo(days: number): string {

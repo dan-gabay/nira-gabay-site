@@ -78,3 +78,8 @@ Verified 2026-10-10 through the MCP server over stdio:
 
 1. `customers_list_accessible_customers` should list `9813608349`.
 2. `search_search` on `customer` with `customer.descriptive_name` for that ID.
+
+## Search Console and GA4
+
+The same OAuth client also serves the Search Console and GA4 scripts in cloud
+sessions, through a combined refresh token. See `docs/google-data-cloud-setup.md`.

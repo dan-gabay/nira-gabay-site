@@ -83,7 +83,7 @@ function table(
 
 async function main() {
   if (!PROP) throw new Error('GA_PROPERTY_ID not set in .env.local');
-  const token = await accessToken();
+  const token = await accessToken('ga');
   console.log(`\nGA4 · property ${PROP} · last ${DAYS} days`);
 
   const totals = await run(token, [], ['sessions', 'totalUsers', 'screenPageViews', 'averageSessionDuration'], 1);
