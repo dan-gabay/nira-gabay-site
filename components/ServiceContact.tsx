@@ -84,7 +84,7 @@ export default function ServiceContact({
               <div className="relative pt-5 md:pt-6">
                 <ContactForm
                   sourceId={`service_${serviceSlug}`}
-                  title=""
+                  title="השאירו פרטים ואחזור אליכם"
                   subtitle=""
                   variant="onDark"
                 />
