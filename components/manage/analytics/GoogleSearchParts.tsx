@@ -5,7 +5,7 @@ import { StackedBars } from '../Charts';
 import { SERVICES } from '@/lib/services';
 import { TOPICS } from '@/lib/topics';
 import type { GoogleSearch } from '@/lib/google/types';
-import { CardPart, Empty, Note, ShowMore, Stat, StatGrid, SubHead, StackBar } from './ui';
+import { CardPart, Empty, Explain, ShowMore, Stat, StatGrid, SubHead, StackBar } from './ui';
 
 // The Search Console half of the organic card: what Google showed the site
 // for, live from /api/manage/google/search. The visits half above it is ours;
@@ -231,15 +231,15 @@ export default function GoogleSearchParts({
       <CardPart>
         <SubHead title="גוגל כבר מכירה, אבל רחוק" aside="מקום 15 ומטה" />
         <FarBehind data={data} articleTitles={articleTitles} />
-        <Note>
+        <Explain>
           חיפושים שגוגל כבר מציגה בהם את האתר, אבל רחוק מהעמוד הראשון. חיזוק העמוד שגוגל בחרה הוא הדרך הקצרה לעלות בהם.
           כשכמה עמודים מתחרים על אותו חיפוש, גוגל לא יודעת איזה מהם להציג.
-        </Note>
+        </Explain>
       </CardPart>
-      <Note>
+      <Explain>
         מקור: Search Console. הופעה היא פעם שהאתר הוצג בתוצאות, לא ביקור. הנתונים מגיעים באיחור של יומיים-שלושה,
         וחיפושים נדירים מוסתרים על ידי גוגל.
-      </Note>
+      </Explain>
     </>
   );
 }

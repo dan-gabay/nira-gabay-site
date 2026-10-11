@@ -2,7 +2,7 @@
 
 import { SplitBar } from './Charts';
 import { enquiries } from '@/lib/heCount';
-import { Empty, MIN_FOR_RATE, Note, one, wholePct } from './analytics/ui';
+import { Empty, MIN_FOR_RATE, Explain, one, wholePct } from './analytics/ui';
 
 // Is anyone coming back? Every other card treats a visit as the unit and so
 // cannot tell forty people who came once from ten who came four times.
@@ -122,10 +122,10 @@ export function ReturningVisitors({
       {/* Said plainly, because the gap is real and will stay real for a while:
           the counter only exists on browsers that have been here since it was
           added, and nothing can be back-filled. */}
-      <Note>
+      <Explain>
         נמדד על {known.toLocaleString('he-IL')} מתוך {totalVisits.toLocaleString('he-IL')} ביקורים בטווח.
         הספירה היא לפי דפדפן, לא לפי אדם: מי שמנקה היסטוריה או מגיע ממכשיר אחר נספר כחדש, ואין כאן כתובות IP.
-      </Note>
+      </Explain>
     </div>
   );
 }

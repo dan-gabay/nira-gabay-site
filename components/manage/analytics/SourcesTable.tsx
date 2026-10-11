@@ -5,7 +5,7 @@ import { ChevronDown } from 'lucide-react';
 import { SOURCE_SERIES } from '@/components/manage/Charts';
 import { GROUP_LABELS, type TrafficRow } from '@/components/manage/TrafficSources';
 import { enquiries as enquiryCount } from '@/lib/heCount';
-import { Empty, MIN_FOR_RATE, Note, one, pct, rateText } from './ui';
+import { Empty, MIN_FOR_RATE, Explain, one, pct, rateText } from './ui';
 import { pageName } from './labels';
 import type { SiteBehavior, SourceRow } from './types';
 
@@ -230,10 +230,10 @@ export function SourcesTable({
         })}
       </ul>
 
-      <Note>
+      <Explain>
         הממוצע של האתר בטווח הזה: {rateText(siteConversions, siteVisits)} מהביקורים הסתיימו בפנייה. שיעורים מוצגים רק
         למקור עם {MIN_FOR_RATE} ביקורים ומעלה. לחיצה על מקור פותחת את הפירוט שלו.
-      </Note>
+      </Explain>
     </div>
   );
 }

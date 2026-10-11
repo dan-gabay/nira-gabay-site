@@ -34,10 +34,10 @@ import type { EnquiryRow, Payload, SiteBehavior } from '@/components/manage/anal
 //   3. מקורות     - which traffic is worth having.
 //   4. גוגל       - what an enquiry from the ads costs, and where organic
 //                   search is missing (live from Google, see lib/google).
-//   5. כלי AI     - whether AI tools read the site, and answer from it.
-//   6. עמודים     - which pages turn a visit into an enquiry, and how deep
+//   5. עמודים     - which pages turn a visit into an enquiry, and how deep
 //                   a visit goes.
-//   7. מאמרים     - whether the content is read.
+//   6. מאמרים     - whether the content is read.
+//   7. כלי AI     - whether AI tools read the site, and answer from it.
 //   8. קהל        - who the visitors are and when they come.
 //
 // It replaced about twenty flat cards in which the same data appeared up to
@@ -377,18 +377,6 @@ function Dashboard({
         </Section>
       )}
 
-      {show('ai') && (
-        <Section id="ai" title="כלי AI" question="האם כלים כמו ChatGPT קוראים את האתר, ועונים ממנו.">
-          {behaviorFailed ? (
-            <Card>
-              <Empty>לא הצלחתי לטעון את הנתונים של כלי AI.</Empty>
-            </Card>
-          ) : (
-            <AiSection data={behavior} buckets={buckets} prevComplete={aiPrevComplete} articleTitles={articleTitles} />
-          )}
-        </Section>
-      )}
-
       {show('pages') && (
         <Section id="pages" title="עמודים" question="אילו עמודים הופכים ביקור לפנייה, וכמה עמוק הולך ביקור.">
           <PagesTable data={data} articleTitles={articleTitles} />
@@ -405,6 +393,18 @@ function Dashboard({
               <Empty>טוען...</Empty>
             )}
           </Card>
+        </Section>
+      )}
+
+      {show('ai') && (
+        <Section id="ai" title="כלי AI" question="האם כלים כמו ChatGPT קוראים את האתר, ועונים ממנו.">
+          {behaviorFailed ? (
+            <Card>
+              <Empty>לא הצלחתי לטעון את הנתונים של כלי AI.</Empty>
+            </Card>
+          ) : (
+            <AiSection data={behavior} buckets={buckets} prevComplete={aiPrevComplete} articleTitles={articleTitles} />
+          )}
         </Section>
       )}
 
