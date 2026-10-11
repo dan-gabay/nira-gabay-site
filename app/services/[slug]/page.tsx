@@ -403,7 +403,6 @@ export default async function ServicePage({
         serviceSlug={service.slug}
         serviceLabel={service.navLabel}
         waHref={waHref}
-        discreet={service.discreet}
       />
 
       {/* ───────── Supporting articles ─────────

@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import Link from 'next/link';
 import ContactForm from '@/components/ContactForm';
 import ServiceAltChannels from '@/components/ServiceAltChannels';
 import { FORM_BG, TEAL_DARK } from '@/lib/palette';
@@ -16,7 +15,7 @@ export const ROLE = 'מטפלת בפסיכותרפיה ומדריכת הורים
 export const PORTRAIT = '/images/hero-mobile.jpg';
 
 /**
- * The closing block on a service page: who she is, and a form.
+ * The closing block on a service page: the form, with WhatsApp and phone.
  *
  * Built from what the numbers said. Across 34 sessions that reached a service
  * page, 65% read to 90% depth and not one clicked the page's own call to
@@ -28,8 +27,9 @@ export const PORTRAIT = '/images/hero-mobile.jpg';
  * Two other things the page never had:
  *
  * A face. You are choosing a person to tell the hardest things in your life
- * to, and the service pages showed only text. The article pages have carried
- * her photo all along; this is the page where it matters more.
+ * to, and the service pages showed only text. Her photo, name and role now
+ * sit near the top of the page (ServiceIntroContact), where most visitors
+ * still are, and are not repeated here.
  *
  * A second channel, demoted. The only ask used to be WhatsApp, which hands
  * your name and phone number to a stranger before you have spoken - a real
@@ -48,12 +48,10 @@ export default function ServiceContact({
   serviceSlug,
   serviceLabel,
   waHref,
-  discreet,
 }: {
   serviceSlug: string;
   serviceLabel: string;
   waHref: string;
-  discreet?: boolean;
 }) {
   // Every other content section on this page is plain white; stone-50 made
   // this one read as a different band rather than the page's last block. The
@@ -79,40 +77,11 @@ export default function ServiceContact({
                 sizes="(max-width: 768px) 100vw, 700px"
               />
 
-              <div className="relative px-5 pt-6 md:px-10 md:pt-8">
-                {/* The portrait and the name go to /about. Someone about to
-                    type why they need therapy is entitled to read who they are
-                    typing it to first, and until now this was the one place on
-                    the page where her face appeared and led nowhere. */}
-                <Link
-                  href="/about"
-                  aria-label="קצת עליי - נירה גבאי"
-                  className="group inline-flex items-center gap-3 md:gap-4 rounded-2xl -m-1 p-1 outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/80"
-                >
-                  <Image
-                    src={PORTRAIT}
-                    alt={`נירה גבאי, ${ROLE}`}
-                    width={72}
-                    height={72}
-                    loading="lazy"
-                    className="w-14 h-14 md:w-[72px] md:h-[72px] rounded-full object-cover flex-shrink-0 border-2 border-white/70 transition-colors group-hover:border-white"
-                  />
-                  <div className="text-white">
-                    <p className="text-base md:text-xl font-bold leading-snug underline decoration-white/40 decoration-1 underline-offset-4 transition-colors group-hover:decoration-white">
-                      נירה גבאי
-                    </p>
-                    <p className="text-xs md:text-sm text-white/80 leading-relaxed">{ROLE}</p>
-                  </div>
-                </Link>
-
-                <p className="text-sm md:text-base text-white/90 leading-relaxed mt-4 md:mt-5">
-                  {discreet
-                    ? 'אפשר לכתוב לי כאן בכמה מילים, בלי להיכנס לפרטים. אחזור אליכם בדיסקרטיות מלאה.'
-                    : `אפשר לכתוב לי כאן בכמה מילים על מה שמביא אתכם, ואחזור אליכם. גם אם עדיין לא ברור לכם אם ${serviceLabel} הוא מה שאתם מחפשים.`}
-                </p>
-              </div>
-
-              <div className="relative">
+              {/* No portrait, name or "write to me" line here: they open the
+                  page instead, in ServiceIntroContact right after the intro,
+                  where most visitors still are. Repeating them here read as a
+                  duplicate. */}
+              <div className="relative pt-5 md:pt-6">
                 <ContactForm
                   sourceId={`service_${serviceSlug}`}
                   title=""
