@@ -6,14 +6,14 @@ import { FORM_BG, TEAL_DARK } from '@/lib/palette';
 
 // The same wording the hero and the footer use. One phrase for who she is,
 // not three variants across the site.
-const ROLE = 'מטפלת בפסיכותרפיה ומדריכת הורים';
+export const ROLE = 'מטפלת בפסיכותרפיה ומדריכת הורים';
 
 // The same file the home page's mobile hero uses. It is already a tight
 // 495x505 headshot, so a circular crop is a near-exact fit and needs no
 // repositioning - and being local it actually loads, unlike the blob-hosted
 // profile.png on /clinic. Replacing that one file changes her photo in both
 // places, which is the behaviour you want from a portrait.
-const PORTRAIT = '/images/hero-mobile.jpg';
+export const PORTRAIT = '/images/hero-mobile.jpg';
 
 /**
  * The closing block on a service page: who she is, and a form.
@@ -59,7 +59,7 @@ export default function ServiceContact({
   // this one read as a different band rather than the page's last block. The
   // card carries the colour, the section does not.
   return (
-    <section className="bg-white py-10 md:py-16">
+    <section id="service-contact" className="bg-white py-10 md:py-16 scroll-mt-24">
         <div className="container mx-auto px-4 md:px-8">
           {/* Matches the reading column above it rather than sitting narrower than
                 everything else on the page - the card was 521px against 695px of
