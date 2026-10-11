@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import PageHeader from '@/components/manage/PageHeader';
 import {
   SourceBars,
   SOURCE_SERIES,
@@ -154,16 +155,11 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6 md:space-y-10">
-      <div>
-        <h1 className="text-lg md:text-2xl font-bold text-stone-800">נתוני האתר</h1>
-        <p className="text-[12px] md:text-sm text-stone-500 mt-0.5">
-          נמדד ישירות באתר, בלי גוגל אנליטיקס. אנשים בלבד, בלי בוטים.
-        </p>
-      </div>
+      <PageHeader title="נתונים" sub="נמדד ישירות באתר, בלי גוגל אנליטיקס. אנשים בלבד, בלי בוטים." />
 
       {/* The range and the tabs stay under the admin header while scrolling:
           they are the only two controls on the page. */}
-      <div className="sticky top-14 md:top-16 z-30 -mx-4 md:-mx-6 px-4 md:px-6 py-2 bg-stone-100/95 backdrop-blur-sm border-b border-stone-200/80 !mt-3">
+      <div className="sticky top-14 lg:top-0 z-30 -mx-4 md:-mx-6 lg:-mx-10 px-4 md:px-6 lg:px-10 py-2 bg-stone-100/95 backdrop-blur-sm border-b border-stone-200/80 !mt-3">
         <div className="md:flex md:items-center md:gap-4">
           <div className="md:w-[380px] md:flex-shrink-0">
             <Segmented label="טווח זמן" options={RANGES} value={range} onChange={setRange} />
@@ -207,7 +203,7 @@ export default function AnalyticsPage() {
       {loading && data && (
         <p
           role="status"
-          className="fixed bottom-20 md:bottom-6 inset-x-0 mx-auto w-max z-40 bg-stone-800 text-white text-[12px] px-3 py-1.5 rounded-full shadow"
+          className="fixed bottom-20 lg:bottom-6 inset-x-0 mx-auto w-max z-40 bg-stone-800 text-white text-[12px] px-3 py-1.5 rounded-full shadow"
         >
           מעדכן...
         </p>

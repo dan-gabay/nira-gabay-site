@@ -11,6 +11,7 @@ import {
 import Image from 'next/image';
 import { useManageSummary } from '@/components/manage/ManageShell';
 import ContentTabs from '@/components/manage/ContentTabs';
+import PageHeader from '@/components/manage/PageHeader';
 
 type Article = {
   id: string;
@@ -197,6 +198,7 @@ function ManageArticlesInner() {
   if (loading) {
     return (
       <div className="space-y-4 md:space-y-5">
+        <PageHeader title="תוכן האתר" />
         <ContentTabs />
         <div className="py-20 text-center text-stone-500 text-sm">טוען מאמרים...</div>
       </div>
@@ -205,11 +207,45 @@ function ManageArticlesInner() {
 
   return (
     <div className="space-y-4 md:space-y-5">
+      <PageHeader
+        title="תוכן האתר"
+        sub="מה כתוב באתר, ומה מחכה לפרסום."
+        actions={
+          <Link
+            href="/manage/articles/new"
+            className="inline-flex items-center gap-1.5 min-h-[44px] px-4 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium transition-colors"
+          >
+            <Plus className="w-4 h-4" aria-hidden="true" />
+            מאמר חדש
+          </Link>
+        }
+      />
       <ContentTabs />
 
-      <div className="flex items-center gap-2">
-        {/* Search */}
-        <div className="relative flex-1">
+      {/* Toolbar: status filter, then search */}
+      <div className="flex flex-col md:flex-row md:items-center gap-2.5 md:gap-4">
+        {/* One filter row, carrying the counts. (A second strip of the same
+            three counts used to sit above it and filter the same list.) */}
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-0.5">
+          {TABS.filter((t) => t.key === 'all' || counts[t.key] > 0 || filter === t.key).map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setFilter(t.key)}
+              aria-pressed={filter === t.key}
+              className={`inline-flex items-center gap-1.5 px-4 min-h-[40px] rounded-full text-xs md:text-sm font-medium whitespace-nowrap flex-shrink-0 border transition-colors ${
+                filter === t.key
+                  ? 'bg-stone-800 text-white border-stone-800'
+                  : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50'
+              }`}
+            >
+              {t.label}
+              <span className={filter === t.key ? 'text-white/70' : 'text-stone-400'}>
+                {counts[t.key]}
+              </span>
+            </button>
+          ))}
+        </div>
+        <div className="relative md:ms-auto md:w-64">
           <Search
             className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none"
             aria-hidden="true"
@@ -223,38 +259,10 @@ function ManageArticlesInner() {
             placeholder="חיפוש מאמרים..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full min-h-[44px] pr-11 pl-4 rounded-xl border border-stone-300 bg-white text-sm focus:ring-2 focus:ring-amber-400 focus:outline-none"
+            className="w-full min-h-[40px] pr-11 pl-4 rounded-xl border border-stone-200 bg-white text-sm focus:ring-2 focus:ring-stone-300 focus:outline-none"
           />
         </div>
-        <Link
-          href="/manage/articles/new"
-          className="inline-flex items-center gap-1.5 min-h-[44px] px-4 rounded-xl bg-stone-800 hover:bg-stone-900 text-white text-xs md:text-sm font-medium transition-colors flex-shrink-0"
-        >
-          <Plus className="w-4 h-4" aria-hidden="true" />
-          מאמר חדש
-        </Link>
-      </div>
 
-      {/* One filter row, carrying the counts. (A second strip of the same
-          three counts used to sit above it and filter the same list.) */}
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-0.5">
-        {TABS.filter((t) => t.key === 'all' || counts[t.key] > 0 || filter === t.key).map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setFilter(t.key)}
-            aria-pressed={filter === t.key}
-            className={`inline-flex items-center gap-1.5 px-4 min-h-[40px] rounded-full text-xs md:text-sm font-medium whitespace-nowrap flex-shrink-0 border transition-colors ${
-              filter === t.key
-                ? 'bg-stone-800 text-white border-stone-800'
-                : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50'
-            }`}
-          >
-            {t.label}
-            <span className={filter === t.key ? 'text-white/70' : 'text-stone-400'}>
-              {counts[t.key]}
-            </span>
-          </button>
-        ))}
       </div>
 
       {filter === 'queue' ? (

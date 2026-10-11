@@ -1,12 +1,25 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { dateToScheduleIso, formatScheduleDate, scheduleIsoToDate, todayLocalDate } from '@/lib/schedule';
+import { dateToScheduleIso, scheduleIsoToDate } from '@/lib/schedule';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import ArticleGoogle from '@/components/manage/ArticleGoogle';
-import { Save, Copy, Check, ImageOff, Clock, X } from 'lucide-react';
+import { Copy, Check } from 'lucide-react';
+import PageHeader from '@/components/manage/PageHeader';
+import {
+  ContentField,
+  Fold,
+  HeadFields,
+  ImagePanel,
+  Label,
+  MobileSaveBar,
+  Panel,
+  PublishPanel,
+  TagsPanel,
+  inputCls,
+} from '@/components/manage/ArticleEditorParts';
 
 type DraftMetadata = {
   image_concept: string | null;
@@ -199,7 +212,6 @@ export default function EditArticlePage() {
       }
 
       setFormData(prev => ({ ...prev, image_url: result.url }));
-      alert('התמונה הועלתה בהצלחה ל-Vercel Blob');
     } catch (error) {
       console.error('Error uploading image:', error);
       alert(error instanceof Error ? error.message : 'שגיאה בהעלאת התמונה');
@@ -247,9 +259,9 @@ export default function EditArticlePage() {
 
       alert('המאמר עודכן בהצלחה!');
       router.push('/manage/articles');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating article:', error);
-      alert('שגיאה בעדכון המאמר: ' + (error.message || 'שגיאה לא ידועה'));
+      alert('שגיאה בעדכון המאמר: ' + ((error as { message?: string })?.message || 'שגיאה לא ידועה'));
     } finally {
       setSaving(false);
     }
@@ -257,427 +269,283 @@ export default function EditArticlePage() {
 
   if (loading) {
     return (
-      <div className="py-20 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-stone-600">טוען מאמר...</p>
-        </div>
-      </div>
+      <>
+        <PageHeader title="עריכת מאמר" />
+        <div className="py-20 text-center text-stone-500 text-sm">טוען מאמר...</div>
+      </>
     );
   }
 
+  const previewHref = formData.slug
+    ? publishedSlug
+      ? `/articles/${publishedSlug}`
+      : `/api/preview?secret=${process.env.NEXT_PUBLIC_PREVIEW_SECRET}&slug=${formData.slug}`
+    : null;
+  const shownFindings = seoReview?.findings.filter((f) => f.severity !== 'info') ?? [];
+  const score = seoReview?.score ?? null;
+
   return (
-    <div className="space-y-4 md:space-y-6">
-            <h1 className="text-xl md:text-3xl font-bold text-stone-800">עריכת מאמר</h1>
+    <>
+      <PageHeader
+        title="עריכת מאמר"
+        sub={
+          <Link href="/manage/articles" className="hover:text-stone-800">
+            מאמרים
+          </Link>
+        }
+      />
 
-      <div className="max-w-4xl mx-auto">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title */}
-          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
-            <label className="block text-sm font-medium text-stone-700 mb-2">
-              כותרת המאמר *
-            </label>
-            <input
-              type="text"
-              value={formData.title}
-              onChange={(e) => handleChange('title', e.target.value)}
-              className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-lg"
-              placeholder="כותרת המאמר..."
-              required
-            />
-          </div>
+      <form onSubmit={handleSubmit} className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6 lg:items-start">
+        {/* ── The writing ─────────────────────────────────────── */}
+        <div className="space-y-4 md:space-y-5 min-w-0">
+          <HeadFields
+            title={formData.title}
+            slug={formData.slug}
+            excerpt={formData.excerpt}
+            onChange={(f, v) => handleChange(f, v)}
+          />
 
-          {/* Slug */}
-          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
-            <label className="block text-sm font-medium text-stone-700 mb-2">
-              Slug (כתובת URL) *
-            </label>
-            <div className="flex items-center gap-2">
-              <span className="text-stone-500 text-sm">niragabay.com/articles/</span>
-              <input
-                type="text"
-                value={formData.slug}
-                onChange={(e) => handleChange('slug', e.target.value)}
-                className="flex-1 px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                placeholder="article-slug"
-                required
-              />
+          <ContentField
+            value={formData.content}
+            readingTime={formData.reading_time}
+            onChange={(v) => handleChange('content', v)}
+          />
+
+          {/* ── How it shows in Google ────────────────────────── */}
+          <Panel
+            title="איך זה נראה בגוגל"
+            aside={
+              score !== null && (
+                <span
+                  className={`text-xs font-bold px-2.5 py-1 rounded-full tabular-nums ${
+                    score >= 80
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : score >= 60
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-rose-100 text-rose-800'
+                  }`}
+                >
+                  ציון SEO {score}/100
+                </span>
+              )
+            }
+          >
+            {/* A search result, as Google would draw it from these fields */}
+            <div className="rounded-xl border border-stone-200 bg-stone-50/60 px-4 py-3 mb-4">
+              <p className="text-[12px] text-stone-500 truncate" dir="ltr">
+                niragabay.com › articles › {formData.slug || '...'}
+              </p>
+              <p className="text-[17px] text-[#1a0dab] leading-snug mt-0.5 line-clamp-1">
+                {formData.meta_title || formData.title || 'כותרת המאמר'}
+              </p>
+              <p className="text-[13px] text-stone-600 leading-relaxed mt-0.5 line-clamp-2">
+                {formData.meta_description || formData.excerpt || 'תיאור קצר לתוצאות החיפוש'}
+              </p>
             </div>
-          </div>
 
-          {/* Image */}
-          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
-            <label className="block text-sm font-medium text-stone-700 mb-2">
-              תמונת ראשית
-            </label>
-            <div className="space-y-3">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                disabled={uploading}
-                className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              />
-              {uploading && <p className="text-amber-600 text-sm">מעלה תמונה...</p>}
-              {formData.image_url ? (
-                <div className="mt-3">
-                  <img
-                    src={formData.image_url}
-                    alt={formData.title ? `תמונת מאמר: ${formData.title}` : "תצוגה מקדימה של תמונת המאמר"}
-                    className="w-full max-w-md rounded-lg border border-stone-200"
-                  />
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-stone-500 text-sm bg-stone-50 border border-stone-200 rounded-lg px-4 py-3">
-                  <ImageOff className="w-4 h-4 flex-shrink-0" />
-                  אין תמונה ראשית מצורפת עדיין
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Image Prompt Metadata - admin only, never shown on public page */}
-          {(draftMetadata || !formData.image_url) && (
-            <div className="bg-amber-50 rounded-2xl p-4 md:p-6 border border-amber-200">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-semibold text-stone-800">פרטי תמונה (לשימוש פנימי בלבד)</h2>
-                {draftMetadata?.image_status && (
-                  <span className="text-xs bg-amber-200 text-amber-900 px-2 py-1 rounded-full font-medium">
-                    {draftMetadata.image_status}
-                  </span>
+            <div className="space-y-4">
+              <div>
+                <Label
+                  htmlFor="seo-title"
+                  aside={
+                    <span className={`text-[11px] tabular-nums ${formData.meta_title.length > 60 ? 'text-rose-600' : 'text-stone-400'}`}>
+                      {formData.meta_title.length}/60
+                    </span>
+                  }
+                >
+                  כותרת לגוגל
+                </Label>
+                <input
+                  id="seo-title"
+                  type="text"
+                  value={formData.meta_title}
+                  onChange={(e) => handleChange('meta_title', e.target.value)}
+                  className={inputCls}
+                  placeholder="ריק = כותרת המאמר"
+                />
+              </div>
+              <div>
+                <Label
+                  htmlFor="seo-desc"
+                  aside={
+                    <span
+                      className={`text-[11px] tabular-nums ${
+                        formData.meta_description.length > 158 ||
+                        (formData.meta_description.length > 0 && formData.meta_description.length < 120)
+                          ? 'text-amber-600'
+                          : 'text-stone-400'
+                      }`}
+                    >
+                      {formData.meta_description.length}/158
+                    </span>
+                  }
+                >
+                  תיאור לגוגל
+                </Label>
+                <textarea
+                  id="seo-desc"
+                  value={formData.meta_description}
+                  onChange={(e) => handleChange('meta_description', e.target.value)}
+                  className={`${inputCls} py-2.5`}
+                  rows={2}
+                  placeholder="120-158 תווים"
+                />
+              </div>
+              <div>
+                <Label htmlFor="seo-kw">מילת מפתח ראשית</Label>
+                <input
+                  id="seo-kw"
+                  type="text"
+                  value={formData.focus_keyword}
+                  onChange={(e) => handleChange('focus_keyword', e.target.value)}
+                  className={inputCls}
+                  placeholder="לדוגמה: הדרכת הורים"
+                />
+                {seoReview && seoReview.secondaryKeywords.length > 0 && (
+                  <p className="text-xs text-stone-500 mt-1.5">משניות: {seoReview.secondaryKeywords.join(', ')}</p>
                 )}
               </div>
-
-              {draftMetadata ? (
-                <div className="space-y-5">
-                  {draftMetadata.image_concept && (
-                    <div>
-                      <p className="text-xs font-semibold text-stone-600 mb-1 uppercase tracking-wide">רעיון לתמונה</p>
-                      <p className="text-sm text-stone-700 bg-white border border-amber-100 rounded-lg px-4 py-3">
-                        {draftMetadata.image_concept}
-                      </p>
-                    </div>
-                  )}
-
-                  {draftMetadata.image_prompt && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-xs font-semibold text-stone-600 uppercase tracking-wide">פרומפט לתמונה</p>
-                        <button
-                          type="button"
-                          onClick={() => copyToClipboard(draftMetadata.image_prompt!, 'prompt')}
-                          className="flex items-center gap-1.5 text-xs bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg transition-colors"
-                        >
-                          {copiedField === 'prompt' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                          {copiedField === 'prompt' ? 'הועתק!' : 'העתק פרומפט'}
-                        </button>
-                      </div>
-                      <p className="text-sm text-stone-600 bg-white border border-amber-100 rounded-lg px-4 py-3 font-mono leading-relaxed text-left" dir="ltr">
-                        {draftMetadata.image_prompt}
-                      </p>
-                    </div>
-                  )}
-
-                  {draftMetadata.negative_prompt && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-xs font-semibold text-stone-600 uppercase tracking-wide">פרומפט שלילי</p>
-                        <button
-                          type="button"
-                          onClick={() => copyToClipboard(draftMetadata.negative_prompt!, 'negative')}
-                          className="flex items-center gap-1.5 text-xs bg-stone-500 hover:bg-stone-600 text-white px-3 py-1.5 rounded-lg transition-colors"
-                        >
-                          {copiedField === 'negative' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                          {copiedField === 'negative' ? 'הועתק!' : 'העתק'}
-                        </button>
-                      </div>
-                      <p className="text-xs text-stone-500 bg-white border border-amber-100 rounded-lg px-4 py-3 font-mono leading-relaxed text-left" dir="ltr">
-                        {draftMetadata.negative_prompt}
-                      </p>
-                    </div>
-                  )}
-
-                  {draftMetadata.image_alt && (
-                    <div>
-                      <p className="text-xs font-semibold text-stone-600 mb-1 uppercase tracking-wide">טקסט חלופי לתמונה (alt)</p>
-                      <p className="text-sm text-stone-700 bg-white border border-amber-100 rounded-lg px-4 py-3">
-                        {draftMetadata.image_alt}
-                      </p>
-                    </div>
-                  )}
-
-                  <p className="text-xs text-stone-400 mt-2">
-                    השתמש בפרומפט זה ב-Midjourney, DALL-E, או כלי יצירת תמונות אחר. לאחר יצירת התמונה, העלה אותה בשדה "תמונת ראשית" למעלה.
-                  </p>
-                </div>
-              ) : (
-                <p className="text-sm text-stone-500">אין פרטי תמונה שמורים עדיין לטיוטה זו</p>
-              )}
-            </div>
-          )}
-
-          {/* Excerpt */}
-          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
-            <label className="block text-sm font-medium text-stone-700 mb-2">
-              תקציר (אופציונלי)
-            </label>
-            <textarea
-              value={formData.excerpt}
-              onChange={(e) => handleChange('excerpt', e.target.value)}
-              className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              rows={3}
-              placeholder="תקציר קצר של המאמר..."
-            />
-          </div>
-
-          {/* SEO */}
-          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-stone-800">SEO</h2>
-              {seoReview?.score !== null && seoReview?.score !== undefined && (
-                <span
-                  className={`text-sm font-bold px-3 py-1 rounded-full ${
-                    seoReview.score >= 80
-                      ? 'bg-green-100 text-green-800'
-                      : seoReview.score >= 60
-                      ? 'bg-amber-100 text-amber-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}
-                >
-                  ציון SEO: {seoReview.score}/100
-                </span>
-              )}
             </div>
 
-            {/* Meta title */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-sm font-medium text-stone-700">כותרת SEO (meta title)</label>
-                <span className={`text-xs ${formData.meta_title.length > 60 ? 'text-red-600' : 'text-stone-400'}`}>
-                  {formData.meta_title.length}/60
-                </span>
-              </div>
-              <input
-                type="text"
-                value={formData.meta_title}
-                onChange={(e) => handleChange('meta_title', e.target.value)}
-                className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                placeholder="כותרת לתוצאות החיפוש..."
-              />
-            </div>
-
-            {/* Meta description */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-sm font-medium text-stone-700">תיאור SEO (meta description)</label>
-                <span
-                  className={`text-xs ${
-                    formData.meta_description.length > 158 || (formData.meta_description.length > 0 && formData.meta_description.length < 120)
-                      ? 'text-amber-600'
-                      : 'text-stone-400'
-                  }`}
-                >
-                  {formData.meta_description.length}/158
-                </span>
-              </div>
-              <textarea
-                value={formData.meta_description}
-                onChange={(e) => handleChange('meta_description', e.target.value)}
-                className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                rows={2}
-                placeholder="תיאור קצר לתוצאות החיפוש (120-158 תווים)..."
-              />
-            </div>
-
-            {/* Focus keyword */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-stone-700 mb-1">מילת מפתח ראשית</label>
-              <input
-                type="text"
-                value={formData.focus_keyword}
-                onChange={(e) => handleChange('focus_keyword', e.target.value)}
-                className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                placeholder="לדוגמה: הדרכת הורים"
-              />
-              {seoReview && seoReview.secondaryKeywords.length > 0 && (
-                <p className="text-xs text-stone-500 mt-2">
-                  מילות מפתח משניות: {seoReview.secondaryKeywords.join(', ')}
-                </p>
-              )}
-              {seoReview?.canonicalUrl && (
-                <p className="text-xs text-stone-400 mt-1 text-left" dir="ltr">canonical: {seoReview.canonicalUrl}</p>
-              )}
-            </div>
-
-            {/* Validation findings */}
-            {seoReview && seoReview.findings.length > 0 && (
-              <div className="mt-2 border-t border-stone-100 pt-4">
-                <p className="text-xs font-semibold text-stone-600 mb-2 uppercase tracking-wide">בדיקות SEO</p>
+            {shownFindings.length > 0 && (
+              <Fold
+                title="בדיקות SEO"
+                aside={<span className="text-[11px] font-normal text-stone-400">{shownFindings.length}</span>}
+              >
                 <ul className="space-y-1.5">
-                  {seoReview.findings
-                    .filter((f) => f.severity !== 'info')
-                    .map((f, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm">
-                        <span
-                          className={`mt-0.5 inline-block w-2 h-2 rounded-full flex-shrink-0 ${
-                            f.severity === 'error' ? 'bg-red-500' : 'bg-amber-400'
-                          }`}
-                        />
-                        <span className={f.severity === 'error' ? 'text-red-700' : 'text-stone-600'}>
-                          {f.message}
-                        </span>
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Internal link suggestions */}
-            {seoReview && seoReview.internalLinks.length > 0 && (
-              <div className="mt-4 border-t border-stone-100 pt-4">
-                <p className="text-xs font-semibold text-stone-600 mb-2 uppercase tracking-wide">הצעות לקישור פנימי</p>
-                <ul className="space-y-1">
-                  {seoReview.internalLinks.map((l, i) => (
-                    <li key={i} className="text-sm">
-                      <Link href={`/articles/${l.slug}`} target="_blank" className="text-amber-700 hover:text-amber-800 underline">
-                        {l.anchor || l.title}
-                      </Link>
-                      {l.reason && <span className="text-stone-400 text-xs"> — {l.reason}</span>}
+                  {shownFindings.map((f, i) => (
+                    <li key={i} className="flex items-start gap-2 text-[13px]">
+                      <span
+                        className={`mt-1.5 inline-block w-2 h-2 rounded-full flex-shrink-0 ${
+                          f.severity === 'error' ? 'bg-rose-500' : 'bg-amber-400'
+                        }`}
+                      />
+                      <span className={f.severity === 'error' ? 'text-rose-700' : 'text-stone-600'}>{f.message}</span>
                     </li>
                   ))}
                 </ul>
-              </div>
+              </Fold>
             )}
 
-            {seoReview && seoReview.faqCount > 0 && (
-              <p className="text-xs text-stone-500 mt-4">FAQ: {seoReview.faqCount} שאלות נשמרו עבור מאמר זה (יוצגו כ-schema).</p>
+            {seoReview && seoReview.internalLinks.length > 0 && (
+              <Fold
+                title="הצעות לקישור פנימי"
+                aside={<span className="text-[11px] font-normal text-stone-400">{seoReview.internalLinks.length}</span>}
+              >
+                <ul className="space-y-1">
+                  {seoReview.internalLinks.map((l, i) => (
+                    <li key={i} className="text-[13px]">
+                      <Link href={`/articles/${l.slug}`} target="_blank" className="text-stone-800 underline underline-offset-2">
+                        {l.anchor || l.title}
+                      </Link>
+                      {l.reason && <span className="text-stone-400 text-xs"> - {l.reason}</span>}
+                    </li>
+                  ))}
+                </ul>
+              </Fold>
             )}
 
-            {!loading && <ArticleGoogle slug={publishedSlug} />}
-          </div>
-
-          {/* Content */}
-          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
-            <label className="block text-sm font-medium text-stone-700 mb-2">
-              תוכן המאמר (Markdown) *
-            </label>
-            <textarea
-              value={formData.content}
-              onChange={(e) => handleChange('content', e.target.value)}
-              className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent font-mono text-sm"
-              rows={20}
-              placeholder="כתוב את המאמר כאן בפורמט Markdown..."
-              required
-            />
-          </div>
-
-          {/* Tags */}
-          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
-            <label className="block text-sm font-medium text-stone-700 mb-3">
-              תגיות (בחר מהרשימה)
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {availableTags.map(tag => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => toggleTag(tag)}
-                  className={`px-4 min-h-[40px] rounded-full text-xs md:text-sm font-medium transition-colors ${
-                    selectedTags.includes(tag)
-                      ? 'bg-amber-600 text-white'
-                      : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-            {selectedTags.length > 0 && (
-              <p className="text-stone-600 text-sm mt-3">
-                תגיות נבחרות: {selectedTags.join(', ')}
+            {(seoReview?.faqCount || seoReview?.canonicalUrl) && (
+              <p className="text-[11px] text-stone-400 mt-4">
+                {seoReview?.faqCount ? `${seoReview.faqCount} שאלות FAQ נשמרו כ-schema. ` : ''}
+                {seoReview?.canonicalUrl && (
+                  <span dir="ltr">canonical: {seoReview.canonicalUrl}</span>
+                )}
               </p>
             )}
-          </div>
 
-          {/* Publish Status */}
-          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200 space-y-4">
-            <p className="text-sm font-semibold text-stone-700">סטטוס פרסום</p>
+            <ArticleGoogle slug={publishedSlug} />
+          </Panel>
+        </div>
 
-            {/* Publish now */}
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.is_published}
-                onChange={(e) => {
-                  handleChange('is_published', e.target.checked);
-                  if (e.target.checked) handleChange('scheduled_publish_at', '');
-                }}
-                className="w-5 h-5 text-amber-600 border-stone-300 rounded focus:ring-amber-500"
-              />
-              <span className="font-medium text-stone-800">פרסם עכשיו</span>
-            </label>
+        {/* ── Publishing ──────────────────────────────────────── */}
+        <aside className="mt-4 lg:mt-0 space-y-4 lg:sticky lg:top-6">
+          <PublishPanel
+            isPublished={formData.is_published}
+            scheduledDate={formData.scheduled_publish_at}
+            onPublishedChange={(v) => handleChange('is_published', v)}
+            onScheduleChange={(v) => handleChange('scheduled_publish_at', v)}
+            saving={saving}
+            saveLabel="שמירת שינויים"
+            previewHref={previewHref}
+          />
 
-            {/* Schedule - only when not published */}
-            {!formData.is_published && (
-              <div className="border-t border-stone-100 pt-4">
-                <p className="text-sm font-medium text-stone-700 mb-2 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-blue-500" />
-                  תזמון פרסום
-                </p>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="date"
-                    value={formData.scheduled_publish_at}
-                    onChange={(e) => handleChange('scheduled_publish_at', e.target.value)}
-                    min={todayLocalDate()}
-                    className="flex-1 px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    dir="ltr"
-                  />
-                  {formData.scheduled_publish_at && (
-                    <button
-                      type="button"
-                      onClick={() => handleChange('scheduled_publish_at', '')}
-                      className="p-2 text-stone-400 hover:text-stone-600 rounded-lg hover:bg-stone-100 transition-colors"
-                      title="בטל תיזמון"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+          <ImagePanel
+            url={formData.image_url}
+            alt={formData.title ? `תמונת מאמר: ${formData.title}` : 'תצוגה מקדימה של תמונת המאמר'}
+            uploading={uploading}
+            onUpload={handleImageUpload}
+          >
+            {/* Image prompt metadata - admin only, never shown on the public page */}
+            {draftMetadata && (
+              <Fold
+                title="פרומפט לתמונה"
+                aside={
+                  draftMetadata.image_status && (
+                    <span className="text-[11px] font-normal bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">
+                      {draftMetadata.image_status}
+                    </span>
+                  )
+                }
+              >
+                <div className="space-y-3 text-[13px]">
+                  {draftMetadata.image_concept && <p className="text-stone-700">{draftMetadata.image_concept}</p>}
+                  {draftMetadata.image_prompt && (
+                    <CopyBlock
+                      label="פרומפט"
+                      text={draftMetadata.image_prompt}
+                      copied={copiedField === 'prompt'}
+                      onCopy={() => copyToClipboard(draftMetadata.image_prompt!, 'prompt')}
+                    />
                   )}
-                </div>
-                {formData.scheduled_publish_at && (
-                  <p className="text-xs text-blue-600 mt-2 flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    יפורסם ב-{formatScheduleDate(formData.scheduled_publish_at)}, בבוקר
+                  {draftMetadata.negative_prompt && (
+                    <CopyBlock
+                      label="פרומפט שלילי"
+                      text={draftMetadata.negative_prompt}
+                      copied={copiedField === 'negative'}
+                      onCopy={() => copyToClipboard(draftMetadata.negative_prompt!, 'negative')}
+                    />
+                  )}
+                  {draftMetadata.image_alt && (
+                    <p className="text-stone-600">
+                      <span className="text-stone-400">טקסט חלופי: </span>
+                      {draftMetadata.image_alt}
+                    </p>
+                  )}
+                  <p className="text-[11px] text-stone-400">
+                    להדבקה בכלי ליצירת תמונות. אחרי שהתמונה מוכנה, להעלות אותה כאן למעלה.
                   </p>
-                )}
-                {!formData.scheduled_publish_at && (
-                  <p className="text-xs text-stone-400 mt-2">השאר ריק כדי לשמור כטיוטה</p>
-                )}
-              </div>
+                </div>
+              </Fold>
             )}
-          </div>
+          </ImagePanel>
 
-          {/* Actions. Sticky: this form is long enough that on a phone
-              saving otherwise meant scrolling past every field. */}
-          <div className="sticky bottom-20 md:bottom-4 z-30 flex gap-2 bg-white/95 backdrop-blur border border-stone-200 rounded-2xl p-2 shadow-lg">
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex-1 bg-stone-800 hover:bg-stone-900 disabled:bg-stone-300 text-white min-h-[48px] rounded-xl text-sm md:text-base font-medium flex items-center justify-center gap-2 transition-colors"
-            >
-              <Save className="w-4 h-4 md:w-5 md:h-5" />
-              {saving ? 'שומר...' : 'שמור שינויים'}
-            </button>
+          <TagsPanel available={availableTags} selected={selectedTags} onToggle={toggleTag} />
+        </aside>
 
-            <Link
-              href="/manage/articles"
-              className="min-h-[48px] px-5 border border-stone-300 text-stone-700 hover:bg-stone-50 rounded-xl text-sm md:text-base font-medium transition-colors inline-flex items-center justify-center"
-            >
-              ביטול
-            </Link>
-          </div>
-        </form>
+        <MobileSaveBar saving={saving} label="שמירת שינויים" />
+      </form>
+    </>
+  );
+}
+
+function CopyBlock({ label, text, copied, onCopy }: { label: string; text: string; copied: boolean; onCopy: () => void }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-[12px] font-medium text-stone-500">{label}</span>
+        <button
+          type="button"
+          onClick={onCopy}
+          className="inline-flex items-center gap-1 text-[12px] font-medium text-stone-700 hover:text-stone-900 min-h-[32px] px-2 rounded-lg hover:bg-stone-100"
+        >
+          {copied ? <Check className="w-3 h-3" aria-hidden="true" /> : <Copy className="w-3 h-3" aria-hidden="true" />}
+          {copied ? 'הועתק' : 'העתקה'}
+        </button>
       </div>
+      <p className="text-[12px] text-stone-600 bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 font-mono leading-relaxed text-left max-h-32 overflow-y-auto" dir="ltr">
+        {text}
+      </p>
     </div>
   );
 }

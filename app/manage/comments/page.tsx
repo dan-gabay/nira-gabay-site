@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import { useManageSummary } from '@/components/manage/ManageShell';
 import ContentTabs from '@/components/manage/ContentTabs';
+import PageHeader from '@/components/manage/PageHeader';
 import { 
   CheckCircle,
   XCircle,
@@ -145,6 +146,7 @@ export default function ManageCommentsPage() {
   if (loading) {
     return (
       <div className="space-y-4 md:space-y-5">
+        <PageHeader title="תוכן האתר" />
         <ContentTabs />
         <div className="py-20 text-center text-stone-500 text-sm">טוען תגובות...</div>
       </div>
@@ -153,6 +155,7 @@ export default function ManageCommentsPage() {
 
   return (
     <div className="space-y-4 md:space-y-5">
+      <PageHeader title="תוכן האתר" sub="תגובות של קוראים מופיעות באתר רק אחרי אישור." />
       <ContentTabs />
       <div>
         <div>

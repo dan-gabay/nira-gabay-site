@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { dateToScheduleIso, formatScheduleDate, todayLocalDate } from '@/lib/schedule';
+import { dateToScheduleIso } from '@/lib/schedule';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
-import { Save, Clock, X } from 'lucide-react';
+import PageHeader from '@/components/manage/PageHeader';
+import { ContentField, HeadFields, ImagePanel, MobileSaveBar, PublishPanel, TagsPanel } from '@/components/manage/ArticleEditorParts';
 
 export default function NewArticlePage() {
   const router = useRouter();
@@ -105,7 +106,6 @@ export default function NewArticlePage() {
       }
 
       setFormData(prev => ({ ...prev, image_url: result.url }));
-      alert('התמונה הועלתה בהצלחה ל-Vercel Blob');
     } catch (error) {
       console.error('Error uploading image:', error);
       alert(error instanceof Error ? error.message : 'שגיאה בהעלאת התמונה');
@@ -146,7 +146,7 @@ export default function NewArticlePage() {
         views_count: 0
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('articles')
         .insert([articleData])
         .select()
@@ -156,212 +156,60 @@ export default function NewArticlePage() {
 
       alert('המאמר נשמר בהצלחה!');
       router.push('/manage/articles');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving article:', error);
-      alert('שגיאה בשמירת המאמר: ' + (error.message || 'שגיאה לא ידועה'));
+      alert('שגיאה בשמירת המאמר: ' + ((error as { message?: string })?.message || 'שגיאה לא ידועה'));
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <div className="space-y-4 md:space-y-6">
-            <h1 className="text-xl md:text-3xl font-bold text-stone-800">מאמר חדש</h1>
+    <>
+      <PageHeader
+        title="מאמר חדש"
+        sub={
+          <Link href="/manage/articles" className="hover:text-stone-800">
+            מאמרים
+          </Link>
+        }
+      />
 
-      <div className="max-w-4xl mx-auto">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title */}
-          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
-            <label className="block text-sm font-medium text-stone-700 mb-2">
-              כותרת המאמר *
-            </label>
-            <input
-              type="text"
-              value={formData.title}
-              onChange={(e) => handleChange('title', e.target.value)}
-              className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-lg"
-              placeholder="כותרת המאמר..."
-              required
-            />
-          </div>
+      <form onSubmit={handleSubmit} className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6 lg:items-start">
+        <div className="space-y-4 md:space-y-5 min-w-0">
+          <HeadFields
+            title={formData.title}
+            slug={formData.slug}
+            excerpt={formData.excerpt}
+            onChange={(f, v) => handleChange(f, v)}
+          />
+          <ContentField
+            value={formData.content}
+            readingTime={formData.reading_time}
+            onChange={(v) => handleChange('content', v)}
+          />
+        </div>
 
-          {/* Slug */}
-          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
-            <label className="block text-sm font-medium text-stone-700 mb-2">
-              Slug (כתובת URL) *
-            </label>
-            <div className="flex items-center gap-2">
-              <span className="text-stone-500 text-sm">niragabay.com/articles/</span>
-              <input
-                type="text"
-                value={formData.slug}
-                onChange={(e) => handleChange('slug', e.target.value)}
-                className="flex-1 px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                placeholder="article-slug"
-                required
-              />
-            </div>
-          </div>
+        <aside className="mt-4 lg:mt-0 space-y-4 lg:sticky lg:top-6">
+          <PublishPanel
+            isPublished={formData.is_published}
+            scheduledDate={formData.scheduled_publish_at}
+            onPublishedChange={(v) => handleChange('is_published', v)}
+            onScheduleChange={(v) => handleChange('scheduled_publish_at', v)}
+            saving={saving}
+            saveLabel="שמירת המאמר"
+          />
+          <ImagePanel
+            url={formData.image_url}
+            alt={formData.title ? `תמונת מאמר: ${formData.title}` : 'תצוגה מקדימה של תמונת המאמר'}
+            uploading={uploading}
+            onUpload={handleImageUpload}
+          />
+          <TagsPanel available={availableTags} selected={selectedTags} onToggle={toggleTag} />
+        </aside>
 
-          {/* Image */}
-          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
-            <label className="block text-sm font-medium text-stone-700 mb-2">
-              תמונת ראשית
-            </label>
-            <div className="space-y-3">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                disabled={uploading}
-                className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              />
-              {uploading && <p className="text-amber-600 text-sm">מעלה תמונה...</p>}
-              {formData.image_url && (
-                <div className="mt-3">
-                  <img 
-                    src={formData.image_url} 
-                    alt={formData.title ? `תמונת מאמר: ${formData.title}` : "תצוגה מקדימה של תמונת המאמר"}
-                    className="w-full max-w-md rounded-lg border border-stone-200"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Excerpt */}
-          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
-            <label className="block text-sm font-medium text-stone-700 mb-2">
-              תקציר (אופציונלי)
-            </label>
-            <textarea
-              value={formData.excerpt}
-              onChange={(e) => handleChange('excerpt', e.target.value)}
-              className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-              rows={3}
-              placeholder="תקציר קצר של המאמר..."
-            />
-          </div>
-
-          {/* Content */}
-          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
-            <label className="block text-sm font-medium text-stone-700 mb-2">
-              תוכן המאמר (Markdown) *
-            </label>
-            <textarea
-              value={formData.content}
-              onChange={(e) => handleChange('content', e.target.value)}
-              className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent font-mono text-sm"
-              rows={20}
-              placeholder="כתוב את המאמר כאן בפורמט Markdown..."
-              required
-            />
-          </div>
-
-          {/* Tags */}
-          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200">
-            <label className="block text-sm font-medium text-stone-700 mb-3">
-              תגיות (בחר מהרשימה)
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {availableTags.map(tag => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => toggleTag(tag)}
-                  className={`px-4 min-h-[40px] rounded-full text-xs md:text-sm font-medium transition-colors ${
-                    selectedTags.includes(tag)
-                      ? 'bg-amber-600 text-white'
-                      : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-            {selectedTags.length > 0 && (
-              <p className="text-stone-600 text-sm mt-3">
-                תגיות נבחרות: {selectedTags.join(', ')}
-              </p>
-            )}
-          </div>
-
-          {/* Publish Status */}
-          <div className="bg-white rounded-2xl p-4 md:p-6 border border-stone-200 space-y-4">
-            <p className="text-sm font-semibold text-stone-700">סטטוס פרסום</p>
-
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.is_published}
-                onChange={(e) => {
-                  handleChange('is_published', e.target.checked);
-                  if (e.target.checked) handleChange('scheduled_publish_at', '');
-                }}
-                className="w-5 h-5 text-amber-600 border-stone-300 rounded focus:ring-amber-500"
-              />
-              <span className="font-medium text-stone-800">פרסם עכשיו</span>
-            </label>
-
-            {!formData.is_published && (
-              <div className="border-t border-stone-100 pt-4">
-                <p className="text-sm font-medium text-stone-700 mb-2 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-blue-500" />
-                  תזמון פרסום
-                </p>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="date"
-                    value={formData.scheduled_publish_at}
-                    onChange={(e) => handleChange('scheduled_publish_at', e.target.value)}
-                    min={todayLocalDate()}
-                    className="flex-1 px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    dir="ltr"
-                  />
-                  {formData.scheduled_publish_at && (
-                    <button
-                      type="button"
-                      onClick={() => handleChange('scheduled_publish_at', '')}
-                      className="p-2 text-stone-400 hover:text-stone-600 rounded-lg hover:bg-stone-100"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-                {formData.scheduled_publish_at && (
-                  <p className="text-xs text-blue-600 mt-2 flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    יפורסם ב-{formatScheduleDate(formData.scheduled_publish_at)}, בבוקר
-                  </p>
-                )}
-                {!formData.scheduled_publish_at && (
-                  <p className="text-xs text-stone-400 mt-2">השאר ריק כדי לשמור כטיוטה</p>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Actions. Sticky: this form is long enough that on a phone
-              saving otherwise meant scrolling past every field. */}
-          <div className="sticky bottom-20 md:bottom-4 z-30 flex gap-2 bg-white/95 backdrop-blur border border-stone-200 rounded-2xl p-2 shadow-lg">
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex-1 bg-stone-800 hover:bg-stone-900 disabled:bg-stone-300 text-white min-h-[48px] rounded-xl text-sm md:text-base font-medium flex items-center justify-center gap-2 transition-colors"
-            >
-              <Save className="w-4 h-4 md:w-5 md:h-5" />
-              {saving ? 'שומר...' : 'שמור מאמר'}
-            </button>
-            
-            <Link
-              href="/manage/articles"
-              className="min-h-[48px] px-5 border border-stone-300 text-stone-700 hover:bg-stone-50 rounded-xl text-sm md:text-base font-medium transition-colors inline-flex items-center justify-center"
-            >
-              ביטול
-            </Link>
-          </div>
-        </form>
-      </div>
-    </div>
+        <MobileSaveBar saving={saving} label="שמירת המאמר" />
+      </form>
+    </>
   );
 }

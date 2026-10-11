@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import ContentTabs from '@/components/manage/ContentTabs';
+import PageHeader from '@/components/manage/PageHeader';
 import { 
   Tag as TagIcon,
   Plus,
@@ -201,6 +202,7 @@ export default function ManageTagsPage() {
   if (loading) {
     return (
       <div className="space-y-4 md:space-y-5">
+        <PageHeader title="תוכן האתר" />
         <ContentTabs />
         <div className="py-20 text-center text-stone-500 text-sm">טוען תגיות...</div>
       </div>
@@ -209,6 +211,7 @@ export default function ManageTagsPage() {
 
   return (
     <div className="space-y-4 md:space-y-5">
+      <PageHeader title="תוכן האתר" sub="התגיות שלפיהן מאמרים מסודרים באתר." />
       <ContentTabs />
 
       <div className="flex items-center gap-2">
@@ -231,7 +234,7 @@ export default function ManageTagsPage() {
         </div>
         <button
           onClick={() => setIsAdding(true)}
-          className="inline-flex items-center gap-1.5 min-h-[44px] px-4 rounded-xl bg-stone-800 hover:bg-stone-900 text-white text-xs md:text-sm font-medium transition-colors flex-shrink-0"
+          className="inline-flex items-center gap-1.5 min-h-[44px] px-4 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs md:text-sm font-medium transition-colors flex-shrink-0"
         >
           <Plus className="w-4 h-4" aria-hidden="true" />
           תגית חדשה
