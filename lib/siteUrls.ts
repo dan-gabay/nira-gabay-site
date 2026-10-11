@@ -70,6 +70,7 @@ export async function getSiteUrls(supabase: SupabaseClient): Promise<SiteUrl[]> 
     // checks before it will name a business. Low priority, but it has to be
     // discoverable to count.
     { url: `${BASE_URL}/privacy`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3, contentKey: staticKey },
+    { url: `${BASE_URL}/accessibility`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3, contentKey: staticKey },
     ...(SERVICES_LIVE
       ? [{ url: `${BASE_URL}/services`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.9, contentKey: staticKey }]
       : []),

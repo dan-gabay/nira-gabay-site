@@ -5,6 +5,7 @@ import { Phone, Mail, Facebook } from 'lucide-react';
 import { trackFooterLinkClick, trackContactMethodClick, trackSocialClick } from '@/lib/analytics';
 import { SERVICES } from '@/lib/services';
 import { SERVICES_LIVE } from '@/lib/publish';
+import { openAccessibilityMenu } from '@/components/AccessibilityMenu';
 
 export default function Footer() {
   const navItems = [
@@ -141,7 +142,9 @@ export default function Footer() {
 
         <div className="border-t border-stone-700 mt-8 md:mt-12 pt-6 md:pt-8 text-center text-xs md:text-base text-stone-500">
           <p>© {new Date().getFullYear()} נירה גבאי - כל הזכויות שמורות</p>
-          <p className="mt-2">
+          {/* The site's accessibility entry point: the settings menu and the
+              statement, on every page. Replaces the floating button. */}
+          <p className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-2">
             <Link
               href="/privacy"
               className="hover:text-stone-300 transition-colors underline underline-offset-4"
@@ -149,6 +152,23 @@ export default function Footer() {
             >
               מדיניות פרטיות
             </Link>
+            <Link
+              href="/accessibility"
+              className="hover:text-stone-300 transition-colors underline underline-offset-4"
+              onClick={() => trackFooterLinkClick('הצהרת נגישות')}
+            >
+              הצהרת נגישות
+            </Link>
+            <button
+              type="button"
+              className="hover:text-stone-300 transition-colors underline underline-offset-4"
+              onClick={() => {
+                trackFooterLinkClick('נגישות');
+                openAccessibilityMenu();
+              }}
+            >
+              נגישות
+            </button>
           </p>
         </div>
       </div>
