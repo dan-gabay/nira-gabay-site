@@ -27,7 +27,7 @@ import { AiSection } from '@/components/manage/analytics/AiSection';
 import { VisitDepth } from '@/components/manage/analytics/VisitDepth';
 import type { EnquiryRow, Payload, SiteBehavior } from '@/components/manage/analytics/types';
 
-// The admin's landing screen, read top to bottom as a chain of questions:
+// The full analytics, read as a chain of questions:
 //
 //   1. תמונת מצב  - is it working? Four figures, what they mean, their shape.
 //   2. פניות      - what produced the enquiries, down to each one.
@@ -45,6 +45,11 @@ import type { EnquiryRow, Payload, SiteBehavior } from '@/components/manage/anal
 // here answers one question, and a figure that did not help answer one was
 // cut rather than given a card of its own.
 //
+// The eight sections are grouped under four tabs (TABS) and only the chosen
+// tab is drawn, so the page is a few screens rather than one very long
+// scroll. The tab lives in the URL hash, and an old link to a section's hash
+// (#google, #articles...) opens the tab that holds it.
+//
 // Seven calls, not one: the main payload, plus article engagement, organic
 // search, the enquiry log, site behaviour (AI tools, visit depth) and the two
 // Google routes, each its own call so that one failing leaves the
@@ -60,17 +65,42 @@ const RANGES = [
   { value: 90, label: '90 יום' },
 ];
 
-const SECTIONS = [
-  { id: 'overview', label: 'תמונת מצב' },
-  { id: 'enquiries', label: 'פניות' },
-  { id: 'sources', label: 'מקורות' },
-  { id: 'google', label: 'גוגל' },
-  { id: 'ai', label: 'כלי AI' },
-  { id: 'pages', label: 'עמודים' },
-  { id: 'articles', label: 'מאמרים' },
-  { id: 'audience', label: 'קהל' },
+type TabId = 'summary' | 'sources' | 'content' | 'audience';
+
+const TABS: Array<{ value: TabId; label: string; sections: string[] }> = [
+  { value: 'summary', label: 'סיכום', sections: ['overview', 'enquiries'] },
+  { value: 'sources', label: 'מקורות וגוגל', sections: ['sources', 'google'] },
+  { value: 'content', label: 'תוכן', sections: ['pages', 'articles', 'ai'] },
+  { value: 'audience', label: 'קהל', sections: ['audience'] },
 ];
-const SECTION_IDS = SECTIONS.map((s) => s.id);
+
+/** The tab a hash names: a tab id itself, or any section inside one. */
+function tabFromHash(hash: string): TabId | null {
+  const h = hash.replace(/^#/, '');
+  if (!h) return null;
+  const tab = TABS.find((t) => t.value === h || t.sections.includes(h));
+  return tab ? tab.value : null;
+}
+
+/** The selected tab, kept in the URL hash so a reload or a shared link keeps it. */
+function useTab(): [TabId, (t: TabId) => void] {
+  const [tab, setTabState] = useState<TabId>('summary');
+  useEffect(() => {
+    const sync = () => {
+      const t = tabFromHash(window.location.hash);
+      if (t) setTabState(t);
+    };
+    sync();
+    window.addEventListener('hashchange', sync);
+    return () => window.removeEventListener('hashchange', sync);
+  }, []);
+  const setTab = (t: TabId) => {
+    setTabState(t);
+    window.history.replaceState(null, '', `#${t}`);
+    window.scrollTo({ top: 0 });
+  };
+  return [tab, setTab];
+}
 
 type Loaded<T> = { range: number; data: T | null; failed?: boolean };
 
@@ -87,30 +117,12 @@ function useRangeFetch<T>(url: string, range: number): Loaded<T> | null {
   return state;
 }
 
-/** The section whose heading was last scrolled past, for the chip row. */
-function useActiveSection(ids: string[]) {
-  const [active, setActive] = useState(ids[0]);
-  useEffect(() => {
-    const onScroll = () => {
-      // 190px: the admin header plus this page's sticky bar, plus a little.
-      let current = ids[0];
-      for (const id of ids) {
-        const el = document.getElementById(id);
-        if (el && el.getBoundingClientRect().top <= 190) current = id;
-      }
-      setActive(current);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [ids]);
-  return active;
-}
-
 export default function AnalyticsPage() {
-  // 24 hours is the default because this is the landing screen of the admin
-  // (app/manage/page.tsx redirects here): the first question on opening it is
-  // "what happened since I last looked".
-  const [range, setRange] = useState(1);
+  // 7 days by default: the home screen (/manage/overview) already gives the
+  // month's headline figures, and a day is usually too few visits here to
+  // read a section by.
+  const [range, setRange] = useState(7);
+  const [tab, setTab] = useTab();
   const main = useRangeFetch<Payload>('/api/manage/analytics', range);
   const articlesRes = useRangeFetch<ArticleEngagement>('/api/manage/article-engagement', range);
   const organicRes = useRangeFetch<OrganicSearch>('/api/manage/organic-search', range);
@@ -118,7 +130,6 @@ export default function AnalyticsPage() {
   const googleAdsRes = useRangeFetch<GoogleAds>('/api/manage/google/ads', range);
   const logRes = useRangeFetch<EnquiryRow[]>('/api/manage/enquiry-log', range);
   const behaviorRes = useRangeFetch<SiteBehavior>('/api/manage/site-behavior', range);
-  const active = useActiveSection(SECTION_IDS);
 
   const loading = !main || main.range !== range;
   const failed = !loading && Boolean(main?.failed);
@@ -150,36 +161,16 @@ export default function AnalyticsPage() {
         </p>
       </div>
 
-      {/* The range and the section chips stay under the admin header while
-          scrolling: the range is the one control on the page, and most of this
-          page is a long way from the top on a phone. */}
+      {/* The range and the tabs stay under the admin header while scrolling:
+          they are the only two controls on the page. */}
       <div className="sticky top-14 md:top-16 z-30 -mx-4 md:-mx-6 px-4 md:px-6 py-2 bg-stone-100/95 backdrop-blur-sm border-b border-stone-200/80 !mt-3">
         <div className="md:flex md:items-center md:gap-4">
           <div className="md:w-[380px] md:flex-shrink-0">
             <Segmented label="טווח זמן" options={RANGES} value={range} onChange={setRange} />
           </div>
-          <nav
-            aria-label="קפיצה לחלק בעמוד"
-            className="mt-2 md:mt-0 -mx-4 px-4 md:mx-0 md:px-0 overflow-x-auto [scrollbar-width:none]"
-          >
-            <ul className="flex gap-1.5 w-max">
-              {SECTIONS.map((s) => (
-                <li key={s.id}>
-                  <a
-                    href={`#${s.id}`}
-                    aria-current={active === s.id ? 'true' : undefined}
-                    className={`inline-flex items-center min-h-[32px] px-3 rounded-full text-[12px] md:text-[13px] font-medium whitespace-nowrap transition-colors ${
-                      active === s.id
-                        ? 'bg-stone-800 text-white'
-                        : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
-                    }`}
-                  >
-                    {s.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          <div className="mt-2 md:mt-0 md:flex-1 md:max-w-[460px]">
+            <Segmented label="חלק בעמוד" options={TABS} value={tab} onChange={setTab} size="sm" />
+          </div>
         </div>
       </div>
 
@@ -208,6 +199,7 @@ export default function AnalyticsPage() {
             behavior={behavior}
             behaviorFailed={behaviorFailed}
             rangeLabel={rangeLabel}
+            tab={tab}
           />
         </div>
       )}
@@ -236,6 +228,7 @@ function Dashboard({
   behavior,
   behaviorFailed,
   rangeLabel,
+  tab,
 }: {
   data: Payload;
   articles: ArticleEngagement | null;
@@ -248,8 +241,10 @@ function Dashboard({
   behavior: SiteBehavior | null;
   behaviorFailed: boolean;
   rangeLabel: string;
+  tab: TabId;
 }) {
   const isHourly = data.granularity === 'hour';
+  const show = (section: string) => TABS.find((t) => t.value === tab)?.sections.includes(section) ?? false;
 
   if ((data.totals.events ?? 0) === 0) {
     return (
@@ -324,84 +319,100 @@ function Dashboard({
 
   return (
     <>
-      <Section id="overview" title="תמונת מצב" question={`איך הולך? ${rangeLabel}.`}>
-        <Overview
-          totals={data.totals}
-          previous={data.previous}
-          prevComplete={prevComplete}
-          firstEvent={data.first_event}
-          insights={insights}
-          timeline={timeline}
-          rangeLabel={rangeLabel}
-        />
-      </Section>
-
-      <Section id="enquiries" title="פניות" question="מה הביא את הפניות, ומי פנה.">
-        <Enquiries byButton={data.conversions_by_source || []} log={log} articleTitles={articleTitles} />
-      </Section>
-
-      <Section id="sources" title="מקורות תנועה" question="איזו תנועה שווה: כמה מביא כל מקור, כמה מזה פונה, וכמה קוראים.">
-        <Card>
-          <SourcesTable
-            rows={data.engagement_by_source || []}
-            details={data.traffic || []}
-            landings={behavior?.source_landings || []}
-            articleTitles={articleTitles}
-            siteVisits={data.totals.visits}
-            siteConversions={data.totals.conversions}
+      {show('overview') && (
+        <Section id="overview" title="תמונת מצב" question={`איך הולך? ${rangeLabel}.`}>
+          <Overview
+            totals={data.totals}
+            previous={data.previous}
+            prevComplete={prevComplete}
+            firstEvent={data.first_event}
+            insights={insights}
+            timeline={timeline}
+            rangeLabel={rangeLabel}
           />
-        </Card>
+        </Section>
+      )}
 
-        {sourceSeries.length > 1 && (
-          <Card title="תמהיל המקורות לאורך זמן" sub={rangeLabel}>
-            <SourceBars data={sourcePoints} series={sourceSeries} />
-          </Card>
-        )}
+      {show('enquiries') && (
+        <Section id="enquiries" title="פניות" question="מה הביא את הפניות, ומי פנה.">
+          <Enquiries byButton={data.conversions_by_source || []} log={log} articleTitles={articleTitles} />
+        </Section>
+      )}
 
-        {organic && (
-          <Disclosure title="חיפוש אורגני - פירוט" sub="לאיזה עמוד גוגל שלח, והאם העמוד החזיק">
-            <OrganicSearchCard
-              data={organic}
-              google={googleSearch}
-              googleFailed={googleSearchFailed}
-              articleTitles={articleTitles}
-            />
-          </Disclosure>
-        )}
-      </Section>
-
-      <Section id="google" title="גוגל" question="כמה עולה פנייה מהפרסום, על מה משלמים לשווא, ואיפה האורגני חסר.">
-        <GoogleSection data={googleAds} failed={googleAdsFailed} />
-      </Section>
-
-      <Section id="ai" title="כלי AI" question="האם כלים כמו ChatGPT קוראים את האתר, ועונים ממנו.">
-        {behaviorFailed ? (
+      {show('sources') && (
+        <Section id="sources" title="מקורות תנועה" question="איזו תנועה שווה: כמה מביא כל מקור, כמה מזה פונה, וכמה קוראים.">
           <Card>
-            <Empty>לא הצלחתי לטעון את הנתונים של כלי AI.</Empty>
+            <SourcesTable
+              rows={data.engagement_by_source || []}
+              details={data.traffic || []}
+              landings={behavior?.source_landings || []}
+              articleTitles={articleTitles}
+              siteVisits={data.totals.visits}
+              siteConversions={data.totals.conversions}
+            />
           </Card>
-        ) : (
-          <AiSection data={behavior} buckets={buckets} prevComplete={aiPrevComplete} articleTitles={articleTitles} />
-        )}
-      </Section>
 
-      <Section id="pages" title="עמודים" question="אילו עמודים הופכים ביקור לפנייה, וכמה עמוק הולך ביקור.">
-        <PagesTable data={data} articleTitles={articleTitles} />
-        {!behaviorFailed && <VisitDepth data={behavior} />}
-      </Section>
-
-      <Section id="articles" title="מאמרים" question="האם קוראים את המאמרים עד הסוף, ומה קורה אחרי.">
-        <Card>
-          {articles ? (
-            <ArticleEngagementCard data={articles} buckets={buckets} />
-          ) : (
-            <Empty>טוען...</Empty>
+          {sourceSeries.length > 1 && (
+            <Card title="תמהיל המקורות לאורך זמן" sub={rangeLabel}>
+              <SourceBars data={sourcePoints} series={sourceSeries} />
+            </Card>
           )}
-        </Card>
-      </Section>
 
-      <Section id="audience" title="קהל" question="מאיזה מכשיר, האם חוזרים, ומתי.">
-        <AudienceSection data={data} isHourly={isHourly} />
-      </Section>
+          {organic && (
+            <Disclosure title="חיפוש אורגני - פירוט" sub="לאיזה עמוד גוגל שלח, והאם העמוד החזיק">
+              <OrganicSearchCard
+                data={organic}
+                google={googleSearch}
+                googleFailed={googleSearchFailed}
+                articleTitles={articleTitles}
+              />
+            </Disclosure>
+          )}
+        </Section>
+      )}
+
+      {show('google') && (
+        <Section id="google" title="גוגל" question="כמה עולה פנייה מהפרסום, על מה משלמים לשווא, ואיפה האורגני חסר.">
+          <GoogleSection data={googleAds} failed={googleAdsFailed} />
+        </Section>
+      )}
+
+      {show('ai') && (
+        <Section id="ai" title="כלי AI" question="האם כלים כמו ChatGPT קוראים את האתר, ועונים ממנו.">
+          {behaviorFailed ? (
+            <Card>
+              <Empty>לא הצלחתי לטעון את הנתונים של כלי AI.</Empty>
+            </Card>
+          ) : (
+            <AiSection data={behavior} buckets={buckets} prevComplete={aiPrevComplete} articleTitles={articleTitles} />
+          )}
+        </Section>
+      )}
+
+      {show('pages') && (
+        <Section id="pages" title="עמודים" question="אילו עמודים הופכים ביקור לפנייה, וכמה עמוק הולך ביקור.">
+          <PagesTable data={data} articleTitles={articleTitles} />
+          {!behaviorFailed && <VisitDepth data={behavior} />}
+        </Section>
+      )}
+
+      {show('articles') && (
+        <Section id="articles" title="מאמרים" question="האם קוראים את המאמרים עד הסוף, ומה קורה אחרי.">
+          <Card>
+            {articles ? (
+              <ArticleEngagementCard data={articles} buckets={buckets} />
+            ) : (
+              <Empty>טוען...</Empty>
+            )}
+          </Card>
+        </Section>
+      )}
+
+      {show('audience') && (
+        <Section id="audience" title="קהל" question="מאיזה מכשיר, האם חוזרים, ומתי.">
+          <AudienceSection data={data} isHourly={isHourly} />
+        </Section>
+      )}
 
       <details className="text-[11px] text-stone-500 leading-relaxed">
         <summary className="cursor-pointer select-none min-h-[44px] inline-flex items-center font-medium">

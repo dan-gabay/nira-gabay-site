@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState, createContext, useContext, useCallback } from 'react';
 import TrackingToggle from '@/components/manage/TrackingToggle';
-import { LayoutDashboard, Inbox, FileText, MessageSquare, Tag, LogOut, BarChart3 } from 'lucide-react';
+import { Home, Inbox, FileText, LogOut, BarChart3, type LucideIcon } from 'lucide-react';
 
 export type ManageSummary = {
   /** Leads awaiting classification PLUS taps awaiting confirmation: both are
@@ -29,14 +29,28 @@ const SummaryContext = createContext<{
 
 export const useManageSummary = () => useContext(SummaryContext);
 
-const NAV = [
-  { href: '/manage/overview', label: 'בקרה', icon: LayoutDashboard, badge: null },
-  { href: '/manage/contacts', label: 'פניות', icon: Inbox, badge: 'newLeads' },
-  { href: '/manage/articles', label: 'מאמרים', icon: FileText, badge: 'drafts' },
-  { href: '/manage/comments', label: 'תגובות', icon: MessageSquare, badge: 'pendingComments' },
-  { href: '/manage/analytics', label: 'נתונים', icon: BarChart3, badge: null },
-  { href: '/manage/tags', label: 'תגיות', icon: Tag, badge: null },
-] as const;
+// Four sections, not six. Comments and tags are part of the content work, so
+// they live as tabs inside מאמרים (ContentTabs) instead of taking a slot of
+// the same weight as the enquiries; the מאמרים badge counts what waits there.
+// `also` lists the other paths that belong to a section, for the active state.
+const NAV: ReadonlyArray<{
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  badge: (s: ManageSummary) => number;
+  also?: string[];
+}> = [
+  { href: '/manage/overview', label: 'בית', icon: Home, badge: () => 0 },
+  { href: '/manage/contacts', label: 'פניות', icon: Inbox, badge: (s) => s.newLeads },
+  {
+    href: '/manage/articles',
+    label: 'מאמרים',
+    icon: FileText,
+    badge: (s) => s.drafts + s.pendingComments,
+    also: ['/manage/comments', '/manage/tags'],
+  },
+  { href: '/manage/analytics', label: 'נתונים', icon: BarChart3, badge: () => 0 },
+];
 
 export default function ManageShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -60,9 +74,10 @@ export default function ManageShell({ children }: { children: React.ReactNode })
     return <>{children}</>;
   }
 
-  // Every nav href is now a real subpath, so a plain prefix test is correct.
-  // '/manage' itself only redirects to /manage/analytics and is never rendered.
-  const isActive = (href: string) => pathname?.startsWith(href);
+  // Every nav href is a real subpath, so a plain prefix test is correct.
+  // '/manage' itself only redirects to /manage/overview and is never rendered.
+  const isActive = (item: (typeof NAV)[number]) =>
+    [item.href, ...(item.also ?? [])].some((p) => pathname?.startsWith(p));
 
   return (
     <SummaryContext.Provider value={{ summary, refresh }}>
@@ -76,8 +91,8 @@ export default function ManageShell({ children }: { children: React.ReactNode })
 
             <nav className="hidden md:flex items-center gap-1">
               {NAV.map((item) => {
-                const badge = item.badge ? summary?.[item.badge] ?? 0 : 0;
-                const active = isActive(item.href);
+                const badge = summary ? item.badge(summary) : 0;
+                const active = isActive(item);
                 return (
                   <Link
                     key={item.href}
@@ -126,23 +141,22 @@ export default function ManageShell({ children }: { children: React.ReactNode })
         <main id="main-content" className="container mx-auto px-4 md:px-6 py-4 md:py-8 pb-24 md:pb-8">{children}</main>
 
         {/* Mobile tab bar - thumb-reachable, always one tap between sections.
-            Six items in a five-column grid wrapped תגיות onto a second row,
-            which then sat under Safari's own bottom bar. The column count is
-            derived from NAV so adding a seventh section cannot repeat it. */}
+            The column count is derived from NAV, so adding a section can never
+            wrap one onto a second row under Safari's own bottom bar. */}
         <nav
           className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-stone-200 pb-[env(safe-area-inset-bottom)]"
           aria-label="ניווט ניהול"
         >
           <div className="grid" style={{ gridTemplateColumns: `repeat(${NAV.length}, minmax(0, 1fr))` }}>
             {NAV.map((item) => {
-              const badge = item.badge ? summary?.[item.badge] ?? 0 : 0;
-              const active = isActive(item.href);
+              const badge = summary ? item.badge(summary) : 0;
+              const active = isActive(item);
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`relative flex flex-col items-center justify-center gap-0.5 min-h-[56px] px-0.5 text-[10px] font-medium leading-tight text-center whitespace-nowrap transition-colors ${
+                  className={`relative flex flex-col items-center justify-center gap-0.5 min-h-[56px] px-0.5 text-[11px] font-medium leading-tight text-center whitespace-nowrap transition-colors ${
                     active ? 'text-stone-900' : 'text-stone-400'
                   }`}
                 >

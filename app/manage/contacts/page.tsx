@@ -621,34 +621,16 @@ export default function ManageContactsPage() {
                         <RotateCcw className="w-4 h-4" aria-hidden="true" />
                       )}
                     </button>
-                    <button
-                      onClick={() => deleteMessage(m.id)}
-                      title="מחיקה"
-                      aria-label="מחיקת הפנייה"
-                      className="w-11 h-11 flex items-center justify-center rounded-xl border border-stone-200 text-stone-400 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-colors flex-shrink-0"
-                    >
-                      <Trash2 className="w-4 h-4" aria-hidden="true" />
-                    </button>
                   </div>
                 </div>
 
-                {/* Where it came from - present but out of the way */}
-                {attribution && (
-                  <details className="group border-t border-stone-100">
-                    <summary className="flex items-center justify-between gap-2 px-3.5 md:px-5 py-2.5 min-h-[44px] cursor-pointer list-none text-[11px] md:text-xs text-stone-500 [&::-webkit-details-marker]:hidden">
-                      מקור הפנייה
-                      <ChevronDown
-                        className="w-3.5 h-3.5 transition-transform group-open:rotate-180"
-                        aria-hidden="true"
-                      />
-                    </summary>
-                    <p className="px-3.5 md:px-5 pb-3 text-[11px] md:text-xs text-stone-500 leading-relaxed break-words">
-                      {attribution}
-                    </p>
-                  </details>
-                )}
-
-                {m.session_id && <LeadVisit session={m.session_id} />}
+                {/* Where it came from, the visit, and delete: one fold, out of
+                    the way of replying and setting the status. */}
+                <LeadDetails
+                  attribution={attribution}
+                  session={m.session_id ?? null}
+                  onDelete={() => deleteMessage(m.id)}
+                />
               </article>
             );
           })}
@@ -658,9 +640,18 @@ export default function ManageContactsPage() {
   );
 }
 
-// The visit the lead came from, page by page - the same panel as a row in the
-// analytics enquiry log. Loaded only when opened.
-function LeadVisit({ session }: { session: string }) {
+// Everything about a lead that is not replying to it: where it came from, the
+// visit it came from (page by page, the same panel as a row in the analytics
+// enquiry log, loaded only when opened), and deleting it.
+function LeadDetails({
+  attribution,
+  session,
+  onDelete,
+}: {
+  attribution: string | null;
+  session: string | null;
+  onDelete: () => void;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <div className="border-t border-stone-100">
@@ -670,12 +661,33 @@ function LeadVisit({ session }: { session: string }) {
         aria-expanded={open}
         className="w-full flex items-center justify-between gap-2 px-3.5 md:px-5 py-2.5 min-h-[44px] text-start text-[11px] md:text-xs text-stone-500"
       >
-        הביקור באתר
+        פרטים נוספים
         <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
       </button>
       {open && (
-        <div className="px-3.5 md:px-5 pb-3">
-          <EnquiryJourneyLoader session={session} />
+        <div className="px-3.5 md:px-5 pb-3 space-y-3">
+          {attribution && (
+            <div>
+              <h3 className="text-[11px] md:text-xs font-semibold text-stone-700">מקור הפנייה</h3>
+              <p className="text-[11px] md:text-xs text-stone-500 leading-relaxed break-words mt-0.5">
+                {attribution}
+              </p>
+            </div>
+          )}
+          {session && (
+            <div>
+              <h3 className="text-[11px] md:text-xs font-semibold text-stone-700">הביקור באתר</h3>
+              <EnquiryJourneyLoader session={session} />
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={onDelete}
+            className="inline-flex items-center gap-1.5 min-h-[40px] px-3 rounded-xl border border-stone-200 text-stone-500 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-xs font-medium transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+            מחיקת הפנייה
+          </button>
         </div>
       )}
     </div>
