@@ -109,15 +109,17 @@ export default function AccessibilityMenu() {
       {/* Accessibility Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed left-4 bottom-24 z-50 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-2xl transition-all hover:scale-110"
+        className="fixed right-3 bottom-3 z-40 bg-white/80 hover:bg-white text-stone-600 hover:text-stone-800 border border-stone-200 p-2 rounded-full shadow-sm opacity-70 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 transition-all"
         aria-label="תפריט נגישות"
+        aria-expanded={isOpen}
+        title="נגישות"
       >
-        <Eye className="w-6 h-6" />
+        <Eye className="w-4 h-4" />
       </button>
 
       {/* Accessibility Menu */}
       {isOpen && (
-        <div className="fixed left-4 bottom-40 z-50 bg-white rounded-2xl shadow-2xl border border-stone-200 w-80 max-h-[70vh] overflow-y-auto">
+        <div className="fixed right-3 bottom-14 z-50 bg-white rounded-2xl shadow-2xl border border-stone-200 w-80 max-w-[calc(100vw-1.5rem)] max-h-[70vh] overflow-y-auto">
           {/* Header */}
           <div className="sticky top-0 bg-white border-b border-stone-200 p-4 flex items-center justify-between rounded-t-2xl">
             <h3 className="text-lg font-bold text-stone-800 flex items-center gap-2">
