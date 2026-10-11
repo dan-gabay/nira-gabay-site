@@ -18,6 +18,7 @@ import {
 } from '@/lib/palette';
 import ArticleRow from '@/components/ArticleRow';
 import ServiceContact from '@/components/ServiceContact';
+import ServiceIntroContact from '@/components/ServiceIntroContact';
 import JsonLd from '@/components/JsonLd';
 import { authorRef } from '@/lib/identitySchema';
 import type { ArticleListItem } from '@/app/articles/ArticlesBrowser';
@@ -253,6 +254,16 @@ export default async function ServicePage({
         </div>
       </section>
 
+      {/* ───────── Early contact ─────────
+          Most visitors leave before the closing contact block; this puts who
+          she is and the two ways to reach her right after the intro. */}
+      <ServiceIntroContact
+        serviceSlug={service.slug}
+        serviceLabel={service.navLabel}
+        waHref={waHref}
+        discreet={service.discreet}
+      />
+
       {/* ───────── When people come ───────── */}
       <section className="py-8 md:py-12 bg-white">
         <div className="container mx-auto px-4 md:px-8">
@@ -388,11 +399,18 @@ export default async function ServicePage({
         </div>
       </section>
 
+      <ServiceContact
+        serviceSlug={service.slug}
+        serviceLabel={service.navLabel}
+        waHref={waHref}
+      />
+
       {/* ───────── Supporting articles ─────────
-          Plain white like every other section. The gradient that used to be
-          here faded into the teal CTA banner that closed the page; that banner
-          is gone, replaced by the contact form, so the fade only left a visible
-          step between this section and the form below it. */}
+          After the contact block, not before it. Placed above the form, the
+          rail was five exits a visitor met just before the way to write to
+          her: in paid traffic (11 Sep-10 Oct 2026) 21 sessions on the adult
+          page clicked an article against 5 that tapped WhatsApp, and none of
+          the 28 paid sessions that went on to an article got in touch. */}
       {articles.length > 0 && (
         <section className="py-8 md:py-12 bg-white">
           <div className="container mx-auto px-4 md:px-8">
@@ -417,13 +435,6 @@ export default async function ServicePage({
           </div>
         </section>
       )}
-
-      <ServiceContact
-        serviceSlug={service.slug}
-        serviceLabel={service.navLabel}
-        waHref={waHref}
-        discreet={service.discreet}
-      />
     </div>
   );
 }

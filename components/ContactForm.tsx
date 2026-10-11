@@ -141,13 +141,12 @@ export default function ContactForm({
         </motion.div>
       ) : (
         <>
-          {/* Skipped when the parent has already said who this is and why -
-              on a service page the card carries her photo, her name and an
-              invitation directly above, and a third heading repeating it was
-              about 100px of the card saying nothing new. */}
+          {/* Skipped when the parent passes an empty title. On a service page
+              the title is a short "leave your details" line; her photo and
+              name sit near the top of the page instead. */}
           {title ? (
             <>
-              <h2 className={`text-lg md:text-2xl font-bold mb-1.5 md:mb-2 ${onDark ? 'text-white' : 'text-stone-800'}`}>{title}</h2>
+              <h2 className={`text-lg md:text-2xl font-bold ${subtitle ? 'mb-1.5 md:mb-2' : 'mb-4 md:mb-5'} ${onDark ? 'text-white' : 'text-stone-800'}`}>{title}</h2>
               {subtitle ? (
                 <p className={`text-sm md:text-base mb-6 md:mb-8 ${onDark ? 'text-white/80' : 'text-stone-500'}`}>{subtitle}</p>
               ) : null}

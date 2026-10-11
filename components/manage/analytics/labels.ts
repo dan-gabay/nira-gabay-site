@@ -42,6 +42,7 @@ const SOURCE_LABELS: Record<string, string> = {
 export function buttonLabel(source: string | null | undefined): string {
   if (!source) return 'לא ידוע';
   if (SOURCE_LABELS[source]) return SOURCE_LABELS[source];
+  if (source.startsWith('service_intro_')) return `כפתור בראש עמוד ${serviceName(source.slice(14))}`;
   if (source.startsWith('service_')) return `טופס/כפתור בעמוד ${serviceName(source.slice(8))}`;
   return source;
 }
