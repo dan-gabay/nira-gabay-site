@@ -70,6 +70,35 @@ The goal: the user says "run" and Claude Code handles the entire flow, including
 
 ---
 
+## Growth work (Nira Growth project)
+
+Growth strategy, backlog and verified tool access live outside the repo, in
+the project's shared files (`/mnt/project-files/nira-growth/`:
+`growth-operating-system.md`, `capability-matrix.md`,
+`optimization-backlog.md`, `change-log.md`). When working on SEO, tracking,
+landing pages or contact flows, read them if available, and reference the
+backlog ID (B-xx) in the PR.
+
+Rules for growth-related code:
+- Success is new paying clients, not traffic or reported conversions.
+  Paying clients are tracked separately from qualified enquiries,
+  conversations (`spoke`) and raw conversion events.
+- Do not add the clinic's street address or a navigation/maps link to any
+  page or schema (owner decision; see `lib/clinic.ts` `streetAddress`).
+- CBT is a real service: never remove or de-emphasize CBT pages or copy for
+  ad or SEO reasons.
+- No invented credentials, testimonials, studies, statistics or guaranteed
+  outcomes in copy, schema or FAQ.
+- Never send identifying enquiry data (name, phone, email, message) to
+  Google Ads, GA4 or any third party. Offline conversion work may use only
+  gclid and conversion name, with Dan's approval.
+- Never build automated review requests or anything that reveals who is a
+  client; psychotherapy reviews are Nira's personal choice.
+- Google Ads access is read-only: account changes are listed for Dan, never
+  automated.
+
+---
+
 ## Key commands
 
 ```bash
