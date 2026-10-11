@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Eye, Type, Contrast, Link as LinkIcon, Pause, Palette, MousePointer, X } from 'lucide-react';
 
 type AccessibilitySettings = {
@@ -13,8 +13,47 @@ type AccessibilitySettings = {
   largeCursor: boolean;
 };
 
+// Opens the menu from anywhere on the page: the footer's "נגישות" button
+// dispatches this. The menu itself stays mounted on every page because it
+// is also what re-applies the visitor's saved settings on load.
+export const OPEN_ACCESSIBILITY_MENU_EVENT = 'open-accessibility-menu';
+
+export function openAccessibilityMenu() {
+  window.dispatchEvent(new Event(OPEN_ACCESSIBILITY_MENU_EVENT));
+}
+
+// No floating button (owner decision, 2026-10-11): the entry point is the
+// "נגישות" button in the footer, with the accessibility statement linked next
+// to it. The panel opens fixed in the corner so it is usable from the footer
+// without scrolling back up.
 export default function AccessibilityMenu() {
   const [isOpen, setIsOpen] = useState(false);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const open = () => {
+      openerRef.current = document.activeElement as HTMLElement | null;
+      setIsOpen(true);
+    };
+    window.addEventListener(OPEN_ACCESSIBILITY_MENU_EVENT, open);
+    return () => window.removeEventListener(OPEN_ACCESSIBILITY_MENU_EVENT, open);
+  }, []);
+
+  // Keyboard users land in the panel when it opens, can leave it with Escape,
+  // and go back to the button they opened it from.
+  useEffect(() => {
+    if (!isOpen) return;
+    closeButtonRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      openerRef.current?.focus();
+    };
+  }, [isOpen]);
   const [settings, setSettings] = useState<AccessibilitySettings>({
     fontSize: 100,
     highContrast: false,
@@ -106,18 +145,12 @@ export default function AccessibilityMenu() {
 
   return (
     <>
-      {/* Accessibility Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed left-4 bottom-24 z-50 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-2xl transition-all hover:scale-110"
-        aria-label="תפריט נגישות"
-      >
-        <Eye className="w-6 h-6" />
-      </button>
-
       {/* Accessibility Menu */}
       {isOpen && (
-        <div className="fixed left-4 bottom-40 z-50 bg-white rounded-2xl shadow-2xl border border-stone-200 w-80 max-h-[70vh] overflow-y-auto">
+        <div
+          role="dialog"
+          aria-label="הגדרות נגישות"
+          className="fixed right-3 bottom-3 z-50 bg-white rounded-2xl shadow-2xl border border-stone-200 w-80 max-w-[calc(100vw-1.5rem)] max-h-[70vh] overflow-y-auto">
           {/* Header */}
           <div className="sticky top-0 bg-white border-b border-stone-200 p-4 flex items-center justify-between rounded-t-2xl">
             <h3 className="text-lg font-bold text-stone-800 flex items-center gap-2">
@@ -125,6 +158,7 @@ export default function AccessibilityMenu() {
               הגדרות נגישות
             </h3>
             <button
+              ref={closeButtonRef}
               onClick={() => setIsOpen(false)}
               className="p-1 hover:bg-stone-100 rounded-lg transition-colors"
               aria-label="סגור"
