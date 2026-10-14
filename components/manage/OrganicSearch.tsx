@@ -10,7 +10,7 @@ import {
   Empty,
   Legend,
   MIN_FOR_RATE,
-  Note,
+  Note, Explain,
   ShowMore,
   StackBar,
   Stat,
@@ -193,10 +193,10 @@ export default function OrganicSearchCard({
         </CardPart>
       )}
 
-      <Note>
+      <Explain>
         זמן באתר נמדד מהפעולה הראשונה לאחרונה, ולכן ביקור של עמוד אחד בלי פעולה
         נוספת נרשם כ-0.
-      </Note>
+      </Explain>
 
       {googleParts}
     </div>

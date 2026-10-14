@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState, createContext, useContext, useCallback } from 'react';
 import TrackingToggle from '@/components/manage/TrackingToggle';
-import { LayoutDashboard, Inbox, FileText, MessageSquare, Tag, LogOut, BarChart3 } from 'lucide-react';
+import { Home, Inbox, FileText, LogOut, BarChart3, ExternalLink, type LucideIcon } from 'lucide-react';
 
 export type ManageSummary = {
   /** Leads awaiting classification PLUS taps awaiting confirmation: both are
@@ -29,15 +29,46 @@ const SummaryContext = createContext<{
 
 export const useManageSummary = () => useContext(SummaryContext);
 
-const NAV = [
-  { href: '/manage/overview', label: 'בקרה', icon: LayoutDashboard, badge: null },
-  { href: '/manage/contacts', label: 'פניות', icon: Inbox, badge: 'newLeads' },
-  { href: '/manage/articles', label: 'מאמרים', icon: FileText, badge: 'drafts' },
-  { href: '/manage/comments', label: 'תגובות', icon: MessageSquare, badge: 'pendingComments' },
-  { href: '/manage/analytics', label: 'נתונים', icon: BarChart3, badge: null },
-  { href: '/manage/tags', label: 'תגיות', icon: Tag, badge: null },
-] as const;
+// Four sections, not six. Comments and tags are part of the content work, so
+// they live as tabs inside מאמרים (ContentTabs) instead of taking a slot of
+// the same weight as the enquiries; the מאמרים badge counts what waits there.
+// `also` lists the other paths that belong to a section, for the active state.
+const NAV: ReadonlyArray<{
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  badge: (s: ManageSummary) => number;
+  also?: string[];
+}> = [
+  { href: '/manage/overview', label: 'בית', icon: Home, badge: () => 0 },
+  { href: '/manage/contacts', label: 'פניות', icon: Inbox, badge: (s) => s.newLeads },
+  {
+    href: '/manage/articles',
+    label: 'מאמרים',
+    icon: FileText,
+    badge: (s) => s.drafts + s.pendingComments,
+    also: ['/manage/comments', '/manage/tags'],
+  },
+  { href: '/manage/analytics', label: 'נתונים', icon: BarChart3, badge: () => 0 },
+];
 
+function Badge({ n, small = false }: { n: number; small?: boolean }) {
+  if (n <= 0) return null;
+  return (
+    <span
+      className={`rounded-full bg-rose-500 text-white font-bold inline-flex items-center justify-center tabular-nums ${
+        small ? 'min-w-[16px] h-4 px-1 text-[10px]' : 'min-w-[20px] h-5 px-1.5 text-[11px]'
+      }`}
+    >
+      {n > 99 ? '99+' : n}
+    </span>
+  );
+}
+
+// Layout: on a laptop a sidebar at the start edge (right, in Hebrew) carries
+// the sections and the few account-level controls, so the page itself starts
+// at the top of the screen. On a phone a slim top bar and a thumb-reachable
+// tab bar at the bottom do the same job.
 export default function ManageShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [summary, setSummary] = useState<ManageSummary | null>(null);
@@ -60,102 +91,129 @@ export default function ManageShell({ children }: { children: React.ReactNode })
     return <>{children}</>;
   }
 
-  // Every nav href is now a real subpath, so a plain prefix test is correct.
-  // '/manage' itself only redirects to /manage/analytics and is never rendered.
-  const isActive = (href: string) => pathname?.startsWith(href);
+  // Every nav href is a real subpath, so a plain prefix test is correct.
+  // '/manage' itself only redirects to /manage/overview and is never rendered.
+  const isActive = (item: (typeof NAV)[number]) =>
+    [item.href, ...(item.also ?? [])].some((p) => pathname?.startsWith(p));
 
   return (
     <SummaryContext.Provider value={{ summary, refresh }}>
-      <div className="min-h-screen bg-stone-100">
-        {/* Top bar. Desktop also carries the nav; mobile gets the tab bar below. */}
-        <header className="sticky top-0 z-40 bg-white border-b border-stone-200">
-          <div className="container mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between gap-4">
-            <Link href="/manage" className="font-bold text-stone-800 text-sm md:text-base whitespace-nowrap">
-              ניהול האתר
-            </Link>
+      <div className="min-h-screen bg-stone-100 lg:flex">
+        {/* ── Sidebar (laptop) ─────────────────────────────────── */}
+        <aside className="hidden lg:flex lg:flex-col lg:w-60 lg:flex-shrink-0 lg:sticky lg:top-0 lg:h-screen bg-white border-e border-stone-200">
+          <Link href="/manage" className="px-5 pt-6 pb-5 block">
+            <span className="block font-bold text-stone-900 text-base leading-tight">נירה גבאי</span>
+            <span className="block text-xs text-stone-500 mt-0.5">ניהול האתר</span>
+          </Link>
 
-            <nav className="hidden md:flex items-center gap-1">
+          <nav aria-label="ניווט ניהול" className="px-3 flex-1">
+            <ul className="space-y-0.5">
               {NAV.map((item) => {
-                const badge = item.badge ? summary?.[item.badge] ?? 0 : 0;
-                const active = isActive(item.href);
+                const active = isActive(item);
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    aria-current={active ? 'page' : undefined}
-                    className={`relative inline-flex items-center gap-2 px-3 min-h-[44px] rounded-lg text-sm font-medium transition-colors ${
-                      active ? 'bg-stone-800 text-white' : 'text-stone-600 hover:bg-stone-100'
-                    }`}
-                  >
-                    <item.icon className="w-4 h-4" aria-hidden="true" />
-                    {item.label}
-                    {badge > 0 && (
-                      <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-rose-500 text-white text-[11px] font-bold inline-flex items-center justify-center">
-                        {badge}
-                      </span>
-                    )}
-                  </Link>
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      aria-current={active ? 'page' : undefined}
+                      className={`flex items-center gap-3 px-3 min-h-[44px] rounded-xl text-sm font-medium transition-colors ${
+                        active ? 'bg-stone-900 text-white' : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
+                      }`}
+                    >
+                      <item.icon className="w-[18px] h-[18px] flex-shrink-0" aria-hidden="true" />
+                      <span className="flex-1">{item.label}</span>
+                      <Badge n={summary ? item.badge(summary) : 0} />
+                    </Link>
+                  </li>
                 );
               })}
-            </nav>
+            </ul>
+          </nav>
 
-            <div className="flex items-center gap-1">
-              <TrackingToggle />
-              <Link
-                href="/"
-                target="_blank"
-                className="hidden sm:inline-flex items-center px-3 min-h-[44px] rounded-lg text-xs md:text-sm text-stone-600 hover:bg-stone-100"
+          <div className="p-3 space-y-1 border-t border-stone-100">
+            <TrackingToggle wide />
+            <Link
+              href="/"
+              target="_blank"
+              className="flex items-center gap-3 px-3 min-h-[40px] rounded-lg text-sm text-stone-600 hover:bg-stone-100"
+            >
+              <ExternalLink className="w-4 h-4" aria-hidden="true" />
+              לאתר
+            </Link>
+            <form action="/api/manage/logout" method="post">
+              <button
+                type="submit"
+                className="w-full flex items-center gap-3 px-3 min-h-[40px] rounded-lg text-sm text-stone-500 hover:bg-stone-100"
               >
-                לאתר
-              </Link>
-              <form action="/api/manage/logout" method="post">
-                <button
-                  type="submit"
-                  aria-label="יציאה"
-                  className="inline-flex items-center gap-1.5 px-3 min-h-[44px] rounded-lg text-xs md:text-sm text-stone-500 hover:bg-stone-100"
-                >
-                  <LogOut className="w-4 h-4" aria-hidden="true" />
-                  <span className="hidden sm:inline">יציאה</span>
-                </button>
-              </form>
-            </div>
+                <LogOut className="w-4 h-4" aria-hidden="true" />
+                יציאה
+              </button>
+            </form>
           </div>
-        </header>
+        </aside>
 
-        {/* pb clears the mobile tab bar */}
-        <main id="main-content" className="container mx-auto px-4 md:px-6 py-4 md:py-8 pb-24 md:pb-8">{children}</main>
+        <div className="flex-1 min-w-0">
+          {/* ── Top bar (phone and tablet) ─────────────────────── */}
+          <header className="lg:hidden sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-stone-200">
+            <div className="px-4 md:px-6 h-14 flex items-center justify-between gap-3">
+              <Link href="/manage" className="font-bold text-stone-900 text-sm whitespace-nowrap">
+                ניהול האתר
+              </Link>
+              <div className="flex items-center gap-1">
+                <TrackingToggle />
+                <Link
+                  href="/"
+                  target="_blank"
+                  aria-label="לאתר"
+                  className="inline-flex items-center justify-center w-11 h-11 rounded-lg text-stone-500 hover:bg-stone-100"
+                >
+                  <ExternalLink className="w-4 h-4" aria-hidden="true" />
+                </Link>
+                <form action="/api/manage/logout" method="post">
+                  <button
+                    type="submit"
+                    aria-label="יציאה"
+                    className="inline-flex items-center justify-center w-11 h-11 rounded-lg text-stone-500 hover:bg-stone-100"
+                  >
+                    <LogOut className="w-4 h-4" aria-hidden="true" />
+                  </button>
+                </form>
+              </div>
+            </div>
+          </header>
 
-        {/* Mobile tab bar - thumb-reachable, always one tap between sections.
-            Six items in a five-column grid wrapped תגיות onto a second row,
-            which then sat under Safari's own bottom bar. The column count is
-            derived from NAV so adding a seventh section cannot repeat it. */}
+          {/* pb clears the phone tab bar */}
+          <main id="main-content" className="max-w-6xl mx-auto px-4 md:px-6 lg:px-10 py-5 md:py-8 pb-24 lg:pb-10">
+            {children}
+          </main>
+        </div>
+
+        {/* ── Tab bar (phone and tablet) ─────────────────────────
+            The column count is derived from NAV, so adding a section can
+            never wrap one onto a second row under Safari's own bottom bar. */}
         <nav
-          className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-stone-200 pb-[env(safe-area-inset-bottom)]"
+          className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-stone-200 pb-[env(safe-area-inset-bottom)]"
           aria-label="ניווט ניהול"
         >
           <div className="grid" style={{ gridTemplateColumns: `repeat(${NAV.length}, minmax(0, 1fr))` }}>
             {NAV.map((item) => {
-              const badge = item.badge ? summary?.[item.badge] ?? 0 : 0;
-              const active = isActive(item.href);
+              const active = isActive(item);
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`relative flex flex-col items-center justify-center gap-0.5 min-h-[56px] px-0.5 text-[10px] font-medium leading-tight text-center whitespace-nowrap transition-colors ${
+                  className={`relative flex flex-col items-center justify-center gap-0.5 min-h-[56px] px-0.5 text-[11px] font-medium leading-tight text-center whitespace-nowrap transition-colors ${
                     active ? 'text-stone-900' : 'text-stone-400'
                   }`}
                 >
                   <span className="relative">
                     <item.icon className="w-5 h-5" aria-hidden="true" />
-                    {badge > 0 && (
-                      <span className="absolute -top-1.5 -left-2 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold inline-flex items-center justify-center">
-                        {badge > 99 ? '99+' : badge}
-                      </span>
-                    )}
+                    <span className="absolute -top-1.5 -left-2.5">
+                      <Badge n={summary ? item.badge(summary) : 0} small />
+                    </span>
                   </span>
                   {item.label}
-                  {active && <span className="absolute top-0 inset-x-2 h-0.5 bg-stone-900 rounded-full" />}
+                  {active && <span className="absolute top-0 inset-x-4 h-0.5 bg-stone-900 rounded-full" />}
                 </Link>
               );
             })}

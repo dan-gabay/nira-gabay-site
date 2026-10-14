@@ -14,7 +14,7 @@ import {
   CardPart,
   Empty,
   MIN_FOR_RATE,
-  Note,
+  Note, Explain,
   ShowMore,
   StackBar,
   Stat,
@@ -304,12 +304,12 @@ export default function ArticleEngagementCard({
 
       {/* Said out loud, because the two words on the chart are doing a lot of
           work and neither means what it sounds like on its own. */}
-      <Note>
+      <Explain>
         &quot;נקרא&quot; = חצי מהעמוד נגלל, או 30 שניות בעמוד. &quot;עד הסוף&quot; = סוף גוף
         המאמר היה על המסך וגם עברו לפחות 40% מזמן הקריאה המשוער, בלשונית פעילה.
         אחוזי גלילה מדויקים וזמן קריאה אינם נשמרים ולכן אינם מופיעים כאן. לאיזו
         רשת בוצע שיתוף נשמר רק מ-22.9.2026, ולכן שיתופים קודמים מופיעים בלי רשת.
-      </Note>
+      </Explain>
     </div>
   );
 }

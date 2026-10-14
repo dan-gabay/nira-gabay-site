@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import ContentTabs from '@/components/manage/ContentTabs';
+import PageHeader from '@/components/manage/PageHeader';
 import { 
   Tag as TagIcon,
   Plus,
@@ -199,45 +201,44 @@ export default function ManageTagsPage() {
 
   if (loading) {
     return (
-      <div className="py-20 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-          <p className="text-stone-600">טוען תגיות...</p>
-        </div>
+      <div className="space-y-4 md:space-y-5">
+        <PageHeader title="תוכן האתר" />
+        <ContentTabs />
+        <div className="py-20 text-center text-stone-500 text-sm">טוען תגיות...</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      {/* Header */}
-      <div>
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-xl md:text-3xl font-bold text-stone-800">ניהול תגיות</h1>
-            </div>
-            <button
-              onClick={() => setIsAdding(true)}
-              className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-colors"
-            >
-              <Plus className="w-5 h-5" />
-              תגית חדשה
-            </button>
-          </div>
+    <div className="space-y-4 md:space-y-5">
+      <PageHeader title="תוכן האתר" sub="התגיות שלפיהן מאמרים מסודרים באתר." />
+      <ContentTabs />
 
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
-            <input
-              type="text"
-              placeholder="חיפוש תגיות..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pr-12 pl-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-            />
-          </div>
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none"
+            aria-hidden="true"
+          />
+          <label htmlFor="manage-tag-search" className="sr-only">
+            חיפוש תגיות
+          </label>
+          <input
+            id="manage-tag-search"
+            type="search"
+            placeholder="חיפוש תגיות..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full min-h-[44px] pr-11 pl-4 rounded-xl border border-stone-300 bg-white text-sm focus:ring-2 focus:ring-amber-400 focus:outline-none"
+          />
         </div>
+        <button
+          onClick={() => setIsAdding(true)}
+          className="inline-flex items-center gap-1.5 min-h-[44px] px-4 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs md:text-sm font-medium transition-colors flex-shrink-0"
+        >
+          <Plus className="w-4 h-4" aria-hidden="true" />
+          תגית חדשה
+        </button>
       </div>
 
       <div>
@@ -276,22 +277,13 @@ export default function ManageTagsPage() {
           </div>
         )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-2.5 md:gap-4 mb-4 md:mb-6">
-          <div className="bg-white p-4 rounded-lg border border-stone-200">
-            <p className="text-stone-600 text-sm">סה"כ תגיות</p>
-            <p className="text-lg md:text-2xl font-bold text-stone-800">{tags.length}</p>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-stone-200">
-            <p className="text-stone-600 text-sm">תגיות בשימוש</p>
-            <p className="text-lg md:text-2xl font-bold text-green-600">
-              {tags.filter(t => (t.article_count || 0) > 0).length}
-            </p>
-          </div>
-        </div>
+        {/* The two counts, as one line rather than two tiles */}
+        <p className="text-[12px] md:text-sm text-stone-500 mb-2 px-0.5">
+          {tags.length} תגיות, {tags.filter((t) => (t.article_count || 0) > 0).length} מהן בשימוש
+        </p>
 
         {/* Tags List */}
-        <div className="bg-white rounded-xl shadow-sm border border-stone-100">
+        <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
           {filteredTags.length === 0 ? (
             <div className="p-8 md:p-12 text-center text-stone-600">
               {searchTerm ? 'לא נמצאו תגיות התואמות לחיפוש' : 'אין תגיות עדיין'}
@@ -299,7 +291,7 @@ export default function ManageTagsPage() {
           ) : (
             <div className="divide-y divide-stone-100">
               {filteredTags.map((tag) => (
-                <div key={tag.id} className="p-4 hover:bg-stone-50 transition-colors">
+                <div key={tag.id} className="p-3 md:px-4 hover:bg-stone-50 transition-colors">
                   {editingId === tag.id ? (
                     // Edit Mode
                     <div className="flex items-center gap-3">
@@ -330,28 +322,30 @@ export default function ManageTagsPage() {
                   ) : (
                     // View Mode
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 flex-1">
-                        <TagIcon className="w-5 h-5 text-amber-600" />
-                        <span className="font-medium text-stone-800">{tag.name}</span>
-                        <span className="text-sm text-stone-500">
-                          ({tag.article_count || 0} מאמרים)
+                      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                        <TagIcon className="w-4 h-4 text-stone-400 flex-shrink-0" aria-hidden="true" />
+                        <span className="font-medium text-stone-800 text-sm md:text-base">{tag.name}</span>
+                        <span className="text-xs md:text-sm text-stone-400">
+                          {tag.article_count || 0} מאמרים
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
                         <button
                           onClick={() => startEdit(tag)}
-                          className="bg-stone-100 hover:bg-stone-200 text-stone-700 min-h-[44px] px-4 rounded-xl text-xs md:text-sm font-medium flex items-center justify-center gap-1.5 transition-colors"
+                          title="עריכה"
+                          aria-label={`עריכת התגית ${tag.name}`}
+                          className="w-10 h-10 flex items-center justify-center rounded-lg text-stone-500 hover:bg-stone-100 transition-colors"
                         >
-                          <Edit className="w-4 h-4" />
-                          עריכה
+                          <Edit className="w-4 h-4" aria-hidden="true" />
                         </button>
                         <button
                           onClick={() => deleteTag(tag.id, tag.name, tag.article_count || 0)}
-                          className="border border-stone-200 text-stone-400 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 min-h-[44px] px-4 rounded-xl text-xs md:text-sm font-medium flex items-center justify-center gap-1.5 transition-colors"
+                          title="מחיקה"
+                          aria-label={`מחיקת התגית ${tag.name}`}
+                          className="w-10 h-10 flex items-center justify-center rounded-lg text-stone-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
                         >
-                          <Trash2 className="w-4 h-4" />
-                          מחק
+                          <Trash2 className="w-4 h-4" aria-hidden="true" />
                         </button>
                       </div>
                     </div>

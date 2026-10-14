@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { GoogleAds } from '@/lib/google/types';
-import { Card, CardPart, Empty, Note, ShowMore, Stat, StatGrid, SubHead, wholePct } from './ui';
+import { Card, CardPart, Empty, Note, Explain, ShowMore, Stat, StatGrid, SubHead, wholePct } from './ui';
 
 // The "גוגל" section: what the ads cost against what they brought, which
 // keywords the site pays for because it is absent organically, and which
@@ -40,11 +40,11 @@ function Cost({ data }: { data: Loaded }) {
         <Stat label="הגיעו לשיחה" value={l.spoke} sub={`עלות לשיחה ${per(data.cost, l.spoke)}`} />
         <Stat label="התחילו טיפול" value={l.clients} sub={`עלות למטופל ${per(data.cost, l.clients)}`} />
       </StatGrid>
-      <Note>
+      <Explain>
         עלות מגוגל אדס (דרך GA4), פניות ומצבן מרשימת הפניות. שני הצדדים מאותם ימים.
         {data.clipped && ` מילת המפתח נשמרת עם הפנייה רק מ-${heDate(data.trackedFrom)}, ולכן הטווח מתחיל שם ולא קודם.`}
         {l.open > 0 && ` ${l.open} פניות עוד בלי סטטוס, ולכן השיחות והמטופלים עשויים לגדול.`}
-      </Note>
+      </Explain>
     </Card>
   );
 }
@@ -126,10 +126,10 @@ function Keywords({ data }: { data: Loaded }) {
               {data.organicNotPaid.map((q) => `${q.query} (${q.impressions}, מקום ${q.position})`).join(' · ')}
             </p>
           )}
-          <Note>
+          <Explain>
             חיפושים שגוגל כבר מציגה בהם את האתר, ואין עליהם מודעה. המספר בסוגריים הוא הופעות. כשהמיקום רחוק, אלה מועמדים
             טבעיים לבדיקה כמילות מפתח, או לחיזוק העמוד.
-          </Note>
+          </Explain>
         </CardPart>
       )}
     </Card>
@@ -144,18 +144,16 @@ function Terms({ data }: { data: Loaded }) {
 
   return (
     <Card title="מונחי חיפוש" sub={`מה אנשים באמת הקלידו לפני שלחצו על המודעה, מ-${heDate(data.termsSince)}`}>
-      <StatGrid>
-        <Stat label="עלות כוללת" value={money(data.termsCost)} />
-        <Stat
-          label="מתוכה במונחים גלויים"
-          value={money(data.visibleTermsCost)}
-          rate={data.termsCost > 0 ? wholePct(data.visibleTermsCost, data.termsCost) : null}
-          sub={`${data.searchTerms.length} מונחים`}
-        />
-        <Stat label="בלי שום המרה" value={money(candidatesCost)} sub={`${candidates.length} מונחים`} />
-      </StatGrid>
+      {/* One line, not three tiles: the totals only frame the list below. */}
+      <p className="text-[12px] md:text-[13px] text-stone-600 leading-relaxed">
+        מתוך <strong className="text-stone-800 tabular-nums">{money(data.termsCost)}</strong>,{' '}
+        <span className="tabular-nums">{money(data.visibleTermsCost)}</span> במונחים שגוגל מראה (
+        {data.searchTerms.length} מונחים).{' '}
+        <strong className="text-stone-800 tabular-nums">{money(candidatesCost)}</strong> הלכו על{' '}
+        {candidates.length} מונחים בלי שום המרה.
+      </p>
 
-      <CardPart>
+      <div className="mt-4">
         <SubHead title="מועמדים להחרגה" aside="לבדיקה בלבד" />
         {candidates.length === 0 ? (
           <Empty>אין מונחים עם עלות ובלי המרה.</Empty>
@@ -188,12 +186,12 @@ function Terms({ data }: { data: Loaded }) {
             )}
           </>
         )}
-        <Note>
+        <Explain>
           מונחים שעלו כסף ולא הובילו לאף המרה שמוגדרת ב-GA4, מסודרים לפי עלות. שווה לעבור עליהם ולהחליט בגוגל אדס מה
           להחריג, למשל שמות של מטפלים אחרים או חיפושים על תרופות. כאן לא משתנה כלום בחשבון הפרסום. גוגל מסתירה מונחים
           נדירים, ולכן רק {wholePct(data.visibleTermsCost, data.termsCost)}% מהעלות מופיעה כאן.
-        </Note>
-      </CardPart>
+        </Explain>
+      </div>
     </Card>
   );
 }

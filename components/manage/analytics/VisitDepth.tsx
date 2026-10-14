@@ -2,7 +2,7 @@
 
 import { SERIES } from '@/components/manage/Charts';
 import { enquiries as enquiryCount } from '@/lib/heCount';
-import { Card, Empty, MIN_FOR_RATE, Note, StackBar, duration, rateText, wholePct } from './ui';
+import { Card, Empty, MIN_FOR_RATE, Explain, StackBar, duration, rateText, wholePct } from './ui';
 import type { SiteBehavior } from './types';
 
 // "כמה עמודים ביקור עובר, וכמה זמן זה לוקח?" One row per depth, so the
@@ -127,11 +127,11 @@ export function VisitDepth({ data }: { data: SiteBehavior | null }) {
         })}
       </ul>
 
-      <Note>
+      <Explain>
         זמן נמדד מהפעולה הראשונה בביקור ועד האחרונה. הזמן על העמוד האחרון לא נספר, כי אין אירוע יציאה, ולכן לביקור של
         עמוד אחד אין זמן כלל, וגם הזמנים האחרים קצרים מהאמת. מוצג חציון ולא ממוצע, כדי שלשונית אחת שנשארה פתוחה לא
         תעוות את התמונה.
-      </Note>
+      </Explain>
     </Card>
   );
 }

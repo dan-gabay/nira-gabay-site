@@ -77,6 +77,23 @@ export function Note({ children }: { children: ReactNode }) {
 }
 
 /**
+ * How a figure is measured, or how to read it: folded under one small link.
+ * These paragraphs were open under nearly every card, and read once they only
+ * stood between the figures; a finding the reader should act on is a Note.
+ */
+export function Explain({ children }: { children: ReactNode }) {
+  return (
+    <details className="group mt-3 text-[11px] text-stone-500">
+      <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer select-none inline-flex items-center gap-1 min-h-[32px] text-stone-400 hover:text-stone-600">
+        איך לקרוא את זה
+        <ChevronDown className="w-3 h-3 transition-transform group-open:rotate-180" aria-hidden="true" />
+      </summary>
+      <p className="leading-relaxed text-stone-500 pb-1">{children}</p>
+    </details>
+  );
+}
+
+/**
  * A second part of the same card, under a hairline. A card that answers two
  * related questions keeps them together rather than becoming two cards, and
  * every such split on the page is this one rule and this one gap.

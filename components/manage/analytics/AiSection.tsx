@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { AiFetchBars, AI_ANSWER_COLOR, AI_SERIES, alignToBuckets } from '@/components/manage/Charts';
-import { BarList, Card, CardPart, Empty, Note, ShowMore, Stat, StatGrid, SubHead, type BarRow } from './ui';
+import { BarList, Card, CardPart, Empty, Explain, ShowMore, Stat, StatGrid, SubHead, type BarRow } from './ui';
 import { heDate } from './Overview';
 import { pageName } from './labels';
 import type { SiteBehavior } from './types';
@@ -125,12 +125,12 @@ export function AiSection({
         </div>
       </CardPart>
 
-      <Note>
+      <Explain>
         סריקה היא כלי שקורא את האתר בזמן שלו, כדי להכיר אותו. פתיחה תוך כדי תשובה היא כלי כמו ChatGPT שפתח עמוד כי
         מישהו שאל אותו משהו עכשיו, כלומר האתר שימש מקור לתשובה. אף אחד מהם אינו ביקור, והם לא נספרים בשום מספר אחר
         בעמוד. מי שלחץ על קישור בתשובה ונכנס מופיע במקורות התנועה.
         {data.ai_first_hit && <> המדידה פועלת מ-{heDate(data.ai_first_hit)}.</>}
-      </Note>
+      </Explain>
     </Card>
   );
 }

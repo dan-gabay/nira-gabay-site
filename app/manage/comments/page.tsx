@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
+import { useManageSummary } from '@/components/manage/ManageShell';
+import ContentTabs from '@/components/manage/ContentTabs';
+import PageHeader from '@/components/manage/PageHeader';
 import { 
   CheckCircle,
   XCircle,
@@ -28,6 +31,8 @@ type Comment = {
 };
 
 export default function ManageCommentsPage() {
+  // Approving or deleting changes the pending count on the nav badge.
+  const { refresh } = useManageSummary();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('pending');
@@ -84,6 +89,7 @@ export default function ManageCommentsPage() {
       setComments(comments.map(c => 
         c.id === id ? { ...c, is_approved: true } : c
       ));
+      refresh();
     } catch (error) {
       console.error('Error approving comment:', error);
       alert('שגיאה באישור התגובה');
@@ -102,6 +108,7 @@ export default function ManageCommentsPage() {
       setComments(comments.map(c => 
         c.id === id ? { ...c, is_approved: false } : c
       ));
+      refresh();
     } catch (error) {
       console.error('Error rejecting comment:', error);
       alert('שגיאה בדחיית התגובה');
@@ -120,7 +127,7 @@ export default function ManageCommentsPage() {
       if (error) throw error;
       
       setComments(comments.filter(c => c.id !== id));
-      alert('התגובה נמחקה בהצלחה');
+      refresh();
     } catch (error) {
       console.error('Error deleting comment:', error);
       alert('שגיאה במחיקת התגובה');
@@ -138,22 +145,20 @@ export default function ManageCommentsPage() {
 
   if (loading) {
     return (
-      <div className="py-20 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-stone-600">טוען תגובות...</p>
-        </div>
+      <div className="space-y-4 md:space-y-5">
+        <PageHeader title="תוכן האתר" />
+        <ContentTabs />
+        <div className="py-20 text-center text-stone-500 text-sm">טוען תגובות...</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      {/* Header */}
+    <div className="space-y-4 md:space-y-5">
+      <PageHeader title="תוכן האתר" sub="תגובות של קוראים מופיעות באתר רק אחרי אישור." />
+      <ContentTabs />
       <div>
         <div>
-          <h1 className="text-xl md:text-3xl font-bold text-stone-800 mb-3 md:mb-4">ניהול תגובות</h1>
-
           {/* Filter Tabs */}
           <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-0.5">
             <button
