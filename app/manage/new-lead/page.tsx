@@ -24,8 +24,7 @@ const CHANNELS = [
 // Where things stand by the time she logs it. Usually still "new"; often she
 // already spoke to them, or already knows it is not for her.
 const OUTCOMES: Array<{ key: LeadStatus; label: string }> = [
-  { key: 'new', label: 'עוד לא דיברנו' },
-  { key: 'spoke', label: 'דיברנו' },
+  { key: 'new', label: 'עוד לא ידוע' },
   { key: 'started_therapy', label: 'קבענו טיפול' },
   { key: 'irrelevant', label: 'לא רלוונטי' },
 ];

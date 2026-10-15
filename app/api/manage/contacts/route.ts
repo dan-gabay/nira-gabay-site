@@ -81,6 +81,8 @@ export async function PATCH(req: NextRequest) {
     is_read?: boolean;
     status?: string;
     heard_from?: string;
+    name?: string;
+    outcome_note?: string;
   };
   try {
     body = await req.json();
@@ -89,6 +91,10 @@ export async function PATCH(req: NextRequest) {
   }
 
   const update: Record<string, unknown> = {};
+  // Written on /manage/update after an outcome is chosen. An empty name keeps
+  // the one already there rather than blanking it.
+  if (typeof body.name === 'string' && body.name.trim()) update.name = body.name.trim().slice(0, 200);
+  if (typeof body.outcome_note === 'string') update.outcome_note = body.outcome_note.trim().slice(0, 2000) || null;
   if (typeof body.is_read === 'boolean') update.is_read = body.is_read;
   if (typeof body.status === 'string') {
     if (!(LEAD_STATUSES as readonly string[]).includes(body.status)) {

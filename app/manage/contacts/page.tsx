@@ -497,6 +497,14 @@ function LeadPane({
         </div>
       </section>
 
+      {/* Nira's own words on how it ended, written on /manage/update */}
+      {m.outcome_note && (
+        <section className="px-5 md:px-6 py-4 border-t border-stone-100">
+          <h3 className="text-[12px] font-semibold text-stone-500 mb-1.5">פרטים</h3>
+          <p className="text-sm text-stone-700 whitespace-pre-wrap">{m.outcome_note}</p>
+        </section>
+      )}
+
       {/* How they heard: what the client said, independent of tracking */}
       <section className="px-5 md:px-6 py-4 border-t border-stone-100">
         <HeardFrom value={m.heard_from ?? ''} onSave={(v) => onUpdate({ heard_from: v })} />

@@ -13,6 +13,8 @@ export type ContactMessage = {
   created_date: string;
   status?: LeadStatus;
   heard_from?: string | null;
+  /** Nira's few words on how it ended (db/2026-10-15-lead-outcome-note.sql). */
+  outcome_note?: string | null;
   channel?: string | null;
   // Attribution (nullable - only present on leads captured after the
   // Google Ads tracking work)
@@ -135,7 +137,7 @@ export function intentSource(i: ContactIntent): string {
 /** PATCH one lead. Throws on failure so the caller can roll back. */
 export async function patchLead(
   id: string,
-  patch: { status?: LeadStatus; heard_from?: string; is_read?: boolean },
+  patch: { status?: LeadStatus; heard_from?: string; is_read?: boolean; name?: string; outcome_note?: string },
 ): Promise<void> {
   const res = await fetch('/api/manage/contacts', {
     method: 'PATCH',

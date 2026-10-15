@@ -14,45 +14,45 @@ import {
   type LeadStatus,
 } from '@/components/manage/leads';
 
-// "What happened with them?" - the one screen Nira opens to keep the enquiries
-// the site recorded up to date. Built for her phone: the new-enquiry email and
-// Telegram message link straight here (?lead=<id> puts that lead first), and a
-// home-screen icon opens it too (see layout.tsx).
+// "What happened with them?" - the one screen Nira opens, after she has spoken
+// to someone, to record how it ended. Built for her phone: the new-enquiry
+// email and Telegram message link straight here (?lead=<id> puts that lead
+// first), and a home-screen icon opens it too (see layout.tsx).
 //
-// It shows only what is waiting for her, newest first:
-// - enquiries still "new" or "spoke": one tap records the outcome, which is
-//   what lead quality is measured by (only started_therapy/ongoing count as
-//   qualified);
-// - taps on the site's WhatsApp/phone/email buttons not yet answered: did a
-//   message actually arrive? A yes logs the lead with the tap's attribution.
+// There are exactly two answers, because those are the only two that change
+// anything (owner decision, 2026-10-15): a treatment was booked, or it is not
+// relevant. "We spoke" is not an outcome. Tapping one saves it at once and
+// opens a name field and a free-text box for a few words - for an irrelevant
+// enquiry, ideally the reason.
 //
-// Every tap saves at once - there is no save button to forget.
+// It shows only what is still open (status new or spoke), plus taps on the
+// site's WhatsApp/phone/email buttons not yet answered: did a message arrive?
 
 // Older open enquiries are left to the full inbox, so this list stays short.
 const OPEN_WINDOW_MS = 90 * 24 * 60 * 60 * 1000;
 
-const OUTCOMES: Array<{ key: LeadStatus; label: string; on: string }> = [
-  { key: 'spoke', label: 'דיברנו', on: 'bg-amber-500 border-amber-500 text-white' },
-  { key: 'started_therapy', label: 'התחיל טיפול', on: 'bg-emerald-600 border-emerald-600 text-white' },
-  { key: 'irrelevant', label: 'לא רלוונטי', on: 'bg-stone-600 border-stone-600 text-white' },
-];
+type Outcome = 'started_therapy' | 'irrelevant';
 
-const NEW_OUTCOMES: Array<{ key: LeadStatus; label: string; on: string }> = [
-  { key: 'new', label: 'עוד לא דיברנו', on: 'bg-rose-500 border-rose-500 text-white' },
-  ...OUTCOMES,
+const OUTCOMES: Array<{ key: Outcome; label: string; on: string; hint: string }> = [
+  {
+    key: 'started_therapy',
+    label: 'קבענו טיפול',
+    on: 'bg-emerald-600 border-emerald-600 text-white',
+    hint: 'רוצה לפרט? למשל: על מה הטיפול, איך שמעו עלייך (לא חובה)',
+  },
+  {
+    key: 'irrelevant',
+    label: 'לא רלוונטי',
+    on: 'bg-stone-600 border-stone-600 text-white',
+    hint: 'רוצה לפרט? למשל: למה לא מתאים, איך שמעו עלייך (לא חובה)',
+  },
 ];
-
-// What the person said, in their words - never filled in from the ad tracking
-// (see startLeadFromIntent in the inbox for why).
-const HEARD_FROM = ['גוגל', 'המלצה של מישהו', 'פייסבוק / אינסטגרם', 'מטופל/ת בעבר'];
 
 const btn =
-  'inline-flex items-center justify-center gap-1 whitespace-nowrap min-h-[48px] px-2 rounded-xl border-2 text-sm font-semibold transition-colors';
+  'inline-flex items-center justify-center gap-1.5 whitespace-nowrap min-h-[52px] px-2 rounded-xl border-2 text-[15px] font-semibold transition-colors';
 const off = 'bg-white border-stone-200 text-stone-700';
-const chip = (on: boolean) =>
-  `min-h-[40px] px-3.5 rounded-full border text-sm transition-colors ${
-    on ? 'bg-stone-900 border-stone-900 text-white' : 'bg-white border-stone-300 text-stone-600'
-  }`;
+const field =
+  'w-full px-4 rounded-xl border border-stone-300 bg-white text-base focus:ring-2 focus:ring-stone-400 focus:outline-none';
 
 export default function UpdateLeadsPage() {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
@@ -60,8 +60,8 @@ export default function UpdateLeadsPage() {
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [focusId, setFocusId] = useState<string | null>(null);
-  // Leads touched on this screen stay on it after reaching a final status, so
-  // a mis-tap can be corrected; they drop off on the next visit.
+  // Leads answered on this screen stay on it, so a mis-tap can be corrected
+  // and the details filled in; they drop off on the next visit.
   const [touched, setTouched] = useState<Set<string>>(new Set());
 
   async function load() {
@@ -95,15 +95,17 @@ export default function UpdateLeadsPage() {
     return list.sort((a, b) => (a.id === focusId ? -1 : b.id === focusId ? 1 : 0));
   }, [messages, focusId, touched]);
 
-  async function update(id: string, patch: { status?: LeadStatus; heard_from?: string }) {
+  // Optimistic, rolled back on failure. Throws so a card can say it failed.
+  async function update(id: string, patch: { status?: LeadStatus; name?: string; outcome_note?: string }) {
     const before = messages;
     setTouched((t) => new Set(t).add(id));
     setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, ...patch, is_read: true } : m)));
     try {
       await patchLead(id, { ...patch, is_read: true });
-    } catch {
+    } catch (e) {
       setMessages(before);
       alert('העדכון לא נשמר. נסי שוב.');
+      throw e;
     }
   }
 
@@ -130,7 +132,7 @@ export default function UpdateLeadsPage() {
           {loading
             ? 'טוען...'
             : waiting > 0
-              ? 'לחיצה אחת על מה שקרה, וזה נשמר.'
+              ? 'אחרי שדיברתם: לחיצה על מה שקרה, וזה נשמר.'
               : 'הכל מעודכן. אין פניות שמחכות לך.'}
         </p>
       </div>
@@ -176,6 +178,10 @@ export default function UpdateLeadsPage() {
   );
 }
 
+// Placeholder names (a lead logged without one) are shown as such, and the
+// name field starts empty for them rather than holding the placeholder.
+const NO_NAME = 'ללא שם';
+
 function LeadCard({
   m,
   focused,
@@ -183,25 +189,40 @@ function LeadCard({
 }: {
   m: ContactMessage;
   focused: boolean;
-  onUpdate: (patch: { status?: LeadStatus; heard_from?: string }) => void;
+  onUpdate: (patch: { status?: LeadStatus; name?: string; outcome_note?: string }) => Promise<void>;
 }) {
   const status = leadStatus(m);
-  const answered = status !== 'new';
+  const outcome = OUTCOMES.find((o) => o.key === status);
+  const [name, setName] = useState(m.name === NO_NAME ? '' : m.name || '');
+  const [note, setNote] = useState(m.outcome_note || '');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  async function saveDetails() {
+    setSaving(true);
+    try {
+      await onUpdate({ name: name.trim() || undefined, outcome_note: note });
+      setSaved(true);
+    } catch {
+      // update() already told her
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <article
       className={`bg-white rounded-2xl border p-4 space-y-3.5 ${focused ? 'border-stone-900 ring-2 ring-stone-900/10' : 'border-stone-200'}`}
     >
       <div>
-        <h2 className="text-lg font-bold text-stone-900">{m.name}</h2>
+        <h2 className="text-lg font-bold text-stone-900">{m.name || NO_NAME}</h2>
         <p className="text-[13px] text-stone-500">
-          {timeAgo(m.created_date)}
-          {m.channel && ` · ${CHANNEL_LABELS[m.channel] || m.channel}`}
-          {!m.channel && ' · טופס האתר'}
+          {timeAgo(m.created_date)} · {CHANNEL_LABELS[m.channel || 'form'] || m.channel}
         </p>
         {m.message && <p className="text-sm text-stone-700 mt-2 line-clamp-3 whitespace-pre-wrap">{m.message}</p>}
       </div>
 
-      <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="מה קרה">
+      <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="מה קרה">
         {OUTCOMES.map((o) => {
           const on = status === o.key;
           return (
@@ -210,7 +231,11 @@ function LeadCard({
               type="button"
               role="radio"
               aria-checked={on}
-              onClick={() => !on && onUpdate({ status: o.key })}
+              onClick={() => {
+                if (on) return;
+                setSaved(false);
+                onUpdate({ status: o.key }).catch(() => {});
+              }}
               className={`${btn} ${on ? o.on : off}`}
             >
               {on && <Check className="w-4 h-4 flex-shrink-0" aria-hidden="true" />}
@@ -220,29 +245,61 @@ function LeadCard({
         })}
       </div>
 
-      {/* Asked once there was a conversation, and only while unanswered. */}
-      {answered && status !== 'irrelevant' && (
-        <div>
-          <p className="text-[13px] font-semibold text-stone-600 mb-1.5">איך שמעו עלייך? (לא חובה)</p>
-          <div className="flex flex-wrap gap-1.5">
-            {HEARD_FROM.map((h) => (
-              <button
-                key={h}
-                type="button"
-                aria-pressed={m.heard_from === h}
-                onClick={() => onUpdate({ heard_from: m.heard_from === h ? '' : h })}
-                className={chip(m.heard_from === h)}
-              >
-                {h}
-              </button>
-            ))}
-          </div>
+      {/* Opens once an outcome is chosen. The outcome itself is already saved;
+          this only adds the details. */}
+      {outcome && (
+        <div className="space-y-2.5 pt-1">
+          <label className="block">
+            <span className="block text-[13px] font-semibold text-stone-600 mb-1">שם</span>
+            <input
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                setSaved(false);
+              }}
+              placeholder="לא חובה"
+              autoComplete="off"
+              className={`${field} min-h-[48px]`}
+            />
+          </label>
+          <label className="block">
+            <span className="block text-[13px] font-semibold text-stone-600 mb-1">פרטים</span>
+            <textarea
+              value={note}
+              onChange={(e) => {
+                setNote(e.target.value);
+                setSaved(false);
+              }}
+              placeholder={outcome.hint}
+              className={`${field} min-h-24 py-3`}
+            />
+          </label>
+          <button
+            type="button"
+            onClick={saveDetails}
+            disabled={saving || saved}
+            className="w-full min-h-[48px] rounded-xl bg-stone-900 text-white text-base font-semibold disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
+          >
+            {saved ? (
+              <>
+                <Check className="w-4 h-4" aria-hidden="true" />
+                נשמר
+              </>
+            ) : saving ? (
+              'שומרת...'
+            ) : (
+              'שמירה'
+            )}
+          </button>
         </div>
       )}
     </article>
   );
 }
 
+// A tap on the site's button: "yes, a message arrived" logs it as an open
+// enquiry (with the tap's ad attribution), which then waits above for its
+// outcome like any other. A name can be added now or later.
 function TapCard({
   intent,
   onDismiss,
@@ -254,7 +311,6 @@ function TapCard({
 }) {
   const [arrived, setArrived] = useState(false);
   const [name, setName] = useState('');
-  const [status, setStatus] = useState<LeadStatus>('new');
   const [saving, setSaving] = useState(false);
 
   async function save() {
@@ -263,7 +319,7 @@ function TapCard({
       const res = await fetch('/api/manage/contacts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, channel: intent.channel, status, intent_id: intent.id }),
+        body: JSON.stringify({ name, channel: intent.channel, intent_id: intent.id }),
       });
       if (!res.ok) throw new Error(String(res.status));
       onLogged();
@@ -277,7 +333,10 @@ function TapCard({
     <article className="bg-white rounded-2xl border border-stone-200 p-4 space-y-3">
       <p className="text-[15px] text-stone-800">
         <span className="font-semibold">{CHANNEL_LABELS[intent.channel] || intent.channel}</span>
-        <span className="text-stone-500"> · {timeAgo(intent.created_at)} · {intentSource(intent)}</span>
+        <span className="text-stone-500">
+          {' '}
+          · {timeAgo(intent.created_at)} · {intentSource(intent)}
+        </span>
       </p>
 
       {!arrived ? (
@@ -290,34 +349,20 @@ function TapCard({
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="שם (לא חובה)"
             aria-label="שם"
             autoComplete="off"
-            className="w-full min-h-[48px] px-4 rounded-xl border border-stone-300 text-base focus:ring-2 focus:ring-stone-400 focus:outline-none"
+            className={`${field} min-h-[48px]`}
           />
-          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="מה קרה">
-            {NEW_OUTCOMES.map((o) => (
-              <button
-                key={o.key}
-                type="button"
-                role="radio"
-                aria-checked={status === o.key}
-                onClick={() => setStatus(o.key)}
-                className={`${btn} ${status === o.key ? o.on : off}`}
-              >
-                {o.label}
-              </button>
-            ))}
-          </div>
           <button
             type="button"
             onClick={save}
             disabled={saving}
-            className="w-full min-h-[52px] rounded-xl bg-stone-900 text-white text-base font-semibold disabled:opacity-60"
+            className="w-full min-h-[48px] rounded-xl bg-stone-900 text-white text-base font-semibold disabled:opacity-60"
           >
             {saving ? 'שומרת...' : 'שמירה'}
           </button>
