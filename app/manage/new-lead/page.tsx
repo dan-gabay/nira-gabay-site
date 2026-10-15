@@ -123,7 +123,7 @@ export default function NewLeadPage() {
           <Check className="w-8 h-8 text-emerald-700" aria-hidden="true" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">נשמר, תודה!</h1>
+          <h2 className="text-2xl font-bold text-stone-900">נשמר, תודה!</h2>
           <p className="text-stone-500 mt-1">הפנייה נמצאת ברשימת הפניות.</p>
         </div>
         <div className="w-full max-w-sm space-y-2.5">

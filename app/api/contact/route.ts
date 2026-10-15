@@ -87,9 +87,10 @@ export async function POST(req: NextRequest) {
   const attribution = sanitizeAttribution(body.attribution);
 
   const supabase = supabaseServer();
+  const leadId = crypto.randomUUID();
   const { error } = await supabase.from('contact_messages').insert([
     {
-      id: crypto.randomUUID(),
+      id: leadId,
       name,
       email,
       phone: normalizedPhone,
@@ -113,6 +114,7 @@ export async function POST(req: NextRequest) {
   // matters - but it IS logged with the reason, so a notification path that
   // has quietly stopped working can be found in the runtime logs.
   const notified = await notifyNewLead({
+    id: leadId,
     name,
     phone: normalizedPhone,
     email,

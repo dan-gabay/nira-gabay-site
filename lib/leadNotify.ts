@@ -13,6 +13,7 @@
 // /manage shows the result.
 
 import { toWhatsAppNumber } from './phone';
+import { BASE_URL } from './siteUrls';
 
 export type NotifyResult =
   | { ok: true; to: string[] }
@@ -26,7 +27,17 @@ export type LeadNotice = {
   /** Where the lead came from, when known. Shown so the ad spend is visible
    *  on the notification itself rather than only in /manage. */
   source?: string | null;
+  /** The contact_messages row, so the notice can link straight to it. */
+  id?: string;
 };
+
+/**
+ * Where Nira records what happened with this lead: one tap on her phone.
+ * The page is behind the /manage login, so the link exposes nothing.
+ */
+export function updateLink(lead: LeadNotice): string | null {
+  return lead.id ? `${BASE_URL}/manage/update?lead=${encodeURIComponent(lead.id)}` : null;
+}
 
 /**
  * Recipients, from CONTACT_NOTIFY_EMAIL. Comma separated, so the owner and
@@ -60,7 +71,9 @@ function body(lead: LeadNotice, isTest: boolean): string {
     lead.email ? `<p><strong>אימייל:</strong> ${escapeHtml(lead.email)}</p>` : '',
     lead.source ? `<p><strong>הגיע מ:</strong> ${escapeHtml(lead.source)}</p>` : '',
     `<p><strong>הודעה:</strong></p><p>${escapeHtml(lead.message).replace(/\n/g, '<br/>')}</p>`,
-    '<hr/><p>ניתן לצפות בכל הפניות באזור הניהול באתר.</p>',
+    updateLink(lead)
+      ? `<p style="margin-top:20px"><a href="${updateLink(lead)}" style="background:#1c1917;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;display:inline-block">אחרי שדיברתם: עדכון מה קרה</a></p>`
+      : '<hr/><p>ניתן לצפות בכל הפניות באזור הניהול באתר.</p>',
     '</div>',
   ].join('');
 }
@@ -151,6 +164,8 @@ export function telegramMessage(lead: LeadNotice, isTest = false): string {
   lines.push('', esc(lead.message));
   // One tap to answer, which is the whole point of putting this on a phone.
   if (wa) lines.push('', `<a href="https://wa.me/${wa}">מענה בוואטסאפ</a>`);
+  const update = updateLink(lead);
+  if (update) lines.push(`<a href="${update}">עדכון: מה קרה עם הפנייה</a>`);
   return lines.join('\n');
 }
 

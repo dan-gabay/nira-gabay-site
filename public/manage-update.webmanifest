@@ -1,7 +1,7 @@
 {
-  "name": "פנייה חדשה - נירה גבאי",
-  "short_name": "פנייה חדשה",
-  "start_url": "/manage/new-lead",
+  "name": "עדכון פניות - נירה גבאי",
+  "short_name": "פניות",
+  "start_url": "/manage/update",
   "scope": "/manage/",
   "display": "standalone",
   "background_color": "#f5f5f4",

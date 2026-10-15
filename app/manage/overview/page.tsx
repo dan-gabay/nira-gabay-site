@@ -141,11 +141,11 @@ export default function ManageHome() {
         actions={
           <div className="flex items-center gap-2">
             <Link
-              href="/manage/new-lead"
+              href="/manage/update"
               className="inline-flex items-center gap-1.5 min-h-[44px] px-4 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium transition-colors"
             >
-              <Plus className="w-4 h-4" aria-hidden="true" />
-              פנייה חדשה
+              <Check className="w-4 h-4" aria-hidden="true" />
+              עדכון פניות
             </Link>
             <Link
               href="/manage/articles/new"
