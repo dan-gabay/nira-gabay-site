@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { MANAGE_COOKIE, isManageAuthorized } from '@/lib/manageAuth';
 import { normalizePhone, PHONE_ERROR } from '@/lib/phone';
+import { withNote } from '@/components/manage/leads';
 
 export const runtime = 'nodejs';
 
@@ -81,6 +82,8 @@ export async function PATCH(req: NextRequest) {
     is_read?: boolean;
     status?: string;
     heard_from?: string;
+    name?: string;
+    outcome_note?: string;
   };
   try {
     body = await req.json();
@@ -89,6 +92,10 @@ export async function PATCH(req: NextRequest) {
   }
 
   const update: Record<string, unknown> = {};
+  // Written on /manage/update after an outcome is chosen. An empty name keeps
+  // the one already there rather than blanking it.
+  if (typeof body.name === 'string' && body.name.trim()) update.name = body.name.trim().slice(0, 200);
+
   if (typeof body.is_read === 'boolean') update.is_read = body.is_read;
   if (typeof body.status === 'string') {
     if (!(LEAD_STATUSES as readonly string[]).includes(body.status)) {
@@ -100,11 +107,27 @@ export async function PATCH(req: NextRequest) {
   if (typeof body.heard_from === 'string') {
     update.heard_from = body.heard_from.slice(0, 200);
   }
-  if (!body.id || Object.keys(update).length === 0) {
+  if (!body.id || (Object.keys(update).length === 0 && typeof body.outcome_note !== 'string')) {
     return NextResponse.json({ error: 'bad request' }, { status: 400 });
   }
 
   const supabase = supabaseServer();
+
+  // The outcome note lives at the end of `message` (see withNote), so the
+  // current message is read and only the note part replaced.
+  if (typeof body.outcome_note === 'string' && body.id) {
+    const { data: row, error: readError } = await supabase
+      .from('contact_messages')
+      .select('message')
+      .eq('id', body.id)
+      .maybeSingle();
+    if (readError || !row) {
+      if (readError) console.error('manage contacts read failed:', readError.message);
+      return NextResponse.json({ error: 'update failed' }, { status: readError ? 500 : 404 });
+    }
+    update.message = withNote(row.message, body.outcome_note.slice(0, 2000)).slice(0, 7000);
+  }
+
   const { error } = await supabase
     .from('contact_messages')
     .update(update)
@@ -131,6 +154,9 @@ export async function POST(req: NextRequest) {
     message?: string;
     heard_from?: string;
     channel?: string;
+    // Where things already stand when the lead is logged after the fact
+    // (the quick form at /manage/new-lead). Defaults to new.
+    status?: string;
     // The contact_intents row this enquiry came from, if the admin identified
     // it. Carries the campaign attribution onto the lead.
     intent_id?: number;
@@ -141,11 +167,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'bad request' }, { status: 400 });
   }
 
-  const name = (body.name || '').trim();
+  // The name is optional too: a lead with no name still counts, and counting
+  // every enquiry is the point. The inbox shows a placeholder in its place.
+  const name = (body.name || '').trim() || 'ללא שם';
   const phone = (body.phone || '').trim();
-  if (!name) {
-    return NextResponse.json({ error: 'נא למלא שם' }, { status: 400 });
-  }
+  const status =
+    body.status && (LEAD_STATUSES as readonly string[]).includes(body.status) ? body.status : null;
   // The phone is optional: often only a name is at hand when the lead is
   // logged. When one is given, normalizePhone rather than the strict Israeli
   // check: Nira is transcribing a number from a message she already has, so a
@@ -194,6 +221,7 @@ export async function POST(req: NextRequest) {
       message: (body.message || '').trim().slice(0, 5000),
       heard_from: (body.heard_from || '').trim().slice(0, 200) || null,
       channel,
+      ...(status ? { status, status_updated_at: new Date().toISOString() } : {}),
       is_read: true, // Nira logs it herself - it's already "read"
       created_date: new Date().toISOString(),
       ...attribution,

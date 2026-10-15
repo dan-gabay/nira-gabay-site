@@ -135,7 +135,7 @@ export function intentSource(i: ContactIntent): string {
 /** PATCH one lead. Throws on failure so the caller can roll back. */
 export async function patchLead(
   id: string,
-  patch: { status?: LeadStatus; heard_from?: string; is_read?: boolean },
+  patch: { status?: LeadStatus; heard_from?: string; is_read?: boolean; name?: string; outcome_note?: string },
 ): Promise<void> {
   const res = await fetch('/api/manage/contacts', {
     method: 'PATCH',
@@ -143,4 +143,23 @@ export async function patchLead(
     body: JSON.stringify({ id, ...patch }),
   });
   if (!res.ok) throw new Error(`update failed (${res.status})`);
+}
+
+// Nira's few words on how an enquiry ended (written on /manage/update) are
+// kept at the end of `message`, after this marker, rather than in a column of
+// their own (owner decision 2026-10-15: no schema change). Everything before
+// the marker is what the person wrote and is never rewritten.
+export const NOTE_MARKER = '\n\n[נירה] ';
+
+export function splitNote(message: string | null | undefined): { text: string; note: string } {
+  const m = message || '';
+  const i = m.indexOf(NOTE_MARKER);
+  return i === -1 ? { text: m, note: '' } : { text: m.slice(0, i), note: m.slice(i + NOTE_MARKER.length) };
+}
+
+/** The message with its note replaced (or removed when the note is empty). */
+export function withNote(message: string | null | undefined, note: string): string {
+  const { text } = splitNote(message);
+  const n = note.trim();
+  return n ? `${text}${NOTE_MARKER}${n}` : text;
 }

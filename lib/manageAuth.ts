@@ -7,6 +7,22 @@ const SALT = 'nira-manage-v1';
 
 export const MANAGE_COOKIE = 'manage_session';
 
+// The owner logs in once on her phone and stays logged in: the cookie lasts
+// a year and every visit to a /manage page renews it (see proxy.ts), so only
+// a year without opening the admin, a new phone or a password change asks for
+// the password again. Browsers cap cookie lifetimes at 400 days.
+export const MANAGE_SESSION_MAX_AGE = 60 * 60 * 24 * 365;
+
+export function manageCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax' as const,
+    path: '/',
+    maxAge: MANAGE_SESSION_MAX_AGE,
+  };
+}
+
 export async function manageSessionToken(): Promise<string | null> {
   const password = process.env.MANAGE_PASSWORD;
   if (!password) return null;

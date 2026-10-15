@@ -41,7 +41,7 @@ const NAV: ReadonlyArray<{
   also?: string[];
 }> = [
   { href: '/manage/overview', label: 'בית', icon: Home, badge: () => 0 },
-  { href: '/manage/contacts', label: 'פניות', icon: Inbox, badge: (s) => s.newLeads },
+  { href: '/manage/contacts', label: 'פניות', icon: Inbox, badge: (s) => s.newLeads, also: ['/manage/new-lead', '/manage/update'] },
   {
     href: '/manage/articles',
     label: 'מאמרים',

@@ -139,13 +139,22 @@ export default function ManageHome() {
         title={greeting}
         sub={now.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })}
         actions={
-          <Link
-            href="/manage/articles/new"
-            className="inline-flex items-center gap-1.5 min-h-[44px] px-4 rounded-xl bg-white border border-stone-300 text-stone-700 hover:bg-stone-50 text-sm font-medium transition-colors"
-          >
-            <Plus className="w-4 h-4" aria-hidden="true" />
-            מאמר חדש
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/manage/update"
+              className="inline-flex items-center gap-1.5 min-h-[44px] px-4 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium transition-colors"
+            >
+              <Check className="w-4 h-4" aria-hidden="true" />
+              עדכון פניות
+            </Link>
+            <Link
+              href="/manage/articles/new"
+              className="inline-flex items-center gap-1.5 min-h-[44px] px-4 rounded-xl bg-white border border-stone-300 text-stone-700 hover:bg-stone-50 text-sm font-medium transition-colors"
+            >
+              <Plus className="w-4 h-4" aria-hidden="true" />
+              מאמר חדש
+            </Link>
+          </div>
         }
       />
 
