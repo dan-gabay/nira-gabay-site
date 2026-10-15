@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, type NextFetchEvent } from 'next/server';
-import { MANAGE_COOKIE, manageSessionToken } from '@/lib/manageAuth';
+import { MANAGE_COOKIE, manageCookieOptions, manageSessionToken } from '@/lib/manageAuth';
 import { prefersMarkdown } from '@/lib/agent/accept';
 import { VARY_VALUE } from '@/lib/agent/vary';
 import { botKindFromUserAgent } from '@/lib/botDetect';
@@ -29,7 +29,13 @@ async function gateManage(req: NextRequest) {
   const cookie = req.cookies.get(MANAGE_COOKIE)?.value;
 
   if (expected && cookie === expected) {
-    return NextResponse.next();
+    // Renew the session on every admin page visit, so it only runs out after
+    // a long stretch of not opening the admin at all. API calls are skipped:
+    // they always follow a page load that has just renewed it.
+    if (pathname.startsWith('/api/')) return NextResponse.next();
+    const res = NextResponse.next();
+    res.cookies.set(MANAGE_COOKIE, expected, manageCookieOptions());
+    return res;
   }
 
   if (pathname.startsWith('/api/')) {

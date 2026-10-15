@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MANAGE_COOKIE, manageSessionToken } from '@/lib/manageAuth';
+import { MANAGE_COOKIE, manageCookieOptions, manageSessionToken } from '@/lib/manageAuth';
 
 export const runtime = 'nodejs';
 
@@ -25,12 +25,6 @@ export async function POST(req: NextRequest) {
 
   const token = await manageSessionToken();
   const res = NextResponse.json({ ok: true });
-  res.cookies.set(MANAGE_COOKIE, token!, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 30, // 30 days
-  });
+  res.cookies.set(MANAGE_COOKIE, token!, manageCookieOptions());
   return res;
 }

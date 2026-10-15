@@ -131,6 +131,9 @@ export async function POST(req: NextRequest) {
     message?: string;
     heard_from?: string;
     channel?: string;
+    // Where things already stand when the lead is logged after the fact
+    // (the quick form at /manage/new-lead). Defaults to new.
+    status?: string;
     // The contact_intents row this enquiry came from, if the admin identified
     // it. Carries the campaign attribution onto the lead.
     intent_id?: number;
@@ -141,11 +144,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'bad request' }, { status: 400 });
   }
 
-  const name = (body.name || '').trim();
+  // The name is optional too: a lead with no name still counts, and counting
+  // every enquiry is the point. The inbox shows a placeholder in its place.
+  const name = (body.name || '').trim() || 'ללא שם';
   const phone = (body.phone || '').trim();
-  if (!name) {
-    return NextResponse.json({ error: 'נא למלא שם' }, { status: 400 });
-  }
+  const status =
+    body.status && (LEAD_STATUSES as readonly string[]).includes(body.status) ? body.status : null;
   // The phone is optional: often only a name is at hand when the lead is
   // logged. When one is given, normalizePhone rather than the strict Israeli
   // check: Nira is transcribing a number from a message she already has, so a
@@ -194,6 +198,7 @@ export async function POST(req: NextRequest) {
       message: (body.message || '').trim().slice(0, 5000),
       heard_from: (body.heard_from || '').trim().slice(0, 200) || null,
       channel,
+      ...(status ? { status, status_updated_at: new Date().toISOString() } : {}),
       is_read: true, // Nira logs it herself - it's already "read"
       created_date: new Date().toISOString(),
       ...attribution,
