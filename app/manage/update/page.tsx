@@ -8,6 +8,8 @@ import {
   intentSource,
   leadStatus,
   patchLead,
+  splitNote,
+  withNote,
   timeAgo,
   type ContactIntent,
   type ContactMessage,
@@ -23,7 +25,8 @@ import {
 // anything (owner decision, 2026-10-15): a treatment was booked, or it is not
 // relevant. "We spoke" is not an outcome. Tapping one saves it at once and
 // opens a name field and a free-text box for a few words - for an irrelevant
-// enquiry, ideally the reason.
+// enquiry, ideally the reason. The words are kept at the end of the message
+// (see withNote in leads.ts), not in a column of their own.
 //
 // It shows only what is still open (status new or spoke), plus taps on the
 // site's WhatsApp/phone/email buttons not yet answered: did a message arrive?
@@ -99,7 +102,19 @@ export default function UpdateLeadsPage() {
   async function update(id: string, patch: { status?: LeadStatus; name?: string; outcome_note?: string }) {
     const before = messages;
     setTouched((t) => new Set(t).add(id));
-    setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, ...patch, is_read: true } : m)));
+    const { outcome_note, ...fields } = patch;
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === id
+          ? {
+              ...m,
+              ...fields,
+              ...(outcome_note !== undefined ? { message: withNote(m.message, outcome_note) } : {}),
+              is_read: true,
+            }
+          : m,
+      ),
+    );
     try {
       await patchLead(id, { ...patch, is_read: true });
     } catch (e) {
@@ -194,7 +209,8 @@ function LeadCard({
   const status = leadStatus(m);
   const outcome = OUTCOMES.find((o) => o.key === status);
   const [name, setName] = useState(m.name === NO_NAME ? '' : m.name || '');
-  const [note, setNote] = useState(m.outcome_note || '');
+  const { text, note: savedNote } = splitNote(m.message);
+  const [note, setNote] = useState(savedNote);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -219,7 +235,7 @@ function LeadCard({
         <p className="text-[13px] text-stone-500">
           {timeAgo(m.created_date)} · {CHANNEL_LABELS[m.channel || 'form'] || m.channel}
         </p>
-        {m.message && <p className="text-sm text-stone-700 mt-2 line-clamp-3 whitespace-pre-wrap">{m.message}</p>}
+        {text && <p className="text-sm text-stone-700 mt-2 line-clamp-3 whitespace-pre-wrap">{text}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="מה קרה">

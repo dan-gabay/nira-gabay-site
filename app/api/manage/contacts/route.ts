@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { MANAGE_COOKIE, isManageAuthorized } from '@/lib/manageAuth';
 import { normalizePhone, PHONE_ERROR } from '@/lib/phone';
+import { withNote } from '@/components/manage/leads';
 
 export const runtime = 'nodejs';
 
@@ -94,7 +95,7 @@ export async function PATCH(req: NextRequest) {
   // Written on /manage/update after an outcome is chosen. An empty name keeps
   // the one already there rather than blanking it.
   if (typeof body.name === 'string' && body.name.trim()) update.name = body.name.trim().slice(0, 200);
-  if (typeof body.outcome_note === 'string') update.outcome_note = body.outcome_note.trim().slice(0, 2000) || null;
+
   if (typeof body.is_read === 'boolean') update.is_read = body.is_read;
   if (typeof body.status === 'string') {
     if (!(LEAD_STATUSES as readonly string[]).includes(body.status)) {
@@ -106,11 +107,27 @@ export async function PATCH(req: NextRequest) {
   if (typeof body.heard_from === 'string') {
     update.heard_from = body.heard_from.slice(0, 200);
   }
-  if (!body.id || Object.keys(update).length === 0) {
+  if (!body.id || (Object.keys(update).length === 0 && typeof body.outcome_note !== 'string')) {
     return NextResponse.json({ error: 'bad request' }, { status: 400 });
   }
 
   const supabase = supabaseServer();
+
+  // The outcome note lives at the end of `message` (see withNote), so the
+  // current message is read and only the note part replaced.
+  if (typeof body.outcome_note === 'string' && body.id) {
+    const { data: row, error: readError } = await supabase
+      .from('contact_messages')
+      .select('message')
+      .eq('id', body.id)
+      .maybeSingle();
+    if (readError || !row) {
+      if (readError) console.error('manage contacts read failed:', readError.message);
+      return NextResponse.json({ error: 'update failed' }, { status: readError ? 500 : 404 });
+    }
+    update.message = withNote(row.message, body.outcome_note.slice(0, 2000)).slice(0, 7000);
+  }
+
   const { error } = await supabase
     .from('contact_messages')
     .update(update)
