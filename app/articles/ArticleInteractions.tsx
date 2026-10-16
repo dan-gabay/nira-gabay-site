@@ -5,6 +5,7 @@ import { Heart, MessageCircle, Facebook, Send, User, Mail, Loader2, Instagram, S
 import { getUserIdentifier } from '@/lib/userIdentifier';
 import { supabase as supabaseClient } from '@/lib/supabaseClient';
 import { trackArticleLike, trackCommentSubmit, trackArticleShare } from '@/lib/analytics';
+import { FACEBOOK_APP_ID } from '@/lib/facebook';
 import { isOptedOut } from '@/lib/ownerOptOut';
 
 type ArticleInteractionsProps = {
@@ -226,24 +227,17 @@ export default function ArticleInteractions({
     const url = canonical || window.location.origin + window.location.pathname;
     trackArticleShare('facebook', articleId, document.title);
 
-    // On a phone, any facebook.com link - sharer.php and the app-id Share
-    // Dialog alike - is handed to the installed Facebook app, which opens on
-    // its feed and drops the link. Facebook's own entry in the OS share sheet
-    // is the only route that reaches its post composer from a web page, so
-    // phones go there (the visitor taps Facebook in the sheet).
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile && typeof navigator.share === 'function') {
-      navigator.share({ url }).catch(() => {
-        // User cancelled the share sheet - nothing to do
-      });
-      return;
-    }
-
-    // Desktop: sharer.php, not the app-id Share Dialog (dialog/share). The
-    // dialog only works while the Facebook app behind the id is live and
-    // lists niragabay.com in its App Domains, and otherwise shows an error
-    // page instead of the composer. sharer.php needs no app at all.
-    const target = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+    // The official Share Dialog, not sharer.php: on a phone with the Facebook
+    // app installed, sharer.php is handed to the app, which opens on its feed
+    // and drops the link, while dialog/share stays in the browser and opens
+    // the post composer. The dialog needs a live Facebook app whose App
+    // Domains list niragabay.com - otherwise Facebook shows "the link may be
+    // broken". sharer.php is only the fallback if the app id is ever cleared.
+    const appId = FACEBOOK_APP_ID;
+    const target = appId
+      ? `https://www.facebook.com/dialog/share?app_id=${encodeURIComponent(appId)}` +
+        `&display=popup&href=${encodeURIComponent(url)}&redirect_uri=${encodeURIComponent(url)}`
+      : `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
 
     // Window features belong in the third argument - window.open takes three.
     window.open(target, '_blank', 'noopener,noreferrer,width=600,height=600');
