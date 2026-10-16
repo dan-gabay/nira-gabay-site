@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Home, FileText, MessageCircle, Compass } from 'lucide-react';
 import { SERVICES_LIVE } from '@/lib/publish';
+import NotFoundRedirect from '@/components/NotFoundRedirect';
 
 // The site-wide 404. Next's built-in one already returned the right status
 // code; what it did not do was tell anyone - person or agent - where to go
@@ -12,6 +13,10 @@ import { SERVICES_LIVE } from '@/lib/publish';
 // domain. The same page requested with `Accept: text/markdown` returns a
 // Markdown version of exactly this content, with a 404 status
 // (app/api/md/[[...path]]/route.ts).
+//
+// People with JavaScript never see it for long: NotFoundRedirect sends them to
+// the homepage at once, while the 404 status stays for crawlers. The list
+// below remains the fallback for no-JS clients and agents.
 
 export const metadata = {
   title: 'העמוד לא נמצא | נירה גבאי',
@@ -38,6 +43,7 @@ export default function NotFound() {
           purpose: the tree is committed before any effect runs, so there is
           no mount-order assumption here to get wrong later. */}
       <div data-page-not-found hidden />
+      <NotFoundRedirect />
       <div
         className="min-h-screen bg-gradient-to-br from-stone-100 to-amber-50 py-12 md:py-24"
         style={{ paddingTop: '120px' }}
