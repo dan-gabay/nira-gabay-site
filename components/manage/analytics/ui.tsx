@@ -28,7 +28,7 @@ export function Section({
   return (
     // scroll-mt clears the admin header plus the sticky range bar, so a jump
     // lands on the heading and not under it.
-    <section id={id} aria-labelledby={`${id}-h`} className="scroll-mt-40 md:scroll-mt-44 space-y-3 md:space-y-4">
+    <section id={id} aria-labelledby={`${id}-h`} className="scroll-mt-44 lg:scroll-mt-24 space-y-3 md:space-y-4">
       <div className="flex items-end justify-between gap-3 px-0.5">
         <div className="min-w-0">
           <h2 id={`${id}-h`} className="text-base md:text-lg font-bold text-stone-800 leading-tight">

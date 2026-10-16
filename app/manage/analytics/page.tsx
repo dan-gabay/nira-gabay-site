@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import PageHeader from '@/components/manage/PageHeader';
 import {
   SourceBars,
@@ -46,11 +46,11 @@ import type { EnquiryRow, Payload, SiteBehavior } from '@/components/manage/anal
 // here answers one question, and a figure that did not help answer one was
 // cut rather than given a card of its own.
 //
-// The eight sections are grouped under four tabs (TABS) and only the chosen
-// tab is drawn, so the page is a few screens rather than one very long
-// scroll. The tab lives in the URL hash, and an old link to a section's hash
-// (#google, #articles...) opens the tab that holds it.
-//
+// The eight sections are one continuous scroll, grouped under four parts
+// (PARTS). The part menu stays under the admin header: it marks the part being
+// read as the page scrolls, and a tap on it jumps to that part. A part's or a
+// section's id in the URL hash (#content, #google...) opens the page there.
+
 // Seven calls, not one: the main payload, plus article engagement, organic
 // search, the enquiry log, site behaviour (AI tools, visit depth) and the two
 // Google routes, each its own call so that one failing leaves the
@@ -66,41 +66,94 @@ const RANGES = [
   { value: 90, label: '90 יום' },
 ];
 
-type TabId = 'summary' | 'sources' | 'content' | 'audience';
+type PartId = 'summary' | 'sources' | 'content' | 'audience';
 
-const TABS: Array<{ value: TabId; label: string; sections: string[] }> = [
+const PARTS: Array<{ value: PartId; label: string; sections: string[] }> = [
   { value: 'summary', label: 'סיכום', sections: ['overview', 'enquiries'] },
   { value: 'sources', label: 'מקורות וגוגל', sections: ['sources', 'google'] },
   { value: 'content', label: 'תוכן', sections: ['pages', 'articles', 'ai'] },
   { value: 'audience', label: 'קהל', sections: ['audience'] },
 ];
 
-/** The tab a hash names: a tab id itself, or any section inside one. */
-function tabFromHash(hash: string): TabId | null {
-  const h = hash.replace(/^#/, '');
+// Two parts share their name with their first section (sources, audience),
+// so a part's element is `part-<id>` and the hash keeps the bare name.
+const partEl = (p: PartId) => document.getElementById(`part-${p}`);
+
+/** The element a hash names (a part or a section), when it is on the page. */
+function hashTarget(): HTMLElement | null {
+  const h = decodeURIComponent(window.location.hash.replace(/^#/, ''));
   if (!h) return null;
-  const tab = TABS.find((t) => t.value === h || t.sections.includes(h));
-  return tab ? tab.value : null;
+  return document.getElementById(`part-${h}`) ?? document.getElementById(h);
 }
 
-/** The selected tab, kept in the URL hash so a reload or a shared link keeps it. */
-function useTab(): [TabId, (t: TabId) => void] {
-  const [tab, setTabState] = useState<TabId>('summary');
+/**
+ * The part being read, from where the parts sit under the sticky bar, and a
+ * jump to a part. While a jump scrolls, the spy holds the part that was tapped
+ * rather than lighting each part it passes on the way.
+ */
+function usePartSpy(ready: boolean): [PartId, (p: PartId) => void] {
+  const [active, setActive] = useState<PartId>('summary');
+  const lockUntil = useRef(0);
+
   useEffect(() => {
-    const sync = () => {
-      const t = tabFromHash(window.location.hash);
-      if (t) setTabState(t);
+    if (!ready) return;
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      if (Date.now() < lockUntil.current) return;
+      const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+      let current: PartId = PARTS[0].value;
+      for (const p of PARTS) {
+        // A part is being read once its top has reached where a jump to it
+        // would put it: its scroll margin, which clears the sticky bar.
+        const el = partEl(p.value);
+        if (el && el.getBoundingClientRect().top - parseFloat(getComputedStyle(el).scrollMarginTop) <= 24) {
+          current = p.value;
+        }
+      }
+      if (atBottom) current = PARTS[PARTS.length - 1].value;
+      setActive(current);
     };
-    sync();
-    window.addEventListener('hashchange', sync);
-    return () => window.removeEventListener('hashchange', sync);
-  }, []);
-  const setTab = (t: TabId) => {
-    setTabState(t);
-    window.history.replaceState(null, '', `#${t}`);
-    window.scrollTo({ top: 0 });
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(measure);
+    };
+    const release = () => {
+      lockUntil.current = 0;
+      onScroll();
+    };
+    measure();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    window.addEventListener('scrollend', release);
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      window.removeEventListener('scrollend', release);
+    };
+  }, [ready]);
+
+  // A link to a part or a section opens there once the figures are drawn: the
+  // browser's own jump fires before they load, when the page is still empty.
+  useEffect(() => {
+    if (!ready) return;
+    const jump = () => hashTarget()?.scrollIntoView({ block: 'start' });
+    jump();
+    window.addEventListener('hashchange', jump);
+    return () => window.removeEventListener('hashchange', jump);
+  }, [ready]);
+
+  const jumpTo = (p: PartId) => {
+    setActive(p);
+    window.history.replaceState(null, '', `#${p}`);
+    const el = partEl(p);
+    if (!el) return;
+    // A fallback for browsers without scrollend.
+    lockUntil.current = Date.now() + 1000;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
   };
-  return [tab, setTab];
+  return [active, jumpTo];
 }
 
 type Loaded<T> = { range: number; data: T | null; failed?: boolean };
@@ -123,7 +176,6 @@ export default function AnalyticsPage() {
   // month's headline figures, and a day is usually too few visits here to
   // read a section by.
   const [range, setRange] = useState(7);
-  const [tab, setTab] = useTab();
   const main = useRangeFetch<Payload>('/api/manage/analytics', range);
   const articlesRes = useRangeFetch<ArticleEngagement>('/api/manage/article-engagement', range);
   const organicRes = useRangeFetch<OrganicSearch>('/api/manage/organic-search', range);
@@ -150,6 +202,8 @@ export default function AnalyticsPage() {
   const behavior = behaviorRes?.range === shownRange ? behaviorRes?.data ?? null : null;
   const behaviorFailed = behaviorRes?.range === shownRange && Boolean(behaviorRes?.failed);
 
+  const [part, setPart] = usePartSpy(Boolean(data) && !failed);
+
   const isHourly = data?.granularity === 'hour';
   const rangeLabel = isHourly ? '24 השעות האחרונות' : `${data?.range_days ?? range} הימים האחרונים`;
 
@@ -157,15 +211,15 @@ export default function AnalyticsPage() {
     <div className="space-y-6 md:space-y-10">
       <PageHeader title="נתונים" sub="נמדד ישירות באתר, בלי גוגל אנליטיקס. אנשים בלבד, בלי בוטים." />
 
-      {/* The range and the tabs stay under the admin header while scrolling:
-          they are the only two controls on the page. */}
+      {/* The range and the part menu stay under the admin header while
+          scrolling: they are the only two controls on the page. */}
       <div className="sticky top-14 lg:top-0 z-30 -mx-4 md:-mx-6 lg:-mx-10 px-4 md:px-6 lg:px-10 py-2 bg-stone-100/95 backdrop-blur-sm border-b border-stone-200/80 !mt-3">
         <div className="md:flex md:items-center md:gap-4">
           <div className="md:w-[380px] md:flex-shrink-0">
             <Segmented label="טווח זמן" options={RANGES} value={range} onChange={setRange} />
           </div>
           <div className="mt-2 md:mt-0 md:flex-1 md:max-w-[460px]">
-            <Segmented label="חלק בעמוד" options={TABS} value={tab} onChange={setTab} size="sm" />
+            <Segmented label="חלק בעמוד" options={PARTS} value={part} onChange={setPart} size="sm" />
           </div>
         </div>
       </div>
@@ -195,7 +249,6 @@ export default function AnalyticsPage() {
             behavior={behavior}
             behaviorFailed={behaviorFailed}
             rangeLabel={rangeLabel}
-            tab={tab}
           />
         </div>
       )}
@@ -212,6 +265,19 @@ export default function AnalyticsPage() {
   );
 }
 
+/**
+ * One part of the page: the target of the part menu, and what its spy
+ * measures. The scroll margin is the Section's, so a jump lands on the first
+ * heading and not under the sticky bar.
+ */
+function Part({ id, children }: { id: PartId; children: ReactNode }) {
+  return (
+    <div id={`part-${id}`} className="scroll-mt-44 lg:scroll-mt-24 space-y-8 md:space-y-12">
+      {children}
+    </div>
+  );
+}
+
 function Dashboard({
   data,
   articles,
@@ -224,7 +290,6 @@ function Dashboard({
   behavior,
   behaviorFailed,
   rangeLabel,
-  tab,
 }: {
   data: Payload;
   articles: ArticleEngagement | null;
@@ -237,10 +302,8 @@ function Dashboard({
   behavior: SiteBehavior | null;
   behaviorFailed: boolean;
   rangeLabel: string;
-  tab: TabId;
 }) {
   const isHourly = data.granularity === 'hour';
-  const show = (section: string) => TABS.find((t) => t.value === tab)?.sections.includes(section) ?? false;
 
   if ((data.totals.events ?? 0) === 0) {
     return (
@@ -315,7 +378,7 @@ function Dashboard({
 
   return (
     <>
-      {show('overview') && (
+      <Part id="summary">
         <Section id="overview" title="תמונת מצב" question={`איך הולך? ${rangeLabel}.`}>
           <Overview
             totals={data.totals}
@@ -327,15 +390,13 @@ function Dashboard({
             rangeLabel={rangeLabel}
           />
         </Section>
-      )}
 
-      {show('enquiries') && (
         <Section id="enquiries" title="פניות" question="מה הביא את הפניות, ומי פנה.">
           <Enquiries byButton={data.conversions_by_source || []} log={log} articleTitles={articleTitles} />
         </Section>
-      )}
+      </Part>
 
-      {show('sources') && (
+      <Part id="sources">
         <Section id="sources" title="מקורות תנועה" question="איזו תנועה שווה: כמה מביא כל מקור, כמה מזה פונה, וכמה קוראים.">
           <Card>
             <SourcesTable
@@ -365,22 +426,18 @@ function Dashboard({
             </Disclosure>
           )}
         </Section>
-      )}
 
-      {show('google') && (
         <Section id="google" title="גוגל" question="כמה עולה פנייה מהפרסום, על מה משלמים לשווא, ואיפה האורגני חסר.">
           <GoogleSection data={googleAds} failed={googleAdsFailed} />
         </Section>
-      )}
+      </Part>
 
-      {show('pages') && (
+      <Part id="content">
         <Section id="pages" title="עמודים" question="אילו עמודים הופכים ביקור לפנייה, וכמה עמוק הולך ביקור.">
           <PagesTable data={data} articleTitles={articleTitles} />
           {!behaviorFailed && <VisitDepth data={behavior} />}
         </Section>
-      )}
 
-      {show('articles') && (
         <Section id="articles" title="מאמרים" question="האם קוראים את המאמרים עד הסוף, ומה קורה אחרי.">
           <Card>
             {articles ? (
@@ -390,9 +447,7 @@ function Dashboard({
             )}
           </Card>
         </Section>
-      )}
 
-      {show('ai') && (
         <Section id="ai" title="כלי AI" question="האם כלים כמו ChatGPT קוראים את האתר, ועונים ממנו.">
           {behaviorFailed ? (
             <Card>
@@ -402,13 +457,13 @@ function Dashboard({
             <AiSection data={behavior} buckets={buckets} prevComplete={aiPrevComplete} articleTitles={articleTitles} />
           )}
         </Section>
-      )}
+      </Part>
 
-      {show('audience') && (
+      <Part id="audience">
         <Section id="audience" title="קהל" question="מאיזה מכשיר, האם חוזרים, ומתי.">
           <AudienceSection data={data} isHourly={isHourly} />
         </Section>
-      )}
+      </Part>
 
       <details className="text-[11px] text-stone-500 leading-relaxed">
         <summary className="cursor-pointer select-none min-h-[44px] inline-flex items-center font-medium">
