@@ -31,25 +31,25 @@ import type { EnquiryRow, LeadOutcomes, Payload, SiteBehavior } from '@/componen
 
 // The full analytics, read as a chain of questions:
 //
-//   0. מה יצא מזה - visits, taps, the enquiries Nira logged and how many
-//                   became clients: the figure the site is judged by.
 //   1. תמונת מצב  - is it working? Four figures, what they mean, their shape.
-//   2. לחיצות     - what produced the taps on contact, down to each one.
-//   3. מקורות     - which traffic is worth having.
-//   4. גוגל       - what an enquiry from the ads costs, and where organic
+//   2. מה יצא מזה - visits, taps, the enquiries Nira logged and how many
+//                   became clients: the figure the site is judged by.
+//   3. לחיצות     - what produced the taps on contact, down to each one.
+//   4. מקורות     - which traffic is worth having.
+//   5. גוגל       - what an enquiry from the ads costs, and where organic
 //                   search is missing (live from Google, see lib/google).
-//   5. עמודים     - which pages turn a visit into an enquiry, and how deep
+//   6. עמודים     - which pages turn a visit into an enquiry, and how deep
 //                   a visit goes.
-//   6. מאמרים     - whether the content is read.
-//   7. כלי AI     - whether AI tools read the site, and answer from it.
-//   8. קהל        - who the visitors are and when they come.
+//   7. מאמרים     - whether the content is read.
+//   8. כלי AI     - whether AI tools read the site, and answer from it.
+//   9. קהל        - who the visitors are and when they come.
 //
 // It replaced about twenty flat cards in which the same data appeared up to
 // three times (landing pages, source quality, enquiries per day). Every section
 // here answers one question, and a figure that did not help answer one was
 // cut rather than given a card of its own.
 //
-// The eight sections are one continuous scroll, grouped under four parts
+// The nine sections are one continuous scroll, grouped under four parts
 // (PARTS). The part menu stays under the admin header: it marks the part being
 // read as the page scrolls, and a tap on it jumps to that part. A part's or a
 // section's id in the URL hash (#content, #google...) opens the page there.
@@ -72,7 +72,7 @@ const RANGES = [
 type PartId = 'summary' | 'sources' | 'content' | 'audience';
 
 const PARTS: Array<{ value: PartId; label: string; sections: string[] }> = [
-  { value: 'summary', label: 'סיכום', sections: ['outcomes', 'overview', 'enquiries'] },
+  { value: 'summary', label: 'סיכום', sections: ['overview', 'outcomes', 'enquiries'] },
   { value: 'sources', label: 'מקורות וגוגל', sections: ['sources', 'google'] },
   { value: 'content', label: 'תוכן', sections: ['pages', 'articles', 'ai'] },
   { value: 'audience', label: 'קהל', sections: ['audience'] },
@@ -175,10 +175,10 @@ function useRangeFetch<T>(url: string, range: number): Loaded<T> | null {
 }
 
 export default function AnalyticsPage() {
-  // 7 days by default: the home screen (/manage/overview) already gives the
-  // month's headline figures, and a day is usually too few visits here to
-  // read a section by.
-  const [range, setRange] = useState(7);
+  // 24 hours by default (Dan, 2026-10-16): the page is opened to see what
+  // happened since yesterday, and the home screen (/manage/overview) already
+  // gives the month. A longer range is one tap away.
+  const [range, setRange] = useState(1);
   const main = useRangeFetch<Payload>('/api/manage/analytics', range);
   const articlesRes = useRangeFetch<ArticleEngagement>('/api/manage/article-engagement', range);
   const organicRes = useRangeFetch<OrganicSearch>('/api/manage/organic-search', range);
@@ -391,10 +391,6 @@ function Dashboard({
   return (
     <>
       <Part id="summary">
-        <Section id="outcomes" title="מה יצא מזה" question="כמה מהביקורים הפכו לפניות, וכמה מהפניות למטופלים.">
-          <Outcomes totals={data.totals} data={outcomes} failed={outcomesFailed} rangeLabel={rangeLabel} />
-        </Section>
-
         <Section id="overview" title="תמונת מצב" question={`איך הולך? ${rangeLabel}.`}>
           <Overview
             totals={data.totals}
@@ -405,6 +401,10 @@ function Dashboard({
             timeline={timeline}
             rangeLabel={rangeLabel}
           />
+        </Section>
+
+        <Section id="outcomes" title="מה יצא מזה" question="כמה מהביקורים הפכו לפניות, וכמה מהפניות למטופלים.">
+          <Outcomes totals={data.totals} data={outcomes} failed={outcomesFailed} rangeLabel={rangeLabel} />
         </Section>
 
         <Section id="enquiries" title="לחיצות ליצירת קשר" question="מה הביא את הלחיצות על ווטסאפ, טלפון, מייל וטופס.">
