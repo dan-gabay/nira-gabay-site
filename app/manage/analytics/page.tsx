@@ -32,8 +32,8 @@ import type { EnquiryRow, LeadOutcomes, Payload, SiteBehavior } from '@/componen
 // The full analytics, read as a chain of questions:
 //
 //   1. תמונת מצב  - is it working? Four figures, what they mean, their shape.
-//   2. מה יצא מזה - visits, taps, the enquiries Nira logged and how many
-//                   became clients: the figure the site is judged by.
+//   2. מה יצא מזה - the enquiries Nira logged and how many became clients:
+//                   the figure the site is judged by.
 //   3. לחיצות     - what produced the taps on contact, down to each one.
 //   4. מקורות     - which traffic is worth having.
 //   5. גוגל       - what an enquiry from the ads costs, and where organic
@@ -403,8 +403,8 @@ function Dashboard({
           />
         </Section>
 
-        <Section id="outcomes" title="מה יצא מזה" question="כמה מהביקורים הפכו לפניות, וכמה מהפניות למטופלים.">
-          <Outcomes totals={data.totals} data={outcomes} failed={outcomesFailed} rangeLabel={rangeLabel} />
+        <Section id="outcomes" title="מה יצא מזה" question="כמה פניות הגיעו בפועל, וכמה מהן הפכו למטופלים.">
+          <Outcomes data={outcomes} failed={outcomesFailed} rangeLabel={rangeLabel} />
         </Section>
 
         <Section id="enquiries" title="לחיצות ליצירת קשר" question="מה הביא את הלחיצות על ווטסאפ, טלפון, מייל וטופס.">

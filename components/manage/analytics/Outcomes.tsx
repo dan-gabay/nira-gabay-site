@@ -2,16 +2,17 @@
 
 import Link from 'next/link';
 import { GROUP_LABELS } from '@/components/manage/TrafficSources';
-import { Card, CardPart, Empty, Note, Stat, StatGrid, SubHead } from './ui';
+import { Card, CardPart, Empty, Note, Stat, SubHead } from './ui';
 import { pageName } from './labels';
 import { heDate } from './Overview';
-import type { LeadOutcomes, OutcomeRow, Totals } from './types';
+import type { LeadOutcomes, OutcomeRow } from './types';
 
 // "מה יצא מזה?" The one figure the site is judged by is new clients, and every
 // other number on the page is measured on the site: a tap on WhatsApp is not
 // an enquiry (some who tap never write, and an ad's call button reaches Nira
-// without the site at all). So the chain runs from visits, through taps, to
-// the enquiries Nira logged and what she marked them as.
+// without the site at all). Visits and taps are תמונת מצב, right above; this
+// section starts where they stop: the enquiries Nira logged and what she
+// marked them as.
 //
 // The breakdowns count every enquiry logged so far, not the range: at a few
 // enquiries a month a week holds one or two, and a share of two is not a
@@ -25,12 +26,10 @@ const SOURCE_NAMES: Record<string, string> = {
 const sourceName = (k: string) => SOURCE_NAMES[k] ?? k;
 
 export function Outcomes({
-  totals,
   data,
   failed,
   rangeLabel,
 }: {
-  totals: Totals;
   /** Null while its call is in flight. */
   data: LeadOutcomes | null;
   failed: boolean;
@@ -54,13 +53,12 @@ export function Outcomes({
   const r = data.range;
   return (
     <Card>
-      <SubHead title="מהביקור עד המטופל" aside={rangeLabel} />
-      <StatGrid>
-        <Stat label="ביקורים" value={totals.visits} />
-        <Stat label="לחיצות ליצירת קשר" value={totals.conversions} sub="ווטסאפ, טלפון, מייל וטופס" />
-        <Stat label="פניות שנרשמו" value={r.enquiries} sub="הודעות ושיחות שהגיעו בפועל" />
-        <Stat label="התחילו טיפול" value={r.clients} sub={r.enquiries > 0 ? `מתוך ${r.enquiries} פניות` : undefined} />
-      </StatGrid>
+      <SubHead title="מה קרה עם הפניות" aside={rangeLabel} />
+      <div className="grid grid-cols-3 gap-2">
+        <Stat label="פניות שנרשמו" value={r.enquiries} sub="הגיעו בפועל" />
+        <Stat label="התחילו טיפול" value={r.clients} />
+        <Stat label="לא רלוונטיות" value={r.irrelevant} />
+      </div>
       <StatusLine c={r} />
 
       {data.all.enquiries > 0 && (
@@ -89,7 +87,6 @@ function StatusLine({ c }: { c: LeadOutcomes['range'] }) {
     return <Note>לא נרשמו פניות בטווח הזה. לחיצה שלא הפכה להודעה לא נרשמת כפנייה.</Note>;
   }
   const parts = [
-    c.irrelevant > 0 && `${c.irrelevant} לא רלוונטיות`,
     c.spoke > 0 && `${c.spoke} בשיחה, עוד בלי החלטה`,
   ].filter(Boolean);
   return (
