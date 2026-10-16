@@ -86,7 +86,7 @@ export default function About() {
                 מטפלת בפסיכותרפיה ומדריכת הורים
               </p>
               <p className="text-xs md:text-lg text-stone-500">
-                פסיכותרפיה | CBT | מומחית למיניות בריאה
+                פסיכותרפיה | CBT | הדרכת הורים | טיפול זוגי
               </p>
             </motion.div>
           </div>
