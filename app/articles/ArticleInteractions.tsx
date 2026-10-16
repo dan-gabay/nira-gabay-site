@@ -233,10 +233,15 @@ export default function ArticleInteractions({
     // the post composer. The dialog needs a live Facebook app whose App
     // Domains list niragabay.com - otherwise Facebook shows "the link may be
     // broken". sharer.php is only the fallback if the app id is ever cleared.
+    //
+    // Only app_id and href: with display=popup and redirect_uri added, the
+    // dialog failed with the same "link may be broken" error, while the bare
+    // URL opened the composer (tested by Dan, 2026-10-16). Facebook picks the
+    // right display for the device itself.
     const appId = FACEBOOK_APP_ID;
     const target = appId
       ? `https://www.facebook.com/dialog/share?app_id=${encodeURIComponent(appId)}` +
-        `&display=popup&href=${encodeURIComponent(url)}&redirect_uri=${encodeURIComponent(url)}`
+        `&href=${encodeURIComponent(url)}`
       : `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
 
     // Window features belong in the third argument - window.open takes three.
