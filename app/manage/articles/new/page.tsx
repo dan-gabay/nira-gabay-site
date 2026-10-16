@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { dateToScheduleIso } from '@/lib/schedule';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
+import { deleteArticleImage, uploadArticleImage } from '@/lib/articleImage';
 import Link from 'next/link';
 import PageHeader from '@/components/manage/PageHeader';
 import { ContentField, HeadFields, ImagePanel, MobileSaveBar, PublishPanel, TagsPanel } from '@/components/manage/ArticleEditorParts';
@@ -85,29 +86,20 @@ export default function NewArticlePage() {
   }
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+    const input = e.currentTarget;
+    const file = input.files?.[0];
+    // Cleared so that picking the same file again still counts as a change.
+    input.value = '';
     if (!file) return;
 
     try {
       setUploading(true);
-      
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const response = await fetch('/api/upload-image', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'שגיאה בהעלאת התמונה');
-      }
-
-      setFormData(prev => ({ ...prev, image_url: result.url }));
+      const url = await uploadArticleImage(file);
+      const previous = formData.image_url;
+      setFormData(prev => ({ ...prev, image_url: url }));
+      // The article is not saved yet, so the image it replaces is used by nothing.
+      if (previous) deleteArticleImage(previous);
     } catch (error) {
-      console.error('Error uploading image:', error);
       alert(error instanceof Error ? error.message : 'שגיאה בהעלאת התמונה');
     } finally {
       setUploading(false);
