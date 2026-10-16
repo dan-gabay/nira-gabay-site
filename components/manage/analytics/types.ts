@@ -117,3 +117,20 @@ export type SiteBehavior = {
   /** Per source detail (as in the traffic list), the page the visit landed on. */
   source_landings?: Array<{ grp: string; detail: string; landing: string; visits: number }>;
 };
+
+/** /api/manage/lead-outcomes: what became of the enquiries, as counts only. */
+export type OutcomeCounts = { enquiries: number; open: number; spoke: number; clients: number; irrelevant: number };
+export type OutcomeRow = OutcomeCounts & { key: string };
+export type LeadOutcomes = {
+  range_days: number;
+  /** The enquiries logged in the selected range. */
+  range: OutcomeCounts;
+  /** Every enquiry logged so far. */
+  all: OutcomeCounts;
+  /** 'YYYY-MM-DD', the first enquiry logged. */
+  first: string | null;
+  /** By landing page path ('' when unknown), over every enquiry. */
+  by_page: OutcomeRow[];
+  /** google_ads, paid_other, a utm_source, or '' when unknown; over every enquiry. */
+  by_source: OutcomeRow[];
+};

@@ -26,12 +26,15 @@ import { PagesTable } from '@/components/manage/analytics/PagesTable';
 import { AudienceSection } from '@/components/manage/analytics/AudienceSection';
 import { AiSection } from '@/components/manage/analytics/AiSection';
 import { VisitDepth } from '@/components/manage/analytics/VisitDepth';
-import type { EnquiryRow, Payload, SiteBehavior } from '@/components/manage/analytics/types';
+import { Outcomes } from '@/components/manage/analytics/Outcomes';
+import type { EnquiryRow, LeadOutcomes, Payload, SiteBehavior } from '@/components/manage/analytics/types';
 
 // The full analytics, read as a chain of questions:
 //
+//   0. מה יצא מזה - visits, taps, the enquiries Nira logged and how many
+//                   became clients: the figure the site is judged by.
 //   1. תמונת מצב  - is it working? Four figures, what they mean, their shape.
-//   2. פניות      - what produced the enquiries, down to each one.
+//   2. לחיצות     - what produced the taps on contact, down to each one.
 //   3. מקורות     - which traffic is worth having.
 //   4. גוגל       - what an enquiry from the ads costs, and where organic
 //                   search is missing (live from Google, see lib/google).
@@ -69,7 +72,7 @@ const RANGES = [
 type PartId = 'summary' | 'sources' | 'content' | 'audience';
 
 const PARTS: Array<{ value: PartId; label: string; sections: string[] }> = [
-  { value: 'summary', label: 'סיכום', sections: ['overview', 'enquiries'] },
+  { value: 'summary', label: 'סיכום', sections: ['outcomes', 'overview', 'enquiries'] },
   { value: 'sources', label: 'מקורות וגוגל', sections: ['sources', 'google'] },
   { value: 'content', label: 'תוכן', sections: ['pages', 'articles', 'ai'] },
   { value: 'audience', label: 'קהל', sections: ['audience'] },
@@ -183,6 +186,7 @@ export default function AnalyticsPage() {
   const googleAdsRes = useRangeFetch<GoogleAds>('/api/manage/google/ads', range);
   const logRes = useRangeFetch<EnquiryRow[]>('/api/manage/enquiry-log', range);
   const behaviorRes = useRangeFetch<SiteBehavior>('/api/manage/site-behavior', range);
+  const outcomesRes = useRangeFetch<LeadOutcomes>('/api/manage/lead-outcomes', range);
 
   const loading = !main || main.range !== range;
   const failed = !loading && Boolean(main?.failed);
@@ -201,6 +205,8 @@ export default function AnalyticsPage() {
     logRes?.range === shownRange ? (logRes?.data ?? (logRes?.failed ? [] : null)) : null;
   const behavior = behaviorRes?.range === shownRange ? behaviorRes?.data ?? null : null;
   const behaviorFailed = behaviorRes?.range === shownRange && Boolean(behaviorRes?.failed);
+  const outcomes = outcomesRes?.range === shownRange ? outcomesRes?.data ?? null : null;
+  const outcomesFailed = outcomesRes?.range === shownRange && Boolean(outcomesRes?.failed);
 
   const [part, setPart] = usePartSpy(Boolean(data) && !failed);
 
@@ -248,6 +254,8 @@ export default function AnalyticsPage() {
             log={log}
             behavior={behavior}
             behaviorFailed={behaviorFailed}
+            outcomes={outcomes}
+            outcomesFailed={outcomesFailed}
             rangeLabel={rangeLabel}
           />
         </div>
@@ -289,6 +297,8 @@ function Dashboard({
   log,
   behavior,
   behaviorFailed,
+  outcomes,
+  outcomesFailed,
   rangeLabel,
 }: {
   data: Payload;
@@ -301,6 +311,8 @@ function Dashboard({
   log: EnquiryRow[] | null;
   behavior: SiteBehavior | null;
   behaviorFailed: boolean;
+  outcomes: LeadOutcomes | null;
+  outcomesFailed: boolean;
   rangeLabel: string;
 }) {
   const isHourly = data.granularity === 'hour';
@@ -379,6 +391,10 @@ function Dashboard({
   return (
     <>
       <Part id="summary">
+        <Section id="outcomes" title="מה יצא מזה" question="כמה מהביקורים הפכו לפניות, וכמה מהפניות למטופלים.">
+          <Outcomes totals={data.totals} data={outcomes} failed={outcomesFailed} rangeLabel={rangeLabel} />
+        </Section>
+
         <Section id="overview" title="תמונת מצב" question={`איך הולך? ${rangeLabel}.`}>
           <Overview
             totals={data.totals}
@@ -391,7 +407,7 @@ function Dashboard({
           />
         </Section>
 
-        <Section id="enquiries" title="פניות" question="מה הביא את הפניות, ומי פנה.">
+        <Section id="enquiries" title="לחיצות ליצירת קשר" question="מה הביא את הלחיצות על ווטסאפ, טלפון, מייל וטופס.">
           <Enquiries byButton={data.conversions_by_source || []} log={log} articleTitles={articleTitles} />
         </Section>
       </Part>
@@ -474,7 +490,10 @@ function Dashboard({
             הנתונים נאספים ישירות באתר, ולכן כוללים גם מבקרים שחוסמים את גוגל אנליטיקס ואת הפיקסל של מטא. לא נשמרות
             כתובות IP ולא פרטים מזהים. כל השעות הן שעון ישראל.
           </p>
-          <p>ביקור הוא רצף צפיות של אותו דפדפן. פנייה היא לחיצה על ווטסאפ, טלפון או מייל, או שליחת טופס.</p>
+          <p>
+            ביקור הוא רצף צפיות של אותו דפדפן. בגרפים ובטבלאות, פנייה היא לחיצה על ווטסאפ, טלפון או מייל, או שליחת
+            טופס. ב&quot;מה יצא מזה&quot; פנייה היא הודעה או שיחה שהגיעה ונרשמה ברשימת הפניות.
+          </p>
           {botSessions > 0 && (
             <p>
               לא נספרו {botSessions.toLocaleString('he-IL')} כניסות אוטומטיות{botSummary && <> ({botSummary})</>}.
