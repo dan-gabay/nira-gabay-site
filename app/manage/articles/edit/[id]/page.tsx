@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { dateToScheduleIso, scheduleIsoToDate } from '@/lib/schedule';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
+import { deleteArticleImage, uploadArticleImage } from '@/lib/articleImage';
 import Link from 'next/link';
 import ArticleGoogle from '@/components/manage/ArticleGoogle';
 import { Copy, Check } from 'lucide-react';
@@ -37,6 +38,8 @@ export default function EditArticlePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  // The image_url stored in the database, to delete it once a replacement is saved.
+  const [savedImageUrl, setSavedImageUrl] = useState('');
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [draftMetadata, setDraftMetadata] = useState<DraftMetadata | null>(null);
@@ -129,6 +132,8 @@ export default function EditArticlePage() {
         focus_keyword: data.focus_keyword || '',
       });
 
+      setSavedImageUrl(data.image_url || '');
+
       // Google data is only asked for the stored, published slug, not for
       // whatever is in the form while editing.
       setPublishedSlug(data.is_published && data.slug ? data.slug : null);
@@ -191,29 +196,20 @@ export default function EditArticlePage() {
   }
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+    const input = e.currentTarget;
+    const file = input.files?.[0];
+    // Cleared so that picking the same file again still counts as a change.
+    input.value = '';
     if (!file) return;
 
     try {
       setUploading(true);
-
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await fetch('/api/upload-image', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'שגיאה בהעלאת התמונה');
-      }
-
-      setFormData(prev => ({ ...prev, image_url: result.url }));
+      const url = await uploadArticleImage(file);
+      const previous = formData.image_url;
+      setFormData(prev => ({ ...prev, image_url: url }));
+      // A file uploaded earlier in this visit and never saved is used by nothing.
+      if (previous && previous !== savedImageUrl) deleteArticleImage(previous);
     } catch (error) {
-      console.error('Error uploading image:', error);
       alert(error instanceof Error ? error.message : 'שגיאה בהעלאת התמונה');
     } finally {
       setUploading(false);
@@ -256,6 +252,11 @@ export default function EditArticlePage() {
         .eq('id', articleId);
 
       if (error) throw error;
+
+      // The replaced image is no longer used by this article.
+      if (savedImageUrl && savedImageUrl !== formData.image_url) {
+        await deleteArticleImage(savedImageUrl);
+      }
 
       alert('המאמר עודכן בהצלחה!');
       router.push('/manage/articles');
