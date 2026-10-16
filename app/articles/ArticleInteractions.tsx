@@ -226,14 +226,23 @@ export default function ArticleInteractions({
     const url = canonical || window.location.origin + window.location.pathname;
     trackArticleShare('facebook', articleId, document.title);
 
-    // This button must actually go to Facebook, not the OS share sheet (that
-    // is what the share button next to it is for).
-    //
-    // sharer.php, not the app-id Share Dialog (dialog/share): the dialog only
-    // works while the Facebook app behind the id is live and lists
-    // niragabay.com in its App Domains, and otherwise shows visitors an error
-    // page instead of the composer. sharer.php needs no app at all and opens
-    // the same composer.
+    // On a phone, any facebook.com link - sharer.php and the app-id Share
+    // Dialog alike - is handed to the installed Facebook app, which opens on
+    // its feed and drops the link. Facebook's own entry in the OS share sheet
+    // is the only route that reaches its post composer from a web page, so
+    // phones go there (the visitor taps Facebook in the sheet).
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile && typeof navigator.share === 'function') {
+      navigator.share({ url }).catch(() => {
+        // User cancelled the share sheet - nothing to do
+      });
+      return;
+    }
+
+    // Desktop: sharer.php, not the app-id Share Dialog (dialog/share). The
+    // dialog only works while the Facebook app behind the id is live and
+    // lists niragabay.com in its App Domains, and otherwise shows an error
+    // page instead of the composer. sharer.php needs no app at all.
     const target = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
 
     // Window features belong in the third argument - window.open takes three.
