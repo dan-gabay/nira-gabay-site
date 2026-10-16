@@ -131,6 +131,4 @@ export type LeadOutcomes = {
   first: string | null;
   /** By landing page path ('' when unknown), over every enquiry. */
   by_page: OutcomeRow[];
-  /** google_ads, paid_other, a utm_source, or '' when unknown; over every enquiry. */
-  by_source: OutcomeRow[];
 };

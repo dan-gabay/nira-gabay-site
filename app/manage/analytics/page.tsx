@@ -26,30 +26,27 @@ import { PagesTable } from '@/components/manage/analytics/PagesTable';
 import { AudienceSection } from '@/components/manage/analytics/AudienceSection';
 import { AiSection } from '@/components/manage/analytics/AiSection';
 import { VisitDepth } from '@/components/manage/analytics/VisitDepth';
-import { Outcomes } from '@/components/manage/analytics/Outcomes';
 import type { EnquiryRow, LeadOutcomes, Payload, SiteBehavior } from '@/components/manage/analytics/types';
 
 // The full analytics, read as a chain of questions:
 //
 //   1. תמונת מצב  - is it working? Four figures, what they mean, their shape.
-//   2. מה יצא מזה - the enquiries Nira logged and how many became clients:
-//                   the figure the site is judged by.
-//   3. לחיצות     - what produced the taps on contact, down to each one.
-//   4. מקורות     - which traffic is worth having.
-//   5. גוגל       - what an enquiry from the ads costs, and where organic
+//   2. לחיצות     - what produced the taps on contact, down to each one.
+//   3. מקורות     - which traffic is worth having.
+//   4. גוגל       - what an enquiry from the ads costs, and where organic
 //                   search is missing (live from Google, see lib/google).
-//   6. עמודים     - which pages turn a visit into an enquiry, and how deep
+//   5. עמודים     - which pages turn a visit into an enquiry, and how deep
 //                   a visit goes.
-//   7. מאמרים     - whether the content is read.
-//   8. כלי AI     - whether AI tools read the site, and answer from it.
-//   9. קהל        - who the visitors are and when they come.
+//   6. מאמרים     - whether the content is read.
+//   7. כלי AI     - whether AI tools read the site, and answer from it.
+//   8. קהל        - who the visitors are and when they come.
 //
 // It replaced about twenty flat cards in which the same data appeared up to
 // three times (landing pages, source quality, enquiries per day). Every section
 // here answers one question, and a figure that did not help answer one was
 // cut rather than given a card of its own.
 //
-// The nine sections are one continuous scroll, grouped under four parts
+// The eight sections are one continuous scroll, grouped under four parts
 // (PARTS). The part menu stays under the admin header: it marks the part being
 // read as the page scrolls, and a tap on it jumps to that part. A part's or a
 // section's id in the URL hash (#content, #google...) opens the page there.
@@ -72,7 +69,7 @@ const RANGES = [
 type PartId = 'summary' | 'sources' | 'content' | 'audience';
 
 const PARTS: Array<{ value: PartId; label: string; sections: string[] }> = [
-  { value: 'summary', label: 'סיכום', sections: ['overview', 'outcomes', 'enquiries'] },
+  { value: 'summary', label: 'סיכום', sections: ['overview', 'enquiries'] },
   { value: 'sources', label: 'מקורות וגוגל', sections: ['sources', 'google'] },
   { value: 'content', label: 'תוכן', sections: ['pages', 'articles', 'ai'] },
   { value: 'audience', label: 'קהל', sections: ['audience'] },
@@ -206,7 +203,6 @@ export default function AnalyticsPage() {
   const behavior = behaviorRes?.range === shownRange ? behaviorRes?.data ?? null : null;
   const behaviorFailed = behaviorRes?.range === shownRange && Boolean(behaviorRes?.failed);
   const outcomes = outcomesRes?.range === shownRange ? outcomesRes?.data ?? null : null;
-  const outcomesFailed = outcomesRes?.range === shownRange && Boolean(outcomesRes?.failed);
 
   const [part, setPart] = usePartSpy(Boolean(data) && !failed);
 
@@ -255,7 +251,6 @@ export default function AnalyticsPage() {
             behavior={behavior}
             behaviorFailed={behaviorFailed}
             outcomes={outcomes}
-            outcomesFailed={outcomesFailed}
             rangeLabel={rangeLabel}
           />
         </div>
@@ -298,7 +293,6 @@ function Dashboard({
   behavior,
   behaviorFailed,
   outcomes,
-  outcomesFailed,
   rangeLabel,
 }: {
   data: Payload;
@@ -312,7 +306,6 @@ function Dashboard({
   behavior: SiteBehavior | null;
   behaviorFailed: boolean;
   outcomes: LeadOutcomes | null;
-  outcomesFailed: boolean;
   rangeLabel: string;
 }) {
   const isHourly = data.granularity === 'hour';
@@ -400,11 +393,8 @@ function Dashboard({
             insights={insights}
             timeline={timeline}
             rangeLabel={rangeLabel}
+            outcomes={outcomes}
           />
-        </Section>
-
-        <Section id="outcomes" title="מה יצא מזה" question="כמה פניות הגיעו בפועל, וכמה מהן הפכו למטופלים.">
-          <Outcomes data={outcomes} failed={outcomesFailed} rangeLabel={rangeLabel} />
         </Section>
 
         <Section id="enquiries" title="לחיצות ליצירת קשר" question="מה הביא את הלחיצות על ווטסאפ, טלפון, מייל וטופס.">
@@ -450,7 +440,7 @@ function Dashboard({
 
       <Part id="content">
         <Section id="pages" title="עמודים" question="אילו עמודים הופכים ביקור לפנייה, וכמה עמוק הולך ביקור.">
-          <PagesTable data={data} articleTitles={articleTitles} />
+          <PagesTable data={data} articleTitles={articleTitles} outcomes={outcomes} />
           {!behaviorFailed && <VisitDepth data={behavior} />}
         </Section>
 
