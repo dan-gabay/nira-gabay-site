@@ -91,7 +91,7 @@ export default function HeroSection() {
       <p className="text-sm md:text-base text-white/65 leading-relaxed mb-8">
         מטפלת במבוגרים, בני נוער וזוגות,
         <br />
-        מומחית למיניות בריאה
+        הדרכת הורים
         <br />
         מלווה אתכם בדרך להגשמה עצמית ולחיים מלאים יותר
       </p>
