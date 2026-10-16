@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { enquiries as enquiryCount } from '@/lib/heCount';
-import { BarList, Card, MIN_FOR_RATE, Segmented, pct, rateText, type BarRow } from './ui';
+import { BarList, Card, MIN_FOR_RATE, Note, Segmented, pct, rateText, type BarRow } from './ui';
 import { pageName, pageTypeName, serviceName } from './labels';
-import type { Payload } from './types';
+import { heDate } from './Overview';
+import type { LeadOutcomes, Payload } from './types';
 
 // "אילו עמודים עובדים?" Three lists that used to be four cards (service funnel,
 // landing pages, most-viewed pages, by page type) behind one switch, because
@@ -28,7 +29,16 @@ function meta(conv: number, visits: number, siteRate: number) {
   );
 }
 
-export function PagesTable({ data, articleTitles }: { data: Payload; articleTitles: Map<string, string> }) {
+export function PagesTable({
+  data,
+  articleTitles,
+  outcomes,
+}: {
+  data: Payload;
+  articleTitles: Map<string, string>;
+  /** Clients per landing page, over every enquiry logged. */
+  outcomes: LeadOutcomes | null;
+}) {
   const [mode, setMode] = useState<Mode>('services');
   const siteRate = pct(data.totals.conversions, data.totals.visits);
 
@@ -89,6 +99,28 @@ export function PagesTable({ data, articleTitles }: { data: Payload; articleTitl
         )}
       </p>
       <BarList rows={rows} empty={empty} limit={mode === 'landing' ? 10 : undefined} />
+      {mode !== 'types' && <ClientsByPage outcomes={outcomes} articleTitles={articleTitles} />}
     </Card>
+  );
+}
+
+/**
+ * The pages above count taps; this is what the enquiries that started on each
+ * page became. Over every enquiry logged, not the range: at a few a month a
+ * range holds one or two. In people, never percent.
+ */
+function ClientsByPage({ outcomes, articleTitles }: { outcomes: LeadOutcomes | null; articleTitles: Map<string, string> }) {
+  if (!outcomes || outcomes.all.enquiries === 0) return null;
+  const rows = outcomes.by_page.filter((r) => r.key);
+  if (rows.length === 0) return null;
+  return (
+    <Note>
+      <span className="font-medium text-stone-500">מטופלים לפי עמוד הכניסה</span>
+      {outcomes.first && <> (כל הפניות מאז {heDate(outcomes.first)})</>}:{' '}
+      {rows
+        .map((r) => `${pageName(r.key, articleTitles)} ${r.clients} מתוך ${r.enquiries}`)
+        .join(' · ')}
+      . מעט מדי כדי להסיק, אבל מראה איפה לחפש.
+    </Note>
   );
 }

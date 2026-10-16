@@ -10,32 +10,20 @@ export const runtime = 'nodejs';
 // no name, phone, message or date of a single lead leaves this route, and a
 // row is never sent to a third party (CLAUDE.md, growth rules).
 //
-// Two windows: the selected range, for the chain at the top of the page, and
-// every enquiry logged so far for the breakdowns, because at a handful of
-// enquiries a month a week's breakdown is one or two rows.
+// Two windows: the selected range, for the line under the overview figures,
+// and every enquiry logged so far for the per-page clients under עמודים,
+// because at a handful of enquiries a month a week's breakdown is one or two
+// rows. By source is not here: almost every lead is from the ads, and the
+// Google section already carries ad leads to clients.
 
 const ALLOWED_RANGES = [1, 7, 30, 90];
 
 type Row = {
   status: string | null;
   created_date: string;
-  gclid: string | null;
-  utm_source: string | null;
-  utm_medium: string | null;
   landing_page: string | null;
   source_page: string | null;
 };
-
-const PAID_MEDIUMS = new Set(['cpc', 'ppc', 'paid', 'paidsearch']);
-
-/** Where a lead came from, by the attribution saved with it. */
-function sourceOf(r: Row): string {
-  if (r.gclid || PAID_MEDIUMS.has((r.utm_medium || '').toLowerCase())) {
-    return (r.utm_source || 'google').toLowerCase() === 'google' ? 'google_ads' : 'paid_other';
-  }
-  if (r.utm_source) return r.utm_source.toLowerCase();
-  return '';
-}
 
 const empty = (): OutcomeCounts => ({ enquiries: 0, open: 0, spoke: 0, clients: 0, irrelevant: 0 });
 
@@ -72,7 +60,7 @@ export async function GET(req: NextRequest) {
     const supabase = supabaseServer();
     const { data, error } = await supabase
       .from('contact_messages')
-      .select('status, created_date, gclid, utm_source, utm_medium, landing_page, source_page')
+      .select('status, created_date, landing_page, source_page')
       .order('created_date', { ascending: true });
     if (error) throw new Error(error.message);
 
@@ -91,7 +79,6 @@ export async function GET(req: NextRequest) {
       all,
       first: rows[0]?.created_date?.slice(0, 10) ?? null,
       by_page: group(rows, (r) => (r.landing_page || r.source_page || '').split('?')[0]),
-      by_source: group(rows, sourceOf),
     };
     return NextResponse.json(body);
   } catch (e) {

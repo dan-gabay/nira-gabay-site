@@ -1,10 +1,11 @@
 'use client';
 
+import Link from 'next/link';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { VisitsTimeline, ACTION_COLOR, SERIES, type DayPoint } from '@/components/manage/Charts';
 import type { Insight } from '@/lib/analyticsInsights';
 import { Card, Kpi, one, pct, type Delta } from './ui';
-import type { Totals } from './types';
+import type { LeadOutcomes, Totals } from './types';
 
 // "איך הולך?" in one screen: four numbers, what they mean, and their shape
 // over the range. Everything below this section is the explanation of it.
@@ -22,6 +23,7 @@ export function Overview({
   insights,
   timeline,
   rangeLabel,
+  outcomes,
 }: {
   totals: Totals;
   previous: Totals;
@@ -31,6 +33,8 @@ export function Overview({
   insights: Insight[];
   timeline: DayPoint[];
   rangeLabel: string;
+  /** The enquiries Nira logged in the range and what she marked them as. */
+  outcomes: LeadOutcomes | null;
 }) {
   const rate = pct(totals.conversions, totals.visits);
   const prevRate = pct(previous.conversions, previous.visits);
@@ -73,6 +77,8 @@ export function Overview({
         />
       </div>
 
+      {outcomes && <OutcomeLine c={outcomes.range} />}
+
       {!prevComplete && firstEvent && (
         <p className="text-[11px] text-stone-400 px-0.5 -mt-1">
           אין השוואה לתקופה הקודמת: המדידה התחילה ב-{heDate(firstEvent)}, כך שהתקופה הקודמת לא נמדדה במלואה.
@@ -110,6 +116,37 @@ export function Overview({
         />
       </Card>
     </div>
+  );
+}
+
+/**
+ * What became of the range's enquiries, under the figures that count taps: a
+ * tap is not an enquiry, and the clients are the number the site is judged
+ * by. From the outcomes Nira records in /manage/update.
+ */
+function OutcomeLine({ c }: { c: LeadOutcomes['range'] }) {
+  if (c.enquiries === 0) {
+    return <p className="text-[12px] text-stone-500 px-0.5">לא נרשמו פניות בטווח הזה.</p>;
+  }
+  const parts = [
+    `פניות שנרשמו: ${c.enquiries}`,
+    `התחילו טיפול: ${c.clients}`,
+    c.irrelevant > 0 && `לא רלוונטיות: ${c.irrelevant}`,
+    c.spoke > 0 && `בשיחה: ${c.spoke}`,
+  ].filter(Boolean);
+  return (
+    <p className="text-[12px] md:text-[13px] text-stone-600 px-0.5">
+      {parts.join(' · ')}
+      {c.open > 0 && (
+        <>
+          {' · '}
+          עוד בלי תשובה: {c.open}.{' '}
+          <Link href="/manage/update" className="underline underline-offset-2 hover:text-stone-800">
+            לעדכן מה קרה
+          </Link>
+        </>
+      )}
+    </p>
   );
 }
 

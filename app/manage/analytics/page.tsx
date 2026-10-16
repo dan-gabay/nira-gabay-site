@@ -26,13 +26,10 @@ import { PagesTable } from '@/components/manage/analytics/PagesTable';
 import { AudienceSection } from '@/components/manage/analytics/AudienceSection';
 import { AiSection } from '@/components/manage/analytics/AiSection';
 import { VisitDepth } from '@/components/manage/analytics/VisitDepth';
-import { Outcomes } from '@/components/manage/analytics/Outcomes';
 import type { EnquiryRow, LeadOutcomes, Payload, SiteBehavior } from '@/components/manage/analytics/types';
 
 // The full analytics, read as a chain of questions:
 //
-//   0. מה יצא מזה - visits, taps, the enquiries Nira logged and how many
-//                   became clients: the figure the site is judged by.
 //   1. תמונת מצב  - is it working? Four figures, what they mean, their shape.
 //   2. לחיצות     - what produced the taps on contact, down to each one.
 //   3. מקורות     - which traffic is worth having.
@@ -72,7 +69,7 @@ const RANGES = [
 type PartId = 'summary' | 'sources' | 'content' | 'audience';
 
 const PARTS: Array<{ value: PartId; label: string; sections: string[] }> = [
-  { value: 'summary', label: 'סיכום', sections: ['outcomes', 'overview', 'enquiries'] },
+  { value: 'summary', label: 'סיכום', sections: ['overview', 'enquiries'] },
   { value: 'sources', label: 'מקורות וגוגל', sections: ['sources', 'google'] },
   { value: 'content', label: 'תוכן', sections: ['pages', 'articles', 'ai'] },
   { value: 'audience', label: 'קהל', sections: ['audience'] },
@@ -175,10 +172,10 @@ function useRangeFetch<T>(url: string, range: number): Loaded<T> | null {
 }
 
 export default function AnalyticsPage() {
-  // 7 days by default: the home screen (/manage/overview) already gives the
-  // month's headline figures, and a day is usually too few visits here to
-  // read a section by.
-  const [range, setRange] = useState(7);
+  // 24 hours by default (Dan, 2026-10-16): the page is opened to see what
+  // happened since yesterday, and the home screen (/manage/overview) already
+  // gives the month. A longer range is one tap away.
+  const [range, setRange] = useState(1);
   const main = useRangeFetch<Payload>('/api/manage/analytics', range);
   const articlesRes = useRangeFetch<ArticleEngagement>('/api/manage/article-engagement', range);
   const organicRes = useRangeFetch<OrganicSearch>('/api/manage/organic-search', range);
@@ -206,7 +203,6 @@ export default function AnalyticsPage() {
   const behavior = behaviorRes?.range === shownRange ? behaviorRes?.data ?? null : null;
   const behaviorFailed = behaviorRes?.range === shownRange && Boolean(behaviorRes?.failed);
   const outcomes = outcomesRes?.range === shownRange ? outcomesRes?.data ?? null : null;
-  const outcomesFailed = outcomesRes?.range === shownRange && Boolean(outcomesRes?.failed);
 
   const [part, setPart] = usePartSpy(Boolean(data) && !failed);
 
@@ -255,7 +251,6 @@ export default function AnalyticsPage() {
             behavior={behavior}
             behaviorFailed={behaviorFailed}
             outcomes={outcomes}
-            outcomesFailed={outcomesFailed}
             rangeLabel={rangeLabel}
           />
         </div>
@@ -298,7 +293,6 @@ function Dashboard({
   behavior,
   behaviorFailed,
   outcomes,
-  outcomesFailed,
   rangeLabel,
 }: {
   data: Payload;
@@ -312,7 +306,6 @@ function Dashboard({
   behavior: SiteBehavior | null;
   behaviorFailed: boolean;
   outcomes: LeadOutcomes | null;
-  outcomesFailed: boolean;
   rangeLabel: string;
 }) {
   const isHourly = data.granularity === 'hour';
@@ -391,10 +384,6 @@ function Dashboard({
   return (
     <>
       <Part id="summary">
-        <Section id="outcomes" title="מה יצא מזה" question="כמה מהביקורים הפכו לפניות, וכמה מהפניות למטופלים.">
-          <Outcomes totals={data.totals} data={outcomes} failed={outcomesFailed} rangeLabel={rangeLabel} />
-        </Section>
-
         <Section id="overview" title="תמונת מצב" question={`איך הולך? ${rangeLabel}.`}>
           <Overview
             totals={data.totals}
@@ -404,6 +393,7 @@ function Dashboard({
             insights={insights}
             timeline={timeline}
             rangeLabel={rangeLabel}
+            outcomes={outcomes}
           />
         </Section>
 
@@ -450,7 +440,7 @@ function Dashboard({
 
       <Part id="content">
         <Section id="pages" title="עמודים" question="אילו עמודים הופכים ביקור לפנייה, וכמה עמוק הולך ביקור.">
-          <PagesTable data={data} articleTitles={articleTitles} />
+          <PagesTable data={data} articleTitles={articleTitles} outcomes={outcomes} />
           {!behaviorFailed && <VisitDepth data={behavior} />}
         </Section>
 
