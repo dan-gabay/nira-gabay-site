@@ -46,7 +46,7 @@ export function Overview({
     <div className="space-y-3 md:space-y-4">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 md:gap-4">
         <Kpi
-          label="פניות"
+          label="לחיצות ליצירת קשר"
           value={totals.conversions}
           delta={d({ kind: 'count', now: totals.conversions, prev: previous.conversions })}
           sub="ווטסאפ, טלפון, מייל וטופס"
@@ -102,7 +102,7 @@ export function Overview({
         </Card>
       )}
 
-      <Card title="ביקורים ופניות לאורך זמן" sub={rangeLabel}>
+      <Card title="ביקורים ולחיצות לאורך זמן" sub={rangeLabel}>
         <VisitsTimeline
           data={timeline}
           granularity={timeline[0]?.day.includes('T') ? 'hour' : 'day'}
