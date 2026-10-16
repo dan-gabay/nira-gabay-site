@@ -59,7 +59,7 @@ export default function About() {
                 <div className="relative w-full h-[300px] md:h-[500px]">
                   <Image
                     src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png"
-                    alt="נירה גבאי - מטפלת בפסיכותרפיה ומדריכת הורים, מומחית למיניות בריאה וטיפול CBT"
+                    alt="נירה גבאי - מטפלת בפסיכותרפיה ומדריכת הורים, טיפול זוגי וטיפול CBT"
                     fill
                     priority
                     className="rounded-3xl shadow-2xl object-cover"
