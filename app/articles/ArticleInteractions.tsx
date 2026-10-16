@@ -5,7 +5,6 @@ import { Heart, MessageCircle, Facebook, Send, User, Mail, Loader2, Instagram, S
 import { getUserIdentifier } from '@/lib/userIdentifier';
 import { supabase as supabaseClient } from '@/lib/supabaseClient';
 import { trackArticleLike, trackCommentSubmit, trackArticleShare } from '@/lib/analytics';
-import { FACEBOOK_APP_ID } from '@/lib/facebook';
 import { isOptedOut } from '@/lib/ownerOptOut';
 
 type ArticleInteractionsProps = {
@@ -220,24 +219,22 @@ export default function ArticleInteractions({
   }
 
   function shareOnFacebook() {
-    const url = window.location.href;
+    // The canonical address, not location.href: a visitor who arrived from an
+    // ad or a Facebook post carries gclid/fbclid/utm params, and those would
+    // otherwise be baked into every re-share.
+    const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href;
+    const url = canonical || window.location.origin + window.location.pathname;
     trackArticleShare('facebook', articleId, document.title);
 
-    // This button must actually go to Facebook. It used to hand off to the OS
-    // share sheet whenever navigator.share existed, which meant tapping the
-    // Facebook icon on a phone opened a generic sheet - and did exactly the
-    // same thing as the share button sitting next to it.
+    // This button must actually go to Facebook, not the OS share sheet (that
+    // is what the share button next to it is for).
     //
-    // The official Share Dialog opens the real composer, in-app included.
-    // Falls back to sharer.php if the app id is ever cleared: correct on
-    // desktop and on mobile browsers without the Facebook app installed,
-    // though iOS/Android hand facebook.com links to the app, which lands on
-    // its feed.
-    const appId = FACEBOOK_APP_ID;
-    const target = appId
-      ? `https://www.facebook.com/dialog/share?app_id=${encodeURIComponent(appId)}` +
-        `&display=popup&href=${encodeURIComponent(url)}&redirect_uri=${encodeURIComponent(url)}`
-      : `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+    // sharer.php, not the app-id Share Dialog (dialog/share): the dialog only
+    // works while the Facebook app behind the id is live and lists
+    // niragabay.com in its App Domains, and otherwise shows visitors an error
+    // page instead of the composer. sharer.php needs no app at all and opens
+    // the same composer.
+    const target = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
 
     // Window features belong in the third argument - window.open takes three.
     window.open(target, '_blank', 'noopener,noreferrer,width=600,height=600');

@@ -1,5 +1,5 @@
-// Facebook app id, used by the article Share Dialog and the fb:app_id meta
-// tag. An app id is public by design - it ships in client-side SDK calls and
+// Facebook app id, used by the fb:app_id meta tag in app/layout.tsx. An app
+// id is public by design - it ships in client-side SDK calls and
 // in the page's own meta tags. The app SECRET is the sensitive half and is
 // not used anywhere in this project.
 //
