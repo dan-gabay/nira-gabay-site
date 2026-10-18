@@ -4,6 +4,7 @@ import {
   isTrackedEvent,
   isConversion,
   isClickKind,
+  isSiteErrorSource,
   type SiteEventPayload,
 } from '@/lib/siteEvents';
 import { botKindFromUserAgent } from '@/lib/botDetect';
@@ -63,6 +64,12 @@ export async function POST(req: NextRequest) {
 
     const name = clip(body.event_name);
     if (!name || !isTrackedEvent(name)) {
+      return new NextResponse(null, { status: 204 });
+    }
+
+    // A failure report must be one of ours (lib/siteEvents.ts): a known
+    // action and a reason code, never free text a visitor could have typed.
+    if (name === 'site_error' && !isSiteErrorSource(clip(body.source))) {
       return new NextResponse(null, { status: 204 });
     }
 

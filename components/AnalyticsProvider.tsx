@@ -9,6 +9,7 @@ import {
   trackEngagementTime,
   trackPagePerformance,
   trackFunnelStage,
+  reportSiteError,
 } from '@/lib/analytics';
 import { captureAttribution } from '@/lib/attribution';
 
@@ -58,6 +59,21 @@ export default function AnalyticsProvider({ children }: { children: React.ReactN
     captureAttribution();
     identifyVisitorType();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Uncaught script errors, recorded in site_events (lib/siteEvents.ts) so a
+  // broken button shows up in the weekly contact-path check instead of only in
+  // a visitor's console. Only errors thrown by our own bundles: extensions,
+  // ad tags and third-party widgets throw constantly and are not ours to fix.
+  // The reason is the error's type (TypeError, ...), never its message.
+  useEffect(() => {
+    const onError = (e: ErrorEvent) => {
+      if (!e.filename || !e.filename.startsWith(`${window.location.origin}/_next/`)) return;
+      const name = e.error instanceof Error ? e.error.name : 'error';
+      reportSiteError('client_js', name);
+    };
+    window.addEventListener('error', onError);
+    return () => window.removeEventListener('error', onError);
   }, []);
 
   // Page-load timing, per route.

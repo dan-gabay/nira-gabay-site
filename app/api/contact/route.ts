@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { normalizeIsraeliPhone, PHONE_ERROR } from '@/lib/phone';
 import { notifyNewLead } from '@/lib/leadNotify';
+import { recordSiteError } from '@/lib/siteErrors';
 
 export const runtime = 'nodejs';
 
@@ -59,18 +60,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
+  const attribution = sanitizeAttribution(body.attribution);
+  // Every refusal and failure below is also written to site_events
+  // (lib/siteErrors.ts): a person turned away here is a lead lost, and the
+  // runtime log forgets it within the hour.
+  const failed = (reason: string) =>
+    recordSiteError({
+      action: 'contact_form',
+      reason,
+      path: attribution.source_page,
+      userAgent: req.headers.get('user-agent'),
+    });
+
   const name = (body.name || '').trim();
   const phone = (body.phone || '').trim();
   const email = (body.email || '').trim();
   const message = (body.message || '').trim();
 
   if (!name || !message || !phone) {
+    await failed('missing_fields');
     return NextResponse.json(
       { error: 'נא למלא שם, טלפון והודעה' },
       { status: 400 },
     );
   }
   if (name.length > 200 || email.length > 200 || phone.length > 50 || message.length > 5000) {
+    await failed('too_long');
     return NextResponse.json({ error: 'bad request' }, { status: 400 });
   }
 
@@ -81,10 +96,9 @@ export async function POST(req: NextRequest) {
   // open WhatsApp without re-parsing what someone typed.
   const normalizedPhone = normalizeIsraeliPhone(phone);
   if (!normalizedPhone) {
+    await failed('phone_rejected');
     return NextResponse.json({ error: PHONE_ERROR }, { status: 400 });
   }
-
-  const attribution = sanitizeAttribution(body.attribution);
 
   const supabase = supabaseServer();
   const leadId = crypto.randomUUID();
@@ -103,6 +117,7 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     console.error('contact insert failed:', error.message);
+    await failed('db_insert_failed');
     return NextResponse.json(
       { error: 'שליחה נכשלה, נסו שוב או פנו בטלפון/WhatsApp' },
       { status: 500 },
@@ -130,6 +145,11 @@ export async function POST(req: NextRequest) {
     // should not fill the log with the news every time a lead arrives.
     if (!r.ok && r.reason !== 'not_configured') {
       console.error(`lead ${channel} not sent (${r.reason}): ${r.detail}`);
+      await recordSiteError({
+        action: channel === 'email' ? 'contact_notify_email' : 'contact_notify_telegram',
+        reason: r.reason,
+        path: attribution.source_page,
+      });
     }
   }
 

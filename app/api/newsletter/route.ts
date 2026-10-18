@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
+import { recordSiteError } from '@/lib/siteErrors';
 
 export const runtime = 'nodejs';
 
@@ -20,6 +21,11 @@ export async function POST(req: NextRequest) {
 
   const email = (body.email || '').trim().toLowerCase();
   if (!EMAIL_RE.test(email) || email.length > 200) {
+    await recordSiteError({
+      action: 'newsletter',
+      reason: 'email_rejected',
+      userAgent: req.headers.get('user-agent'),
+    });
     return NextResponse.json({ error: 'כתובת אימייל לא תקינה' }, { status: 400 });
   }
 
@@ -31,6 +37,7 @@ export async function POST(req: NextRequest) {
   // Unique violation = already subscribed; treat as success.
   if (error && error.code !== '23505') {
     console.error('newsletter insert failed:', error.message);
+    await recordSiteError({ action: 'newsletter', reason: 'db_insert_failed' });
     return NextResponse.json(
       { error: 'ההרשמה נכשלה, נסו שוב מאוחר יותר' },
       { status: 500 },

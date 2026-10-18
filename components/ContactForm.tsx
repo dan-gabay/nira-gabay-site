@@ -7,6 +7,7 @@ import {
   trackContactFormSubmit,
   trackFormFieldFocus,
   trackGenerateLead,
+  reportSiteError,
 } from '@/lib/analytics';
 import { getStoredAttribution } from '@/lib/attribution';
 import { isValidIsraeliPhone, PHONE_ERROR } from '@/lib/phone';
@@ -73,12 +74,19 @@ export default function ContactForm({
     if (!isValidIsraeliPhone(formData.phone)) {
       setPhoneTouched(true);
       setError(PHONE_ERROR);
+      // Never reaches the server, so the server cannot count it. A number
+      // refused here is the likeliest way a real enquiry quietly gives up.
+      reportSiteError('contact_form', 'phone_rejected_client');
       return;
     }
 
     setIsLoading(true);
     setError('');
 
+    // Set once a response arrives. A throw with no response means the request
+    // never got an answer - offline, blocked, timed out - which the server
+    // cannot have recorded, so the browser does (lib/siteEvents.ts).
+    let status: number | null = null;
     try {
       const honeypot = (document.getElementById(honeypotId) as HTMLInputElement | null)?.value || '';
       const res = await fetch('/api/contact', {
@@ -93,6 +101,7 @@ export default function ContactForm({
           },
         }),
       });
+      status = res.status;
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || 'submit failed');
@@ -107,6 +116,13 @@ export default function ContactForm({
       setPhoneTouched(false);
     } catch (err) {
       console.error('Form submission error:', err);
+      // 400 and 500 come from app/api/contact, which records its own refusals
+      // and failures. Anything else (404, 413, 502, 504, no answer) never ran
+      // that code, so only this side can see it.
+      if (status === null) reportSiteError('contact_form', 'network');
+      else if (status >= 400 && status !== 400 && status !== 500) {
+        reportSiteError('contact_form', `http_${status}`);
+      }
       setError('לא הצלחנו לשלוח את ההודעה. אנא נסו שוב או צרו קשר ישירות בטלפון/WhatsApp.');
     } finally {
       setIsLoading(false);

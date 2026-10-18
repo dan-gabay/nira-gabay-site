@@ -12,6 +12,8 @@ import {
   isTrackedEvent,
   pageTypeFor,
   entityFor,
+  siteErrorSource,
+  type SiteErrorAction,
   type SiteEventPayload,
 } from './siteEvents';
 import { isOptedOut } from './ownerOptOut';
@@ -172,6 +174,19 @@ function mirrorToStore(
     // Measurement must never break a CTA.
   }
 }
+
+// A visitor action that failed (lib/siteEvents.ts, SITE_ERROR_ACTIONS). Our
+// own store only: GA4 has no use for it, and the weekly contact-path check
+// reads it from site_events. Capped per page load, so a script error firing in
+// a loop cannot flood the table.
+let siteErrorsSent = 0;
+export const reportSiteError = (action: SiteErrorAction, reason: string) => {
+  if (typeof window === 'undefined' || isOptedOut() || siteErrorsSent >= 5) return;
+  const source = siteErrorSource(action, reason);
+  if (!source) return;
+  siteErrorsSent += 1;
+  mirrorToStore('site_error', { source });
+};
 
 // Under GTM every event goes to dataLayer and nowhere else. GTM defines
 // window.gtag as a side effect of loading GA4, so calling both would send each

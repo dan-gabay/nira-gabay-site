@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Mail, Loader2, CheckCircle2 } from 'lucide-react';
-import { trackSignUp } from '@/lib/analytics';
+import { trackSignUp, reportSiteError } from '@/lib/analytics';
 
 export default function NewsletterSignup({ source = 'article' }: { source?: string }) {
   const [email, setEmail] = useState('');
@@ -14,18 +14,26 @@ export default function NewsletterSignup({ source = 'article' }: { source?: stri
     if (!email) return;
     setStatus('loading');
     setErrorMsg('');
+    // As in ContactForm: the route records its own 400/500, the browser
+    // records what never reached it.
+    let status: number | null = null;
     try {
       const res = await fetch('/api/newsletter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, source }),
       });
-      const data = await res.json();
+      status = res.status;
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'failed');
       // sign_up, not generate_lead - leads mean therapy inquiries only
       trackSignUp(source);
       setStatus('done');
     } catch (err) {
+      if (status === null) reportSiteError('newsletter', 'network');
+      else if (status >= 400 && status !== 400 && status !== 500) {
+        reportSiteError('newsletter', `http_${status}`);
+      }
       setStatus('error');
       setErrorMsg(err instanceof Error && err.message !== 'failed' ? err.message : 'ההרשמה נכשלה, נסו שוב');
     }
