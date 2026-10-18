@@ -4,9 +4,17 @@ import { useState, useEffect } from 'react';
 import { Heart, MessageCircle, Facebook, Send, User, Mail, Loader2, Instagram, Share2, Link2 } from 'lucide-react';
 import { getUserIdentifier } from '@/lib/userIdentifier';
 import { supabase as supabaseClient } from '@/lib/supabaseClient';
-import { trackArticleLike, trackCommentSubmit, trackArticleShare } from '@/lib/analytics';
+import { trackArticleLike, trackCommentSubmit, trackArticleShare, reportSiteError } from '@/lib/analytics';
 import { FACEBOOK_APP_ID } from '@/lib/facebook';
 import { isOptedOut } from '@/lib/ownerOptOut';
+
+// The Postgres/PostgREST code when there is one (e.g. 42501 for a policy
+// refusal), never the message: these writes go straight from the browser to
+// Supabase, so no server route sees them fail.
+function supabaseErrorReason(error: unknown): string {
+  const code = (error as { code?: unknown } | null)?.code;
+  return typeof code === 'string' && code ? `db_${code}` : 'network';
+}
 
 type ArticleInteractionsProps = {
   articleId: string;
@@ -148,6 +156,7 @@ export default function ArticleInteractions({
       trackArticleLike(articleId, document.title);
     } catch (error) {
       console.error('Error liking article:', error);
+      reportSiteError('like', supabaseErrorReason(error));
       setToastMessage('משהו השתבש, נסו שוב');
     } finally {
       setIsLiking(false);
@@ -184,6 +193,7 @@ export default function ArticleInteractions({
       setToastMessage('התגובה נשלחה! היא תפורסם לאחר אישור');
     } catch (error) {
       console.error('Error submitting comment:', error);
+      reportSiteError('comment', supabaseErrorReason(error));
       setToastMessage('משהו השתבש, נסו שוב');
     } finally {
       setIsSubmittingComment(false);

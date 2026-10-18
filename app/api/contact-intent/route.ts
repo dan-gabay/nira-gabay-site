@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { OPT_OUT_COOKIE, optedOutFromCookie } from '@/lib/ownerOptOut';
+import { recordSiteError } from '@/lib/siteErrors';
 
 export const runtime = 'nodejs';
 
@@ -84,9 +85,18 @@ export async function POST(req: NextRequest) {
       ...attribution,
     });
 
-    if (error) console.error('contact intent insert failed:', error.message);
+    if (error) {
+      console.error('contact intent insert failed:', error.message);
+      await recordSiteError({
+        action: 'contact_intent',
+        reason: 'db_insert_failed',
+        path: clip(body.source_page),
+        userAgent: req.headers.get('user-agent'),
+      });
+    }
   } catch (e) {
     console.error('contact intent failed:', e);
+    await recordSiteError({ action: 'contact_intent', reason: 'exception' });
   }
 
   return new NextResponse(null, { status: 204 });

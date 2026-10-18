@@ -39,6 +39,8 @@ export const TRACKED_EVENTS = [
   'contact_email',
   'contact_form_submit',
   'sign_up',
+  // A visitor action that failed. See SITE_ERROR_ACTIONS below.
+  'site_error',
 ] as const;
 
 export type TrackedEvent = (typeof TRACKED_EVENTS)[number];
@@ -80,7 +82,53 @@ export const EVENT_LABELS: Record<string, string> = {
   contact_email: 'אימייל',
   contact_form_submit: 'טופס יצירת קשר',
   sign_up: 'הרשמה לרשימה',
+  site_error: 'תקלה באתר',
 };
+
+// Failed visitor actions, kept in site_events as event_name 'site_error' with
+// source '<action>:<reason>'.
+//
+// Why here and not in the runtime logs: Vercel's Hobby plan keeps those for
+// one hour, so a contact form that broke on Tuesday night is invisible by
+// Wednesday morning. A row in our own store lasts, and the weekly contact-path
+// check counts them. Why not a table of its own: no migration, and every error
+// row then sits beside the visit it happened in.
+//
+// Nothing a visitor typed is ever stored - no name, phone, email or message,
+// not even the error text, which can echo input back. Only which action failed
+// and a short reason code. is_conversion stays false, so an error never counts
+// as anything on the dashboard.
+export const SITE_ERROR_ACTIONS = [
+  'contact_form', // the form itself: rejected, failed to save, or never arrived
+  'contact_notify_email', // the lead is saved, the email to Nira was not sent
+  'contact_notify_telegram', // the lead is saved, the Telegram alert was not sent
+  'contact_intent', // a WhatsApp/phone/email tap that could not be recorded
+  'newsletter',
+  'comment',
+  'like',
+  'page_crash', // a page failed to render (app/error.tsx)
+  'client_js', // an uncaught script error on our own code
+] as const;
+
+export type SiteErrorAction = (typeof SITE_ERROR_ACTIONS)[number];
+
+const ERROR_ACTIONS = new Set<string>(SITE_ERROR_ACTIONS);
+
+/** Reason codes are ours, short and lowercase: never free text. */
+const REASON_RE = /^[a-z0-9_]{1,40}$/;
+
+/** '<action>:<reason>' if both are allowed, else null. */
+export function siteErrorSource(action: string, reason: string): string | null {
+  const r = reason.toLowerCase().replace(/[^a-z0-9_]+/g, '_').slice(0, 40) || 'unknown';
+  return ERROR_ACTIONS.has(action) && REASON_RE.test(r) ? `${action}:${r}` : null;
+}
+
+/** For the ingest route: accepts only a source siteErrorSource could have made. */
+export function isSiteErrorSource(source: string | null): boolean {
+  if (!source) return false;
+  const i = source.indexOf(':');
+  return i > 0 && ERROR_ACTIONS.has(source.slice(0, i)) && REASON_RE.test(source.slice(i + 1));
+}
 
 export const PAGE_TYPE_LABELS: Record<string, string> = {
   homepage: 'דף הבית',
