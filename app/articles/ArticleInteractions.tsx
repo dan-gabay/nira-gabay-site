@@ -238,19 +238,6 @@ export default function ArticleInteractions({
     // dialog failed with the same "link may be broken" error, while the bare
     // URL opened the composer (tested by Dan, 2026-10-16). Facebook picks the
     // right display for the device itself.
-    // Phones: Facebook's mobile web refuses the Share Dialog ("link may be
-    // broken", even for the app's admin, while the same URL works on desktop),
-    // and sharer.php is swallowed by the Facebook app, which opens its feed.
-    // The OS share sheet's Facebook entry is the route that reaches the post
-    // composer, so phones use it (owner decision, 2026-10-18).
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile && typeof navigator.share === 'function') {
-      navigator.share({ url }).catch(() => {
-        // User cancelled the share sheet - nothing to do
-      });
-      return;
-    }
-
     const appId = FACEBOOK_APP_ID;
     const target = appId
       ? `https://www.facebook.com/dialog/share?app_id=${encodeURIComponent(appId)}` +
