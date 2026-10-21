@@ -79,6 +79,24 @@ Verified 2026-10-10 through the MCP server over stdio:
 1. `customers_list_accessible_customers` should list `9813608349`.
 2. `search_search` on `customer` with `customer.descriptive_name` for that ID.
 
+## When `mcp__google-ads__*` is missing from a session
+
+`launch.sh` runs the server with `uvx`, which downloads `google-ads-mcp` and its
+dependencies from PyPI the first time it runs in a fresh container. If that
+takes longer than Claude Code waits for an MCP server at session start, the
+server is dropped for that session and cannot be reconnected mid-session. Seen
+on 2026-10-21 (the morning routine and a project thread both started without
+the tools), while the same launcher started fine by hand later in the session.
+
+Fix: warm the `uvx` cache in the cloud environment's **Setup script** (project
+settings, Cloud environment, gear beside the environment, Setup script), so the
+download happens before the session starts:
+
+    uvx --quiet --from "google-ads-mcp==0.0.5" google-ads-mcp --help </dev/null >/dev/null 2>&1 || true
+
+Keep the version in step with `launch.sh`. Only sessions started after the
+change pick it up.
+
 ## Search Console and GA4
 
 The same OAuth client also serves the Search Console and GA4 scripts in cloud
