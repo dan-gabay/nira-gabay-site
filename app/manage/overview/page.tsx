@@ -41,6 +41,12 @@ import {
 //
 // The period is 30 days for every figure here, because the lead outcomes
 // (/api/manage/insights) are counted over 30 days - one period on one screen.
+//
+// Layout: on a phone everything is one column. On a desktop the to-do list
+// runs the full width (its rows side by side), and the month is three equal
+// columns underneath, so a short to-do list no longer leaves an empty half
+// screen beside a long column of figures. Desktop-only classes are all lg:,
+// so the phone layout is unchanged.
 
 const RANGE = 30;
 const TRIAGE_SHOWN = 4;
@@ -158,7 +164,7 @@ export default function ManageHome() {
         }
       />
 
-      <div className="grid gap-5 md:gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start">
+      <div className="grid gap-5 md:gap-6 lg:gap-8">
         {/* ── Waiting for you ───────────────────────────────────── */}
         <section aria-labelledby="todo-heading" className="space-y-3">
           <h2 id="todo-heading" className="text-base md:text-lg font-bold text-stone-900">
@@ -189,7 +195,7 @@ export default function ManageHome() {
                       <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
                     </Link>
                   </div>
-                  <ul className="divide-y divide-stone-100">
+                  <ul className="divide-y divide-stone-100 lg:divide-y-0 lg:grid lg:grid-cols-2">
                     {newLeads.slice(0, TRIAGE_SHOWN).map((m) => (
                       <TriageRow
                         key={m.id}
@@ -211,10 +217,10 @@ export default function ManageHome() {
               )}
 
               {tasks.length > 0 && (
-                <ul className="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100 overflow-hidden">
+                <ul className="bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100 overflow-hidden lg:bg-transparent lg:border-0 lg:rounded-none lg:divide-y-0 lg:overflow-visible lg:grid lg:grid-cols-[repeat(auto-fit,minmax(15rem,1fr))] lg:gap-3">
                   {tasks.map((t) => (
-                    <li key={t.label}>
-                      <Link href={t.href} className="group flex items-center gap-3 px-4 md:px-5 py-3.5 hover:bg-stone-50 transition-colors">
+                    <li key={t.label} className="lg:bg-white lg:border lg:border-stone-200 lg:rounded-2xl lg:overflow-hidden">
+                      <Link href={t.href} className="group flex items-center gap-3 px-4 md:px-5 py-3.5 lg:py-4 hover:bg-stone-50 transition-colors">
                         <span className={`${t.tone} w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0`}>
                           <t.icon className="w-[18px] h-[18px]" aria-hidden="true" />
                         </span>
@@ -252,9 +258,11 @@ export default function ManageHome() {
             </Link>
           </div>
 
-          <LeadFunnel insights={insights} />
-          <SiteFigures site={site} />
-          <TopSources site={site} />
+          <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-4 lg:items-stretch">
+            <LeadFunnel insights={insights} />
+            <SiteFigures site={site} />
+            <TopSources site={site} />
+          </div>
         </section>
       </div>
     </>
@@ -274,7 +282,7 @@ function TriageRow({
 }) {
   const wa = waNumber(m.phone);
   return (
-    <li className="px-4 md:px-5 py-3.5">
+    <li className="px-4 md:px-5 py-3.5 lg:border-t lg:border-stone-100 lg:odd:border-l">
       <div className="flex items-baseline justify-between gap-3">
         <Link href={`/manage/contacts?lead=${encodeURIComponent(m.id)}`} className="font-semibold text-stone-900 text-sm hover:underline underline-offset-2 truncate">
           {m.name}
@@ -322,7 +330,7 @@ function TriageRow({
 // What became of the month's enquiries - the number the site is judged by.
 // Each bar is a share of the enquiries logged; the clients bar is the outcome.
 function LeadFunnel({ insights }: { insights: Insights | null }) {
-  if (!insights) return <div className="bg-white rounded-2xl border border-stone-200 p-5 text-sm text-stone-400">טוען...</div>;
+  if (!insights) return <div className="bg-white rounded-2xl border border-stone-200 p-5 text-sm text-stone-400 lg:h-full">טוען...</div>;
   const s = insights.byStatus;
   const total = Object.values(s).reduce((a, n) => a + n, 0);
   const clients = (s.started_therapy ?? 0) + (s.ongoing ?? 0);
@@ -338,7 +346,7 @@ function LeadFunnel({ insights }: { insights: Insights | null }) {
   ];
 
   return (
-    <div className="bg-white rounded-2xl border border-stone-200 p-4 md:p-5">
+    <div className="bg-white rounded-2xl border border-stone-200 p-4 md:p-5 lg:h-full">
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="text-sm font-semibold text-stone-900">מה קרה עם הפניות</h3>
         <DeltaBadge delta={delta} />
@@ -394,7 +402,7 @@ function SiteFigures({ site }: { site: Payload | null }) {
   const rate = pct(site.totals.conversions, site.totals.visits);
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:grid-rows-2 lg:gap-4">
       <Figure
         label="ביקורים"
         value={site.totals.visits.toLocaleString('he-IL')}
@@ -430,7 +438,7 @@ function Figure({
   color: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-stone-200 p-4 min-w-0">
+    <div className="bg-white rounded-2xl border border-stone-200 p-4 min-w-0 lg:flex lg:flex-col">
       <p className="text-[12px] text-stone-500 truncate">{label}</p>
       <p className="mt-1 flex items-baseline gap-2 flex-wrap">
         <span className="text-2xl md:text-[28px] font-bold text-stone-900 leading-none tabular-nums">{value}</span>
@@ -453,7 +461,7 @@ function Sparkline({ values, color }: { values: number[]; color: string }) {
   const pts = values.map((v, i) => [i * step, h - 2 - (v / max) * (h - 4)] as const);
   const line = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-8 mt-2" preserveAspectRatio="none" aria-hidden="true">
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-8 mt-2 lg:mt-auto lg:h-12" preserveAspectRatio="none" aria-hidden="true">
       <path d={`${line} L${w},${h} L0,${h} Z`} fill={color} opacity={0.08} />
       <path d={line} fill="none" stroke={color} strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
     </svg>
@@ -466,7 +474,7 @@ function TopSources({ site }: { site: Payload | null }) {
   if (!site || rows.length === 0) return null;
   const max = Math.max(...rows.map((r) => r.visits));
   return (
-    <div className="bg-white rounded-2xl border border-stone-200 p-4 md:p-5">
+    <div className="bg-white rounded-2xl border border-stone-200 p-4 md:p-5 lg:h-full">
       <div className="flex items-baseline justify-between gap-3 mb-3">
         <h3 className="text-sm font-semibold text-stone-900">מאיפה הגיעו</h3>
         <span className="text-[11px] text-stone-400">ביקורים · לחיצות</span>
