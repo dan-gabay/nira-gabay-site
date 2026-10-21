@@ -79,6 +79,32 @@ Verified 2026-10-10 through the MCP server over stdio:
 1. `customers_list_accessible_customers` should list `9813608349`.
 2. `search_search` on `customer` with `customer.descriptive_name` for that ID.
 
+## When `mcp__google-ads__*` is missing from a session
+
+`launch.sh` runs the server with `uvx`, which downloads `google-ads-mcp` the
+first time it runs in a fresh container. If that takes longer than Claude Code
+waits for an MCP server at session start, the server is dropped for the whole
+session (seen 2026-10-21), even though the launcher works when run later.
+
+Fallback: `scripts/google-ads-mcp/gaql.py` starts the same launcher over stdio
+and calls only `search_search` (still behind `tools_config.yaml`), so a
+routine can keep reading Ads data:
+
+    python3 -I scripts/google-ads-mcp/gaql.py --resource campaign \
+      --fields campaign.name metrics.cost_micros metrics.clicks \
+      --conditions "segments.date DURING LAST_7_DAYS"
+
+It is pre-approved in `.claude/settings.json`, so it runs without a prompt.
+Every run prints a `FALLBACK:` line on stderr, and a report that used it must
+say so: the fallback is a stopgap, not the normal path. The weekly connections
+check reports a missing native MCP as a failure until it is fixed.
+
+Fix: warm the `uvx` cache in the cloud environment's Setup script so the
+download happens before the session starts (keep the version in step with
+`launch.sh`; only sessions started after the change pick it up):
+
+    uvx --quiet --from "google-ads-mcp==0.0.5" google-ads-mcp --help </dev/null >/dev/null 2>&1 || true
+
 ## Search Console and GA4
 
 The same OAuth client also serves the Search Console and GA4 scripts in cloud
