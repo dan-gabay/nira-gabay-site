@@ -230,23 +230,28 @@ export default function ArticleInteractions({
   }
 
   function shareOnFacebook() {
-    const url = window.location.href;
+    // The canonical address, not location.href: a visitor who arrived from an
+    // ad or a Facebook post carries gclid/fbclid/utm params, and those would
+    // otherwise be baked into every re-share.
+    const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href;
+    const url = canonical || window.location.origin + window.location.pathname;
     trackArticleShare('facebook', articleId, document.title);
 
-    // This button must actually go to Facebook. It used to hand off to the OS
-    // share sheet whenever navigator.share existed, which meant tapping the
-    // Facebook icon on a phone opened a generic sheet - and did exactly the
-    // same thing as the share button sitting next to it.
+    // The official Share Dialog, not sharer.php: on a phone with the Facebook
+    // app installed, sharer.php is handed to the app, which opens on its feed
+    // and drops the link, while dialog/share stays in the browser and opens
+    // the post composer. The dialog needs a live Facebook app whose App
+    // Domains list niragabay.com - otherwise Facebook shows "the link may be
+    // broken". sharer.php is only the fallback if the app id is ever cleared.
     //
-    // The official Share Dialog opens the real composer, in-app included.
-    // Falls back to sharer.php if the app id is ever cleared: correct on
-    // desktop and on mobile browsers without the Facebook app installed,
-    // though iOS/Android hand facebook.com links to the app, which lands on
-    // its feed.
+    // Only app_id and href: with display=popup and redirect_uri added, the
+    // dialog failed with the same "link may be broken" error, while the bare
+    // URL opened the composer (tested by Dan, 2026-10-16). Facebook picks the
+    // right display for the device itself.
     const appId = FACEBOOK_APP_ID;
     const target = appId
       ? `https://www.facebook.com/dialog/share?app_id=${encodeURIComponent(appId)}` +
-        `&display=popup&href=${encodeURIComponent(url)}&redirect_uri=${encodeURIComponent(url)}`
+        `&href=${encodeURIComponent(url)}`
       : `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
 
     // Window features belong in the third argument - window.open takes three.
