@@ -54,7 +54,8 @@ async function gateManage(req: NextRequest) {
 
   const url = req.nextUrl.clone();
   url.pathname = '/manage/login';
-  url.searchParams.set('from', pathname);
+  // Keep the query too, so a notification link (?lead=<id>) survives the login.
+  url.search = `?from=${encodeURIComponent(pathname + req.nextUrl.search)}`;
   return NextResponse.redirect(url);
 }
 

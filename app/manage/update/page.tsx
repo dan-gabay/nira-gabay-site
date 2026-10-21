@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Check, Inbox, Plus } from 'lucide-react';
 import {
@@ -9,7 +9,6 @@ import {
   leadStatus,
   patchLead,
   splitNote,
-  withNote,
   timeAgo,
   type ContactIntent,
   type ContactMessage,
@@ -21,18 +20,17 @@ import {
 // email and Telegram message link straight here (?lead=<id> puts that lead
 // first), and a home-screen icon opens it too (see layout.tsx).
 //
-// There are exactly two answers, because those are the only two that change
-// anything (owner decision, 2026-10-15): a treatment was booked, or it is not
-// relevant. "We spoke" is not an outcome. Tapping one saves it at once and
-// opens a name field and a free-text box for a few words - for an irrelevant
-// enquiry, ideally the reason. The words are kept at the end of the message
-// (see withNote in leads.ts), not in a column of their own.
+// One step per enquiry (owner feedback, 2026-10-21): tapping an outcome only
+// opens the fields under it - name and a few words - and a single שמירה saves
+// all of it. Nothing is written, and nothing reloads, until then.
 //
-// It shows only what is still open (status new or spoke), plus taps on the
-// site's WhatsApp/phone/email buttons not yet answered: did a message arrive?
-
-// Older open enquiries are left to the full inbox, so this list stays short.
-const OPEN_WINDOW_MS = 90 * 24 * 60 * 60 * 1000;
+// There are exactly two outcomes, because those are the only two that change
+// anything (owner decision, 2026-10-15): a treatment was booked, or it is not
+// relevant. "We spoke" is not an outcome. The few words are kept at the end
+// of the message (see withNote in leads.ts), not in a column of their own.
+//
+// The data comes from GET /api/manage/contacts?view=open, which returns only
+// what this screen shows, so it opens quickly from a notification.
 
 type Outcome = 'started_therapy' | 'irrelevant';
 
@@ -51,11 +49,23 @@ const OUTCOMES: Array<{ key: Outcome; label: string; on: string; hint: string }>
   },
 ];
 
+const OUTCOME_LABEL: Partial<Record<LeadStatus, string>> = {
+  new: 'עוד לא ידוע',
+  started_therapy: 'קבענו טיפול',
+  irrelevant: 'לא רלוונטי',
+};
+
 const btn =
   'inline-flex items-center justify-center gap-1.5 whitespace-nowrap min-h-[52px] px-2 rounded-xl border-2 text-[15px] font-semibold transition-colors';
 const off = 'bg-white border-stone-200 text-stone-700';
 const field =
   'w-full px-4 rounded-xl border border-stone-300 bg-white text-base focus:ring-2 focus:ring-stone-400 focus:outline-none';
+const saveBtn =
+  'w-full min-h-[52px] rounded-xl bg-stone-900 text-white text-base font-semibold disabled:opacity-60 inline-flex items-center justify-center gap-1.5';
+
+// Placeholder names (a lead logged without one) are shown as such, and the
+// name field starts empty for them rather than holding the placeholder.
+const NO_NAME = 'ללא שם';
 
 export default function UpdateLeadsPage() {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
@@ -63,66 +73,26 @@ export default function UpdateLeadsPage() {
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [focusId, setFocusId] = useState<string | null>(null);
-  // Leads answered on this screen stay on it, so a mis-tap can be corrected
-  // and the details filled in; they drop off on the next visit.
-  const [touched, setTouched] = useState<Set<string>>(new Set());
-
-  async function load() {
-    try {
-      const res = await fetch('/api/manage/contacts');
-      if (!res.ok) throw new Error(String(res.status));
-      const d = await res.json();
-      setMessages(d.messages || []);
-      setIntents(d.intents || []);
-      setFailed(false);
-    } catch {
-      setFailed(true);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   useEffect(() => {
-    setFocusId(new URLSearchParams(window.location.search).get('lead'));
-    load();
+    const lead = new URLSearchParams(window.location.search).get('lead');
+    const q = new URLSearchParams({ view: 'open' });
+    if (lead) q.set('lead', lead);
+    fetch(`/api/manage/contacts?${q}`)
+      .then((r) => {
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      })
+      .then((d) => {
+        const list: ContactMessage[] = d.messages || [];
+        setFocusId(lead);
+        // The lead the notification linked to comes first.
+        setMessages(lead ? [...list].sort((a, b) => (a.id === lead ? -1 : b.id === lead ? 1 : 0)) : list);
+        setIntents(d.intents || []);
+      })
+      .catch(() => setFailed(true))
+      .finally(() => setLoading(false));
   }, []);
-
-  const open = useMemo(() => {
-    const since = Date.now() - OPEN_WINDOW_MS;
-    const list = messages.filter((m) => {
-      if (m.id === focusId || touched.has(m.id)) return true;
-      const s = leadStatus(m);
-      return (s === 'new' || s === 'spoke') && new Date(m.created_date).getTime() >= since;
-    });
-    // The lead the notification linked to comes first.
-    return list.sort((a, b) => (a.id === focusId ? -1 : b.id === focusId ? 1 : 0));
-  }, [messages, focusId, touched]);
-
-  // Optimistic, rolled back on failure. Throws so a card can say it failed.
-  async function update(id: string, patch: { status?: LeadStatus; name?: string; outcome_note?: string }) {
-    const before = messages;
-    setTouched((t) => new Set(t).add(id));
-    const { outcome_note, ...fields } = patch;
-    setMessages((prev) =>
-      prev.map((m) =>
-        m.id === id
-          ? {
-              ...m,
-              ...fields,
-              ...(outcome_note !== undefined ? { message: withNote(m.message, outcome_note) } : {}),
-              is_read: true,
-            }
-          : m,
-      ),
-    );
-    try {
-      await patchLead(id, { ...patch, is_read: true });
-    } catch (e) {
-      setMessages(before);
-      alert('העדכון לא נשמר. נסי שוב.');
-      throw e;
-    }
-  }
 
   async function dismissTap(id: number) {
     setIntents((prev) => prev.filter((i) => i.id !== id));
@@ -131,24 +101,17 @@ export default function UpdateLeadsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, dismissed: true }),
     }).catch(() => null);
-    if (!res?.ok) {
-      alert('העדכון לא נשמר. נסי שוב.');
-      load();
-    }
+    if (!res?.ok) alert('העדכון לא נשמר. כדאי לרענן ולנסות שוב.');
   }
 
-  const waiting = open.filter((m) => !touched.has(m.id)).length + intents.length;
+  const empty = !loading && !failed && messages.length === 0 && intents.length === 0;
 
   return (
     <div className="max-w-lg mx-auto space-y-5 pb-6">
       <div>
         <h1 className="text-2xl font-bold text-stone-900">מה קרה עם הפניות?</h1>
         <p className="text-stone-500 text-sm mt-1">
-          {loading
-            ? 'טוען...'
-            : waiting > 0
-              ? 'אחרי שדיברתם: לחיצה על מה שקרה, וזה נשמר.'
-              : 'הכל מעודכן. אין פניות שמחכות לך.'}
+          {loading ? 'טוען...' : empty ? 'הכל מעודכן. אין פניות שמחכות לך.' : 'אחרי שדיברתם: בוחרים מה קרה, ממלאים ושומרים.'}
         </p>
       </div>
 
@@ -158,8 +121,16 @@ export default function UpdateLeadsPage() {
         </p>
       )}
 
-      {open.map((m) => (
-        <LeadCard key={m.id} m={m} focused={m.id === focusId} onUpdate={(p) => update(m.id, p)} />
+      {loading && (
+        <div className="space-y-3" aria-hidden="true">
+          {[0, 1].map((i) => (
+            <div key={i} className="h-40 rounded-2xl bg-white border border-stone-200 animate-pulse" />
+          ))}
+        </div>
+      )}
+
+      {messages.map((m) => (
+        <LeadCard key={m.id} m={m} focused={m.id === focusId} />
       ))}
 
       {intents.length > 0 && (
@@ -168,7 +139,7 @@ export default function UpdateLeadsPage() {
             לחצו על כפתור באתר. הגיעה מהם הודעה?
           </h2>
           {intents.map((i) => (
-            <TapCard key={i.id} intent={i} onDismiss={() => dismissTap(i.id)} onLogged={load} />
+            <TapCard key={i.id} intent={i} onDismiss={() => dismissTap(i.id)} />
           ))}
         </section>
       )}
@@ -193,141 +164,136 @@ export default function UpdateLeadsPage() {
   );
 }
 
-// Placeholder names (a lead logged without one) are shown as such, and the
-// name field starts empty for them rather than holding the placeholder.
-const NO_NAME = 'ללא שם';
-
-function LeadCard({
-  m,
-  focused,
-  onUpdate,
+// Name and details, opened by choosing an outcome. Shared by both cards.
+function DetailFields({
+  name,
+  note,
+  hint,
+  onName,
+  onNote,
 }: {
-  m: ContactMessage;
-  focused: boolean;
-  onUpdate: (patch: { status?: LeadStatus; name?: string; outcome_note?: string }) => Promise<void>;
+  name: string;
+  note: string;
+  hint: string;
+  onName: (v: string) => void;
+  onNote: (v: string) => void;
 }) {
-  const status = leadStatus(m);
-  const outcome = OUTCOMES.find((o) => o.key === status);
-  const [name, setName] = useState(m.name === NO_NAME ? '' : m.name || '');
+  return (
+    <>
+      <label className="block">
+        <span className="block text-[13px] font-semibold text-stone-600 mb-1">שם</span>
+        <input
+          value={name}
+          onChange={(e) => onName(e.target.value)}
+          placeholder="לא חובה"
+          autoComplete="off"
+          className={`${field} min-h-[48px]`}
+        />
+      </label>
+      <label className="block">
+        <span className="block text-[13px] font-semibold text-stone-600 mb-1">פרטים</span>
+        <textarea value={note} onChange={(e) => onNote(e.target.value)} placeholder={hint} className={`${field} min-h-24 py-3`} />
+      </label>
+    </>
+  );
+}
+
+function LeadCard({ m, focused }: { m: ContactMessage; focused: boolean }) {
+  const saved0 = leadStatus(m);
   const { text, note: savedNote } = splitNote(m.message);
+  // The choice is local until שמירה: tapping an outcome only opens the fields.
+  const [choice, setChoice] = useState<Outcome | null>(
+    saved0 === 'started_therapy' || saved0 === 'irrelevant' ? saved0 : null,
+  );
+  const [name, setName] = useState(m.name === NO_NAME ? '' : m.name || '');
   const [note, setNote] = useState(savedNote);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const outcome = OUTCOMES.find((o) => o.key === choice);
 
-  async function saveDetails() {
+  async function save() {
+    if (!choice) return;
     setSaving(true);
     try {
-      await onUpdate({ name: name.trim() || undefined, outcome_note: note });
+      await patchLead(m.id, { status: choice, name: name.trim() || undefined, outcome_note: note, is_read: true });
       setSaved(true);
     } catch {
-      // update() already told her
+      alert('השמירה נכשלה. נסי שוב.');
     } finally {
       setSaving(false);
     }
   }
+
+  const edit = () => setSaved(false);
 
   return (
     <article
       className={`bg-white rounded-2xl border p-4 space-y-3.5 ${focused ? 'border-stone-900 ring-2 ring-stone-900/10' : 'border-stone-200'}`}
     >
       <div>
-        <h2 className="text-lg font-bold text-stone-900">{m.name || NO_NAME}</h2>
+        <h2 className="text-lg font-bold text-stone-900">{name.trim() || m.name || NO_NAME}</h2>
         <p className="text-[13px] text-stone-500">
           {timeAgo(m.created_date)} · {CHANNEL_LABELS[m.channel || 'form'] || m.channel}
         </p>
         {text && <p className="text-sm text-stone-700 mt-2 line-clamp-3 whitespace-pre-wrap">{text}</p>}
       </div>
 
-      <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="מה קרה">
-        {OUTCOMES.map((o) => {
-          const on = status === o.key;
-          return (
-            <button
-              key={o.key}
-              type="button"
-              role="radio"
-              aria-checked={on}
-              onClick={() => {
-                if (on) return;
-                setSaved(false);
-                onUpdate({ status: o.key }).catch(() => {});
-              }}
-              className={`${btn} ${on ? o.on : off}`}
-            >
-              {on && <Check className="w-4 h-4 flex-shrink-0" aria-hidden="true" />}
-              {o.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Opens once an outcome is chosen. The outcome itself is already saved;
-          this only adds the details. */}
-      {outcome && (
-        <div className="space-y-2.5 pt-1">
-          <label className="block">
-            <span className="block text-[13px] font-semibold text-stone-600 mb-1">שם</span>
-            <input
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                setSaved(false);
-              }}
-              placeholder="לא חובה"
-              autoComplete="off"
-              className={`${field} min-h-[48px]`}
-            />
-          </label>
-          <label className="block">
-            <span className="block text-[13px] font-semibold text-stone-600 mb-1">פרטים</span>
-            <textarea
-              value={note}
-              onChange={(e) => {
-                setNote(e.target.value);
-                setSaved(false);
-              }}
-              placeholder={outcome.hint}
-              className={`${field} min-h-24 py-3`}
-            />
-          </label>
-          <button
-            type="button"
-            onClick={saveDetails}
-            disabled={saving || saved}
-            className="w-full min-h-[48px] rounded-xl bg-stone-900 text-white text-base font-semibold disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
-          >
-            {saved ? (
-              <>
-                <Check className="w-4 h-4" aria-hidden="true" />
-                נשמר
-              </>
-            ) : saving ? (
-              'שומרת...'
-            ) : (
-              'שמירה'
-            )}
+      {saved && outcome ? (
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3">
+          <p className="text-sm font-medium text-emerald-900 inline-flex items-center gap-1.5">
+            <Check className="w-4 h-4" aria-hidden="true" />
+            נשמר: {outcome.label}
+          </p>
+          <button type="button" onClick={edit} className="text-sm text-emerald-900 underline underline-offset-2 min-h-[40px] px-1">
+            עריכה
           </button>
         </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="מה קרה">
+            {OUTCOMES.map((o) => {
+              const on = choice === o.key;
+              return (
+                <button
+                  key={o.key}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  onClick={() => setChoice(o.key)}
+                  className={`${btn} ${on ? o.on : off}`}
+                >
+                  {on && <Check className="w-4 h-4 flex-shrink-0" aria-hidden="true" />}
+                  {o.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {outcome && (
+            <div className="space-y-2.5 pt-1">
+              <DetailFields name={name} note={note} hint={outcome.hint} onName={setName} onNote={setNote} />
+              <button type="button" onClick={save} disabled={saving} className={saveBtn}>
+                {saving ? 'שומרת...' : 'שמירה'}
+              </button>
+            </div>
+          )}
+        </>
       )}
     </article>
   );
 }
 
-// A tap on the site's button: "yes, a message arrived" logs it as an open
-// enquiry (with the tap's ad attribution), which then waits above for its
-// outcome like any other. A name can be added now or later.
-function TapCard({
-  intent,
-  onDismiss,
-  onLogged,
-}: {
-  intent: ContactIntent;
-  onDismiss: () => void;
-  onLogged: () => void;
-}) {
+// A tap on the site's button. "כן, הגיעה" opens everything at once - what
+// happened, name, details - and one שמירה logs the enquiry with the tap's ad
+// attribution. "עוד לא ידוע" keeps it open for later.
+function TapCard({ intent, onDismiss }: { intent: ContactIntent; onDismiss: () => void }) {
   const [arrived, setArrived] = useState(false);
+  const [status, setStatus] = useState<LeadStatus>('new');
   const [name, setName] = useState('');
+  const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const hint = OUTCOMES.find((o) => o.key === status)?.hint ?? 'רוצה לפרט? למשל: במה מדובר, איך שמעו עלייך (לא חובה)';
 
   async function save() {
     setSaving(true);
@@ -335,12 +301,13 @@ function TapCard({
       const res = await fetch('/api/manage/contacts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, channel: intent.channel, intent_id: intent.id }),
+        body: JSON.stringify({ name, channel: intent.channel, status, outcome_note: note, intent_id: intent.id }),
       });
       if (!res.ok) throw new Error(String(res.status));
-      onLogged();
+      setSaved(true);
     } catch {
       alert('השמירה נכשלה. נסי שוב.');
+    } finally {
       setSaving(false);
     }
   }
@@ -355,7 +322,12 @@ function TapCard({
         </span>
       </p>
 
-      {!arrived ? (
+      {saved ? (
+        <p className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm font-medium text-emerald-900 inline-flex items-center gap-1.5 w-full">
+          <Check className="w-4 h-4" aria-hidden="true" />
+          נשמר: {OUTCOME_LABEL[status]}
+        </p>
+      ) : !arrived ? (
         <div className="grid grid-cols-2 gap-2">
           <button type="button" onClick={() => setArrived(true)} className={`${btn} bg-stone-900 border-stone-900 text-white`}>
             כן, הגיעה
@@ -366,20 +338,26 @@ function TapCard({
         </div>
       ) : (
         <div className="space-y-2.5">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="שם (לא חובה)"
-            aria-label="שם"
-            autoComplete="off"
-            className={`${field} min-h-[48px]`}
-          />
-          <button
-            type="button"
-            onClick={save}
-            disabled={saving}
-            className="w-full min-h-[48px] rounded-xl bg-stone-900 text-white text-base font-semibold disabled:opacity-60"
-          >
+          <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="מה קרה">
+            {(['new', 'started_therapy', 'irrelevant'] as const).map((k) => {
+              const on = status === k;
+              const tone = OUTCOMES.find((o) => o.key === k)?.on ?? 'bg-stone-900 border-stone-900 text-white';
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  onClick={() => setStatus(k)}
+                  className={`${btn} text-sm ${on ? tone : off}`}
+                >
+                  {OUTCOME_LABEL[k]}
+                </button>
+              );
+            })}
+          </div>
+          <DetailFields name={name} note={note} hint={hint} onName={setName} onNote={setNote} />
+          <button type="button" onClick={save} disabled={saving} className={saveBtn}>
             {saving ? 'שומרת...' : 'שמירה'}
           </button>
         </div>
@@ -387,3 +365,4 @@ function TapCard({
     </article>
   );
 }
+
