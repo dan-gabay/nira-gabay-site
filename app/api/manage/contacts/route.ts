@@ -19,6 +19,15 @@ export async function GET(req: NextRequest) {
   }
 
   const supabase = supabaseServer();
+
+  // /manage/update asks for ?view=open: only the leads still waiting for an
+  // outcome and the pending taps, with the few columns it shows. It is opened
+  // on a phone from a notification, so it skips the full table and the two
+  // visit-matching RPCs below, which are what made it slow to open.
+  if (req.nextUrl.searchParams.get('view') === 'open') {
+    return openView(req, supabase);
+  }
+
   const { data, error } = await supabase
     .from('contact_messages')
     .select('*')
@@ -67,6 +76,48 @@ export async function GET(req: NextRequest) {
   const pending = (intents || []).map((i) => ({ ...i, session_id: intentSessionOf.get(i.id) ?? null }));
 
   return NextResponse.json({ messages, intents: pending });
+}
+
+// Open = status new or spoke, from the last 90 days (older ones are left to
+// the full inbox), plus the lead a notification linked to, whatever its state.
+async function openView(req: NextRequest, supabase: ReturnType<typeof supabaseServer>) {
+  const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+  const lead = req.nextUrl.searchParams.get('lead');
+  const columns = 'id, name, message, channel, status, created_date';
+
+  const [open, linked, intents] = await Promise.all([
+    supabase
+      .from('contact_messages')
+      .select(columns)
+      .in('status', ['new', 'spoke'])
+      .gte('created_date', since)
+      .order('created_date', { ascending: false })
+      .limit(100),
+    lead
+      ? supabase.from('contact_messages').select(columns).eq('id', lead).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    supabase
+      .from('contact_intents')
+      .select('id, created_at, channel, utm_source, utm_campaign, utm_term, gclid')
+      .is('claimed_by', null)
+      .is('dismissed_at', null)
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(50),
+  ]);
+
+  if (open.error) {
+    console.error('manage open leads failed:', open.error.message);
+    return NextResponse.json({ error: 'load failed' }, { status: 500 });
+  }
+  if (intents.error) console.error('manage contact intents list failed:', intents.error.message);
+
+  const messages = open.data || [];
+  const focused = linked.data as { id: string } | null;
+  if (focused && !messages.some((m) => m.id === focused.id)) {
+    messages.unshift(focused as (typeof messages)[number]);
+  }
+  return NextResponse.json({ messages, intents: intents.data || [] });
 }
 
 const LEAD_STATUSES = ['new', 'spoke', 'started_therapy', 'ongoing', 'irrelevant'] as const;
@@ -154,6 +205,7 @@ export async function POST(req: NextRequest) {
     message?: string;
     heard_from?: string;
     channel?: string;
+    outcome_note?: string;
     // Where things already stand when the lead is logged after the fact
     // (the quick form at /manage/new-lead). Defaults to new.
     status?: string;
@@ -218,7 +270,9 @@ export async function POST(req: NextRequest) {
       name: name.slice(0, 200),
       phone: normalizedPhone,
       email: (body.email || '').trim().slice(0, 200),
-      message: (body.message || '').trim().slice(0, 5000),
+      // Nira's own words on the outcome go after the note marker (withNote),
+      // exactly as PATCH stores them, so the inbox shows them apart.
+      message: withNote((body.message || '').trim().slice(0, 5000), (body.outcome_note || '').slice(0, 2000)),
       heard_from: (body.heard_from || '').trim().slice(0, 200) || null,
       channel,
       ...(status ? { status, status_updated_at: new Date().toISOString() } : {}),
