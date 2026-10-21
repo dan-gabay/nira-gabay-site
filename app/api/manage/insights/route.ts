@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
       comments30,
       published30,
       leadRows,
+      firstLead,
     ] = await Promise.all([
       supabase
         .from('articles')
@@ -71,6 +72,14 @@ export async function GET(req: NextRequest) {
         .select('status, channel, created_date')
         .gte('created_date', d30)
         .then((r) => r.data || []),
+      // When lead logging began, so a month is only compared with a previous
+      // month that was logged in full.
+      supabase
+        .from('contact_messages')
+        .select('created_date')
+        .order('created_date', { ascending: true })
+        .limit(1)
+        .then((r) => (r.data?.[0]?.created_date as string | undefined) ?? null),
     ]);
 
     const totalViews = articles.reduce((s, a) => s + (a.views_count || 0), 0);
@@ -91,6 +100,7 @@ export async function GET(req: NextRequest) {
       publishedCount: articles.length,
       leads30,
       leadsPrev30,
+      firstLead,
       subs30,
       subsPrev30,
       comments30,

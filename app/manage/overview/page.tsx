@@ -54,6 +54,7 @@ const TRIAGE_SHOWN = 4;
 type Insights = {
   leads30: number;
   leadsPrev30: number;
+  firstLead?: string | null;
   byStatus: Record<string, number>;
 };
 
@@ -328,22 +329,32 @@ function TriageRow({
 }
 
 // What became of the month's enquiries - the number the site is judged by.
-// Each bar is a share of the enquiries logged; the clients bar is the outcome.
+// Two bars: the enquiries logged and the clients they became. Everything else
+// (irrelevant, still talking, no status yet) is one line under them, so each
+// enquiry is counted once and a conversation never reads as a result.
 function LeadFunnel({ insights }: { insights: Insights | null }) {
   if (!insights) return <div className="bg-white rounded-2xl border border-stone-200 p-5 text-sm text-stone-400 lg:h-full">טוען...</div>;
   const s = insights.byStatus;
   const total = Object.values(s).reduce((a, n) => a + n, 0);
   const clients = (s.started_therapy ?? 0) + (s.ongoing ?? 0);
-  const talked = (s.spoke ?? 0) + clients;
+  const talking = s.spoke ?? 0;
   const open = s.new ?? 0;
   const irrelevant = s.irrelevant ?? 0;
-  const delta: Delta = { kind: 'count', now: insights.leads30, prev: insights.leadsPrev30 };
+  // Compare only against a previous 30 days that was logged in full: logging
+  // began on 2026-09-18, and a month against two days read "+900%".
+  // eslint-disable-next-line react-hooks/purity -- a render-time clock is what "now" means for the window.
+  const prevStart = Date.now() - 2 * RANGE * 86_400_000;
+  const prevComplete = Boolean(insights.firstLead) && Date.parse(insights.firstLead!) <= prevStart;
+  const delta: Delta = prevComplete ? { kind: 'count', now: insights.leads30, prev: insights.leadsPrev30 } : null;
 
   const rows = [
     { label: 'פניות', n: total, color: 'bg-stone-300' },
-    { label: 'דיברנו איתם', n: talked, color: 'bg-amber-400' },
     { label: 'התחילו טיפול', n: clients, color: 'bg-emerald-500' },
   ];
+  const rest = [
+    irrelevant > 0 && `${irrelevant} לא רלוונטיות`,
+    talking > 0 && `${talking} בשיחה, עוד לא התחילו`,
+  ].filter(Boolean);
 
   return (
     <div className="bg-white rounded-2xl border border-stone-200 p-4 md:p-5 lg:h-full">
@@ -369,8 +380,8 @@ function LeadFunnel({ insights }: { insights: Insights | null }) {
             ))}
           </ul>
           <p className="text-[12px] text-stone-500 mt-3">
-            {irrelevant > 0 && `${irrelevant} לא רלוונטיות`}
-            {irrelevant > 0 && open > 0 && ' · '}
+            {rest.join(' · ')}
+            {rest.length > 0 && open > 0 && ' · '}
             {open > 0 && (
               <>
                 {open} עוד בלי סטטוס.{' '}
