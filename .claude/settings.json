@@ -1,10 +1,13 @@
 {
-  "enabledMcpjsonServers": ["google-ads"],
+  "enabledMcpjsonServers": [
+    "google-ads"
+  ],
   "permissions": {
     "allow": [
       "mcp__google-ads__customers_list_accessible_customers",
       "mcp__google-ads__search_search",
-      "mcp__google-ads__metadata_get_resource_metadata"
+      "mcp__google-ads__metadata_get_resource_metadata",
+      "Bash(python3 -I scripts/google-ads-mcp/gaql.py:*)"
     ]
   }
 }
