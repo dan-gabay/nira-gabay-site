@@ -221,7 +221,9 @@ export default async function ServicePage({
           className="flex items-center gap-2 md:gap-2.5 overflow-x-auto scrollbar-hide pb-1 md:justify-center"
           aria-label="ניווט בין תחומי טיפול"
         >
-          {SERVICES.map((s) => {
+          {/* Current service first (rightmost in RTL) so it is never cut off on
+              mobile; ordered on the server, so no client scroll or layout shift. */}
+          {[service, ...SERVICES.filter((s) => s.slug !== service.slug)].map((s) => {
             const isActive = s.slug === service.slug;
             return (
               <Link
