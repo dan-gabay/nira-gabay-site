@@ -1,6 +1,7 @@
 "use client";
 import { whatsappHref } from '@/lib/whatsapp';
 import React from 'react';
+import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { MessageCircle, Calendar } from 'lucide-react';
 import { trackWhatsAppClick, trackCTAClick } from '@/lib/analytics';
@@ -120,11 +121,16 @@ export default function HeroSection() {
           />
         </div>
 
-        <div className="px-6 pt-8 pb-10 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45 }}
+          className="px-6 pt-8 pb-10 text-center"
+        >
           <div className="mb-5">{Pill}</div>
           {copyFor('h1')}
           {Buttons}
-        </div>
+        </motion.div>
       </div>
 
       {/* ────────────────────────────────────────
@@ -155,14 +161,17 @@ export default function HeroSection() {
 
         {/* justify-start === physical RIGHT in this RTL section (text side) */}
         <div className="absolute inset-0 flex items-center justify-start">
-          <div
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
             className="w-full max-w-xl px-12 xl:px-20 text-center"
             style={{ textShadow: '0 1px 14px rgba(0,0,0,0.30)' }}
           >
             <div className="mb-8">{Pill}</div>
             {copyFor('h2')}
             {Buttons}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
