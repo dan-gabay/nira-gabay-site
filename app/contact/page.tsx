@@ -166,7 +166,7 @@ export default function Contact() {
                     href={whatsappHref(DEFAULT_WHATSAPP_MESSAGE)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block w-full bg-green-600 hover:bg-green-700 text-white text-center py-3 rounded-lg text-sm md:text-base font-medium transition-colors"
+                    className="block w-full bg-green-700 hover:bg-green-800 text-white text-center py-3 rounded-lg text-sm md:text-base font-medium transition-colors"
                     onClick={() => trackWhatsAppClick('contact_page_cta')}
                   >
                     <span className="flex items-center justify-center gap-2">

@@ -40,7 +40,7 @@ export default function HeroSection() {
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => trackWhatsAppClick('hero')}
-        className="flex items-center justify-center gap-2.5 w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl text-base font-medium whitespace-nowrap shadow-lg shadow-green-900/20 transition-colors"
+        className="flex items-center justify-center gap-2.5 w-full bg-green-700 hover:bg-green-800 text-white py-4 rounded-2xl text-base font-medium whitespace-nowrap shadow-lg shadow-green-900/20 transition-colors"
       >
         <MessageCircle className="w-5 h-5 flex-shrink-0" />
         שלחו הודעת WhatsApp

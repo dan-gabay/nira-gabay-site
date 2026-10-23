@@ -161,7 +161,7 @@ export default async function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <WhatsAppLink href={whatsappHref()} source="home_cta">
-                <button className="bg-green-600 hover:bg-green-700 text-white px-6 md:px-8 py-3 md:py-4 text-sm md:text-lg rounded-xl shadow-2xl w-full sm:w-auto inline-flex items-center justify-center gap-2.5 md:gap-3">
+                <button className="bg-green-700 hover:bg-green-800 text-white px-6 md:px-8 py-3 md:py-4 text-sm md:text-lg rounded-xl shadow-2xl w-full sm:w-auto inline-flex items-center justify-center gap-2.5 md:gap-3">
                   <MessageCircle className="w-5 h-5 md:w-6 md:h-6" />
                   שלחו הודעת WhatsApp
                 </button>

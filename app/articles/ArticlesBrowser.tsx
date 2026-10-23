@@ -12,6 +12,7 @@ import ArticleCtaBanner from '@/components/ArticleCtaBanner';
 import {
   TEAL_DARK,
   MINT,
+  MINT_DARK,
   ARTICLES_HERO_BG,
   CHIP_BASE,
   CHIP_IDLE,
@@ -166,7 +167,7 @@ export default function ArticlesBrowser({
             onClick={() => applyTag(null)}
             aria-pressed={selectedTag === null}
             className={`${CHIP_BASE} ${selectedTag === null ? CHIP_ACTIVE : CHIP_IDLE}`}
-            style={selectedTag === null ? { background: MINT } : undefined}
+            style={selectedTag === null ? { background: MINT_DARK } : undefined}
           >
             הכל
           </button>
@@ -176,7 +177,7 @@ export default function ArticlesBrowser({
             const hubPath = topicPathForTag(tag.name);
             const isActive = selectedTag === tag.name;
             const chipClass = `${CHIP_BASE} ${isActive ? CHIP_ACTIVE : CHIP_IDLE}`;
-            const chipStyle = isActive ? { background: MINT } : undefined;
+            const chipStyle = isActive ? { background: MINT_DARK } : undefined;
             return hubPath ? (
               <Link
                 key={tag.id}

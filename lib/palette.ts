@@ -4,6 +4,11 @@ import { whatsappHref } from './whatsapp';
 // with a mint accent, over the supplied leaf artwork.
 export const TEAL_DARK = '#1A4A44';
 export const MINT = '#3FC195';
+// MINT is too light for white text on it, or for text on white (about
+// 2.3:1). Wherever a colour carries small text - the active chip, a text
+// link, the light end of a gradient - use this darker emerald (5.5:1 with
+// white, WCAG AA). MINT stays for large headings on TEAL_DARK and icons.
+export const MINT_DARK = '#047857';
 
 // Both files already carry the leaf line-art and their own gradient, so they
 // are used at full opacity with the solid colours as the paint-in layer.
