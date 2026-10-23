@@ -219,7 +219,7 @@ export default function ArticlesBrowser({
                     onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
                     className="inline-flex items-center gap-2 px-6 md:px-7 min-h-[40px] md:min-h-[44px] rounded-full border border-emerald-300 text-emerald-800 bg-white hover:bg-emerald-50 text-sm md:text-base font-medium transition-colors"
                   >
-                    טען עוד מאמרים
+                    עוד מאמרים
                     <ChevronDown className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </div>
