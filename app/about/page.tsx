@@ -1,7 +1,6 @@
 'use client';
 import React from 'react';
 import Reveal from '@/components/Reveal';
-import { enterStyle } from '@/lib/enter';
 import Image from 'next/image';
 import { GraduationCap, Award, Heart, MapPin, Users, BookOpen, Monitor } from 'lucide-react';
 import ArticleCtaBanner from '@/components/ArticleCtaBanner';
@@ -49,10 +48,7 @@ export default function About() {
         <div className="container mx-auto px-4 md:px-8">
           <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-12">
             {/* Image */}
-            <div
-              className="animate-enter w-full lg:w-2/5"
-              style={enterStyle({ duration: 0.3 })}
-            >
+            <div className="w-full lg:w-2/5">
               <div className="relative">
                 <div className="absolute -top-3 -right-3 md:-top-4 md:-right-4 w-full h-full bg-gradient-to-br from-amber-200 to-stone-200 rounded-3xl" />
                 <div className="relative w-full h-[300px] md:h-[500px]">
@@ -69,10 +65,7 @@ export default function About() {
             </div>
 
             {/* Text */}
-            <div
-              className="animate-enter w-full lg:w-3/5 text-center lg:text-right"
-              style={enterStyle({ x: 50, duration: 0.8, delay: 0.2 })}
-            >
+            <div className="w-full lg:w-3/5 text-center lg:text-right">
               <span className="inline-block px-4 py-1.5 md:py-2 bg-amber-100 rounded-full text-amber-800 text-xs md:text-sm mb-4 md:mb-6">
                 קצת עליי
               </span>
