@@ -75,12 +75,14 @@ export default function NewsletterSignup({ source = 'article' }: { source?: stri
           data-clarity-mask="true"
           id="newsletter-email"
           type="email"
+          autoComplete="email"
+          inputMode="email"
           dir="ltr"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="email@example.com"
-          className="flex-1 min-h-[44px] px-4 py-2 rounded-xl border border-stone-300 text-sm md:text-base focus:ring-2 focus:ring-amber-400 focus:outline-none text-left"
+          className="flex-1 min-h-[44px] px-4 py-2 rounded-xl border border-stone-300 text-base focus:ring-2 focus:ring-amber-400 focus:outline-none text-left"
         />
         <button
           type="submit"

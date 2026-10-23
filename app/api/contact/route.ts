@@ -77,10 +77,12 @@ export async function POST(req: NextRequest) {
   const email = (body.email || '').trim();
   const message = (body.message || '').trim();
 
-  if (!name || !message || !phone) {
+  // The message is optional (stored as ''): a name and a number are enough
+  // for Nira to call back.
+  if (!name || !phone) {
     await failed('missing_fields');
     return NextResponse.json(
-      { error: 'נא למלא שם, טלפון והודעה' },
+      { error: 'נא למלא שם וטלפון' },
       { status: 400 },
     );
   }
