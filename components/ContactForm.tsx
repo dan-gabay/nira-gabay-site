@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Send, Loader2, CheckCircle } from 'lucide-react';
 import {
@@ -13,8 +13,10 @@ import { getStoredAttribution } from '@/lib/attribution';
 import { isValidIsraeliPhone, PHONE_ERROR } from '@/lib/phone';
 
 // One definition for the field styling, so the two variants cannot drift.
+// text-base at every width: iOS Safari zooms the page into any focused field
+// under 16px, and the visitor then has to pinch back out to find the button.
 const FIELD = (onDark: boolean) =>
-  'w-full px-3.5 md:px-4 py-2.5 md:py-3 border rounded-lg text-sm md:text-base ' +
+  'w-full px-3.5 md:px-4 py-2.5 md:py-3 border rounded-lg text-base ' +
   'focus:outline-none focus:ring-2 ' +
   (onDark
     ? 'bg-white/95 border-white/40 text-stone-800 placeholder:text-stone-400 focus:ring-white'
@@ -59,14 +61,22 @@ export default function ContactForm({
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  // The thank-you replaces the form, so focus would otherwise fall back to
+  // the page and a screen reader would say nothing about the message going.
+  const thanksRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (submitted) thanksRef.current?.focus();
+  }, [submitted]);
 
   const honeypotId = `contact-website-${sourceId}`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.message || !formData.phone) {
-      setError('נא למלא שם, טלפון והודעה');
+    // The message is optional: putting the reason into words is often the
+    // hardest part of reaching out, and a name and number are enough to call.
+    if (!formData.name || !formData.phone) {
+      setError('נא למלא שם וטלפון');
       return;
     }
     // Checked again on the server, which is the authority; this is here so the
@@ -139,6 +149,7 @@ export default function ContactForm({
     >
       {submitted ? (
         <motion.div
+          role="status"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="text-center py-8 md:py-12"
@@ -146,7 +157,7 @@ export default function ContactForm({
           <div className="w-16 h-16 md:w-20 md:h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6">
             <CheckCircle className="w-8 h-8 md:w-10 md:h-10 text-green-600" />
           </div>
-          <h3 className="text-lg md:text-2xl font-bold text-stone-800 mb-3 md:mb-4">תודה על פנייתכם!</h3>
+          <h3 ref={thanksRef} tabIndex={-1} className="text-lg md:text-2xl font-bold text-stone-800 mb-3 md:mb-4 focus:outline-none">תודה על פנייתכם!</h3>
           <p className="text-sm md:text-base text-stone-600 mb-5 md:mb-6">קיבלתי את ההודעה ואחזור אליכם בהקדם האפשרי.</p>
           <button
             onClick={() => setSubmitted(false)}
@@ -170,7 +181,7 @@ export default function ContactForm({
           ) : null}
 
           {error && (
-            <div className="mb-4 md:mb-6 p-3.5 md:p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-xs md:text-sm">
+            <div role="alert" className="mb-4 md:mb-6 p-3.5 md:p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-xs md:text-sm">
               {error}
             </div>
           )}
@@ -194,6 +205,7 @@ export default function ContactForm({
                 data-clarity-mask="true"
                 id={`contact-name-${sourceId}`}
                 type="text"
+                autoComplete="name"
                 placeholder="השם שלכם"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -212,6 +224,8 @@ export default function ContactForm({
                   data-clarity-mask="true"
                   id={`contact-email-${sourceId}`}
                   type="email"
+                  autoComplete="email"
+                  inputMode="email"
                   dir="ltr"
                   placeholder="email@example.com"
                   value={formData.email}
@@ -228,6 +242,7 @@ export default function ContactForm({
                   data-clarity-mask="true"
                   id={`contact-phone-${sourceId}`}
                   type="tel"
+                  autoComplete="tel"
                   dir="ltr"
                   inputMode="tel"
                   placeholder="050-0000000"
@@ -269,17 +284,16 @@ export default function ContactForm({
 
             <div>
               <label htmlFor={`contact-message-${sourceId}`} className={`block text-xs md:text-sm font-medium mb-1.5 md:mb-2 ${onDark ? 'text-white/90' : 'text-stone-700'}`}>
-                הודעה *
+                הודעה
               </label>
               <textarea
                 data-clarity-mask="true"
                 id={`contact-message-${sourceId}`}
-                placeholder="במה אוכל לעזור?"
+                placeholder="במה אוכל לעזור? (לא חובה)"
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 onFocus={() => trackFormFieldFocus('contact_form', 'message')}
                 className={`${FIELD(onDark)} ${onDark ? 'min-h-20 md:min-h-24' : 'min-h-24 md:min-h-32'}`}
-                required
               />
             </div>
 
