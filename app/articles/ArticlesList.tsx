@@ -78,7 +78,7 @@ export default function ArticlesList() {
               <p className="text-sm text-stone-500 line-clamp-2 mb-2">{a.excerpt}</p>
             )}
             <span className="text-xs text-amber-600 flex items-center gap-1">
-              קרא עוד <ArrowLeft className="w-3 h-3" />
+              קראו עוד <ArrowLeft className="w-3 h-3" />
             </span>
           </Link>
         </li>

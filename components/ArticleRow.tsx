@@ -85,7 +85,7 @@ export default function ArticleRow({
             className="text-xs md:text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all"
             style={{ color: MINT }}
           >
-            קרא עוד
+            קראו עוד
             <ArrowLeft className="w-3.5 h-3.5 md:w-4 md:h-4" aria-hidden="true" />
           </span>
         </div>

@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Heart, MessageCircle, Facebook, Send, User, Mail, Loader2, Instagram, Share2, Link2 } from 'lucide-react';
+import { Heart, MessageCircle, Facebook, Instagram, Share2, Link2 } from 'lucide-react';
 import { getUserIdentifier } from '@/lib/userIdentifier';
 import { supabase as supabaseClient } from '@/lib/supabaseClient';
-import { trackArticleLike, trackCommentSubmit, trackArticleShare, reportSiteError } from '@/lib/analytics';
+import { trackArticleLike, trackArticleShare, reportSiteError } from '@/lib/analytics';
 import { FACEBOOK_APP_ID } from '@/lib/facebook';
 import { isOptedOut } from '@/lib/ownerOptOut';
 
@@ -22,14 +22,6 @@ type ArticleInteractionsProps = {
   initialViewsCount: number;
 };
 
-type Comment = {
-  id: string;
-  author_name: string;
-  author_email: string;
-  content: string;
-  created_date: string;
-};
-
 export default function ArticleInteractions({ 
   articleId, 
   initialLikesCount,
@@ -38,22 +30,12 @@ export default function ArticleInteractions({
   const [hasLiked, setHasLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(initialLikesCount);
   const [isLiking, setIsLiking] = useState(false);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [isLoadingComments, setIsLoadingComments] = useState(true);
-  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [canNativeShare, setCanNativeShare] = useState(false);
-  
-  const [commentForm, setCommentForm] = useState({
-    author_name: '',
-    author_email: '',
-    content: ''
-  });
 
   // בדיקה אם המשתמש כבר נתן לייק
   useEffect(() => {
     checkUserLike();
-    loadComments();
     incrementViewCount();
     // navigator.share is only known on the client (avoid hydration mismatch)
     setCanNativeShare(typeof navigator !== 'undefined' && !!navigator.share);
@@ -77,18 +59,6 @@ export default function ArticleInteractions({
       .single();
     
     setHasLiked(!!data);
-  }
-
-  async function loadComments() {
-    const { data } = await supabaseClient
-      .from('comments')
-      .select('*')
-      .eq('article_id', articleId)
-      .eq('is_approved', true)
-      .order('created_date', { ascending: false });
-    
-    setComments(data || []);
-    setIsLoadingComments(false);
   }
 
   async function incrementViewCount() {
@@ -160,43 +130,6 @@ export default function ArticleInteractions({
       setToastMessage('משהו השתבש, נסו שוב');
     } finally {
       setIsLiking(false);
-    }
-  }
-
-  async function handleSubmitComment() {
-    if (!commentForm.author_name || !commentForm.content) {
-      setToastMessage('נא למלא את כל השדות הנדרשים');
-      return;
-    }
-    
-    setIsSubmittingComment(true);
-    
-    try {
-      const { error } = await supabaseClient
-        .from('comments')
-        .insert({
-          id: crypto.randomUUID(),
-          article_id: articleId,
-          author_name: commentForm.author_name,
-          author_email: commentForm.author_email,
-          content: commentForm.content,
-          is_approved: false,
-          created_date: new Date().toISOString()
-        });
-      
-      if (error) throw error;
-      
-      // Track conversion
-      trackCommentSubmit(articleId);
-      
-      setCommentForm({ author_name: '', author_email: '', content: '' });
-      setToastMessage('התגובה נשלחה! היא תפורסם לאחר אישור');
-    } catch (error) {
-      console.error('Error submitting comment:', error);
-      reportSiteError('comment', supabaseErrorReason(error));
-      setToastMessage('משהו השתבש, נסו שוב');
-    } finally {
-      setIsSubmittingComment(false);
     }
   }
 
@@ -308,7 +241,8 @@ export default function ArticleInteractions({
           } disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           <Heart className={`w-4 h-4 md:w-5 md:h-5 ${hasLiked ? 'fill-white' : ''}`} />
-          {hasLiked ? 'אהבתי!' : 'לייק'} ({likesCount})
+          {hasLiked ? 'אהבתי!' : 'לייק'}
+          {likesCount > 0 && ` (${likesCount})`}
         </button>
 
         {/* Uniform circular icon buttons in one row - the old mix of
@@ -361,115 +295,6 @@ export default function ArticleInteractions({
         </div>
       </div>
 
-      {/* Comments Section */}
-      <section className="mt-8 mb-8 md:mt-12 md:mb-12" style={{ minHeight: 'auto' }}>
-        <h3 className="text-lg md:text-2xl font-bold text-stone-800 mb-4 md:mb-8 font-serif">
-          תגובות ({comments.length})
-        </h3>
-
-        {/* Comment Form */}
-        <div className="bg-white rounded-2xl p-4 md:p-8 shadow-lg border border-stone-100 mb-6 md:mb-8">
-          <h4 className="text-base md:text-lg font-bold text-stone-800 mb-3 md:mb-4">השאירו תגובה</h4>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-3 md:mb-4">
-            <div className="relative">
-              <label htmlFor="comment-author-name" className="sr-only">
-                שם
-              </label>
-              <User className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-stone-400" />
-              <input
-                data-clarity-mask="true"
-                id="comment-author-name"
-                type="text"
-                placeholder="שם *"
-                value={commentForm.author_name}
-                onChange={(e) => setCommentForm({ ...commentForm, author_name: e.target.value })}
-                className="w-full pr-10 pl-4 py-3 border-2 border-stone-200 rounded-lg focus:border-amber-500 focus:outline-none transition-colors"
-              />
-            </div>
-            <div className="relative">
-              <label htmlFor="comment-author-email" className="sr-only">
-                אימייל (לא יפורסם)
-              </label>
-              <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-stone-400" />
-              <input
-                data-clarity-mask="true"
-                id="comment-author-email"
-                type="email"
-                placeholder="אימייל (לא יפורסם)"
-                value={commentForm.author_email}
-                onChange={(e) => setCommentForm({ ...commentForm, author_email: e.target.value })}
-                className="w-full pr-10 pl-4 py-3 border-2 border-stone-200 rounded-lg focus:border-amber-500 focus:outline-none transition-colors"
-              />
-            </div>
-          </div>
-          
-          <label htmlFor="comment-content" className="sr-only">
-            התגובה שלכם
-          </label>
-          <textarea
-            data-clarity-mask="true"
-            id="comment-content"
-            placeholder="התגובה שלכם *"
-            value={commentForm.content}
-            onChange={(e) => setCommentForm({ ...commentForm, content: e.target.value })}
-            className="w-full px-4 py-3 border-2 border-stone-200 rounded-lg focus:border-amber-500 focus:outline-none transition-colors mb-4 min-h-24 resize-y"
-          />
-          
-          <div className="flex justify-between items-center gap-3">
-            <p className="text-[11px] md:text-sm text-stone-500">התגובה תפורסם לאחר אישור</p>
-            <button
-              onClick={handleSubmitComment}
-              disabled={!commentForm.author_name || !commentForm.content || isSubmittingComment}
-              className="flex items-center gap-2 flex-shrink-0 bg-stone-800 hover:bg-stone-900 text-white px-4 md:px-6 py-2.5 md:py-3 rounded-lg text-sm md:text-base font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmittingComment ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <>
-                  <Send className="w-4 h-4 md:w-5 md:h-5" />
-                  שליחה
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Comments List. The loading placeholder is deliberately the same
-            height as the empty state (the overwhelmingly common outcome) -
-            a taller skeleton collapsed on load and yanked the related-articles
-            section up mid-scroll on mobile (iOS has no scroll anchoring). */}
-        {isLoadingComments ? (
-          <p className="text-center text-sm md:text-base text-stone-400 py-6 md:py-8 animate-pulse">
-            טוען תגובות...
-          </p>
-        ) : comments.length > 0 ? (
-          <div className="space-y-4 md:space-y-6">
-            {comments.map((comment) => (
-              <div key={comment.id} className="bg-stone-50 rounded-xl p-4 md:p-6">
-                <div className="flex items-center gap-2.5 md:gap-3 mb-2.5 md:mb-3">
-                  <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-amber-200 to-stone-200 flex items-center justify-center">
-                    <span className="text-sm font-bold text-stone-700">
-                      {comment.author_name?.[0]?.toUpperCase()}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm md:text-base font-medium text-stone-800">{comment.author_name}</p>
-                    <p className="text-xs text-stone-500">
-                      {new Date(comment.created_date).toLocaleDateString('he-IL')}
-                    </p>
-                  </div>
-                </div>
-                <p className="text-sm md:text-base text-stone-600 leading-relaxed">{comment.content}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-center text-sm md:text-base text-stone-500 py-6 md:py-8">
-            אין תגובות עדיין. היו הראשונים להגיב!
-          </p>
-        )}
-      </section>
     </>
   );
 }
