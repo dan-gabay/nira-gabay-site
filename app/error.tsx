@@ -30,7 +30,7 @@ export default function ErrorPage({ reset }: { error: Error & { digest?: string 
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackWhatsAppClick('error_page')}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-green-600 px-6 py-3 text-white font-semibold"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-green-700 hover:bg-green-800 px-6 py-3 text-white font-semibold"
           >
             <MessageCircle className="w-5 h-5" aria-hidden="true" />
             וואטסאפ

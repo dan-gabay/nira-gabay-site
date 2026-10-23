@@ -86,7 +86,7 @@ export default function ClinicPage() {
             aria-label="ניווט"
             className="text-[11px] md:text-sm text-white/60 mb-4 md:mb-6 text-center"
           >
-            <Link href="/" className="hover:text-white transition-colors">
+            <Link href="/" className="inline-block py-2 -my-2 hover:text-white transition-colors">
               דף הבית
             </Link>
             <span className="mx-1.5 md:mx-2">/</span>

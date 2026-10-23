@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Calendar, MessageCircle } from 'lucide-react';
 import { trackCTAClick, trackWhatsAppClick } from '@/lib/analytics';
-import { ARTICLES_CTA_BG, MINT, WA_HREF } from '@/lib/palette';
+import { ARTICLES_CTA_BG, MINT_DARK, WA_HREF } from '@/lib/palette';
 
 // Rounded gradient banner closing the article index and the topic hubs.
 export default function ArticleCtaBanner({ source }: { source: string }) {
@@ -16,7 +16,7 @@ export default function ArticleCtaBanner({ source }: { source: string }) {
       <div className="container mx-auto">
         <div
           className="relative overflow-hidden rounded-3xl"
-          style={{ background: `linear-gradient(115deg, ${MINT} 0%, #1F7A63 100%)` }}
+          style={{ background: `linear-gradient(115deg, ${MINT_DARK} 0%, #1F7A63 100%)` }}
         >
           <Image
             src={ARTICLES_CTA_BG}
