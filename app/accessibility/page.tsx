@@ -111,7 +111,7 @@ export default function AccessibilityStatementPage() {
               <li>נירה גבאי</li>
               <li>
                 טלפון:{' '}
-                <a href={`tel:${CLINIC.phoneDisplay}`} className="text-amber-700 underline hover:text-amber-800">
+                <a href={CLINIC.phoneHref} className="text-amber-700 underline hover:text-amber-800">
                   {CLINIC.phoneDisplay}
                 </a>
               </li>

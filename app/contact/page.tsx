@@ -16,6 +16,7 @@ import { trackContactMethodClick, trackSocialClick, trackWhatsAppClick } from '@
 import FaqSection from '@/components/FaqSection';
 import ContactForm from '@/components/ContactForm';
 import { whatsappHref, DEFAULT_WHATSAPP_MESSAGE } from '@/lib/whatsapp';
+import { CLINIC } from '@/lib/clinic';
 
 type ContactInfoItem = {
   icon: LucideIcon | (() => React.ReactElement);
@@ -30,8 +31,8 @@ const contactInfo: ContactInfoItem[] = [
   {
     icon: Phone,
     title: 'טלפון',
-    value: '050-7936681',
-    link: 'tel:050-7936681',
+    value: CLINIC.phoneDisplay,
+    link: CLINIC.phoneHref,
     color: 'text-green-600'
   },
   {

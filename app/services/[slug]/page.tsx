@@ -8,6 +8,7 @@ import { supabaseServer } from '@/lib/supabaseServer';
 import { SERVICES, getService, type Service } from '@/lib/services';
 import { SERVICES_LIVE, UNPUBLISHED_ROBOTS } from '@/lib/publish';
 import { whatsappHref } from '@/lib/whatsapp';
+import { CLINIC } from '@/lib/clinic';
 import {
   TEAL_DARK,
   MINT,
@@ -110,7 +111,7 @@ function buildSchema(service: Service, url: string) {
       {
         '@type': 'ServiceChannel',
         name: 'מפגש בקליניקה',
-        servicePhone: '+972-50-7936681',
+        servicePhone: CLINIC.phone,
         serviceLocation: {
           '@type': 'Place',
           name: 'הקליניקה של נירה גבאי',

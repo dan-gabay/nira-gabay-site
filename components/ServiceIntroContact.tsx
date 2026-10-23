@@ -14,7 +14,7 @@ import { PORTRAIT, ROLE } from '@/components/ServiceContact';
  *
  * So the first screens now say who is writing and offer the same two routes,
  * without a second form: one button jumps to the closing block, the other
- * opens WhatsApp. The wording repeats the closing block's own line rather
+ * opens WhatsApp, and a quiet line under them gives the phone number. The wording repeats the closing block's own line rather
  * than adding new copy. No price - the owner does not publish one.
  */
 export default function ServiceIntroContact({

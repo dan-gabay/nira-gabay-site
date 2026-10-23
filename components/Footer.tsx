@@ -5,6 +5,7 @@ import { Phone, Mail, Facebook } from 'lucide-react';
 import { trackFooterLinkClick, trackContactMethodClick, trackSocialClick } from '@/lib/analytics';
 import { SERVICES } from '@/lib/services';
 import { SERVICES_LIVE } from '@/lib/publish';
+import { CLINIC } from '@/lib/clinic';
 import { openAccessibilityMenu } from '@/components/AccessibilityMenu';
 
 export default function Footer() {
@@ -99,11 +100,11 @@ export default function Footer() {
               <li className="flex items-center gap-3 text-sm md:text-base text-stone-400">
                 <Phone className="w-5 h-5" />
                 <a 
-                  href="tel:050-7936681" 
+                  href={CLINIC.phoneHref}
                   className="hover:text-white transition-colors"
                   onClick={() => trackContactMethodClick('phone', 'footer')}
                 >
-                  050-7936681
+                  {CLINIC.phoneDisplay}
                 </a>
               </li>
               <li className="flex items-center gap-3 text-sm md:text-base text-stone-400">

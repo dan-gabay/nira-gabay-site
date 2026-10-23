@@ -36,7 +36,7 @@ export default function ErrorPage({ reset }: { error: Error & { digest?: string 
             וואטסאפ
           </a>
           <a
-            href={`tel:${CLINIC.phone}`}
+            href={CLINIC.phoneHref}
             onClick={() => trackPhoneClick('error_page')}
             className="inline-flex items-center justify-center gap-2 rounded-full bg-amber-600 px-6 py-3 text-white font-semibold"
           >
