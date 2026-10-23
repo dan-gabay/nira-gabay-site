@@ -1,38 +1,63 @@
 'use client';
 
-import { motion, useReducedMotion } from 'framer-motion';
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 
-// The scroll-reveal used on /about (fade + 30px rise, 0.6s, once), wrapped so
-// server components like the home page can use it too.
+// Scroll-reveal (fade + rise, once) that never hides content in the server
+// HTML. framer-motion's `initial` was serialised as opacity:0, so /about,
+// /contact and the home page stayed blank until the JS bundle hydrated, and
+// for good if it never did.
 //
-// framer-motion animates via JS transforms, so the reduced-motion rules in
-// globals.css do not reach it - useReducedMotion does, and renders the content
-// in its final state for anyone who has asked for less movement.
+// Here the element renders visible. After hydration, only an element that is
+// still below the fold is hidden (the visitor has not seen it yet, so nothing
+// flickers) and faded in when it scrolls into view. Anything already on screen
+// is left alone, as is everything for visitors who asked for reduced motion.
 export default function Reveal({
   children,
   delay = 0,
+  duration = 0.6,
+  x = 0,
+  y = 30,
+  scale = 1,
   className,
 }: {
   children: ReactNode;
   delay?: number;
+  duration?: number;
+  x?: number;
+  y?: number;
+  scale?: number;
   className?: string;
 }) {
-  const reduceMotion = useReducedMotion();
+  const ref = useRef<HTMLDivElement>(null);
 
-  if (reduceMotion) {
-    return <div className={className}>{children}</div>;
-  }
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (el.getBoundingClientRect().top < window.innerHeight) return;
+
+    el.style.opacity = '0';
+    el.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        el.style.transition = `opacity ${duration}s ease-out ${delay}s, transform ${duration}s ease-out ${delay}s`;
+        el.style.opacity = '';
+        el.style.transform = '';
+      },
+      // Fire once ~10% of the viewport into the element; a ratio threshold
+      // would never fire for blocks taller than the screen.
+      { rootMargin: '0px 0px -10% 0px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [delay, duration, x, y, scale]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.15 }}
-      transition={{ duration: 0.6, delay }}
-      className={className}
-    >
+    <div ref={ref} className={className}>
       {children}
-    </motion.div>
+    </div>
   );
 }
