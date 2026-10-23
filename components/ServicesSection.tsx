@@ -1,5 +1,6 @@
 "use client";
 import React from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import Link from 'next/link';
 import { Users, User, Heart, Baby, HeartHandshake, Brain } from 'lucide-react';
 import { trackServiceInterest } from '@/lib/analytics';
@@ -23,6 +24,8 @@ const services = SERVICES.map((s) => ({
 const Card: any = SERVICES_LIVE ? Link : 'div';
 
 export default function ServicesSection() {
+  const reduceMotion = useReducedMotion();
+
   return (
     <section className="py-12 md:py-24 bg-gradient-to-b from-stone-50 to-white">
       <div className="container mx-auto px-4 md:px-8">
@@ -39,16 +42,19 @@ export default function ServicesSection() {
           {services.map((service, index) => {
             const IconComponent = service.icon;
             return (
-              <Reveal
+              <motion.div
                 key={service.href}
-                y={0}
-                scale={0.95}
-                duration={0.4}
-                delay={index * 0.05}
-                // transition-shadow, not transition-all, on the card: its only
-                // hover effect is the shadow, and transition-all once fought
-                // the entrance animation over opacity and transform, so the
-                // card stuttered its way in.
+                initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.4, delay: reduceMotion ? 0 : index * 0.05 }}
+                // transition-shadow, not transition-all: the card's only hover
+                // effect is the shadow, but transition-all also had CSS
+                // transitioning opacity and transform - the two properties
+                // framer-motion rewrites every frame. The browser eased toward
+                // each frame's value on its own 300ms curve, so the card
+                // stuttered its way in. The icon keeps its own transform
+                // transition; it isn't the animated element.
                 className="h-full"
               >
                 {/* A link once the service pages are approved; until then a
@@ -67,7 +73,7 @@ export default function ServicesSection() {
                     <p className="text-stone-600 text-xs md:text-sm leading-relaxed">{service.description}</p>
                   </div>
                 </Card>
-              </Reveal>
+              </motion.div>
             );
           })}
         </div>

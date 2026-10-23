@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { enterStyle } from '@/lib/enter';
+import { motion } from 'framer-motion';
 import { Search, FileText, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -102,9 +102,11 @@ export default function ArticlesBrowser({
         />
 
         <div className="relative container mx-auto px-4 md:px-8 pt-6 pb-16 md:pt-14 md:pb-28">
-          <div
-            className="animate-enter text-center max-w-2xl mx-auto"
-            style={enterStyle({ y: 10 })}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="text-center max-w-2xl mx-auto"
           >
             <span
               className="block w-10 md:w-12 h-px mx-auto mb-4 md:mb-6"
@@ -121,7 +123,7 @@ export default function ArticlesBrowser({
               <br />
               לחיים מלאים ומאוזנים יותר
             </p>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -227,7 +229,11 @@ export default function ArticlesBrowser({
               )}
             </>
           ) : (
-            <div className="animate-enter text-center py-12 md:py-20">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-12 md:py-20"
+            >
               <div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <FileText className="w-10 h-10 text-stone-400" aria-hidden="true" />
               </div>
@@ -248,7 +254,7 @@ export default function ArticlesBrowser({
                   נקה סינון
                 </button>
               )}
-            </div>
+            </motion.div>
           )}
         </div>
       </section>
