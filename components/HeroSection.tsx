@@ -1,6 +1,7 @@
 "use client";
 import { whatsappHref } from '@/lib/whatsapp';
 import React from 'react';
+import { enterStyle } from '@/lib/enter';
 import Image from 'next/image';
 import { MessageCircle, Calendar } from 'lucide-react';
 import { trackWhatsAppClick, trackCTAClick } from '@/lib/analytics';
@@ -120,7 +121,10 @@ export default function HeroSection() {
           />
         </div>
 
-        <div className="px-6 pt-8 pb-10 text-center">
+        <div
+          className="animate-enter px-6 pt-8 pb-10 text-center"
+          style={enterStyle({ y: 14, duration: 0.45 })}
+        >
           <div className="mb-5">{Pill}</div>
           {copyFor('h1')}
           {Buttons}
@@ -156,8 +160,11 @@ export default function HeroSection() {
         {/* justify-start === physical RIGHT in this RTL section (text side) */}
         <div className="absolute inset-0 flex items-center justify-start">
           <div
-            className="w-full max-w-xl px-12 xl:px-20 text-center"
-            style={{ textShadow: '0 1px 14px rgba(0,0,0,0.30)' }}
+            className="animate-enter w-full max-w-xl px-12 xl:px-20 text-center"
+            style={{
+              ...enterStyle({ x: -20, duration: 0.5, delay: 0.1 }),
+              textShadow: '0 1px 14px rgba(0,0,0,0.30)',
+            }}
           >
             <div className="mb-8">{Pill}</div>
             {copyFor('h2')}

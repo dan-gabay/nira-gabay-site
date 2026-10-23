@@ -35,11 +35,6 @@ export default function Reveal({
     if (!el || typeof IntersectionObserver === 'undefined') return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (el.getBoundingClientRect().top < window.innerHeight) return;
-    // Reload, back/forward and #anchor links restore a scroll position after
-    // this runs, so a block measured as below the fold may already be on
-    // screen: it would flash, vanish and fade back in. Leave those visible.
-    const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
-    if (window.location.hash || nav?.type === 'reload' || nav?.type === 'back_forward') return;
 
     el.style.opacity = '0';
     el.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
