@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { enterStyle } from '@/lib/enter';
 import { Search, FileText, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -12,6 +12,7 @@ import ArticleCtaBanner from '@/components/ArticleCtaBanner';
 import {
   TEAL_DARK,
   MINT,
+  MINT_DARK,
   ARTICLES_HERO_BG,
   CHIP_BASE,
   CHIP_IDLE,
@@ -101,11 +102,9 @@ export default function ArticlesBrowser({
         />
 
         <div className="relative container mx-auto px-4 md:px-8 pt-6 pb-16 md:pt-14 md:pb-28">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="text-center max-w-2xl mx-auto"
+          <div
+            className="animate-enter text-center max-w-2xl mx-auto"
+            style={enterStyle({ y: 10 })}
           >
             <span
               className="block w-10 md:w-12 h-px mx-auto mb-4 md:mb-6"
@@ -122,7 +121,7 @@ export default function ArticlesBrowser({
               <br />
               לחיים מלאים ומאוזנים יותר
             </p>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -166,7 +165,7 @@ export default function ArticlesBrowser({
             onClick={() => applyTag(null)}
             aria-pressed={selectedTag === null}
             className={`${CHIP_BASE} ${selectedTag === null ? CHIP_ACTIVE : CHIP_IDLE}`}
-            style={selectedTag === null ? { background: MINT } : undefined}
+            style={selectedTag === null ? { background: MINT_DARK } : undefined}
           >
             הכל
           </button>
@@ -176,7 +175,7 @@ export default function ArticlesBrowser({
             const hubPath = topicPathForTag(tag.name);
             const isActive = selectedTag === tag.name;
             const chipClass = `${CHIP_BASE} ${isActive ? CHIP_ACTIVE : CHIP_IDLE}`;
-            const chipStyle = isActive ? { background: MINT } : undefined;
+            const chipStyle = isActive ? { background: MINT_DARK } : undefined;
             return hubPath ? (
               <Link
                 key={tag.id}
@@ -221,18 +220,14 @@ export default function ArticlesBrowser({
                     onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
                     className="inline-flex items-center gap-2 px-6 md:px-7 min-h-[40px] md:min-h-[44px] rounded-full border border-emerald-300 text-emerald-800 bg-white hover:bg-emerald-50 text-sm md:text-base font-medium transition-colors"
                   >
-                    טען עוד מאמרים
+                    עוד מאמרים
                     <ChevronDown className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </div>
               )}
             </>
           ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-12 md:py-20"
-            >
+            <div className="animate-enter text-center py-12 md:py-20">
               <div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <FileText className="w-10 h-10 text-stone-400" aria-hidden="true" />
               </div>
@@ -253,7 +248,7 @@ export default function ArticlesBrowser({
                   נקה סינון
                 </button>
               )}
-            </motion.div>
+            </div>
           )}
         </div>
       </section>

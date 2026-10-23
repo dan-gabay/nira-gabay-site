@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Menu, X, Phone, Mail, Facebook, MessageCircle, Home, User, FileText, PhoneCall, HeartHandshake } from 'lucide-react';
@@ -12,15 +12,38 @@ import { SERVICES } from '@/lib/services';
 import { CLINIC } from '@/lib/clinic';
 
 export default function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  // The menu remembers the page it was opened on, so any navigation closes
+  // it - back/forward too, which never passes a link's onClick.
+  const [menuOpenOn, setMenuOpenOn] = useState<string | null>(null);
+  const mobileMenuOpen = menuOpenOn === pathname;
+  const setMobileMenuOpen = (open: boolean) => setMenuOpenOn(open ? pathname : null);
+  const menuToggleRef = useRef<HTMLButtonElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Open: focus moves into the panel, and Escape closes it and returns focus
+  // to the toggle. A link click is left alone - it navigates, and the new page
+  // keeps its own focus order.
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const panel = mobileMenuRef.current;
+    panel?.querySelector<HTMLElement>('a, button')?.focus();
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      setMenuOpenOn(null);
+      trackMobileMenuToggle('close');
+      menuToggleRef.current?.focus();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [mobileMenuOpen]);
 
   const navItems = [
     { name: 'דף הבית', href: '/', icon: Home },
@@ -110,29 +133,26 @@ export default function Header() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackWhatsAppClick('header')}
+                className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg hover:shadow-xl transition-all"
               >
-                <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg hover:shadow-xl transition-all">
-                  <MessageCircle className="w-4 h-4" />
-                  WhatsApp
-                </button>
+                <MessageCircle className="w-4 h-4" aria-hidden="true" />
+                WhatsApp
               </a>
-              <a 
-                href="https://www.facebook.com/nira.gabay" 
-                target="_blank" 
+              <a
+                href="https://www.facebook.com/nira.gabay"
+                target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackSocialClick('facebook', 'header')}
+                aria-label="העמוד של נירה גבאי בפייסבוק"
+                className="border border-stone-300 hover:bg-stone-100 p-2 rounded-lg transition-colors"
               >
-                <button
-                  aria-label="העמוד של נירה גבאי בפייסבוק"
-                  className="border border-stone-300 hover:bg-stone-100 p-2 rounded-lg transition-colors"
-                >
-                  <Facebook className="w-4 h-4 text-blue-600" aria-hidden="true" />
-                </button>
+                <Facebook className="w-4 h-4 text-blue-600" aria-hidden="true" />
               </a>
             </div>
 
             {/* Mobile Menu Button */}
             <button
+              ref={menuToggleRef}
               className="lg:hidden p-2 rounded-lg hover:bg-stone-100 transition-colors"
               onClick={() => {
                 const newState = !mobileMenuOpen;
@@ -150,7 +170,7 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div id="mobile-menu" className="lg:hidden bg-white/95 backdrop-blur-md border-t border-stone-200 max-h-[calc(100dvh-80px)] overflow-y-auto overscroll-contain">
+          <div id="mobile-menu" ref={mobileMenuRef} className="lg:hidden bg-white/95 backdrop-blur-md border-t border-stone-200 max-h-[calc(100dvh-80px)] overflow-y-auto overscroll-contain">
             <nav className="container mx-auto px-4 py-6 space-y-2">
               {navItems.map((item) => (
                 <div key={item.href}>
@@ -207,7 +227,7 @@ export default function Header() {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => trackWhatsAppClick('header_mobile')}
-                  className="flex-1 min-h-[44px] bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2"
+                  className="flex-1 min-h-[44px] bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2"
                 >
                   <MessageCircle className="w-4 h-4" aria-hidden="true" />
                   WhatsApp

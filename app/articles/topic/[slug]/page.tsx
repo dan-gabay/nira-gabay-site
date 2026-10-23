@@ -10,6 +10,7 @@ import { SERVICES_LIVE } from '@/lib/publish';
 import {
   TEAL_DARK,
   MINT,
+  MINT_DARK,
   ARTICLES_HERO_BG,
   CHIP_BASE,
   CHIP_IDLE,
@@ -146,11 +147,11 @@ export default async function TopicPage({
             aria-label="ניווט"
             className="text-[11px] md:text-sm text-white/60 mb-4 md:mb-6 text-center"
           >
-            <Link href="/" className="hover:text-white transition-colors">
+            <Link href="/" className="inline-block py-2 -my-2 hover:text-white transition-colors">
               דף הבית
             </Link>
             <span className="mx-1.5 md:mx-2">/</span>
-            <Link href="/articles" className="hover:text-white transition-colors">
+            <Link href="/articles" className="inline-block py-2 -my-2 hover:text-white transition-colors">
               מאמרים
             </Link>
             <span className="mx-1.5 md:mx-2">/</span>
@@ -192,7 +193,7 @@ export default async function TopicPage({
                 href={`/articles/topic/${t.slug}`}
                 aria-current={isActive ? 'page' : undefined}
                 className={`${CHIP_BASE} ${isActive ? CHIP_ACTIVE : CHIP_IDLE}`}
-                style={isActive ? { background: MINT } : undefined}
+                style={isActive ? { background: MINT_DARK } : undefined}
               >
                 {t.tag}
               </Link>

@@ -70,7 +70,9 @@ function body(lead: LeadNotice, isTest: boolean): string {
     `<p><strong>טלפון:</strong> ${escapeHtml(lead.phone)}</p>`,
     lead.email ? `<p><strong>אימייל:</strong> ${escapeHtml(lead.email)}</p>` : '',
     lead.source ? `<p><strong>הגיע מ:</strong> ${escapeHtml(lead.source)}</p>` : '',
-    `<p><strong>הודעה:</strong></p><p>${escapeHtml(lead.message).replace(/\n/g, '<br/>')}</p>`,
+    lead.message
+      ? `<p><strong>הודעה:</strong></p><p>${escapeHtml(lead.message).replace(/\n/g, '<br/>')}</p>`
+      : '<p><strong>הודעה:</strong> לא נכתבה הודעה</p>',
     updateLink(lead)
       ? `<p style="margin-top:20px"><a href="${updateLink(lead)}" style="background:#1c1917;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;display:inline-block">אחרי שדיברתם: עדכון מה קרה</a></p>`
       : '<hr/><p>ניתן לצפות בכל הפניות באזור הניהול באתר.</p>',
@@ -161,7 +163,7 @@ export function telegramMessage(lead: LeadNotice, isTest = false): string {
   ];
   if (lead.email) lines.push(esc(lead.email));
   if (lead.source) lines.push(`מקור: ${esc(lead.source)}`);
-  lines.push('', esc(lead.message));
+  lines.push('', lead.message ? esc(lead.message) : '(לא נכתבה הודעה)');
   // One tap to answer, which is the whole point of putting this on a phone.
   if (wa) lines.push('', `<a href="https://wa.me/${wa}">מענה בוואטסאפ</a>`);
   const update = updateLink(lead);

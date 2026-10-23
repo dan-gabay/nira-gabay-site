@@ -13,6 +13,10 @@ import ArticleFaq from '@/components/ArticleFaq';
 import RelatedArticles from '../RelatedArticles';
 import ArticleCtaBanner from '@/components/ArticleCtaBanner';
 import { TOPIC_BY_TAG } from '@/lib/topics';
+import { SERVICES, getService, type Service } from '@/lib/services';
+import { SERVICES_LIVE } from '@/lib/publish';
+import { PORTRAIT } from '@/components/ServiceContact';
+import { TEAL_DARK } from '@/lib/palette';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import JsonLd from '@/components/JsonLd';
@@ -128,6 +132,21 @@ function splitAtThirdH2(content: string): [string, string] | null {
 // The page renders its own <h1>, so demote any stray "# " heading in the
 // markdown content to <h2> for a valid heading hierarchy.
 const markdownComponents: Components = { h1: 'h2' };
+
+// The service page a reader of this article would book: one that lists the
+// article as supporting content first, then the service of its first tag that
+// has a topic hub with one (the same map the hubs link from). Discreet
+// services are never pushed at anyone, so they are skipped.
+function serviceForArticle(article: Article): Service | undefined {
+  const listed = SERVICES.find((s) => !s.discreet && s.articleSlugs.includes(article.slug));
+  if (listed) return listed;
+  for (const tag of article.tag_names || []) {
+    const slug = TOPIC_BY_TAG.get(tag)?.serviceSlug;
+    const service = slug ? getService(slug) : undefined;
+    if (service && !service.discreet) return service;
+  }
+  return undefined;
+}
 
 // Dynamic metadata
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -255,6 +274,8 @@ export default async function ArticlePage({ params }: Props) {
     ? TOPIC_BY_TAG.get(article.tag_names[0]) ?? null
     : null;
 
+  const matchingService = SERVICES_LIVE ? serviceForArticle(article) : undefined;
+
   // Breadcrumb Schema
   const breadcrumbTrail = [
     { name: 'דף הבית', item: 'https://www.niragabay.com' },
@@ -302,13 +323,13 @@ export default async function ArticlePage({ params }: Props) {
           {/* Fixed crumbs must not shrink or the flex layout squeezes them and
               Hebrew words break mid-word on mobile; only the title flexes. */}
           <nav className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm text-stone-500">
-            <Link href="/" className="hover:text-stone-800 shrink-0 whitespace-nowrap">דף הבית</Link>
+            <Link href="/" className="py-2 -my-2 hover:text-stone-800 shrink-0 whitespace-nowrap">דף הבית</Link>
             <span className="shrink-0">/</span>
-            <Link href="/articles" className="hover:text-stone-800 shrink-0 whitespace-nowrap">מאמרים</Link>
+            <Link href="/articles" className="py-2 -my-2 hover:text-stone-800 shrink-0 whitespace-nowrap">מאמרים</Link>
             {primaryTopic && (
               <>
                 <span className="shrink-0">/</span>
-                <Link href={`/articles/topic/${primaryTopic.slug}`} className="hover:text-stone-800 shrink-0 whitespace-nowrap">
+                <Link href={`/articles/topic/${primaryTopic.slug}`} className="py-2 -my-2 hover:text-stone-800 shrink-0 whitespace-nowrap">
                   {primaryTopic.tag}
                 </Link>
               </>
@@ -350,9 +371,13 @@ export default async function ArticlePage({ params }: Props) {
                 half of a byline. Renders identically - the anchor inherits the
                 same colour and weight the span had. */}
             <Link href="/about" rel="author" className="flex items-center gap-2 hover:text-stone-800">
-              <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-amber-100 to-stone-200 flex items-center justify-center">
-                <span className="text-xs font-bold text-stone-700">נ</span>
-              </div>
+              <Image
+                src={PORTRAIT}
+                alt=""
+                width={32}
+                height={32}
+                className="w-7 h-7 md:w-8 md:h-8 rounded-full object-cover"
+              />
               <span className="font-medium text-stone-700">נירה גבאי</span>
             </Link>
             
@@ -371,10 +396,14 @@ export default async function ArticlePage({ params }: Props) {
               {article.reading_time || 5} דקות קריאה
             </span>
             
-            <span className="flex items-center gap-1">
-              <Heart className="w-4 h-4" />
-              {article.likes_count || 0} לייקים
-            </span>
+            {/* Most articles have no likes yet, and "0 לייקים" next to the
+                byline reads as an inactive site. */}
+            {(article.likes_count || 0) > 0 && (
+              <span className="flex items-center gap-1">
+                <Heart className="w-4 h-4" />
+                {article.likes_count} לייקים
+              </span>
+            )}
           </div>
         </div>
       </header>
@@ -454,7 +483,29 @@ export default async function ArticlePage({ params }: Props) {
             readingTime={article.reading_time}
           />
 
-          {/* Interactions (Likes, Share, Comments) */}
+          {matchingService && (
+            <aside className="mb-8 md:mb-12 rounded-2xl border border-stone-200 bg-stone-50 p-4 md:p-6">
+              <p className="text-sm md:text-base text-stone-600 leading-relaxed">
+                מחפשים ליווי אישי?{' '}
+                <Link
+                  href={`/services/${matchingService.slug}`}
+                  className="font-semibold underline underline-offset-4 hover:no-underline"
+                  style={{ color: TEAL_DARK }}
+                >
+                  {matchingService.h1 ?? matchingService.title}
+                </Link>
+              </p>
+              <p className="mt-1.5 text-xs md:text-sm text-stone-500 leading-relaxed">
+                {matchingService.tagline}
+              </p>
+            </aside>
+          )}
+
+          {/* Interactions (Likes, Share). The public comment form was removed:
+              it never received a single comment, it pushed the author box and
+              the contact banner down, and on a therapy site it invited readers
+              to post personal details under their name. The comments table and
+              /manage are untouched. */}
           <ArticleInteractions 
             articleId={article.id}
             initialLikesCount={article.likes_count || 0}
@@ -468,7 +519,7 @@ export default async function ArticlePage({ params }: Props) {
           <div className="bg-gradient-to-br from-amber-50 to-stone-50 rounded-2xl p-5 md:p-8 my-8 md:my-12">
             <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-6">
               <Image
-                src="https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png"
+                src={PORTRAIT}
                 alt="נירה גבאי - מטפלת בפסיכותרפיה ומדריכת הורים"
                 width={96}
                 height={96}

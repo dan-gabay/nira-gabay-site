@@ -1,7 +1,7 @@
 "use client";
 import { whatsappHref } from '@/lib/whatsapp';
 import React from 'react';
-import { motion } from 'framer-motion';
+import { enterStyle } from '@/lib/enter';
 import Image from 'next/image';
 import { MessageCircle, Calendar } from 'lucide-react';
 import { trackWhatsAppClick, trackCTAClick } from '@/lib/analytics';
@@ -40,7 +40,7 @@ export default function HeroSection() {
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => trackWhatsAppClick('hero')}
-        className="flex items-center justify-center gap-2.5 w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl text-base font-medium whitespace-nowrap shadow-lg shadow-green-900/20 transition-colors"
+        className="flex items-center justify-center gap-2.5 w-full bg-green-700 hover:bg-green-800 text-white py-4 rounded-2xl text-base font-medium whitespace-nowrap shadow-lg shadow-green-900/20 transition-colors"
       >
         <MessageCircle className="w-5 h-5 flex-shrink-0" />
         שלחו הודעת WhatsApp
@@ -121,16 +121,14 @@ export default function HeroSection() {
           />
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
-          className="px-6 pt-8 pb-10 text-center"
+        <div
+          className="animate-enter px-6 pt-8 pb-10 text-center"
+          style={enterStyle({ y: 14, duration: 0.45 })}
         >
           <div className="mb-5">{Pill}</div>
           {copyFor('h1')}
           {Buttons}
-        </motion.div>
+        </div>
       </div>
 
       {/* ────────────────────────────────────────
@@ -161,17 +159,17 @@ export default function HeroSection() {
 
         {/* justify-start === physical RIGHT in this RTL section (text side) */}
         <div className="absolute inset-0 flex items-center justify-start">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="w-full max-w-xl px-12 xl:px-20 text-center"
-            style={{ textShadow: '0 1px 14px rgba(0,0,0,0.30)' }}
+          <div
+            className="animate-enter w-full max-w-xl px-12 xl:px-20 text-center"
+            style={{
+              ...enterStyle({ x: -20, duration: 0.5, delay: 0.1 }),
+              textShadow: '0 1px 14px rgba(0,0,0,0.30)',
+            }}
           >
             <div className="mb-8">{Pill}</div>
             {copyFor('h2')}
             {Buttons}
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

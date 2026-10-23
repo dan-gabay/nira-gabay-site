@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { FileText, ArrowLeft, Clock } from 'lucide-react';
 import { trackArticleCardClick, trackReadMoreClick } from '@/lib/analytics';
-import { MINT } from '@/lib/palette';
+import { MINT_DARK } from '@/lib/palette';
 import type { ArticleListItem } from '@/app/articles/ArticlesBrowser';
 
 // One article card, in two shapes from one piece of markup.
@@ -83,9 +83,9 @@ export default function ArticleRow({
           </span>
           <span
             className="text-xs md:text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all"
-            style={{ color: MINT }}
+            style={{ color: MINT_DARK }}
           >
-            קרא עוד
+            קראו עוד
             <ArrowLeft className="w-3.5 h-3.5 md:w-4 md:h-4" aria-hidden="true" />
           </span>
         </div>
