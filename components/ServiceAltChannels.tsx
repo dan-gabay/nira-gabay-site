@@ -51,7 +51,7 @@ export default function ServiceAltChannels({
           WhatsApp
         </a>
         <a
-          href={`tel:${CLINIC.phone}`}
+          href={CLINIC.phoneHref}
           onClick={() => trackContactMethodClick('phone', `service_${serviceSlug}`)}
           className={link}
           dir="ltr"

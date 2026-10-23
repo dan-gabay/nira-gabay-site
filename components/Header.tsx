@@ -5,9 +5,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Menu, X, Phone, Mail, Facebook, MessageCircle, Home, User, FileText, PhoneCall, HeartHandshake } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import { trackHeaderNavClick, trackHeaderLogoClick, trackMobileMenuToggle, trackWhatsAppClick, trackSocialClick } from '@/lib/analytics';
+import { trackHeaderNavClick, trackHeaderLogoClick, trackMobileMenuToggle, trackWhatsAppClick, trackSocialClick, trackContactMethodClick } from '@/lib/analytics';
 import { whatsappHref, whatsappMessageForPath } from '@/lib/whatsapp';
 import { SERVICES_LIVE } from '@/lib/publish';
+import { SERVICES } from '@/lib/services';
+import { CLINIC } from '@/lib/clinic';
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -59,6 +61,11 @@ export default function Header() {
   const isCurrent = (href: string) =>
     href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
 
+  // The mobile menu lists the services under "תחומי טיפול", so CBT or couples
+  // therapy is one tap away instead of two and a page load. Same list as the
+  // footer: the discreet ones stay out of site-wide navigation.
+  const menuServices = SERVICES_LIVE ? SERVICES.filter((s) => !s.discreet) : [];
+
   // Prefill names the service the visitor is reading about (see lib/whatsapp.ts)
   const waHref = whatsappHref(whatsappMessageForPath(pathname));
 
@@ -109,6 +116,18 @@ export default function Header() {
 
             {/* CTA Buttons */}
             <div className="hidden lg:flex items-center gap-4">
+              {/* Many people read at a desk and call from their mobile, so the
+                  number is visible, not only a WhatsApp button. Icon-only on
+                  narrow desktops, where the nav needs the room. */}
+              <a
+                href={CLINIC.phoneHref}
+                onClick={() => trackContactMethodClick('phone', 'header')}
+                aria-label={`התקשרו ${CLINIC.phoneDisplay}`}
+                className="flex items-center gap-2 text-stone-700 hover:text-stone-900 font-medium transition-colors"
+              >
+                <Phone className="w-4 h-4" aria-hidden="true" />
+                <span dir="ltr" className="hidden xl:inline">{CLINIC.phoneDisplay}</span>
+              </a>
               <a
                 href={waHref}
                 target="_blank"
@@ -151,46 +170,75 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div id="mobile-menu" ref={mobileMenuRef} className="lg:hidden bg-white/95 backdrop-blur-md border-t border-stone-200">
+          <div id="mobile-menu" ref={mobileMenuRef} className="lg:hidden bg-white/95 backdrop-blur-md border-t border-stone-200 max-h-[calc(100dvh-80px)] overflow-y-auto overscroll-contain">
             <nav className="container mx-auto px-4 py-6 space-y-2">
               {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    trackHeaderNavClick(item.name + '_mobile');
-                  }}
-                  className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
-                    isCurrent(item.href)
-                      ? 'bg-amber-100 text-stone-900' 
-                      : 'hover:bg-stone-100 text-stone-700'
-                  }`}
-                >
-                  <item.icon className="w-5 h-5" />
-                  {item.name}
-                </Link>
+                <div key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      trackHeaderNavClick(item.name + '_mobile');
+                    }}
+                    className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
+                      // On a service page its own sub-link is lit instead.
+                      isCurrent(item.href) && !(item.href === '/services' && pathname !== '/services')
+                        ? 'bg-amber-100 text-stone-900'
+                        : 'hover:bg-stone-100 text-stone-700'
+                    }`}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    {item.name}
+                  </Link>
+                  {item.href === '/services' && menuServices.length > 0 && (
+                    <ul className="mt-1 mr-8 border-r border-stone-200 pr-2">
+                      {menuServices.map((s) => {
+                        const href = `/services/${s.slug}`;
+                        return (
+                          <li key={s.slug}>
+                            <Link
+                              href={href}
+                              onClick={() => {
+                                setMobileMenuOpen(false);
+                                trackHeaderNavClick(s.navLabel + '_mobile');
+                              }}
+                              aria-current={pathname === href ? 'page' : undefined}
+                              className={`flex items-center min-h-[44px] px-3 rounded-xl text-[15px] transition-colors ${
+                                pathname === href
+                                  ? 'bg-amber-100 text-stone-900'
+                                  : 'hover:bg-stone-100 text-stone-600'
+                              }`}
+                            >
+                              {s.navLabel}
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
               ))}
+              {/* WhatsApp and a call, side by side. Facebook used to share this
+                  row; it takes a visitor off the site at the moment they meant
+                  to get in touch, and it stays in the footer. */}
               <div className="pt-4 flex gap-3">
                 <a
                   href={waHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2"
                   onClick={() => trackWhatsAppClick('header_mobile')}
+                  className="flex-1 min-h-[44px] bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2"
                 >
                   <MessageCircle className="w-4 h-4" aria-hidden="true" />
                   WhatsApp
                 </a>
                 <a
-                  href="https://www.facebook.com/nira.gabay"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => trackSocialClick('facebook', 'header_mobile')}
-                  aria-label="העמוד של נירה גבאי בפייסבוק"
-                  className="border border-stone-300 p-2 rounded-lg"
+                  href={CLINIC.phoneHref}
+                  onClick={() => trackContactMethodClick('phone', 'header_mobile')}
+                  className="flex-1 min-h-[44px] border border-stone-300 hover:bg-stone-100 text-stone-800 px-4 py-2 rounded-lg flex items-center justify-center gap-2"
                 >
-                  <Facebook className="w-5 h-5 text-blue-600" aria-hidden="true" />
+                  <Phone className="w-4 h-4" aria-hidden="true" />
+                  התקשרו
                 </a>
               </div>
             </nav>

@@ -29,6 +29,12 @@ export const CLINIC = {
   geo: { latitude: '31.7907', longitude: '35.0644' },
   phone: '+972-50-7936681',
   phoneDisplay: '050-7936681',
+  /**
+   * Every tel: link on the site. International form, no separators, so it
+   * also dials from a foreign SIM or an Israeli number roaming abroad; the
+   * local "050-..." form fails there. The display text stays phoneDisplay.
+   */
+  phoneHref: 'tel:+972507936681',
   photo: 'https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/profile.png',
 
   /** Established across the existing site copy, so safe to repeat. */
