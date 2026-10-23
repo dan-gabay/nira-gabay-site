@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import Reveal from '@/components/Reveal';
+import { enterStyle } from '@/lib/enter';
 import Image from 'next/image';
 import {
   Phone,
@@ -75,11 +76,9 @@ export default function Contact() {
       {/* Hero */}
       <section className="py-10 md:py-20 bg-gradient-to-br from-stone-100 to-amber-50">
         <div className="container mx-auto px-4 md:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="text-center max-w-3xl mx-auto"
+          <div
+            className="animate-enter text-center max-w-3xl mx-auto"
+            style={enterStyle({ y: 5, duration: 0.3 })}
           >
             <span className="inline-block px-4 py-1.5 md:py-2 bg-amber-100 rounded-full text-amber-800 text-xs md:text-sm mb-4 md:mb-6">
               צרו קשר
@@ -90,7 +89,7 @@ export default function Contact() {
             <p className="text-sm md:text-xl text-stone-600 leading-relaxed">
               אתם מוזמנים לשלוח אליי שאלות למאמרים, לקבוע טיפול, הדרכת הורים, ייעוץ, טיפול זוגי או סדנאות
             </p>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -100,21 +99,18 @@ export default function Contact() {
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
               {/* Contact Info */}
-              <motion.div
-                initial={{ opacity: 0, x: -15 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3 }}
+              <div
+                className="animate-enter"
+                style={enterStyle({ x: -15, duration: 0.3 })}
               >
                 <h2 className="text-lg md:text-2xl font-bold text-stone-800 mb-5 md:mb-8">פרטי התקשרות</h2>
                 
                 <div className="space-y-4 md:space-y-6 mb-7 md:mb-10">
                   {contactInfo.map((info, index) => (
-                    <motion.div
+                    <div
                       key={index}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                      className="flex items-center gap-4"
+                      className="animate-enter flex items-center gap-4"
+                      style={enterStyle({ y: 10, duration: 0.3, delay: index * 0.05 })}
                     >
                       <div className={`w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-stone-100 flex items-center justify-center flex-shrink-0 ${info.color}`}>
                         {typeof info.icon === 'function' ? 
@@ -143,16 +139,14 @@ export default function Contact() {
                           <p className="text-sm md:text-lg font-medium text-stone-800">{info.value}</p>
                         )}
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
 
                 {/* WhatsApp CTA */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.3 }}
-                  className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-4 md:p-6 mb-6 md:mb-8"
+                <div
+                  className="animate-enter bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-4 md:p-6 mb-6 md:mb-8"
+                  style={enterStyle({ y: 10, duration: 0.3, delay: 0.3 })}
                 >
                   <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4">
                     <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
@@ -175,14 +169,12 @@ export default function Contact() {
                       שלחו הודעת WhatsApp
                     </span>
                   </a>
-                </motion.div>
+                </div>
 
                 {/* Additional Info */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.35 }}
-                  className="bg-stone-50 rounded-2xl p-4 md:p-6"
+                <div
+                  className="animate-enter bg-stone-50 rounded-2xl p-4 md:p-6"
+                  style={enterStyle({ y: 10, duration: 0.3, delay: 0.35 })}
                 >
                   <div className="flex items-start gap-3 md:gap-4">
                     <Monitor className="w-5 h-5 md:w-6 md:h-6 text-amber-600 flex-shrink-0 mt-0.5 md:mt-1" />
@@ -193,17 +185,16 @@ export default function Contact() {
                       </p>
                     </div>
                   </div>
-                </motion.div>
-              </motion.div>
+                </div>
+              </div>
 
               {/* Contact Form */}
-              <motion.div
-                initial={{ opacity: 0, x: 15 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
+              <div
+                className="animate-enter"
+                style={enterStyle({ x: 15, duration: 0.3, delay: 0.1 })}
               >
                 <ContactForm sourceId="contact_page" />
-              </motion.div>
+              </div>
             </div>
           </div>
         </div>
@@ -212,11 +203,9 @@ export default function Contact() {
       {/* Map Section */}
       <section className="py-10 md:py-16 bg-gradient-to-br from-stone-50 to-amber-50">
         <div className="container mx-auto px-4 md:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4 }}
+          <Reveal
+            y={15}
+            duration={0.4}
             className="max-w-4xl mx-auto text-center"
           >
             <h2 className="text-xl md:text-3xl font-bold text-stone-800 mb-4 md:mb-6">הקליניקה שלי</h2>
@@ -252,7 +241,7 @@ export default function Contact() {
                 </a>
               </div>
             </div>
-          </motion.div>
+          </Reveal>
         </div>
       </section>
 

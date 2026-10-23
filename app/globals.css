@@ -93,6 +93,24 @@ svg {
   animation: shimmer 2s infinite;
 }
 
+/* First-paint entrance. The element is in the server HTML at full opacity and
+   only the CSS animation fades it in, so it shows at first paint without
+   waiting for JavaScript (framer-motion `initial` states were serialised as
+   opacity:0 and kept whole pages blank until hydration). Fill-mode backwards,
+   not both: a transform held after the animation would make the element a
+   containing block for position:fixed descendants. Offsets come from
+   inline custom properties - see lib/enter.ts. */
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translate(var(--enter-x, 0), var(--enter-y, 0)) scale(var(--enter-scale, 1));
+  }
+}
+
+.animate-enter {
+  animation: enter var(--enter-duration, 0.4s) ease-out var(--enter-delay, 0s) backwards;
+}
+
 /* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -101,6 +119,11 @@ svg {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  /* The delay would otherwise hold the element at opacity 0 (fill backwards). */
+  .animate-enter {
+    animation: none !important;
   }
 }
 
