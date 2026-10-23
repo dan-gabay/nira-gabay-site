@@ -274,7 +274,11 @@ export default async function ArticlePage({ params }: Props) {
     ? TOPIC_BY_TAG.get(article.tag_names[0]) ?? null
     : null;
 
-  const matchingService = SERVICES_LIVE ? serviceForArticle(article) : undefined;
+  // Skipped when the article's own text already links to that service (many
+  // closing paragraphs do), so the reader is not offered the same link twice.
+  const service = SERVICES_LIVE ? serviceForArticle(article) : undefined;
+  const matchingService =
+    service && !article.content?.includes(`/services/${service.slug}`) ? service : undefined;
 
   // Breadcrumb Schema
   const breadcrumbTrail = [
