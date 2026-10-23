@@ -70,7 +70,7 @@ export const personSchema = {
   mainEntityOfPage: `${BASE_URL}/about`,
   jobTitle: 'מטפלת בפסיכותרפיה ומדריכת הורים',
   description:
-    'מטפלת בפסיכותרפיה ומדריכת הורים. בעלת תואר שני (M.A) בייעוץ חינוכי, הכשרה בטיפול קוגניטיבי התנהגותי (CBT) מאוניברסיטת חיפה והתמחות במיניות בריאה. מלווה מתבגרים, מבוגרים וזוגות בקליניקה במושב שואבה שבאזור ירושלים ובטיפול מקוון בזום.',
+    'מטפלת בפסיכותרפיה ומדריכת הורים. בעלת תואר שני (M.A) בייעוץ חינוכי, הכשרה בטיפול קוגניטיבי התנהגותי (CBT) וב-DBT מאוניברסיטת חיפה והתמחות במיניות בריאה. מלווה מתבגרים, מבוגרים וזוגות בקליניקה במושב שואבה שבאזור ירושלים ובטיפול מקוון בזום.',
   image: CLINIC.photo,
   telephone: CLINIC.phone,
   email: 'niraga1123@gmail.com',
@@ -94,7 +94,7 @@ export const personSchema = {
     {
       '@type': 'EducationalOccupationalCredential',
       credentialCategory: 'certificate',
-      name: 'הכשרה בטיפול קוגניטיבי התנהגותי (CBT)',
+      name: 'הכשרה בטיפול קוגניטיבי התנהגותי (CBT) וב-DBT',
       recognizedBy: { '@type': 'CollegeOrUniversity', name: 'אוניברסיטת חיפה' },
     },
     {
