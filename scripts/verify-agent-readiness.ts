@@ -9,9 +9,33 @@
  *
  *   npm run verify:agent-readiness                    # http://localhost:3000
  *   npm run verify:agent-readiness -- https://www.niragabay.com
+ *   npm run verify:agent-readiness -- https://www.niragabay.com --quick
+ *
+ * Sections 1-8 are the content-negotiation contract. Sections 9-14 (added
+ * 2026-10-24, GEO monitoring) crawl the site the way a search or AI crawler
+ * would: redirects, robots.txt per AI crawler, the sitemap and its dates,
+ * every sitemap page's status / canonical / indexing / JSON-LD, entity
+ * consistency across pages, every internal link, and real 404s for invalid
+ * article paths. --quick skips the per-page crawl (9-14 then run only the
+ * checks /manage/geo runs live). The rules live in lib/geo/siteChecks.ts.
+ *
+ * Read-only: GET and HEAD, identified as niragabay-healthcheck so the requests
+ * are labelled 'monitor' in bot_hits and not counted as crawls.
  */
 
-const BASE = (process.argv[2] || 'http://localhost:3000').replace(/\/$/, '');
+import {
+  HEALTHCHECK_UA,
+  entityConflicts,
+  jsonLdNodes,
+  pageProblems,
+  parsePage,
+  parseSitemap,
+  runQuickChecks,
+} from '../lib/geo/siteChecks';
+
+const args = process.argv.slice(2);
+const QUICK = args.includes('--quick');
+const BASE = (args.find((a) => !a.startsWith('--')) || 'http://localhost:3000').replace(/\/$/, '');
 
 const BROWSER_ACCEPT =
   'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8';
@@ -33,7 +57,7 @@ const varyHasAccept = (res: Response) =>
 
 async function get(path: string, accept?: string) {
   return fetch(`${BASE}${path}`, {
-    headers: accept ? { Accept: accept } : {},
+    headers: { 'user-agent': HEALTHCHECK_UA, ...(accept ? { Accept: accept } : {}) },
     redirect: 'manual',
   });
 }
@@ -165,6 +189,106 @@ async function main() {
       '/manage is not served as markdown',
       !ct.startsWith('text/markdown'),
       `${res.status} · ${ct}`,
+    );
+  }
+
+
+  // 9. Redirects a crawler meets: the old /blog paths, the consolidated
+  //    article, and (on the real domain) the apex host.
+  for (const [path, target] of [
+    ['/blog', '/articles'],
+    ['/articles/birth-order-family-dynamics', '/articles/family-birth-order-meaning-and-impact'],
+  ] as const) {
+    const res = await get(path, BROWSER_ACCEPT);
+    const loc = res.headers.get('location') || '';
+    record(
+      `${path} redirects permanently to ${target}`,
+      [301, 308].includes(res.status) && new URL(loc, BASE).pathname === target,
+      `${res.status} → ${loc || '(no location)'}`,
+    );
+  }
+  if (new URL(BASE).hostname === 'www.niragabay.com') {
+    const res = await fetch('https://niragabay.com/about', { redirect: 'manual', headers: { 'user-agent': HEALTHCHECK_UA } });
+    const loc = res.headers.get('location') || '';
+    record(
+      'niragabay.com redirects to the www host, path kept',
+      [301, 308].includes(res.status) && loc.startsWith('https://www.niragabay.com/about'),
+      `${res.status} → ${loc || '(no location)'}`,
+    );
+  }
+
+  // 10. robots.txt per AI crawler, the sitemap and its dates, real 404s for
+  //     invalid article paths, llms.txt - the same checks /manage/geo runs.
+  for (const c of await runQuickChecks(BASE, (url, init) => fetch(url, init))) {
+    record(c.id, c.ok || c.severity === 'warn', `${c.ok ? '' : c.severity === 'warn' ? '[warn] ' : ''}${c.detail}`);
+  }
+
+  // 11. The Markdown variant of a real article, and the direct /api/md URL.
+  const sitemapRes = await get('/sitemap.xml');
+  const entries = sitemapRes.status === 200 ? parseSitemap(await sitemapRes.text()) : [];
+  const article = entries.find((e) => /\/articles\/(?!topic\/)[^/]+$/.test(new URL(e.loc).pathname));
+  if (article) {
+    const path = new URL(article.loc).pathname;
+    const res = await get(path, 'text/markdown');
+    const ct = res.headers.get('content-type') || '';
+    record(
+      `${path} with Accept: text/markdown`,
+      res.status === 200 && ct.startsWith('text/markdown') && varyHasAccept(res),
+      `${res.status} · ${ct} · Vary: ${varyOf(res) || '(none)'}`,
+    );
+  }
+  {
+    const res = await get('/api/md/about');
+    const xr = res.headers.get('x-robots-tag') || '';
+    record('direct /api/md/about is noindex (a second URL for /about)', res.status === 200 && /noindex/i.test(xr), `${res.status} · X-Robots-Tag: ${xr || '(none)'}`);
+  }
+
+  if (!QUICK && entries.length) {
+    // 12. Every sitemap page: 200, its own canonical, indexable, JSON-LD that parses.
+    const pages: Array<{ url: string; nodes: Array<Record<string, unknown>>; links: string[] }> = [];
+    const problems: string[] = [];
+    const queue = [...entries];
+    await Promise.all(
+      Array.from({ length: 4 }, async () => {
+        for (let e = queue.shift(); e; e = queue.shift()) {
+          const path = new URL(e.loc).pathname;
+          try {
+            const res = await get(path, BROWSER_ACCEPT);
+            const html = res.status === 200 ? await res.text() : '';
+            const facts = html ? parsePage(html, new URL(e.loc).origin) : null;
+            const p = pageProblems(e.loc, res.status, res.headers.get('x-robots-tag'), facts);
+            if (p.length) problems.push(`${path}: ${p.join('; ')}`);
+            if (facts) pages.push({ url: e.loc, nodes: facts.jsonLd.flatMap((j) => jsonLdNodes(j.value)), links: facts.internalLinks });
+          } catch (err) {
+            problems.push(`${path}: ${err instanceof Error ? err.message : String(err)}`);
+          }
+        }
+      }),
+    );
+    record(
+      `all ${entries.length} sitemap pages: 200, self-canonical, indexable, valid JSON-LD`,
+      problems.length === 0,
+      problems.length ? problems.slice(0, 10).join('\n      ') : `${pages.length} pages clean`,
+    );
+
+    // 13. One entity, one name: every @id names the same thing everywhere.
+    const conflicts = entityConflicts(pages.map((p) => ({ url: p.url, nodes: p.nodes })));
+    record('JSON-LD entities are consistent across pages', conflicts.length === 0, conflicts.join('\n      ') || 'no @id with two names');
+
+    // 14. Every internal link that is not itself in the sitemap.
+    const listed = new Set(entries.map((e) => new URL(e.loc).pathname));
+    const linked = [...new Set(pages.flatMap((p) => p.links))].filter(
+      (l) => !listed.has(l) && !/\.[a-z0-9]+$/i.test(l) && !l.startsWith('/api/') && !l.startsWith('/manage'),
+    );
+    const broken: string[] = [];
+    for (const l of linked) {
+      const res = await get(l, BROWSER_ACCEPT);
+      if (res.status >= 400) broken.push(`${l} → ${res.status}`);
+    }
+    record(
+      'no broken internal links',
+      broken.length === 0,
+      broken.length ? broken.join('\n      ') : `${linked.length} links outside the sitemap checked`,
     );
   }
 

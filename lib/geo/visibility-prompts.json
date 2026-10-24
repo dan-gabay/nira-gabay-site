@@ -1,0 +1,12 @@
+{
+  "_comment": "The prompts the GEO page tracks. Edit freely: add a prompt, or set active=false to stop tracking one without losing its history. ids are permanent - observations refer to them. Backlog B-49.",
+  "prompts": [
+    { "id": "cbt-mevaseret", "text": "מטפלת CBT באזור מבשרת ציון", "service": "cbt", "area": "מבשרת ציון", "active": true, "added": "2026-10-24" },
+    { "id": "psychotherapist-jerusalem", "text": "פסיכותרפיסטית מומלצת באזור ירושלים", "service": "adult-therapy", "area": "ירושלים", "active": true, "added": "2026-10-24" },
+    { "id": "parent-guidance-jerusalem", "text": "הדרכת הורים באזור ירושלים", "service": "parent-guidance", "area": "ירושלים", "active": true, "added": "2026-10-24" },
+    { "id": "adult-therapy-mevaseret", "text": "טיפול רגשי למבוגרים באזור מבשרת", "service": "adult-therapy", "area": "מבשרת ציון", "active": true, "added": "2026-10-24" },
+    { "id": "teen-therapy-jerusalem", "text": "טיפול במתבגרים באזור ירושלים", "service": "teen-therapy", "area": "ירושלים", "active": true, "added": "2026-10-24" },
+    { "id": "couples-jerusalem", "text": "מטפלת זוגית מומלצת באזור ירושלים", "service": "couples-therapy", "area": "ירושלים", "active": true, "added": "2026-10-21" },
+    { "id": "cbt-anxiety-jerusalem", "text": "טיפול CBT לחרדה בירושלים", "service": "cbt", "area": "ירושלים", "active": true, "added": "2026-10-21" }
+  ]
+}
