@@ -218,16 +218,10 @@ const pct = (v: number) => `${one(v)}%`;
 /** The two lines; "other" stays in the table, where it is there for scale. */
 const LINE_CHANNELS = CHANNEL_SERIES.filter((s) => s.key !== 'other');
 
-/** Visits with a tap, out of the channel's visits, as a percent. */
-const channelRate = (w: TrendWeek, ch: Channel) => {
-  const c = w.channels[ch];
-  return c.visits > 0 ? (c.tapped / c.visits) * 100 : null;
-};
-
 /**
- * Ads against organic search, week by week: the enquiry rate of each as its
- * own line on one axis (Dan, 2026-10-24: two lines, like the enquiry-rate
- * card), and under it the whole window per channel down to clients - the
+ * Ads against organic search, week by week: the visits of each as its
+ * own line on one axis (Dan, 2026-10-24: two lines of visits, like the
+ * enquiry-rate card), and under it the whole window per channel down to clients - the
  * comparison that says which channel brings people who become clients, not
  * only visitors.
  */
@@ -246,16 +240,16 @@ function PaidVsOrganic({ weeks, xLabel }: { weeks: TrendWeek[]; xLabel: (key: st
   const num = (n: number) => n.toLocaleString('he-IL');
 
   return (
-    <Card title="שיעור פנייה: מודעות מול אורגני" sub={`${weeks.length} שבועות`} className="md:col-span-2">
+    <Card title="ביקורים: מודעות מול אורגני" sub={`${weeks.length} שבועות`} className="md:col-span-2">
       <TrendLine
         data={weeks.map((w) => ({ day: w.week }))}
         lines={LINE_CHANNELS.map((s) => ({
           key: s.key,
           label: s.label,
           color: s.color,
-          values: weeks.map((w) => channelRate(w, s.key)),
+          values: weeks.map((w) => w.channels[s.key].visits),
         }))}
-        format={pct}
+        format={(v) => num(Math.round(v))}
         xLabel={xLabel}
         lastRunning={weeks[weeks.length - 1]?.current}
         height={200}
@@ -267,16 +261,16 @@ function PaidVsOrganic({ weeks, xLabel }: { weeks: TrendWeek[]; xLabel: (key: st
               return (
                 <div key={s.key} className="flex items-center gap-1.5 whitespace-nowrap">
                   <span className="w-2.5 h-[3px] rounded-full flex-shrink-0" style={{ background: s.color }} />
-                  {s.label}: <strong>{c.visits > 0 ? pct((c.tapped / c.visits) * 100) : '-'}</strong>
+                  {s.label}: <strong>{num(c.visits)} ביקורים</strong>
                   <span className="text-stone-400">
-                    ({c.tapped} מתוך {num(c.visits)} ביקורים)
+                    ({c.tapped > 0 ? `${c.tapped} עם לחיצה` : 'בלי לחיצות'})
                   </span>
                 </div>
               );
             })}
           </>
         )}
-        aria="שיעור הביקורים שהסתיימו בלחיצה ליצירת קשר לפי שבוע, קו למודעות וקו לחיפוש אורגני"
+        aria="ביקורים בכל שבוע, קו למודעות וקו לחיפוש אורגני"
       />
 
       <div className="mt-4 pt-4 border-t border-stone-100 overflow-x-auto">
@@ -316,9 +310,8 @@ function PaidVsOrganic({ weeks, xLabel }: { weeks: TrendWeek[]; xLabel: (key: st
         </table>
       </div>
       <Explain>
-        שיעור הפנייה כאן הוא ביקורים עם לחיצה ליצירת קשר מתוך כל הביקורים מאותו ערוץ (בכרטיס שיעור פנייה למעלה
-        נספרות הלחיצות עצמן, ולכן המספרים קצת שונים). באורגני יש בין 3 ל-16 ביקורים בשבוע, אז לחיצה אחת מקפיצה
-        את הקו בהרבה. מודעות הן ביקורים עם סימון של קמפיין גוגל. אורגני הוא ביקור שהגיע מתוצאות החיפוש הרגילות של גוגל או מנוע
+        בטבלה, &quot;ביקורים עם לחיצה&quot; הם ביקורים שהייתה בהם לפחות לחיצה אחת ליצירת קשר (בכרטיס לחיצות
+        למעלה נספרות הלחיצות עצמן, ולכן המספרים קצת שונים). מודעות הן ביקורים עם סימון של קמפיין גוגל. אורגני הוא ביקור שהגיע מתוצאות החיפוש הרגילות של גוגל או מנוע
         אחר. &quot;אחר&quot; כולל כניסה ישירה, רשתות חברתיות, כלי AI ואתרים מפנים. פנייה שנרשמה משויכת לערוץ לפי מה
         שנשמר איתה (סימון גוגל אדס, או הגעה מחיפוש). מי שראה מודעה וחזר אחר כך ישירות נספר ב&quot;אחר&quot;, ולכן
         המודעות יכולות להיות קצת יותר ממה שרואים כאן.
