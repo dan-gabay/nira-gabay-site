@@ -26,11 +26,13 @@ import { PagesTable } from '@/components/manage/analytics/PagesTable';
 import { AudienceSection } from '@/components/manage/analytics/AudienceSection';
 import { AiSection } from '@/components/manage/analytics/AiSection';
 import { VisitDepth } from '@/components/manage/analytics/VisitDepth';
+import { Trends } from '@/components/manage/analytics/Trends';
 import type { EnquiryRow, LeadOutcomes, Payload, SiteBehavior } from '@/components/manage/analytics/types';
 
 // The full analytics, read as a chain of questions:
 //
 //   1. תמונת מצב  - is it working? Four figures, what they mean, their shape.
+//      מגמות     - is it getting better? Week by week, whatever the range.
 //   2. לחיצות     - what produced the taps on contact, down to each one.
 //   3. מקורות     - which traffic is worth having.
 //   4. גוגל       - what an enquiry from the ads costs, and where organic
@@ -69,7 +71,7 @@ const RANGES = [
 type PartId = 'summary' | 'sources' | 'content' | 'audience';
 
 const PARTS: Array<{ value: PartId; label: string; sections: string[] }> = [
-  { value: 'summary', label: 'סיכום', sections: ['overview', 'enquiries'] },
+  { value: 'summary', label: 'סיכום', sections: ['overview', 'trends', 'enquiries'] },
   { value: 'sources', label: 'מקורות וגוגל', sections: ['sources', 'google'] },
   { value: 'content', label: 'תוכן', sections: ['pages', 'articles', 'ai'] },
   { value: 'audience', label: 'קהל', sections: ['audience'] },
@@ -395,6 +397,10 @@ function Dashboard({
             rangeLabel={rangeLabel}
             outcomes={outcomes}
           />
+        </Section>
+
+        <Section id="trends" title="מגמות לאורך זמן" question="האם זה משתפר משבוע לשבוע. תמיד לפי שבועות, בלי קשר לטווח שנבחר למעלה.">
+          <Trends />
         </Section>
 
         <Section id="enquiries" title="לחיצות ליצירת קשר" question="מה הביא את הלחיצות על ווטסאפ, טלפון, מייל וטופס.">

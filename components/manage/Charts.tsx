@@ -1101,3 +1101,149 @@ export function VisitsTimeline({
     </div>
   );
 }
+
+// ─────────────────────────────────────────── one ratio, week by week
+
+/**
+ * A ratio over a few buckets (a rate, pages per visit) as one line with a dot
+ * per bucket. Not columns: a ratio has no total to stack, and the question is
+ * its direction. The y axis starts at zero so a move from 1.3 to 1.4 looks as
+ * small as it is; the dots are there because twelve weeks is few enough that
+ * each one is read on its own.
+ *
+ * The last bucket may still be running. It is drawn dashed and hollow, so a
+ * week that is three days old does not read as a drop.
+ */
+export function TrendLine({
+  data,
+  color,
+  format,
+  xLabel = heDay,
+  title,
+  tooltip,
+  lastRunning = false,
+  height = 170,
+  aria,
+}: {
+  data: Array<{ day: string; value: number | null }>;
+  color: string;
+  /** The value as text, for the axis and the dot labels. */
+  format: (v: number) => string;
+  xLabel?: (key: string) => string;
+  /** The tooltip heading for a bucket. */
+  title: (i: number) => string;
+  /** Lines under it. */
+  tooltip: (i: number) => ReactNode;
+  lastRunning?: boolean;
+  height?: number;
+  aria: string;
+}) {
+  const [ref, w] = useWidth<HTMLDivElement>();
+  const [hover, setHover] = useState<number | null>(null);
+
+  const pad = { t: 18, r: 14, b: 24, l: 40 };
+  const iw = Math.max(0, w - pad.l - pad.r);
+  const ih = height - pad.t - pad.b;
+  const n = data.length;
+  const vals = data.map((d) => d.value).filter((v): v is number => v !== null);
+
+  if (n === 0 || vals.length === 0) {
+    return (
+      <div ref={ref} className="w-full">
+        <p className="text-xs md:text-sm text-stone-400 py-2">אין עדיין מספיק נתונים.</p>
+      </div>
+    );
+  }
+
+  // A round top with room above the highest dot, so the two gridlines land on
+  // readable values (1, 2 rather than 0.9, 1.8).
+  const peak = Math.max(...vals) * 1.1 || 1;
+  const mag = 10 ** Math.floor(Math.log10(peak));
+  const top = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].map((m) => m * mag).find((t) => t >= peak) ?? 10 * mag;
+  const x = (i: number) => (n <= 1 ? iw / 2 : (i / (n - 1)) * iw);
+  const y = (v: number) => ih - (v / top) * ih;
+  const ticks = [0, top / 2, top];
+  const every = n <= 8 ? 1 : Math.max(1, Math.ceil(n / (w < 420 ? 4 : 7)));
+
+  const pts = data.map((d, i) => ({ v: d.value, i })).filter((p): p is { v: number; i: number } => p.v !== null);
+  const running = (i: number) => lastRunning && i === n - 1;
+  const line = (list: typeof pts) => list.map((p, j) => `${j ? 'L' : 'M'}${x(p.i).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ');
+  const done = pts.filter((p) => !running(p.i));
+  const tail = lastRunning && pts.length > 1 && pts[pts.length - 1].i === n - 1 ? pts.slice(-2) : [];
+
+  const onMove = (e: PointerEvent<SVGSVGElement>) => {
+    const box = e.currentTarget.getBoundingClientRect();
+    const px = e.clientX - box.left - pad.l;
+    const i = n <= 1 ? 0 : Math.round((px / iw) * (n - 1));
+    setHover(Math.min(n - 1, Math.max(0, i)));
+  };
+
+  return (
+    <div ref={ref} className="w-full">
+      <div className="relative">
+        {w > 0 && (
+          <svg
+            width={w}
+            height={height}
+            role="img"
+            aria-label={aria}
+            onPointerMove={onMove}
+            onPointerDown={onMove}
+            onPointerLeave={() => setHover(null)}
+            style={{ touchAction: 'pan-y' }}
+          >
+            <g transform={`translate(${pad.l},${pad.t})`}>
+              {ticks.map((t) => (
+                <g key={t}>
+                  <line x1={0} x2={iw} y1={y(t)} y2={y(t)} stroke={GRID} strokeWidth={1} />
+                  <text x={-8} y={y(t)} dy="0.32em" textAnchor="end" fontSize={10} fill={MUTED}>
+                    {format(t)}
+                  </text>
+                </g>
+              ))}
+
+              {data.map((d, i) =>
+                i % every === 0 || i === n - 1 ? (
+                  <text key={d.day} x={x(i)} y={ih + 17} textAnchor="middle" fontSize={10} fill={MUTED}>
+                    {xLabel(d.day)}
+                  </text>
+                ) : null,
+              )}
+
+              {hover !== null && (
+                <line x1={x(hover)} x2={x(hover)} y1={0} y2={ih} stroke={MUTED} strokeWidth={1} strokeDasharray="3 3" />
+              )}
+
+              {done.length > 1 && (
+                <path d={line(done)} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+              )}
+              {tail.length > 1 && <path d={line(tail)} fill="none" stroke={color} strokeWidth={2} strokeDasharray="3 4" />}
+
+              {pts.map((p) => (
+                <circle
+                  key={p.i}
+                  cx={x(p.i)}
+                  cy={y(p.v)}
+                  r={hover === p.i ? 5 : 3.5}
+                  fill={running(p.i) ? '#fff' : color}
+                  stroke={running(p.i) ? color : '#fff'}
+                  strokeWidth={running(p.i) ? 2 : 1.5}
+                />
+              ))}
+            </g>
+          </svg>
+        )}
+
+        {hover !== null && data[hover] && (
+          <div
+            className="pointer-events-none absolute top-0 bg-white border border-stone-200 rounded-lg shadow-sm px-2.5 py-1.5 text-[11px] leading-relaxed"
+            style={{ left: Math.min(Math.max(0, x(hover) + pad.l - 60), Math.max(0, w - 190)), color: INK }}
+          >
+            <div className="font-semibold text-stone-800">{title(hover)}</div>
+            {tooltip(hover)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
