@@ -1116,7 +1116,8 @@ export function VisitsTimeline({
  */
 export function TrendLine({
   data,
-  color,
+  color = SERIES.primary,
+  lines,
   format,
   xLabel = heDay,
   title,
@@ -1125,8 +1126,12 @@ export function TrendLine({
   height = 170,
   aria,
 }: {
-  data: Array<{ day: string; value: number | null }>;
-  color: string;
+  /** The buckets; `value` is the line when there is only one. */
+  data: Array<{ day: string; value?: number | null }>;
+  color?: string;
+  /** Two or more lines on one axis instead of `value`, each with a legend
+   *  entry: the same ratio for parts of the whole (ads, organic). */
+  lines?: Array<{ key: string; label: string; color: string; values: Array<number | null> }>;
   /** The value as text, for the axis and the dot labels. */
   format: (v: number) => string;
   xLabel?: (key: string) => string;
@@ -1145,7 +1150,8 @@ export function TrendLine({
   const iw = Math.max(0, w - pad.l - pad.r);
   const ih = height - pad.t - pad.b;
   const n = data.length;
-  const vals = data.map((d) => d.value).filter((v): v is number => v !== null);
+  const series = lines ?? [{ key: 'value', label: '', color, values: data.map((d) => d.value ?? null) }];
+  const vals = series.flatMap((s) => s.values).filter((v): v is number => v !== null && v !== undefined);
 
   if (n === 0 || vals.length === 0) {
     return (
@@ -1165,11 +1171,18 @@ export function TrendLine({
   const ticks = [0, top / 2, top];
   const every = n <= 8 ? 1 : Math.max(1, Math.ceil(n / (w < 420 ? 4 : 7)));
 
-  const pts = data.map((d, i) => ({ v: d.value, i })).filter((p): p is { v: number; i: number } => p.v !== null);
+  type Pt = { v: number; i: number };
   const running = (i: number) => lastRunning && i === n - 1;
-  const line = (list: typeof pts) => list.map((p, j) => `${j ? 'L' : 'M'}${x(p.i).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ');
-  const done = pts.filter((p) => !running(p.i));
-  const tail = lastRunning && pts.length > 1 && pts[pts.length - 1].i === n - 1 ? pts.slice(-2) : [];
+  const line = (list: Pt[]) => list.map((p, j) => `${j ? 'L' : 'M'}${x(p.i).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ');
+  const drawn = series.map((s) => {
+    const pts = s.values.map((v, i) => ({ v, i })).filter((p): p is Pt => p.v !== null && p.v !== undefined);
+    return {
+      ...s,
+      pts,
+      done: pts.filter((p) => !running(p.i)),
+      tail: lastRunning && pts.length > 1 && pts[pts.length - 1].i === n - 1 ? pts.slice(-2) : [],
+    };
+  });
 
   const onMove = (e: PointerEvent<SVGSVGElement>) => {
     const box = e.currentTarget.getBoundingClientRect();
@@ -1178,8 +1191,20 @@ export function TrendLine({
     setHover(Math.min(n - 1, Math.max(0, i)));
   };
 
+  // The svg is LTR: in the RTL page a "0%" tick anchored at its end was laid
+  // out from the other side and ran under the first dot.
   return (
     <div ref={ref} className="w-full">
+      {series.length > 1 && (
+        <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2 text-[11px] md:text-xs" style={{ color: INK }}>
+          {series.map((s) => (
+            <span key={s.key} className="inline-flex items-center gap-1.5">
+              <span className="w-3 h-[3px] rounded-full flex-shrink-0" style={{ background: s.color }} />
+              {s.label}
+            </span>
+          ))}
+        </div>
+      )}
       <div className="relative">
         {w > 0 && (
           <svg
@@ -1190,7 +1215,7 @@ export function TrendLine({
             onPointerMove={onMove}
             onPointerDown={onMove}
             onPointerLeave={() => setHover(null)}
-            style={{ touchAction: 'pan-y' }}
+            style={{ touchAction: 'pan-y', direction: 'ltr' }}
           >
             <g transform={`translate(${pad.l},${pad.t})`}>
               {ticks.map((t) => (
@@ -1214,21 +1239,26 @@ export function TrendLine({
                 <line x1={x(hover)} x2={x(hover)} y1={0} y2={ih} stroke={MUTED} strokeWidth={1} strokeDasharray="3 3" />
               )}
 
-              {done.length > 1 && (
-                <path d={line(done)} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-              )}
-              {tail.length > 1 && <path d={line(tail)} fill="none" stroke={color} strokeWidth={2} strokeDasharray="3 4" />}
-
-              {pts.map((p) => (
-                <circle
-                  key={p.i}
-                  cx={x(p.i)}
-                  cy={y(p.v)}
-                  r={hover === p.i ? 5 : 3.5}
-                  fill={running(p.i) ? '#fff' : color}
-                  stroke={running(p.i) ? color : '#fff'}
-                  strokeWidth={running(p.i) ? 2 : 1.5}
-                />
+              {drawn.map((s) => (
+                <g key={s.key}>
+                  {s.done.length > 1 && (
+                    <path d={line(s.done)} fill="none" stroke={s.color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+                  )}
+                  {s.tail.length > 1 && (
+                    <path d={line(s.tail)} fill="none" stroke={s.color} strokeWidth={2} strokeDasharray="3 4" />
+                  )}
+                  {s.pts.map((p) => (
+                    <circle
+                      key={p.i}
+                      cx={x(p.i)}
+                      cy={y(p.v)}
+                      r={hover === p.i ? 5 : 3.5}
+                      fill={running(p.i) ? '#fff' : s.color}
+                      stroke={running(p.i) ? s.color : '#fff'}
+                      strokeWidth={running(p.i) ? 2 : 1.5}
+                    />
+                  ))}
+                </g>
               ))}
             </g>
           </svg>
