@@ -2,7 +2,7 @@ import { NextRequest, NextResponse, type NextFetchEvent } from 'next/server';
 import { MANAGE_COOKIE, manageCookieOptions, manageSessionToken } from '@/lib/manageAuth';
 import { prefersMarkdown } from '@/lib/agent/accept';
 import { VARY_VALUE } from '@/lib/agent/vary';
-import { botKindFromUserAgent } from '@/lib/botDetect';
+import { botAgentFromUserAgent, botKindFromUserAgent } from '@/lib/botDetect';
 import { recordBotHit } from '@/lib/botLog';
 
 // Three jobs, in this order: note down an automated request, keep the admin
@@ -162,7 +162,9 @@ export default async function proxy(req: NextRequest, event: NextFetchEvent) {
   // and recordBotHit swallows its own failures so a database that is down
   // cannot take the site with it.
   const kind = botHitKind(req);
-  if (kind) event.waitUntil(recordBotHit(kind, pathname));
+  if (kind) {
+    event.waitUntil(recordBotHit(kind, pathname, botAgentFromUserAgent(req.headers.get('user-agent'))));
+  }
 
   if (pathname === '/manage' || pathname.startsWith('/manage/') || pathname.startsWith('/api/manage/')) {
     return gateManage(req);

@@ -110,7 +110,7 @@ const FAMILIES: Array<{ kind: BotKind; patterns: RegExp }> = [
   },
   {
     kind: 'monitor',
-    patterns: /uptimerobot|pingdom|statuscake|betteruptime|site24x7|newrelicpinger|datadog|gtmetrix|lighthouse|pagespeed|chrome-lighthouse|vercel-(screenshot|favicon|og)/i,
+    patterns: /niragabay-healthcheck|uptimerobot|pingdom|statuscake|betteruptime|site24x7|newrelicpinger|datadog|gtmetrix|lighthouse|pagespeed|chrome-lighthouse|vercel-(screenshot|favicon|og)/i,
   },
   {
     // Anything that says what it is. Deliberately last, so a named family above
@@ -151,3 +151,64 @@ export const BOT_KIND_LABELS: Record<StoredBotKind, string> = {
   monitor: 'ניטור וביצועים',
   other: 'בוט אחר',
 };
+
+// ─────────────────────────────────────────── which agent, by name
+
+// The kind answers "what was it for". This answers "whose was it", for the
+// AI and search families only: GPTBot and OAI-SearchBot are both ai_crawler,
+// and only the second one puts the site into ChatGPT's search results. Telling
+// them apart is the difference between "OpenAI is training on the site" and
+// "ChatGPT can cite it".
+//
+// PRIVACY. What comes back is one of the fixed product tokens below, never a
+// slice of the user agent: a string that does not match an entry returns null
+// and nothing about it survives. Each token names a company's crawler, the
+// same for every request it makes, so it identifies nobody. Browsers, preview
+// fetchers and scripts get null - their user agents are the ones that carry
+// device and version detail, and there is nothing worth naming in them.
+//
+// Ordered like FAMILIES: first match wins, so the user-initiated fetchers come
+// before the crawlers whose names they contain.
+const AGENTS: Array<[name: string, pattern: RegExp]> = [
+  ['ChatGPT-User', /chatgpt-user/i],
+  ['OAI-SearchBot', /oai-searchbot/i],
+  ['GPTBot', /gptbot/i],
+  ['Perplexity-User', /perplexity-user/i],
+  ['PerplexityBot', /perplexitybot/i],
+  ['Claude-User', /claude-user|claude-web/i],
+  ['Claude-SearchBot', /claude-searchbot/i],
+  ['ClaudeBot', /claudebot|anthropic-ai/i],
+  ['Google-Extended', /google-extended/i],
+  ['Googlebot', /googlebot|google-inspectiontool|storebot-google/i],
+  ['Bingbot', /bingbot/i],
+  ['DuckAssistBot', /duckassistbot/i],
+  ['DuckDuckBot', /duckduckbot/i],
+  ['Applebot-Extended', /applebot-extended/i],
+  ['Applebot', /applebot/i],
+  ['Meta-ExternalFetcher', /meta-externalfetcher/i],
+  ['Meta-ExternalAgent', /meta-externalagent/i],
+  ['MistralAI-User', /mistralai-user/i],
+  ['Amazonbot', /amazonbot/i],
+  ['Bytespider', /bytespider/i],
+  ['CCBot', /ccbot/i],
+  ['YandexBot', /yandex(bot|images)/i],
+];
+
+/** Families worth naming. Everything else stays a kind and nothing more. */
+const NAMED_KINDS: ReadonlySet<BotKind> = new Set(['ai_answer', 'ai_crawler', 'search']);
+
+/**
+ * The crawler's published product token (e.g. 'OAI-SearchBot'), or null.
+ * Never returns any part of the user agent other than a token from AGENTS.
+ */
+export function botAgentFromUserAgent(ua: string | null | undefined): string | null {
+  const kind = botKindFromUserAgent(ua);
+  if (!kind || !NAMED_KINDS.has(kind) || !ua) return null;
+  for (const [name, pattern] of AGENTS) {
+    if (pattern.test(ua)) return name;
+  }
+  return null;
+}
+
+/** Every value botAgentFromUserAgent can return - the column's whole domain. */
+export const BOT_AGENT_NAMES: readonly string[] = AGENTS.map(([name]) => name);

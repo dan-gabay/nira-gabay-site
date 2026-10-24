@@ -15,6 +15,13 @@
 // null for a browser and the caller skips the write entirely. No IP, no user
 // agent, no session id, no referrer - only the bucket and the path, which is
 // the same bargain site_events.bot_kind already makes.
+//
+// The agent name (lib/botDetect.ts botAgentFromUserAgent: 'OAI-SearchBot',
+// 'GPTBot', ...) goes in its own column, bot_agent, which does not exist until
+// db/2026-10-24-bot-hits-agent.sql has run. PostgREST rejects an insert that
+// names an unknown column, so sending it early would lose every row. It is
+// therefore off until BOT_HITS_AGENT=1 is set in the environment, which is
+// the deploy step that follows the migration.
 
 /**
  * Inserts one row into public.bot_hits. Never throws and never blocks: the
@@ -24,7 +31,7 @@
  * Uses plain fetch against PostgREST rather than @supabase/supabase-js, to
  * keep the edge bundle small - this runs on every single request.
  */
-export async function recordBotHit(kind: string, path: string): Promise<void> {
+export async function recordBotHit(kind: string, path: string, agent?: string | null): Promise<void> {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return;
@@ -41,9 +48,21 @@ export async function recordBotHit(kind: string, path: string): Promise<void> {
       },
       // `path` is truncated because a malformed or hostile URL is still a URL
       // and there is no reason to store an arbitrarily long one.
-      body: JSON.stringify({ bot_kind: kind, path: path.slice(0, 512) }),
+      body: JSON.stringify(botHitRow(kind, path, agent)),
     });
   } catch {
     // A log line is never worth breaking a page for.
   }
+}
+
+/** The row recordBotHit sends. Exported for the tests. */
+export function botHitRow(
+  kind: string,
+  path: string,
+  agent?: string | null,
+  agentColumn = process.env.BOT_HITS_AGENT === '1',
+): Record<string, string> {
+  const row: Record<string, string> = { bot_kind: kind, path: path.slice(0, 512) };
+  if (agentColumn && agent) row.bot_agent = agent.slice(0, 40);
+  return row;
 }

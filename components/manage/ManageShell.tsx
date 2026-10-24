@@ -49,7 +49,7 @@ const NAV: ReadonlyArray<{
     badge: (s) => s.drafts + s.pendingComments,
     also: ['/manage/comments', '/manage/tags'],
   },
-  { href: '/manage/analytics', label: 'נתונים', icon: BarChart3, badge: () => 0 },
+  { href: '/manage/analytics', label: 'נתונים', icon: BarChart3, badge: () => 0, also: ['/manage/geo'] },
 ];
 
 function Badge({ n, small = false }: { n: number; small?: boolean }) {
