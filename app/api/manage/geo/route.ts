@@ -13,7 +13,7 @@ export const runtime = 'nodejs';
 // Never cached: the page is a live read, and it sits behind the admin gate.
 export const dynamic = 'force-dynamic';
 
-// The GEO page (/manage/geo) in one call: crawl activity from bot_hits, AI
+// The GEO section (/manage/analytics, folded under מקורות) in one call: crawl activity from bot_hits, AI
 // referral visits from manage_analytics, the prompt observations from the
 // repo, and a quick live check of what the site serves to crawlers.
 //

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { AiFetchBars, AI_ANSWER_COLOR, AI_SERIES, alignToBuckets } from '@/components/manage/Charts';
 import { BarList, Card, CardPart, Empty, Explain, ShowMore, Stat, StatGrid, SubHead, type BarRow } from './ui';
 import { heDate } from './Overview';
@@ -127,9 +126,17 @@ export function AiSection({
       </CardPart>
 
       <p className="mt-3 text-[12px] md:text-[13px]">
-        <Link href="/manage/geo" className="text-stone-700 underline underline-offset-2 hover:text-stone-900">
-          לניטור המלא: שבוע אחרי שבוע, סריקה אחרונה לכל עמוד, נראות בתשובות AI ובריאות טכנית
-        </Link>
+        <a
+          href="#geo"
+          onClick={() => {
+            // The section is folded: open it, then the anchor scrolls to it.
+            const geo = document.getElementById('geo');
+            if (geo instanceof HTMLDetailsElement) geo.open = true;
+          }}
+          className="text-stone-700 underline underline-offset-2 hover:text-stone-900"
+        >
+          לניטור המלא (בתוך מקורות): שבוע אחרי שבוע, סריקה אחרונה לכל עמוד, נראות בתשובות AI ובריאות טכנית
+        </a>
       </p>
 
       <Explain>

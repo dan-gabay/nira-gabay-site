@@ -17,7 +17,7 @@
  * every sitemap page's status / canonical / indexing / JSON-LD, entity
  * consistency across pages, every internal link, and real 404s for invalid
  * article paths. --quick skips the per-page crawl (9-14 then run only the
- * checks /manage/geo runs live). The rules live in lib/geo/siteChecks.ts.
+ * checks the GEO section on /manage/analytics runs live). The rules live in lib/geo/siteChecks.ts.
  *
  * Read-only: GET and HEAD, identified as niragabay-healthcheck so the requests
  * are labelled 'monitor' in bot_hits and not counted as crawls.
@@ -218,7 +218,7 @@ async function main() {
   }
 
   // 10. robots.txt per AI crawler, the sitemap and its dates, real 404s for
-  //     invalid article paths, llms.txt - the same checks /manage/geo runs.
+  //     invalid article paths, llms.txt - the same checks the GEO section runs.
   for (const c of await runQuickChecks(BASE, (url, init) => fetch(url, init))) {
     record(c.id, c.ok || c.severity === 'warn', `${c.ok ? '' : c.severity === 'warn' ? '[warn] ' : ''}${c.detail}`);
   }
