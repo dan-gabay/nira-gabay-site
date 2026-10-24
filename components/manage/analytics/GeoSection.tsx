@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import PageHeader from '@/components/manage/PageHeader';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { AiFetchBars, AI_ANSWER_COLOR, AI_SERIES } from '@/components/manage/Charts';
-import { BarList, Card, CardPart, Empty, Explain, Note, Section, Segmented, Stat, StatGrid, SubHead, type BarRow } from '@/components/manage/analytics/ui';
+import { BarList, CardPart, Empty, Explain, Note, Segmented, Stat, StatGrid, SubHead, type BarRow } from '@/components/manage/analytics/ui';
 import { heDate } from '@/components/manage/analytics/Overview';
 import { pageName } from '@/components/manage/analytics/labels';
 import type { CrawlReport, GeoKind, InvalidRow } from '@/lib/geo/crawl';
@@ -12,21 +11,21 @@ import type { Cell, VisibilityReport } from '@/lib/geo/visibility';
 import type { SiteCheck } from '@/lib/geo/siteChecks';
 
 // GEO: is the site readable by AI tools, do they read it, and does Nira come
-// up when someone asks one for a therapist. One page, four questions, each
-// with the evidence that answers it and nothing that only looks like it:
+// up when someone asks one for a therapist. A folded section under מקורות on
+// /manage/analytics (Dan, 24 Oct: not a page of its own), loaded from
+// /api/manage/geo only when it is first opened - the route reads every
+// bot_hits row in the range and fetches the live site, which the rest of the
+// analytics page should not wait for.
 //
 //   סריקות          - requests from AI crawlers and search engines (bot_hits).
 //                     A request is not a reader, an impression or a
-//                     recommendation; the page never calls it one.
+//                     recommendation; the section never calls it one.
 //   פתיחות בתשובה   - an assistant fetching a page mid-conversation. The only
 //                     server-side sign that a person was on the other end.
 //   הפניות          - visits that arrived from an AI tool (site_events).
 //   נראות בתשובות   - observed answers to fixed prompts, from the repo file
 //                     lib/geo/visibility-observations.json. Never measured is
 //                     shown as never measured.
-//
-// Built from the same parts as /manage/analytics (components/manage/analytics/ui)
-// and behind the same /manage gate (proxy.ts).
 
 type GeoPayload = {
   generatedAt: string;
@@ -82,11 +81,33 @@ const heWhen = (iso: string | null) => {
 
 const daysAgo = (iso: string | null) => (iso ? Math.floor((Date.now() - Date.parse(iso)) / 86_400_000) : null);
 
-export default function GeoPage() {
+/** One question of the section, under its own heading. */
+function Block({ title, question, children }: { title: string; question: string; children: ReactNode }) {
+  return (
+    <section className="pt-5 mt-5 border-t border-stone-200 first:mt-0 first:pt-0 first:border-t-0 min-w-0">
+      <h3 className="text-[13px] md:text-sm font-semibold text-stone-800">{title}</h3>
+      <p className="text-[11px] md:text-xs text-stone-400 mt-0.5 mb-3">{question}</p>
+      {children}
+    </section>
+  );
+}
+
+export default function GeoSection() {
+  const ref = useRef<HTMLDetailsElement>(null);
+  const [opened, setOpened] = useState(false);
   const [range, setRange] = useState(56);
   const [state, setState] = useState<{ range: number; data: GeoPayload | null; error: boolean } | null>(null);
 
+  // The link from the AI section lands on #geo: open it there.
   useEffect(() => {
+    if (window.location.hash === '#geo' && ref.current) {
+      ref.current.open = true;
+      ref.current.scrollIntoView();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!opened) return;
     let cancelled = false;
     fetch(`/api/manage/geo?range=${range}`)
       .then(async (r) => {
@@ -98,55 +119,49 @@ export default function GeoPage() {
     return () => {
       cancelled = true;
     };
-  }, [range]);
+  }, [opened, range]);
 
   const loading = state?.range !== range;
   const data = state?.data ?? null;
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <PageHeader
-        title="נראות במנועי AI"
-        sub={
-          <>
-            האם כלים כמו ChatGPT, Perplexity, Gemini ו-Google AI קוראים את האתר, ומזכירים את נירה.{' '}
-            <Link href="/manage/analytics#ai" className="underline underline-offset-2 hover:text-stone-700">
-              חזרה לנתונים
-            </Link>
-          </>
-        }
-      />
-
-      <div className="mb-5 max-w-md">
-        <Segmented options={RANGES} value={range} onChange={setRange} label="טווח" />
-      </div>
-
-      {state?.error && !loading && (
-        <Card>
-          <Empty>לא הצלחתי לטעון את הנתונים. נסו לרענן.</Empty>
-        </Card>
-      )}
-      {!data && !state?.error && (
-        <Card>
-          <Empty>טוען...</Empty>
-        </Card>
-      )}
-
-      {data && (
-        <div className={`space-y-8 md:space-y-10 transition-opacity ${loading ? 'opacity-50' : ''}`}>
-          <Summary data={data} />
-          <CrawlSection data={data} />
-          <PagesSection data={data} />
-          <ReferralsSection data={data} />
-          <VisibilitySection report={data.visibility} />
-          <HealthSection data={data} />
-          <p className="text-[11px] text-stone-400">
-            עודכן {heWhen(data.generatedAt)} · {data.rowsRead.toLocaleString('he-IL')} רשומות סריקה נקראו
-            {data.truncated && ' (הטווח נחתך - יותר מדי רשומות)'}
-          </p>
+    <details
+      ref={ref}
+      id="geo"
+      onToggle={(e) => e.currentTarget.open && setOpened(true)}
+      className="group bg-white rounded-2xl border border-stone-200 min-w-0 scroll-mt-24"
+    >
+      <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer select-none flex items-center justify-between gap-3 p-4 md:p-5 min-h-[44px]">
+        <span className="min-w-0">
+          <span className="block text-[13px] md:text-sm font-semibold text-stone-800">נראות במנועי AI</span>
+          <span className="block text-[11px] text-stone-400 mt-0.5">
+            סריקות, עמודים שנקראו, המלצות, אזכור בתשובות ובריאות טכנית
+          </span>
+        </span>
+        <ChevronDown className="w-5 h-5 flex-shrink-0 text-stone-400 transition-transform group-open:rotate-180" aria-hidden="true" />
+      </summary>
+      <div className="px-4 pb-4 md:px-5 md:pb-5 border-t border-stone-100 pt-4">
+        <div className="mb-5 max-w-md">
+          <Segmented options={RANGES} value={range} onChange={setRange} label="טווח" />
         </div>
-      )}
-    </div>
+        {state?.error && !loading && <Empty>לא הצלחתי לטעון את הנתונים. נסו לרענן.</Empty>}
+        {!data && !state?.error && <Empty>טוען...</Empty>}
+        {data && (
+          <div className={`transition-opacity ${loading ? 'opacity-50' : ''}`}>
+            <Summary data={data} />
+            <CrawlSection data={data} />
+            <PagesSection data={data} />
+            <ReferralsSection data={data} />
+            <VisibilitySection report={data.visibility} />
+            <HealthSection data={data} />
+            <p className="mt-5 text-[11px] text-stone-400">
+              עודכן {heWhen(data.generatedAt)} · {data.rowsRead.toLocaleString('he-IL')} רשומות סריקה נקראו
+              {data.truncated && ' (הטווח נחתך - יותר מדי רשומות)'}
+            </p>
+          </div>
+        )}
+      </div>
+    </details>
   );
 }
 
@@ -158,8 +173,8 @@ function Summary({ data }: { data: GeoPayload }) {
   const aiVisits = data.referrals.daily.reduce((a, d) => a + d.visits, 0);
   const failing = data.checks.filter((c) => !c.ok && c.severity === 'fail').length;
   return (
-    <Section id="summary" title="תמונת מצב" question={`${data.rangeDays} הימים האחרונים, ומצב הנראות בבדיקה האחרונה.`}>
-      <Card>
+    <Block title="תמונת מצב" question={`${data.rangeDays} הימים האחרונים, ומצב הנראות בבדיקה האחרונה.`}>
+      <>
         <StatGrid>
           <Stat label="סריקות של כלי AI" value={t.ai_crawler} sub={`נסרק לאחרונה ${heWhen(data.crawl.lastSeen.ai_crawler)}`} color={AI_SERIES[0].color} />
           <Stat
@@ -177,7 +192,7 @@ function Summary({ data }: { data: GeoPayload }) {
         </StatGrid>
         {failing > 0 && (
           <Note>
-            <span className="text-red-700 font-medium">{failing} בדיקות טכניות נכשלו</span> - פירוט בסוף העמוד.
+            <span className="text-red-700 font-medium">{failing} בדיקות טכניות נכשלו</span> - פירוט בסוף הסקשן.
           </Note>
         )}
         <Explain>
@@ -186,8 +201,8 @@ function Summary({ data }: { data: GeoPayload }) {
           הוא אדם שלחץ על קישור בתשובה; כלים שלא שולחים מקור הפניה נספרים כישירים, כך שזה מינימום. האזכור בתשובות מבוסס רק
           על תצפיות אמיתיות, ולכל כלי שלא נבדק כתוב שלא נמדד.
         </Explain>
-      </Card>
-    </Section>
+      </>
+    </Block>
   );
 }
 
@@ -197,8 +212,8 @@ function CrawlSection({ data }: { data: GeoPayload }) {
   const c = data.crawl;
   const daily = c.daily.map((d) => ({ day: d.day, crawler: d.ai_crawler, answer: d.ai_answer, search: d.search }));
   return (
-    <Section id="crawl" title="סריקות לאורך זמן" question="כמה פעמים כלי AI ומנועי חיפוש קראו את האתר, ומתי היה חריג.">
-      <Card>
+    <Block title="סריקות לאורך זמן" question="כמה פעמים כלי AI ומנועי חיפוש קראו את האתר, ומתי היה חריג.">
+      <>
         <AiFetchBars data={daily} granularity="day" />
         <CardPart>
           <SubHead title="שבוע אחרי שבוע" aside="ראשון עד שבת" />
@@ -207,15 +222,15 @@ function CrawlSection({ data }: { data: GeoPayload }) {
               <thead>
                 <tr className="text-stone-400 text-start">
                   <th className="font-normal text-start px-1 py-1">שבוע</th>
-                  <th className="font-normal text-end px-1">סריקות AI</th>
-                  <th className="font-normal text-end px-1">פתיחות בתשובה</th>
-                  <th className="font-normal text-end px-1">מנועי חיפוש</th>
+                  <th className="font-normal text-end px-1 whitespace-nowrap">סריקות AI</th>
+                  <th className="font-normal text-end px-1 whitespace-nowrap">בתשובה</th>
+                  <th className="font-normal text-end px-1 whitespace-nowrap">חיפוש</th>
                 </tr>
               </thead>
               <tbody>
                 {[...c.weekly].reverse().map((w) => (
                   <tr key={w.week} className="border-t border-stone-100 text-stone-700">
-                    <td className="px-1 py-1.5">
+                    <td className="px-1 py-1.5 whitespace-nowrap">
                       {heDate(w.week)}
                       {(w.current || w.days < 7) && <span className="text-stone-400"> ({w.days} ימים)</span>}
                     </td>
@@ -263,8 +278,8 @@ function CrawlSection({ data }: { data: GeoPayload }) {
             />
           )}
         </CardPart>
-      </Card>
-    </Section>
+      </>
+    </Block>
   );
 }
 
@@ -280,39 +295,30 @@ function PagesSection({ data }: { data: GeoPayload }) {
   const rows = [...data.crawl.pages].sort((a, b) => b.counts.ai_crawler - a.counts.ai_crawler);
   const shown = all ? rows : rows.slice(0, 12);
   return (
-    <Section id="pages" title="אילו עמודים נקראים" question="מה נסרק הכי הרבה, ומתי כל עמוד נקרא לאחרונה.">
-      <Card>
+    <Block title="אילו עמודים נקראים" question="מה נסרק הכי הרבה, ומתי כל עמוד נקרא לאחרונה.">
+      <>
         <SubHead title="נפתחו תוך כדי תשובה" aside="פתיחות" />
         <BarList rows={answered} color={AI_ANSWER_COLOR} empty="אף עמוד לא נפתח תוך כדי תשובה בטווח הזה." />
         <CardPart>
           <SubHead title="הכי נסרקים" aside="סריקה אחרונה" />
-          <div className="overflow-x-auto -mx-1">
-            <table className="w-full text-[12px] md:text-[13px] tabular-nums">
-              <thead>
-                <tr className="text-stone-400">
-                  <th className="font-normal text-start px-1 py-1">עמוד</th>
-                  <th className="font-normal text-end px-1">AI</th>
-                  <th className="font-normal text-end px-1">חיפוש</th>
-                  <th className="font-normal text-end px-1 whitespace-nowrap">AI לאחרונה</th>
-                  <th className="font-normal text-end px-1 whitespace-nowrap">חיפוש לאחרונה</th>
-                </tr>
-              </thead>
-              <tbody>
-                {shown.map((p) => (
-                  <tr key={p.path} className="border-t border-stone-100 text-stone-700">
-                    <td className="px-1 py-1.5 max-w-[14rem] truncate" title={p.path}>
-                      {name(p.path)}
-                      {p.status !== 'listed' && <span className="text-stone-400"> · לא במפת האתר</span>}
-                    </td>
-                    <td className="text-end px-1">{p.counts.ai_crawler.toLocaleString('he-IL')}</td>
-                    <td className="text-end px-1">{p.counts.search}</td>
-                    <td className="text-end px-1 whitespace-nowrap">{heWhen(p.last.ai_crawler)}</td>
-                    <td className="text-end px-1 whitespace-nowrap">{heWhen(p.last.search)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ul className="divide-y divide-stone-100 text-[12px] md:text-[13px]">
+            {shown.map((p) => (
+              <li key={p.path} className="py-2 min-w-0">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-stone-800 truncate min-w-0" title={p.path}>
+                    {name(p.path)}
+                    {p.status !== 'listed' && <span className="text-stone-400"> · לא במפת האתר</span>}
+                  </span>
+                  <span className="text-stone-700 tabular-nums whitespace-nowrap flex-shrink-0">
+                    AI {p.counts.ai_crawler.toLocaleString('he-IL')} · חיפוש {p.counts.search.toLocaleString('he-IL')}
+                  </span>
+                </div>
+                <div className="text-[11px] text-stone-400 tabular-nums mt-0.5">
+                  AI לאחרונה {heWhen(p.last.ai_crawler)} · חיפוש לאחרונה {heWhen(p.last.search)}
+                </div>
+              </li>
+            ))}
+          </ul>
           {rows.length > 12 && (
             <button type="button" onClick={() => setAll((v) => !v)} className="mt-2 text-[12px] text-stone-500 underline min-h-[32px]">
               {all ? 'פחות' : `הצג את כל ${rows.length} העמודים`}
@@ -331,8 +337,8 @@ function PagesSection({ data }: { data: GeoPayload }) {
             </ul>
           )}
         </CardPart>
-      </Card>
-    </Section>
+      </>
+    </Block>
   );
 }
 
@@ -343,8 +349,8 @@ function ReferralsSection({ data }: { data: GeoPayload }) {
   const total = r.daily.reduce((a, d) => a + d.visits, 0);
   const conv = r.daily.reduce((a, d) => a + d.conversions, 0);
   return (
-    <Section id="referrals" title="ביקורים מהמלצת AI" question="אנשים שהגיעו לאתר מקישור בתשובה של כלי AI.">
-      <Card>
+    <Block title="ביקורים מהמלצת AI" question="אנשים שהגיעו לאתר מקישור בתשובה של כלי AI.">
+      <>
         {r.error ? (
           <Empty>לא הצלחתי לטעון את נתוני הביקורים.</Empty>
         ) : total === 0 ? (
@@ -369,8 +375,8 @@ function ReferralsSection({ data }: { data: GeoPayload }) {
           כזה. Google AI Overviews נספרים כחיפוש אורגני, כי גוגל שולחת את אותו מקור הפניה. אפליקציות שלא שולחות מקור נספרות
           כישירות, ולכן זה מינימום ולא סך הכל.
         </Explain>
-      </Card>
-    </Section>
+      </>
+    </Block>
   );
 }
 
@@ -393,12 +399,10 @@ function VisibilitySection({ report }: { report: VisibilityReport }) {
   const opened = open ? report.cells.find((c) => `${c.prompt_id}|${c.provider}` === open) : null;
 
   return (
-    <Section
-      id="visibility"
-      title="נראות בתשובות AI"
+    <Block title="נראות בתשובות AI"
       question="כשמישהו שואל כלי AI על מטפלת באזור, האם נירה מוזכרת - לפי תצפיות אמיתיות בלבד."
     >
-      <Card>
+      <>
         <p className="text-[12px] md:text-[13px] text-stone-600 mb-3">
           נמדדו {report.measuredPairs} מתוך {report.totalPairs} צירופים של שאילתה וכלי.
           {report.lastObserved && <> בדיקה אחרונה: {heDate(report.lastObserved)}.</>}
@@ -510,8 +514,8 @@ function VisibilitySection({ report }: { report: VisibilityReport }) {
           לא נחשבת כתוצאה של ChatGPT או של חיפוש: אין בה שלב חיפוש, מיקום או מקורות. התשובות משתנות בין בדיקות ובין משתמשים,
           ולכן תצפית אחת היא סימן ולא דירוג. השאילתות נמצאות ב-lib/geo/visibility-prompts.json והתצפיות ב-visibility-observations.json.
         </Explain>
-      </Card>
-    </Section>
+      </>
+    </Block>
   );
 }
 
@@ -522,8 +526,8 @@ function HealthSection({ data }: { data: GeoPayload }) {
   const invHits = inv.reduce((a, r) => a + r.hits, 0);
   const sinceAnswer = daysAgo(data.crawl.lastSeen.ai_answer);
   return (
-    <Section id="health" title="בריאות טכנית" question="מה האתר מחזיר לסורקים עכשיו, ואילו בקשות הגיעו לכתובות שלא קיימות.">
-      <Card>
+    <Block title="בריאות טכנית" question="מה האתר מחזיר לסורקים עכשיו, ואילו בקשות הגיעו לכתובות שלא קיימות.">
+      <>
         <SubHead title="בדיקה חיה של האתר" aside={heWhen(data.generatedAt)} />
         <ul className="space-y-2">
           {data.checks.map((c) => (
@@ -565,8 +569,8 @@ function HealthSection({ data }: { data: GeoPayload }) {
             החיה למעלה מוודאת שכתובות כאלה מחזירות היום 404 אמיתי.
           </Explain>
         </CardPart>
-      </Card>
-    </Section>
+      </>
+    </Block>
   );
 }
 

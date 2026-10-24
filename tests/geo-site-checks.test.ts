@@ -1,5 +1,5 @@
 // Tests for lib/geo/siteChecks.ts, the rules behind verify-agent-readiness and
-// the live health card on /manage/geo. The robots.txt cases use the site's own
+// the live health card in the GEO section. The robots.txt cases use the site's own
 // generated file, so a change to app/robots.ts that shuts out an AI crawler
 // fails here before it reaches production.
 

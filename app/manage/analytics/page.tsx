@@ -25,6 +25,7 @@ import { SourcesTable } from '@/components/manage/analytics/SourcesTable';
 import { PagesTable } from '@/components/manage/analytics/PagesTable';
 import { AudienceSection } from '@/components/manage/analytics/AudienceSection';
 import { AiSection } from '@/components/manage/analytics/AiSection';
+import GeoSection from '@/components/manage/analytics/GeoSection';
 import { VisitDepth } from '@/components/manage/analytics/VisitDepth';
 import { Trends } from '@/components/manage/analytics/Trends';
 import type { EnquiryRow, LeadOutcomes, Payload, SiteBehavior } from '@/components/manage/analytics/types';
@@ -437,6 +438,8 @@ function Dashboard({
               />
             </Disclosure>
           )}
+
+          <GeoSection />
         </Section>
 
         <Section id="google" title="גוגל" question="כמה עולה פנייה מהפרסום, על מה משלמים לשווא, ואיפה האורגני חסר.">

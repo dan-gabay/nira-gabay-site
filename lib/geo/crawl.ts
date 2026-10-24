@@ -1,4 +1,4 @@
-// Crawl activity for the GEO page (/manage/geo), folded from public.bot_hits.
+// Crawl activity for the GEO section of /manage/analytics, folded from public.bot_hits.
 //
 // bot_hits already holds one row per automated request (proxy.ts, lib/botLog.ts)
 // and /manage/analytics already shows a range of it. What that section cannot

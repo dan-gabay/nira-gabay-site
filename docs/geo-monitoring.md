@@ -1,6 +1,6 @@
-# GEO monitoring (/manage/geo)
+# GEO monitoring (/manage/analytics, under מקורות)
 
-Backlog B-49. One admin page, behind the existing `/manage` gate, that answers three questions:
+Backlog B-49. A folded section "נראות במנועי AI" under מקורות on /manage/analytics, behind the existing `/manage` gate, that answers three questions:
 
 1. **Which AI crawlers and search engines read the site, and what did they read?** Folded from `public.bot_hits` by `lib/geo/crawl.ts`.
 2. **Does Nira appear in AI answers to the prompts we care about?** Read from the repo files `lib/geo/visibility-prompts.json` and `lib/geo/visibility-observations.json` by `lib/geo/visibility.ts`.
