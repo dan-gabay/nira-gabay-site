@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { MANAGE_COOKIE, isManageAuthorized } from '@/lib/manageAuth';
-import { addDays, buildWeeks, israelDay, type Trends } from '@/lib/trends';
+import { addDays, buildWeeks, channelOfEnquiry, israelDay, type Trends } from '@/lib/trends';
 
 export const runtime = 'nodejs';
 
@@ -9,6 +9,10 @@ export const runtime = 'nodejs';
 // on contact, and the enquiries Nira logged with what became of them. The
 // range control answers "what happened lately"; this answers "is it getting
 // better", which no single range can.
+//
+// By channel too (ads, organic search, everything else): visits and visits
+// with a tap from the traffic groups, enquiries from their gclid / UTM /
+// referrer. Only the channel name leaves the route.
 //
 // The site figures are the 90-day daily series of manage_analytics, folded
 // into weeks here rather than in a new SQL function (no migration). The
@@ -31,7 +35,7 @@ export async function GET(req: NextRequest) {
       supabase.rpc('manage_analytics', { p_days: WINDOW_DAYS }),
       supabase
         .from('contact_messages')
-        .select('status, created_date')
+        .select('status, created_date, gclid, utm_source, utm_medium, referrer')
         .gte('created_date', new Date(Date.now() - (WINDOW_DAYS + 1) * 86_400_000).toISOString()),
     ]);
     if (analytics.error) throw new Error(analytics.error.message);
@@ -39,15 +43,35 @@ export async function GET(req: NextRequest) {
 
     const payload = analytics.data as {
       daily?: Array<{ day: string; visits: number; views: number; conversions: number }>;
+      traffic_daily?: Array<{ day: string; grp: string; visits: number; conversions: number }>;
       first_event?: string | null;
     };
     const firstEvent = payload.first_event ?? null;
-    const enquiries = ((messages.data || []) as Array<{ status: string | null; created_date: string }>).map(
-      (m) => ({ day: israelDay(new Date(m.created_date)), status: m.status }),
-    );
+    // The attribution columns are read only to name the channel, and do not
+    // leave this route.
+    type Message = {
+      status: string | null;
+      created_date: string;
+      gclid: string | null;
+      utm_source: string | null;
+      utm_medium: string | null;
+      referrer: string | null;
+    };
+    const enquiries = ((messages.data || []) as Message[]).map((m) => ({
+      day: israelDay(new Date(m.created_date)),
+      status: m.status,
+      channel: channelOfEnquiry(m),
+    }));
 
     const body: Trends = {
-      weeks: buildWeeks({ daily: payload.daily || [], enquiries, today, windowStart, firstEvent }),
+      weeks: buildWeeks({
+        daily: payload.daily || [],
+        traffic: payload.traffic_daily || [],
+        enquiries,
+        today,
+        windowStart,
+        firstEvent,
+      }),
       first_event: firstEvent,
     };
     return NextResponse.json(body);

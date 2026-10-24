@@ -24,7 +24,53 @@ export type TrendWeek = {
   irrelevant: number;
   /** Not marked yet, or marked spoke: neither a client nor ruled out. */
   open: number;
+  /** The same week by channel: paid ads, organic search, everything else. */
+  channels: Record<Channel, ChannelWeek>;
 };
+
+export type Channel = 'paid' | 'organic' | 'other';
+
+export type ChannelWeek = {
+  visits: number;
+  /** Visits with at least one tap on contact (not the tap count). */
+  tapped: number;
+  enquiries: number;
+  clients: number;
+};
+
+export const CHANNELS: Channel[] = ['paid', 'organic', 'other'];
+
+/** A traffic group from manage_analytics (traffic_daily.grp) as a channel. */
+export function channelOfGroup(grp: string): Channel {
+  if (grp === 'google_ads') return 'paid';
+  if (grp === 'organic_search') return 'organic';
+  return 'other';
+}
+
+const SEARCH_HOST = /(^|\.)(google|bing|duckduckgo|yahoo|yandex)\./i;
+
+/**
+ * A logged enquiry's channel, from what the contact form and the click
+ * handlers stored with it: a gclid or a paid medium is the ads; a search
+ * engine referrer with no campaign tags is organic search.
+ */
+export function channelOfEnquiry(e: {
+  gclid?: string | null;
+  utm_medium?: string | null;
+  utm_source?: string | null;
+  referrer?: string | null;
+}): Channel {
+  const medium = (e.utm_medium || '').toLowerCase();
+  if (e.gclid || ['cpc', 'ppc', 'paid', 'paidsearch'].includes(medium)) return 'paid';
+  if (!e.utm_source && !medium && e.referrer) {
+    try {
+      if (SEARCH_HOST.test(new URL(e.referrer).hostname)) return 'organic';
+    } catch {
+      // not a URL: falls through to other
+    }
+  }
+  return 'other';
+}
 
 export type Trends = {
   weeks: TrendWeek[];
@@ -78,9 +124,12 @@ export function buildWeeks({
   today,
   windowStart,
   firstEvent,
+  traffic = [],
 }: {
   daily: Array<{ day: string; visits: number; views: number; conversions: number }>;
-  enquiries: Array<{ day: string; status: string | null }>;
+  enquiries: Array<{ day: string; status: string | null; channel?: Channel }>;
+  /** Visits per day per traffic group (manage_analytics traffic_daily). */
+  traffic?: Array<{ day: string; grp: string; visits: number; conversions: number }>;
   today: string;
   windowStart: string;
   firstEvent: string | null;
@@ -106,6 +155,11 @@ export function buildWeeks({
       clients: 0,
       irrelevant: 0,
       open: 0,
+      channels: {
+        paid: { visits: 0, tapped: 0, enquiries: 0, clients: 0 },
+        organic: { visits: 0, tapped: 0, enquiries: 0, clients: 0 },
+        other: { visits: 0, tapped: 0, enquiries: 0, clients: 0 },
+      },
     });
   }
 
@@ -117,13 +171,25 @@ export function buildWeeks({
     w.taps += d.conversions;
   }
 
+  for (const t of traffic) {
+    const w = weeks.get(weekOf(t.day));
+    if (!w) continue;
+    const c = w.channels[channelOfGroup(t.grp)];
+    c.visits += t.visits;
+    c.tapped += t.conversions;
+  }
+
   for (const e of enquiries) {
     const w = weeks.get(weekOf(e.day));
     if (!w) continue;
     w.enquiries += 1;
+    const c = w.channels[e.channel ?? 'other'];
+    c.enquiries += 1;
     const s = e.status || 'new';
-    if (s === 'started_therapy' || s === 'ongoing') w.clients += 1;
-    else if (s === 'irrelevant') w.irrelevant += 1;
+    if (s === 'started_therapy' || s === 'ongoing') {
+      w.clients += 1;
+      c.clients += 1;
+    } else if (s === 'irrelevant') w.irrelevant += 1;
     else w.open += 1;
   }
 

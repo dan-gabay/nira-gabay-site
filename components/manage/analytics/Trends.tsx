@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ACTION_COLOR, SERIES, StackedBars, TrendLine } from '@/components/manage/Charts';
+import { ACTION_COLOR, SERIES, SOURCE_SERIES, StackedBars, TrendLine } from '@/components/manage/Charts';
 import { enquiries as enquiryCount } from '@/lib/heCount';
-import type { TrendWeek, Trends as TrendsData } from '@/lib/trends';
+import { CHANNELS, type Channel, type TrendWeek, type Trends as TrendsData } from '@/lib/trends';
 import { Card, Empty, Explain, one } from './ui';
 
 // "Is it getting better?" week by week, from the client back to the visit:
@@ -24,6 +24,14 @@ const CLIENT_SERIES = [
 ];
 
 const VIEWS_COLOR = '#6366f1';
+
+// The two source hues the page already uses for ads and organic search
+// (SOURCE_SERIES), and neutral stone for the rest, which is here for scale.
+const CHANNEL_SERIES: Array<{ key: Channel; label: string; color: string }> = [
+  { key: 'paid', label: 'מודעות גוגל', color: SOURCE_SERIES.google_ads },
+  { key: 'organic', label: 'חיפוש אורגני', color: SOURCE_SERIES.organic_search },
+  { key: 'other', label: 'אחר', color: '#a8a29e' },
+];
 
 const dm = (iso: string) => {
   const [, m, d] = iso.split('-').map(Number);
@@ -200,6 +208,104 @@ export function Trends() {
           aria="ממוצע העמודים שנצפו בביקור, לפי שבוע"
         />
       </Card>
+
+      <PaidVsOrganic weeks={weeks} xLabel={xLabel} />
     </div>
+  );
+}
+
+/**
+ * Ads against organic search, week by week: visits stacked by channel, so the
+ * organic slice can be watched growing (or not) under the ads, and under it
+ * the whole window per channel down to clients - the comparison that says
+ * which channel brings people who become clients, not only visitors.
+ */
+function PaidVsOrganic({ weeks, xLabel }: { weeks: TrendWeek[]; xLabel: (key: string) => string }) {
+  const total = (ch: Channel, k: 'visits' | 'tapped' | 'enquiries' | 'clients') =>
+    weeks.reduce((a, w) => a + w.channels[ch][k], 0);
+  const rows = CHANNEL_SERIES.map((s) => ({
+    ...s,
+    visits: total(s.key, 'visits'),
+    tapped: total(s.key, 'tapped'),
+    enquiries: total(s.key, 'enquiries'),
+    clients: total(s.key, 'clients'),
+  }));
+  const allVisits = rows.reduce((a, r) => a + r.visits, 0);
+  const share = (r: (typeof rows)[number]) => (allVisits > 0 ? Math.round((r.visits / allVisits) * 100) : 0);
+  const num = (n: number) => n.toLocaleString('he-IL');
+
+  return (
+    <Card title="מודעות מול אורגני" sub={`${weeks.length} שבועות`} className="md:col-span-2">
+      <StackedBars
+        data={weeks.map((w) => ({
+          day: w.week,
+          values: Object.fromEntries(CHANNELS.map((c) => [c, w.channels[c].visits])),
+        }))}
+        series={CHANNEL_SERIES}
+        height={190}
+        aria="ביקורים בכל שבוע לפי ערוץ: מודעות גוגל, חיפוש אורגני ואחר"
+        emptyText="אין עדיין תנועה."
+        emptyBucketText="אין ביקורים"
+        formatTotal={(n) => (n === 1 ? 'ביקור אחד' : `${num(n)} ביקורים`)}
+        tooltipOrder="series"
+        xLabel={xLabel}
+        tooltipExtra={(i) => {
+          const w = weeks[i];
+          const taps = CHANNEL_SERIES.filter((s) => w.channels[s.key].tapped > 0)
+            .map((s) => `${s.label} ${w.channels[s.key].tapped}`)
+            .join(' · ');
+          return (
+            <div className="text-stone-500 mt-1 pt-1 border-t border-stone-100 whitespace-nowrap">
+              {weekTitle(w)}
+              <br />
+              ביקורים עם לחיצה: {taps || 'אין'}
+            </div>
+          );
+        }}
+      />
+
+      <div className="mt-4 pt-4 border-t border-stone-100 overflow-x-auto">
+        <table className="w-full text-[12px] md:text-[13px] text-stone-700 tabular-nums">
+          <thead>
+            <tr className="text-[11px] text-stone-400 text-start">
+              <th className="font-normal text-start pb-1.5">ערוץ</th>
+              <th className="font-normal text-start pb-1.5">ביקורים</th>
+              <th className="font-normal text-start pb-1.5">ביקורים עם לחיצה</th>
+              <th className="font-normal text-start pb-1.5">פניות שנרשמו</th>
+              <th className="font-normal text-start pb-1.5">התחילו טיפול</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.key} className="border-t border-stone-100">
+                <td className="py-1.5 pe-2 whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-sm flex-shrink-0" style={{ background: r.color }} aria-hidden="true" />
+                    {r.label}
+                  </span>
+                </td>
+                <td className="py-1.5 pe-2 whitespace-nowrap">
+                  {num(r.visits)} <span className="text-[11px] text-stone-400">{share(r)}%</span>
+                </td>
+                <td className="py-1.5 pe-2 whitespace-nowrap">
+                  {num(r.tapped)}
+                  {r.visits > 0 && (
+                    <span className="text-[11px] text-stone-400"> {one((r.tapped / r.visits) * 100)}%</span>
+                  )}
+                </td>
+                <td className="py-1.5 pe-2 whitespace-nowrap">{num(r.enquiries)}</td>
+                <td className="py-1.5 font-semibold text-stone-800">{num(r.clients)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <Explain>
+        מודעות הן ביקורים עם סימון של קמפיין גוגל. אורגני הוא ביקור שהגיע מתוצאות החיפוש הרגילות של גוגל או מנוע
+        אחר. &quot;אחר&quot; כולל כניסה ישירה, רשתות חברתיות, כלי AI ואתרים מפנים. פנייה שנרשמה משויכת לערוץ לפי מה
+        שנשמר איתה (סימון גוגל אדס, או הגעה מחיפוש). מי שראה מודעה וחזר אחר כך ישירות נספר ב&quot;אחר&quot;, ולכן
+        המודעות יכולות להיות קצת יותר ממה שרואים כאן.
+      </Explain>
+    </Card>
   );
 }

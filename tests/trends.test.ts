@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { addDays, buildWeeks, israelDay, weekOf } from '../lib/trends';
+import { addDays, buildWeeks, channelOfEnquiry, israelDay, weekOf } from '../lib/trends';
 
 test('weeks start on Sunday', () => {
   assert.equal(weekOf('2026-10-24'), '2026-10-18'); // Saturday
@@ -42,4 +42,37 @@ test('weeks: window stub dropped, measurement start and current week counted', (
     [2, 4, 1, 1, 2],
   );
   assert.equal(weeks.length, 9);
+});
+
+test('enquiry channel: gclid or cpc is paid, a bare search referrer is organic', () => {
+  assert.equal(channelOfEnquiry({ gclid: 'x' }), 'paid');
+  assert.equal(channelOfEnquiry({ utm_source: 'google', utm_medium: 'cpc' }), 'paid');
+  assert.equal(channelOfEnquiry({ referrer: 'https://www.google.com/' }), 'organic');
+  assert.equal(channelOfEnquiry({ referrer: 'https://www.google.co.il/search?q=x' }), 'organic');
+  assert.equal(channelOfEnquiry({ referrer: 'https://www.facebook.com/' }), 'other');
+  assert.equal(channelOfEnquiry({ referrer: 'https://www.google.com/', utm_source: 'newsletter' }), 'other');
+  assert.equal(channelOfEnquiry({}), 'other');
+});
+
+test('weeks split visits and enquiries by channel', () => {
+  const [w] = buildWeeks({
+    daily: [{ day: '2026-10-19', visits: 12, views: 15, conversions: 2 }],
+    traffic: [
+      { day: '2026-10-19', grp: 'google_ads', visits: 8, conversions: 2 },
+      { day: '2026-10-19', grp: 'organic_search', visits: 3, conversions: 0 },
+      { day: '2026-10-20', grp: 'social', visits: 1, conversions: 0 },
+    ],
+    enquiries: [
+      { day: '2026-10-19', status: 'ongoing', channel: 'paid' },
+      { day: '2026-10-20', status: 'irrelevant', channel: 'organic' },
+    ],
+    today: '2026-10-21',
+    windowStart: '2026-10-18',
+    firstEvent: '2026-08-23',
+  });
+  assert.deepEqual(w.channels.paid, { visits: 8, tapped: 2, enquiries: 1, clients: 1 });
+  assert.deepEqual(w.channels.organic, { visits: 3, tapped: 0, enquiries: 1, clients: 0 });
+  assert.equal(w.channels.other.visits, 1);
+  assert.equal(w.clients, 1);
+  assert.equal(w.irrelevant, 1);
 });
