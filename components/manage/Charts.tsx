@@ -97,19 +97,27 @@ export function clockKey(at: Date, unit: 'day' | 'hour'): string {
 /**
  * The bucket keys a range covers, oldest first - the x axis, gaps included.
  *
- * Hours step by an absolute hour, so a DST change repeats or skips exactly the
- * hour the real clock does. Days step on a noon anchor rather than by adding 24
- * hours to a local midnight: on the two days a year the offset moves, adding
- * 24 hours to midnight lands on the same calendar date twice, or skips one.
+ * Hours step by an absolute hour and are spelled as the Israel clock reads.
+ * When the clocks go back, two consecutive absolute hours read the same (02:00
+ * twice), and the SQL folds both into that one key, so the axis keeps it once:
+ * that day's 24 hours are 23 buckets. When the clocks go forward the skipped
+ * hour simply never appears and every key is distinct. Days step on a noon
+ * anchor rather than by adding 24 hours to a local midnight: on the two days a
+ * year the offset moves, adding 24 hours to midnight lands on the same
+ * calendar date twice, or skips one.
+ *
+ * `now` is a parameter so the tests can stand on a real transition.
  */
-export function bucketKeys(count: number, unit: 'day' | 'hour'): string[] {
+export function bucketKeys(count: number, unit: 'day' | 'hour', now: number = Date.now()): string[] {
   const out: string[] = [];
   if (unit === 'hour') {
-    const now = Date.now();
-    for (let i = count - 1; i >= 0; i--) out.push(clockKey(new Date(now - i * 3_600_000), 'hour'));
+    for (let i = count - 1; i >= 0; i--) {
+      const key = clockKey(new Date(now - i * 3_600_000), 'hour');
+      if (out[out.length - 1] !== key) out.push(key);
+    }
     return out;
   }
-  const [y, m, d] = clockKey(new Date(), 'day').split('-').map(Number);
+  const [y, m, d] = clockKey(new Date(now), 'day').split('-').map(Number);
   const anchor = Date.UTC(y, m - 1, d, 12);
   for (let i = count - 1; i >= 0; i--) {
     const t = new Date(anchor - i * 86_400_000);

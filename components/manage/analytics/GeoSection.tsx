@@ -34,7 +34,6 @@ type GeoPayload = {
   truncated: boolean;
   crawl: CrawlReport;
   unread: string[];
-  agentColumn: boolean;
   titles: Record<string, string>;
   referrals: {
     error: string | null;
@@ -260,10 +259,9 @@ function CrawlSection({ data }: { data: GeoPayload }) {
         </CardPart>
         <CardPart>
           <SubHead title="לפי כלי" />
-          {!data.agentColumn || c.agentRows === 0 ? (
+          {c.agentRows === 0 ? (
             <Empty>
-              עדיין לא נמדד. כרגע נשמר רק סוג הכלי (סריקת AI, פתיחה בתשובה, חיפוש) ולא שמו, למשל GPTBot מול OAI-SearchBot.
-              המדידה מוכנה ותתחיל אחרי הרצת db/2026-10-24-bot-hits-agent.sql והגדרת BOT_HITS_AGENT=1.
+              עדיין אין נתונים. שם הכלי (למשל GPTBot מול OAI-SearchBot) נשמר מ-25.10.2026, ובטווח הזה עוד לא נרשמה סריקה עם שם.
             </Empty>
           ) : (
             <BarList

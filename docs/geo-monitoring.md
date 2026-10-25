@@ -27,14 +27,9 @@ Observations are append-only. Never edit or delete a past entry; add a new one, 
 4. Use `evidence: "estimate"` for anything not actually seen. Estimates are shown apart and never counted as results.
 5. Run `npm test`. `tests/geo-visibility.test.ts` fails on any invalid entry in the repo file.
 
-## Crawler names (optional, needs approval)
+## Crawler names
 
-Per-crawler counts need one nullable column. The migration is prepared but has not been run: `db/2026-10-24-bot-hits-agent.sql`.
-
-1. Run the migration.
-2. Set `BOT_HITS_AGENT=1` in Vercel and redeploy.
-
-The order matters: with the flag set but no column, the insert fails. Until both steps are done, the page says that names are not measured yet.
+Per-crawler counts use the nullable `bot_agent` column, added on 2026-10-25 by `db/2026-10-24-bot-hits-agent.sql`. The proxy writes it for every ai_answer, ai_crawler and search hit whose user agent matches the allowlist. Rows from before that date have no name.
 
 ## Production check
 
