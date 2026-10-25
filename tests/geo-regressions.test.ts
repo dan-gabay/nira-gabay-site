@@ -99,8 +99,7 @@ test('the health check labels itself a monitor, so it is never counted as a craw
   assert.equal(botKindFromUserAgent('niragabay-healthcheck/1.0 (+https://www.niragabay.com/llms.txt)'), 'monitor');
 });
 
-test('bot_agent is only sent once the column exists (BOT_HITS_AGENT=1)', () => {
-  assert.deepEqual(botHitRow('ai_crawler', '/', 'GPTBot', false), { bot_kind: 'ai_crawler', path: '/' });
-  assert.deepEqual(botHitRow('ai_crawler', '/', 'GPTBot', true), { bot_kind: 'ai_crawler', path: '/', bot_agent: 'GPTBot' });
-  assert.deepEqual(botHitRow('preview', '/', null, true), { bot_kind: 'preview', path: '/' });
+test('bot_agent is sent only when a known crawler name was found', () => {
+  assert.deepEqual(botHitRow('ai_crawler', '/', 'GPTBot'), { bot_kind: 'ai_crawler', path: '/', bot_agent: 'GPTBot' });
+  assert.deepEqual(botHitRow('preview', '/', null), { bot_kind: 'preview', path: '/' });
 });

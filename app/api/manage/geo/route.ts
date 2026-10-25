@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const supabase = supabaseServer();
-    const columns = process.env.BOT_HITS_AGENT === '1' ? 'created_at, bot_kind, path, bot_agent' : 'created_at, bot_kind, path';
+    const columns = 'created_at, bot_kind, path, bot_agent';
 
     const [{ count, error: countError }, first, analytics, siteUrls, titles] = await Promise.all([
       supabase.from('bot_hits').select('id', { count: 'exact', head: true }).gte('created_at', since),
@@ -124,7 +124,6 @@ export async function GET(req: NextRequest) {
       truncated: (count ?? 0) > MAX_ROWS,
       crawl,
       unread: unreadListedPages(crawl, listed),
-      agentColumn: process.env.BOT_HITS_AGENT === '1',
       titles: Object.fromEntries(((titles.data || []) as Array<{ slug: string; title: string }>).map((a) => [a.slug, a.title])),
       referrals,
       visibility: loadVisibilityReport(),

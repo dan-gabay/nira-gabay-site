@@ -1,4 +1,4 @@
--- PREPARED, NOT RUN. Needs Dan's approval before it touches production.
+-- RUN on production 2026-10-25 (approved by Dan). Kept for the record.
 --
 -- Adds the crawler's product token to bot_hits, so the GEO page can say
 -- which AI crawler read the site and not only which kind of client it was.
@@ -15,12 +15,10 @@
 -- automated client outside the AI and search families. No IP, no user agent,
 -- no session, as before.
 --
--- Order of the deploy, because the order is what keeps rows from being lost:
---   1. run this migration (additive, nullable, no rewrite of existing rows);
---   2. set BOT_HITS_AGENT=1 in the Vercel environment and redeploy.
--- Until step 2 the app never sends the column, so step 1 alone changes nothing
--- and can be rolled back with `alter table public.bot_hits drop column bot_agent`.
--- Rows written before step 2 keep bot_agent null; the dashboard says so.
+-- Additive and nullable, no rewrite of existing rows. The app writes the
+-- column unconditionally from the deploy after this ran, so do not drop it
+-- without first removing bot_agent from lib/botLog.ts botHitRow: PostgREST
+-- rejects an insert that names an unknown column.
 
 alter table public.bot_hits add column if not exists bot_agent text;
 
