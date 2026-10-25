@@ -37,12 +37,71 @@ test('bucketKeys returns one key per day, oldest first, ending today in Israel',
   assert.equal(new Set(keys).size, keys.length);
 });
 
-test('an hourly range uses the hour-suffixed key the SQL emits', () => {
-  const keys = bucketKeys(24, 'hour');
-  assert.equal(keys.length, 24);
+// Israel's offset from UTC at an instant, in hours (+2 winter, +3 summer).
+const israelOffset = (t: number) => {
+  const [d, h] = inJerusalem(new Date(t), 'hour').split('T');
+  const local = Date.parse(`${d}T${h}:00:00Z`);
+  return Math.round((local - Math.floor(t / 3_600_000) * 3_600_000) / 3_600_000);
+};
+
+// The next clock change in each direction, found by walking the real Israel
+// clock forward an hour at a time from now. No transition date is written
+// down anywhere, so these tests stand on whichever changes come next, every
+// year, whatever the rules become.
+const transitions = () => {
+  const found: { back?: number; forward?: number } = {};
+  const start = Math.floor(Date.now() / 3_600_000) * 3_600_000;
+  for (let t = start; t < start + 400 * 86_400_000 && !(found.back && found.forward); t += 3_600_000) {
+    const before = israelOffset(t);
+    const after = israelOffset(t + 3_600_000);
+    if (after < before && !found.back) found.back = t + 3_600_000;
+    if (after > before && !found.forward) found.forward = t + 3_600_000;
+  }
+  return found;
+};
+
+const checkHourly = (keys: string[], now: number) => {
   for (const k of keys) assert.match(k, /^\d{4}-\d{2}-\d{2}T\d{2}$/);
-  assert.equal(new Set(keys).size, 24);
-  assert.equal(keys[keys.length - 1], inJerusalem(new Date(), 'hour'));
+  // Each key once, in order: a repeat would draw two points on one x.
+  assert.equal(new Set(keys).size, keys.length);
+  assert.deepEqual([...keys].sort(), keys);
+  assert.equal(keys[keys.length - 1], inJerusalem(new Date(now), 'hour'));
+  // Exactly the distinct hours the Israel clock showed in the window.
+  const shown = new Set(Array.from({ length: 24 }, (_, i) => inJerusalem(new Date(now - i * 3_600_000), 'hour')));
+  assert.equal(keys.length, shown.size);
+};
+
+test('an hourly range uses the hour-suffixed key the SQL emits', () => {
+  const now = Date.now();
+  checkHourly(bucketKeys(24, 'hour', now), now);
+});
+
+test('hourly keys stay right on the day the clocks go back and the day they go forward', () => {
+  const { back, forward } = transitions();
+  assert.ok(back && forward, 'Israel changes its clocks twice a year');
+  // Windows ending just after each change, and a few hours later.
+  for (const at of [back, forward]) {
+    for (const later of [0, 1, 5]) {
+      const now = at + later * 3_600_000 + 30 * 60_000;
+      checkHourly(bucketKeys(24, 'hour', now), now);
+    }
+  }
+  // Going back repeats an hour on the clock: 24 hours, 23 buckets.
+  assert.equal(bucketKeys(24, 'hour', back + 5 * 3_600_000).length, 23);
+  // Going forward skips one: 24 hours, 24 distinct buckets.
+  assert.equal(bucketKeys(24, 'hour', forward + 5 * 3_600_000).length, 24);
+});
+
+test('daily keys do not repeat or skip a date across either clock change', () => {
+  const { back, forward } = transitions();
+  for (const at of [back!, forward!]) {
+    const keys = bucketKeys(10, 'day', at + 3 * 86_400_000);
+    assert.equal(new Set(keys).size, 10);
+    for (let i = 1; i < keys.length; i++) {
+      const gap = (Date.parse(`${keys[i]}T12:00:00Z`) - Date.parse(`${keys[i - 1]}T12:00:00Z`)) / 86_400_000;
+      assert.equal(gap, 1, `gap before ${keys[i]}`);
+    }
+  }
 });
 
 test('a month boundary does not repeat or skip a day', () => {
