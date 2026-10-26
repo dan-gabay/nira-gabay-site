@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { enterStyle } from '@/lib/enter';
 import { Search, FileText, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
@@ -41,21 +42,35 @@ export type Tag = {
 type ArticlesBrowserProps = {
   articles: ArticleListItem[];
   allTags: Tag[];
-  initialSearch?: string;
-  initialTag?: string;
 };
+
+// Applies ?search= / ?tag= from the URL. Read on the client, not from the
+// page's searchParams: reading them on the server made /articles render on
+// every request, so a tap on "מאמרים" waited 1-2s with no feedback while the
+// other pages open instantly. In its own Suspense boundary so the rest of the
+// list stays in the static HTML.
+function UrlFilters({ onChange }: { onChange: (search: string, tag: string | null) => void }) {
+  const params = useSearchParams();
+  const search = params.get('search') ?? '';
+  const tag = params.get('tag');
+  useEffect(() => {
+    onChange(search, tag);
+  }, [onChange, search, tag]);
+  return null;
+}
 
 const PAGE_SIZE = 6;
 
-export default function ArticlesBrowser({
-  articles,
-  allTags,
-  initialSearch,
-  initialTag,
-}: ArticlesBrowserProps) {
-  const [searchQuery, setSearchQuery] = useState(initialSearch || '');
-  const [selectedTag, setSelectedTag] = useState<string | null>(initialTag || null);
+export default function ArticlesBrowser({ articles, allTags }: ArticlesBrowserProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  const applyUrlFilters = useCallback((search: string, tag: string | null) => {
+    setSearchQuery(search);
+    setSelectedTag(tag);
+    setVisibleCount(PAGE_SIZE);
+  }, []);
 
   const filteredArticles = articles.filter((article) => {
     const matchesSearch =
@@ -88,6 +103,9 @@ export default function ArticlesBrowser({
 
   return (
     <div style={{ paddingTop: '80px' }}>
+      <Suspense fallback={null}>
+        <UrlFilters onChange={applyUrlFilters} />
+      </Suspense>
       {/* ───────── Hero ───────── */}
       <section className="relative overflow-hidden" style={{ background: TEAL_DARK }}>
         {/* Anchored left so the artwork's leaf survives the crop on narrow screens */}

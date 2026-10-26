@@ -26,10 +26,7 @@ export const metadata: Metadata = {
   },
 };
 
-type SearchParams = Promise<{ search?: string; tag?: string }>;
-
-export default async function Articles({ searchParams }: { searchParams: SearchParams }) {
-  const { search, tag } = await searchParams;
+export default async function Articles() {
   const supabase = supabaseServer();
 
   // List fields only - content is intentionally not fetched
@@ -97,12 +94,7 @@ export default async function Articles({ searchParams }: { searchParams: SearchP
     <>
       <JsonLd data={collectionSchema} />
       <JsonLd data={breadcrumbSchema} />
-      <ArticlesBrowser
-        articles={articles}
-        allTags={allTags}
-        initialSearch={typeof search === 'string' ? search : undefined}
-        initialTag={typeof tag === 'string' ? tag : undefined}
-      />
+      <ArticlesBrowser articles={articles} allTags={allTags} />
     </>
   );
 }
