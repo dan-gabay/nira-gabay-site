@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
-import { motion } from 'framer-motion';
+import Reveal from '@/components/Reveal';
+import { enterStyle } from '@/lib/enter';
 import Image from 'next/image';
 import { GraduationCap, Award, Heart, MapPin, Users, BookOpen, Monitor } from 'lucide-react';
 import ArticleCtaBanner from '@/components/ArticleCtaBanner';
@@ -48,11 +49,9 @@ export default function About() {
         <div className="container mx-auto px-4 md:px-8">
           <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-12">
             {/* Image */}
-            <motion.div
-              initial={{ opacity: 0, x: 0 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3 }}
-              className="w-full lg:w-2/5"
+            <div
+              className="animate-enter w-full lg:w-2/5"
+              style={enterStyle({ duration: 0.3 })}
             >
               <div className="relative">
                 <div className="absolute -top-3 -right-3 md:-top-4 md:-right-4 w-full h-full bg-gradient-to-br from-amber-200 to-stone-200 rounded-3xl" />
@@ -67,14 +66,12 @@ export default function About() {
                   />
                 </div>
               </div>
-            </motion.div>
+            </div>
 
             {/* Text */}
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="w-full lg:w-3/5 text-center lg:text-right"
+            <div
+              className="animate-enter w-full lg:w-3/5 text-center lg:text-right"
+              style={enterStyle({ x: 50, duration: 0.8, delay: 0.2 })}
             >
               <span className="inline-block px-4 py-1.5 md:py-2 bg-amber-100 rounded-full text-amber-800 text-xs md:text-sm mb-4 md:mb-6">
                 קצת עליי
@@ -88,7 +85,7 @@ export default function About() {
               <p className="text-xs md:text-lg text-stone-500">
                 פסיכותרפיה | CBT | הדרכת הורים | טיפול זוגי
               </p>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
@@ -98,11 +95,9 @@ export default function About() {
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-4xl mx-auto">
             {/* Philosophy Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
+            <Reveal
+              y={30}
+              duration={0.6}
               className="mb-8 md:mb-16"
             >
               <h2 className="text-xl md:text-3xl font-bold text-stone-800 mb-5 md:mb-8 text-center">
@@ -120,17 +115,15 @@ export default function About() {
                   כן ופתוח.
                 </p>
               </div>
-            </motion.div>
+            </Reveal>
 
             {/* Divider */}
             <div className="w-16 md:w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mx-auto mb-8 md:mb-16" />
 
             {/* Personal Story */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
+            <Reveal
+              y={30}
+              duration={0.6}
               className="mb-8 md:mb-16"
             >
               <h2 className="text-xl md:text-3xl font-bold text-stone-800 mb-5 md:mb-8 text-center">
@@ -153,14 +146,12 @@ export default function About() {
                   הזה מצריך רגישות, מקצועיות וחוסר שיפוטיות.
                 </p>
               </div>
-            </motion.div>
+            </Reveal>
 
             {/* Personal Life */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
+            <Reveal
+              y={30}
+              duration={0.6}
               className="bg-gradient-to-br from-amber-50 to-stone-50 rounded-3xl p-5 md:p-12 mb-8 md:mb-16"
             >
               <div className="flex items-start gap-3 md:gap-4 mb-4 md:mb-6">
@@ -174,7 +165,7 @@ export default function About() {
                   </p>
                 </div>
               </div>
-            </motion.div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -193,12 +184,11 @@ export default function About() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 max-w-5xl mx-auto">
             {milestones.map((milestone, index) => (
-              <motion.div
+              <Reveal
                 key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+                y={30}
+                duration={0.5}
+                delay={index * 0.1}
                 className="bg-white rounded-2xl p-5 md:p-8 shadow-lg border border-stone-100"
               >
                 <div className="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center mb-4 md:mb-6">
@@ -206,7 +196,7 @@ export default function About() {
                 </div>
                 <h3 className="text-base md:text-xl font-bold text-stone-800 mb-2 md:mb-3">{milestone.title}</h3>
                 <p className="text-sm md:text-base text-stone-600 leading-relaxed">{milestone.description}</p>
-              </motion.div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -227,17 +217,17 @@ export default function About() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 md:gap-4">
               {experiences.map((exp, index) => (
-                <motion.div
+                <Reveal
                   key={index}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                  scale={0.9}
+                  duration={0.4}
+                  delay={index * 0.05}
+                  y={0}
                   className="flex items-center gap-3 bg-stone-50 rounded-xl p-3 md:p-4"
                 >
                   <div className="w-2 h-2 rounded-full bg-amber-400" />
                   <span className="text-sm md:text-base text-stone-700">{exp}</span>
-                </motion.div>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -258,11 +248,10 @@ export default function About() {
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-5xl mx-auto">
             <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-12">
-              <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
+              <Reveal
+                x={-30}
+                duration={0.6}
+                y={0}
                 className="w-full lg:w-1/2"
               >
                 <div className="relative w-full aspect-[4/3]">
@@ -274,13 +263,13 @@ export default function About() {
                     sizes="(max-width: 1024px) 100vw, 50vw"
                   />
                 </div>
-              </motion.div>
+              </Reveal>
               
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.2 }}
+              <Reveal
+                x={30}
+                duration={0.6}
+                delay={0.2}
+                y={0}
                 className="w-full lg:w-1/2"
               >
                 <div className="flex items-center gap-3 mb-4 md:mb-6">
@@ -301,7 +290,7 @@ export default function About() {
                     </p>
                   </div>
                 </div>
-              </motion.div>
+              </Reveal>
             </div>
           </div>
         </div>
