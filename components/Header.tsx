@@ -171,7 +171,10 @@ export default function Header() {
                   key={item.href}
                   href={item.href}
                   onClick={() => {
-                    setMobileMenuOpen(false);
+                    // Another page: leave the menu open. It closes when the
+                    // new page renders (menuOpenOn stops matching pathname),
+                    // so the old page never flashes back in between.
+                    if (pathname === item.href) setMobileMenuOpen(false);
                     trackHeaderNavClick(item.name + '_mobile');
                   }}
                   className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
