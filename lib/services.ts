@@ -576,10 +576,24 @@ export const SERVICES: Service[] = [
         q: 'כמה זמן נמשך טיפול במתבגרים?',
         a: 'אין מספר מפגשים קבוע מראש. יש מתבגרים שמגיעים סביב קושי ממוקד, כמו חרדת בחינות, ומסיימים אחרי תקופה קצרה יחסית, ויש כאלה שזקוקים לליווי ארוך יותר. אנחנו בודקים יחד מדי פעם מה השתנה ומה עוד צריך.',
       },
+      // The two below restate the "כשהלחץ מגיע דרך בית הספר" section as
+      // questions (B-44); keep them in step with that section's wording.
+      {
+        q: 'הוא נמנע מבית הספר בגלל לחץ, אפשר לעזור גם מול בית הספר?',
+        a: 'כן. בטיפול אנחנו מנסים להבין מה הפחד אומר, ובמקביל חוזרים בהדרגה, בקצב שהמתבגר יכול להחזיק, אל מה שהוא נמנע ממנו. עבדתי שנים כיועצת חינוכית ואני מכירה את המערכת מבפנים, וזה מאפשר לחשוב יחד איתכם איך לדבר עם הצוות בצורה שתעזור לילד ולא תסמן אותו.',
+      },
+      {
+        q: 'משלבים בטיפול במתבגרים כלים מ-CBT?',
+        a: 'כשזה מתאים, כן. מתבגרים רבים מתחברים לכלים מ-CBT כי הם ברורים ומעשיים, במיוחד סביב חרדה והימנעות.',
+      },
     ],
+    // body-image and bullying back the "חברים, דחייה ודימוי עצמי" section
+    // (B-44). Listing them here also points their article cards at this page.
     articleSlugs: [
       'emotional-disorders-in-adolescence-guide-for-parents',
       'exam-anxiety-achievement',
+      'body-image-in-teen-girls',
+      'bullying-and-social-exclusion',
       'coming-out-teen-parents-guide',
       'addiction-teens-adults-how-to-cope',
       'passover-break-adolescent',
