@@ -32,10 +32,24 @@ export type ArticleSchemaInput = {
   canonical_url?: string | null;
   tag_names?: string[] | null;
   schema_json?: Record<string, unknown> | null;
+  seo_package?: { image_alt?: string | null } | null;
 };
 
 const FALLBACK_IMAGE =
   'https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png';
+
+/**
+ * What the cover image shows, in Hebrew. The written description in
+ * `seo_package.image_alt` when there is one; the title otherwise, for
+ * articles whose image was never described.
+ */
+export function articleImageAlt(article: {
+  title: string;
+  seo_package?: { image_alt?: string | null } | null;
+}): string {
+  const alt = article.seo_package?.image_alt?.trim();
+  return alt || `תמונת המאמר: ${article.title} - נירה גבאי פסיכותרפיה`;
+}
 
 /** Words in the article body, for `wordCount`. Hebrew splits on whitespace. */
 function countWords(content: string | null | undefined): number | undefined {
@@ -81,7 +95,17 @@ export function buildArticleSchema(article: ArticleSchemaInput): Record<string, 
     inLanguage: 'he-IL',
     datePublished,
     dateModified,
-    image: article.image_url || FALLBACK_IMAGE,
+    // An ImageObject with a caption when the article has its own described
+    // image; the site fallback stays a bare URL, since the caption would not
+    // describe it.
+    image:
+      article.image_url && article.seo_package?.image_alt?.trim()
+        ? {
+            '@type': 'ImageObject',
+            url: article.image_url,
+            caption: article.seo_package.image_alt.trim(),
+          }
+        : article.image_url || FALLBACK_IMAGE,
     author: authorRef,
     // Schema.org allows Organization or Person here; the practice node is a
     // ProfessionalService, which is an Organization subtype, so this validates.
