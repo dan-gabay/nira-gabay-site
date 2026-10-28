@@ -28,3 +28,29 @@ test('site_error is stored but never a conversion', () => {
   assert.ok(isTrackedEvent('site_error'));
   assert.ok(!isConversion('site_error'));
 });
+
+test('every public route passes the visitor user agent to recordSiteError', async () => {
+  // Without it botKindFromUserAgent sees no user agent and stores
+  // 'automation', and the weekly check (bot_kind IS NULL) never sees a real
+  // visitor's failure - which is how the 25 Oct email-notice failure was missed.
+  const { readFileSync, readdirSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const apiDir = join(__dirname, '..', 'app', 'api');
+  const files: string[] = [];
+  const walk = (dir: string) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      if (e.isDirectory()) walk(join(dir, e.name));
+      else if (e.name === 'route.ts') files.push(join(dir, e.name));
+    }
+  };
+  walk(apiDir);
+  let calls = 0;
+  for (const f of files) {
+    const src = readFileSync(f, 'utf8');
+    for (const m of src.matchAll(/recordSiteError\(\{[\s\S]*?\}\)/g)) {
+      calls++;
+      assert.match(m[0], /userAgent:/, `${f}: ${m[0]}`);
+    }
+  }
+  assert.ok(calls > 0);
+});
