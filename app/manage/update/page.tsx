@@ -94,6 +94,23 @@ export default function UpdateLeadsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // A tap logged as an enquiry is no longer a question: after a moment to show
+  // "נשמר" its card leaves the list (and the heading with the last one), so the
+  // screen matches what a refresh would show. One saved as "עוד לא ידוע" is
+  // now an open lead, so it is fetched and added above, without touching the
+  // cards already there.
+  function tapSaved(id: number, stillOpen: boolean) {
+    setTimeout(() => setIntents((prev) => prev.filter((i) => i.id !== id)), 1500);
+    if (!stillOpen) return;
+    fetch('/api/manage/contacts?view=open')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const list: ContactMessage[] = d?.messages || [];
+        setMessages((prev) => [...prev, ...list.filter((m) => !prev.some((p) => p.id === m.id))]);
+      })
+      .catch(() => {});
+  }
+
   async function dismissTap(id: number) {
     setIntents((prev) => prev.filter((i) => i.id !== id));
     const res = await fetch('/api/manage/contact-intents', {
@@ -139,7 +156,12 @@ export default function UpdateLeadsPage() {
             לחצו על כפתור באתר. הגיעה מהם הודעה?
           </h2>
           {intents.map((i) => (
-            <TapCard key={i.id} intent={i} onDismiss={() => dismissTap(i.id)} />
+            <TapCard
+              key={i.id}
+              intent={i}
+              onDismiss={() => dismissTap(i.id)}
+              onSaved={(stillOpen) => tapSaved(i.id, stillOpen)}
+            />
           ))}
         </section>
       )}
@@ -286,7 +308,15 @@ function LeadCard({ m, focused }: { m: ContactMessage; focused: boolean }) {
 // A tap on the site's button. "כן, הגיעה" opens everything at once - what
 // happened, name, details - and one שמירה logs the enquiry with the tap's ad
 // attribution. "עוד לא ידוע" keeps it open for later.
-function TapCard({ intent, onDismiss }: { intent: ContactIntent; onDismiss: () => void }) {
+function TapCard({
+  intent,
+  onDismiss,
+  onSaved,
+}: {
+  intent: ContactIntent;
+  onDismiss: () => void;
+  onSaved: (stillOpen: boolean) => void;
+}) {
   const [arrived, setArrived] = useState(false);
   const [status, setStatus] = useState<LeadStatus>('new');
   const [name, setName] = useState('');
@@ -305,6 +335,7 @@ function TapCard({ intent, onDismiss }: { intent: ContactIntent; onDismiss: () =
       });
       if (!res.ok) throw new Error(String(res.status));
       setSaved(true);
+      onSaved(status === 'new');
     } catch {
       alert('השמירה נכשלה. נסי שוב.');
     } finally {
