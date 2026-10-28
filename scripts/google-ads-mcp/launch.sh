@@ -37,4 +37,15 @@ unset GOOGLE_ADS_DEVELOPER_TOKEN GOOGLE_ADS_MCP_OAUTH_CLIENT_ID GOOGLE_ADS_MCP_O
 export GOOGLE_APPLICATION_CREDENTIALS="$adc"
 export GOOGLE_ADS_MCP_TOOLS_CONFIG="$here/tools_config.yaml"
 
+# Start from the uv cache when it already holds a usable environment. Only
+# google-ads-mcp is pinned, so an online uvx re-resolves its dependencies on
+# every start once the cached index is older than a few minutes, and when a
+# dependency has a new release (fastmcp 4.1.4, 28 Oct) it downloads and builds
+# ~90 packages first. A resumed routine session does not re-run the Setup
+# script that warms the cache, so that took longer than Claude Code's 30 s MCP
+# connect limit and the Ads tools never loaded. Online only when the cache
+# cannot serve it (a fresh container before the Setup script has run).
+if uvx --offline --quiet --from "google-ads-mcp==0.0.5" python -c "" >/dev/null 2>&1; then
+  exec uvx --offline --quiet --from "google-ads-mcp==0.0.5" google-ads-mcp
+fi
 exec uvx --quiet --from "google-ads-mcp==0.0.5" google-ads-mcp
