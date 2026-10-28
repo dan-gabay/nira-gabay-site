@@ -12,7 +12,6 @@ import {
   timeAgo,
   type ContactIntent,
   type ContactMessage,
-  type LeadStatus,
 } from '@/components/manage/leads';
 
 // "What happened with them?" - the one screen Nira opens, after she has spoken
@@ -48,12 +47,6 @@ const OUTCOMES: Array<{ key: Outcome; label: string; on: string; hint: string }>
     hint: 'רוצה לפרט? למשל: למה לא מתאים, איך שמעו עלייך (לא חובה)',
   },
 ];
-
-const OUTCOME_LABEL: Partial<Record<LeadStatus, string>> = {
-  new: 'עוד לא ידוע',
-  started_therapy: 'קבענו טיפול',
-  irrelevant: 'לא רלוונטי',
-};
 
 const btn =
   'inline-flex items-center justify-center gap-1.5 whitespace-nowrap min-h-[52px] px-2 rounded-xl border-2 text-[15px] font-semibold transition-colors';
@@ -104,6 +97,40 @@ export default function UpdateLeadsPage() {
     if (!res?.ok) alert('העדכון לא נשמר. כדאי לרענן ולנסות שוב.');
   }
 
+  // "כן, הגיעה" saves at once (owner feedback, 2026-10-28): the tap becomes an
+  // enquiry carrying its ad attribution and leaves the question list. Its card
+  // then opens at the top like any other open enquiry, where what happened,
+  // the name and the details are filled in as usual.
+  async function confirmTap(intent: ContactIntent) {
+    const res = await fetch('/api/manage/contacts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ channel: intent.channel, status: 'new', intent_id: intent.id }),
+    }).catch(() => null);
+    const d = res?.ok ? await res.json().catch(() => null) : null;
+    if (!d?.id) {
+      alert('השמירה נכשלה. נסי שוב.');
+      return;
+    }
+    setIntents((prev) => prev.filter((i) => i.id !== intent.id));
+    setMessages((prev) => [
+      {
+        id: d.id,
+        name: NO_NAME,
+        email: '',
+        phone: '',
+        message: '',
+        is_read: true,
+        created_date: new Date().toISOString(),
+        status: 'new',
+        channel: intent.channel,
+      },
+      ...prev,
+    ]);
+    setFocusId(d.id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   const empty = !loading && !failed && messages.length === 0 && intents.length === 0;
 
   return (
@@ -139,7 +166,7 @@ export default function UpdateLeadsPage() {
             לחצו על כפתור באתר. הגיעה מהם הודעה?
           </h2>
           {intents.map((i) => (
-            <TapCard key={i.id} intent={i} onDismiss={() => dismissTap(i.id)} />
+            <TapCard key={i.id} intent={i} onConfirm={() => confirmTap(i)} onDismiss={() => dismissTap(i.id)} />
           ))}
         </section>
       )}
@@ -283,30 +310,24 @@ function LeadCard({ m, focused }: { m: ContactMessage; focused: boolean }) {
   );
 }
 
-// A tap on the site's button. "כן, הגיעה" opens everything at once - what
-// happened, name, details - and one שמירה logs the enquiry with the tap's ad
-// attribution. "עוד לא ידוע" keeps it open for later.
-function TapCard({ intent, onDismiss }: { intent: ContactIntent; onDismiss: () => void }) {
-  const [arrived, setArrived] = useState(false);
-  const [status, setStatus] = useState<LeadStatus>('new');
-  const [name, setName] = useState('');
-  const [note, setNote] = useState('');
+// A tap on the site's button: one tap answers whether a message came.
+// "כן, הגיעה" logs it as an enquiry right away (see confirmTap); "לא הגיעה"
+// dismisses it.
+function TapCard({
+  intent,
+  onConfirm,
+  onDismiss,
+}: {
+  intent: ContactIntent;
+  onConfirm: () => Promise<void>;
+  onDismiss: () => void;
+}) {
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const hint = OUTCOMES.find((o) => o.key === status)?.hint ?? 'רוצה לפרט? למשל: במה מדובר, איך שמעו עלייך (לא חובה)';
 
-  async function save() {
+  async function confirm() {
     setSaving(true);
     try {
-      const res = await fetch('/api/manage/contacts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, channel: intent.channel, status, outcome_note: note, intent_id: intent.id }),
-      });
-      if (!res.ok) throw new Error(String(res.status));
-      setSaved(true);
-    } catch {
-      alert('השמירה נכשלה. נסי שוב.');
+      await onConfirm();
     } finally {
       setSaving(false);
     }
@@ -321,48 +342,19 @@ function TapCard({ intent, onDismiss }: { intent: ContactIntent; onDismiss: () =
           · {timeAgo(intent.created_at)} · {intentSource(intent)}
         </span>
       </p>
-
-      {saved ? (
-        <p className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm font-medium text-emerald-900 inline-flex items-center gap-1.5 w-full">
-          <Check className="w-4 h-4" aria-hidden="true" />
-          נשמר: {OUTCOME_LABEL[status]}
-        </p>
-      ) : !arrived ? (
-        <div className="grid grid-cols-2 gap-2">
-          <button type="button" onClick={() => setArrived(true)} className={`${btn} bg-stone-900 border-stone-900 text-white`}>
-            כן, הגיעה
-          </button>
-          <button type="button" onClick={onDismiss} className={`${btn} ${off}`}>
-            לא הגיעה
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-2.5">
-          <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="מה קרה">
-            {(['new', 'started_therapy', 'irrelevant'] as const).map((k) => {
-              const on = status === k;
-              const tone = OUTCOMES.find((o) => o.key === k)?.on ?? 'bg-stone-900 border-stone-900 text-white';
-              return (
-                <button
-                  key={k}
-                  type="button"
-                  role="radio"
-                  aria-checked={on}
-                  onClick={() => setStatus(k)}
-                  className={`${btn} text-sm ${on ? tone : off}`}
-                >
-                  {OUTCOME_LABEL[k]}
-                </button>
-              );
-            })}
-          </div>
-          <DetailFields name={name} note={note} hint={hint} onName={setName} onNote={setNote} />
-          <button type="button" onClick={save} disabled={saving} className={saveBtn}>
-            {saving ? 'שומרת...' : 'שמירה'}
-          </button>
-        </div>
-      )}
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={confirm}
+          disabled={saving}
+          className={`${btn} bg-stone-900 border-stone-900 text-white disabled:opacity-60`}
+        >
+          {saving ? 'שומרת...' : 'כן, הגיעה'}
+        </button>
+        <button type="button" onClick={onDismiss} disabled={saving} className={`${btn} ${off}`}>
+          לא הגיעה
+        </button>
+      </div>
     </article>
   );
 }
-
