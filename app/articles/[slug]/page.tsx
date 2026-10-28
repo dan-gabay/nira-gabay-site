@@ -20,7 +20,7 @@ import { TEAL_DARK } from '@/lib/palette';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import JsonLd from '@/components/JsonLd';
-import { buildArticleSchema } from '@/lib/articleSchema';
+import { buildArticleSchema, articleImageAlt } from '@/lib/articleSchema';
 import type { Metadata } from 'next';
 
 type Props = { params: Promise<{ slug: string }> };
@@ -49,7 +49,7 @@ type Article = {
   faq?: unknown | null;
   schema_json?: Record<string, unknown> | null;
   internal_links?: Array<{ slug: string; title?: string; anchor?: string; reason?: string }> | null;
-  seo_package?: { og_title?: string; og_description?: string } | null;
+  seo_package?: { og_title?: string; og_description?: string; image_alt?: string } | null;
   focus_keyword?: string | null;
   secondary_keywords?: string[] | null;
 };
@@ -175,6 +175,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const canonical = article.canonical_url || `https://www.niragabay.com/articles/${slug}`;
   const ogTitle = seoPkg.og_title || metaTitle;
   const ogDescription = seoPkg.og_description || metaDescription;
+  const imageAlt = articleImageAlt(article);
   const secondaryKeywords: string[] = Array.isArray(article.secondary_keywords)
     ? article.secondary_keywords
     : [];
@@ -209,7 +210,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         url: article.image_url || 'https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png',
         width: 1200,
         height: 630,
-        alt: article.title,
+        alt: imageAlt,
       }],
     },
     twitter: {
@@ -420,7 +421,7 @@ export default async function ArticlePage({ params }: Props) {
             <div className="mb-5 md:mb-12 relative w-full aspect-[16/9] rounded-xl overflow-hidden shadow-lg">
               <Image
                 src={article.image_url}
-                alt={`תמונת המאמר: ${article.title} - נירה גבאי פסיכותרפיה`}
+                alt={articleImageAlt(article)}
                 fill
                 priority
                 className="object-cover"

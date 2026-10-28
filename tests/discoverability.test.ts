@@ -17,7 +17,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import robots from '@/app/robots';
-import { buildArticleSchema } from '@/lib/articleSchema';
+import { buildArticleSchema, articleImageAlt } from '@/lib/articleSchema';
 import {
   authorRef,
   publisherRef,
@@ -228,6 +228,22 @@ test('wordCount is present and does not count markdown punctuation', () => {
   assert.equal(typeof schema.wordCount, 'number');
   assert.ok((schema.wordCount as number) > 0);
   assert.equal(buildArticleSchema({ ...ARTICLE, content: null }).wordCount, undefined);
+});
+
+test('a described cover image is an ImageObject with its Hebrew caption', () => {
+  const alt = 'איור של הורה וילד משוחחים על הספה';
+  const schema = buildArticleSchema({ ...ARTICLE, seo_package: { image_alt: alt } });
+  assert.deepEqual(schema.image, {
+    '@type': 'ImageObject',
+    url: ARTICLE.image_url,
+    caption: alt,
+  });
+  assert.equal(articleImageAlt({ title: ARTICLE.title, seo_package: { image_alt: alt } }), alt);
+});
+
+test('an undescribed cover image falls back to the title for alt text', () => {
+  assert.equal(typeof buildArticleSchema({ ...ARTICLE, seo_package: { image_alt: ' ' } }).image, 'string');
+  assert.ok(articleImageAlt({ title: ARTICLE.title, seo_package: null }).includes(ARTICLE.title));
 });
 
 test('an article without an image still declares one', () => {
