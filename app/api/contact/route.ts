@@ -151,6 +151,7 @@ export async function POST(req: NextRequest) {
         action: channel === 'email' ? 'contact_notify_email' : 'contact_notify_telegram',
         reason: r.reason,
         path: attribution.source_page,
+        userAgent: req.headers.get('user-agent'),
       });
     }
   }

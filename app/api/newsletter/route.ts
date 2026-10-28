@@ -37,7 +37,11 @@ export async function POST(req: NextRequest) {
   // Unique violation = already subscribed; treat as success.
   if (error && error.code !== '23505') {
     console.error('newsletter insert failed:', error.message);
-    await recordSiteError({ action: 'newsletter', reason: 'db_insert_failed' });
+    await recordSiteError({
+      action: 'newsletter',
+      reason: 'db_insert_failed',
+      userAgent: req.headers.get('user-agent'),
+    });
     return NextResponse.json(
       { error: 'ההרשמה נכשלה, נסו שוב מאוחר יותר' },
       { status: 500 },

@@ -96,7 +96,11 @@ export async function POST(req: NextRequest) {
     }
   } catch (e) {
     console.error('contact intent failed:', e);
-    await recordSiteError({ action: 'contact_intent', reason: 'exception' });
+    await recordSiteError({
+      action: 'contact_intent',
+      reason: 'exception',
+      userAgent: req.headers.get('user-agent'),
+    });
   }
 
   return new NextResponse(null, { status: 204 });
