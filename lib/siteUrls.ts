@@ -36,7 +36,7 @@ export const STATIC_CONTENT_VERSION = '2026-10-10';
  * does, and nothing at runtime knows when that copy last changed. Bump it with
  * a real edit to a service page.
  */
-export const SERVICES_CONTENT_VERSION = '2026-10-23';
+export const SERVICES_CONTENT_VERSION = '2026-10-27';
 
 // What these pages used to claim was `new Date()`: every fetch of the sitemap
 // said every static page had changed that very second. Google documents that
