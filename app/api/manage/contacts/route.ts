@@ -299,7 +299,8 @@ export async function POST(req: NextRequest) {
     if (claimError) console.error('manage contact intent claim failed:', claimError.message);
   }
 
-  return NextResponse.json({ ok: true });
+  // The id lets /manage/update show the new lead's card straight away.
+  return NextResponse.json({ ok: true, id: leadId });
 }
 
 export async function DELETE(req: NextRequest) {
