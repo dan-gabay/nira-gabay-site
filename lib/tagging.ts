@@ -35,10 +35,11 @@ export const GOOGLE_ADS_ID =
 // Microsoft Clarity: session replay and heatmaps. Not part of the GTM/direct
 // split above - the container never carried it - so it loads on its own.
 //
-// Left as a required env var rather than defaulted like the GA and pixel ids.
-// Those two only count things; this one records what a visitor does on a page
-// about therapy, and that is not something to switch on by default in a repo.
-export const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID || '';
+// Owner's project, created 2026-10-29 with masking set to Strict. Defaulted
+// like the ids above at Dan's request: as an env var it was never set, so the
+// site recorded nothing. It still records what a visitor does on a page about
+// therapy, so the privacy layers in components/Clarity.tsx all stay in place.
+export const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID || 'z5d6aui0mc';
 
 /** True when GTM owns the tags and the site must not embed them itself. */
 export const usingGtm = Boolean(GTM_ID);
