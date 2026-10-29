@@ -15,7 +15,12 @@ export default function MetaPixel() {
 
   return (
     <>
-      <Script id="meta-pixel" strategy="afterInteractive">
+      {/* lazyOnload: the pixel builds an audience and is not part of the
+          Google Ads conversion setup, so it waits for the page to finish
+          loading instead of competing with hydration on a phone (U-19).
+          A tap before then sends no Meta event - lib/conversions.ts
+          already skips when fbq is missing. */}
+      <Script id="meta-pixel" strategy="lazyOnload">
         {`
           !function(f,b,e,v,n,t,s)
           {if(f.fbq)return;n=f.fbq=function(){n.callMethod?

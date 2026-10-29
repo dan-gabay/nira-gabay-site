@@ -23,7 +23,14 @@ export const GA_MEASUREMENT_ID =
 // adds a dashboard step between a working deploy and working measurement.
 export const META_PIXEL_ID =
   process.env.NEXT_PUBLIC_META_PIXEL_ID || '2294471474637160';
-export const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || '';
+// Google Ads tag of account 981-360-8349, read from the account's conversion
+// tracking setting. Defaulted for the same reason as the two above: it is
+// public, and as an env var it never got set, so the live site ran without
+// the Ads tag (no conversion linker, no gclid cookie). It only configures the
+// tag - conversions are still imported from GA4 key events, so nothing is
+// counted twice.
+export const GOOGLE_ADS_ID =
+  process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || 'AW-18318601009';
 
 // Microsoft Clarity: session replay and heatmaps. Not part of the GTM/direct
 // split above - the container never carried it - so it loads on its own.

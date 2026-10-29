@@ -31,8 +31,9 @@ const noSubscribe = () => () => {};
 // The same goes for the owner on the public pages once the
 // switch in /manage is on (lib/ownerOptOut.ts). The server cannot read the cookie
 // without making every page dynamic, so it renders no trackers at all and the
-// browser adds them after hydration when the switch is off. Every tracker here
-// is an afterInteractive script, so that is when they would load anyway.
+// browser adds them after hydration when the switch is off. GA4 and GTM are
+// afterInteractive scripts, so that is when they would load anyway; Meta Pixel
+// and Clarity wait for lazyOnload (U-19).
 export default function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const optedOut = useSyncExternalStore(noSubscribe, isOptedOut, () => true);
