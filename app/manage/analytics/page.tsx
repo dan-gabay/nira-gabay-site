@@ -17,7 +17,7 @@ import GoogleSection from '@/components/manage/analytics/GoogleSection';
 import ArticleEngagementCard, { type ArticleEngagement } from '@/components/manage/ArticleEngagement';
 import { buildInsights } from '@/lib/analyticsInsights';
 import { BOT_KIND_LABELS, type StoredBotKind } from '@/lib/botDetect';
-import { Card, Disclosure, Empty, Section, Segmented } from '@/components/manage/analytics/ui';
+import { Card, Disclosure, Empty, FoldedSection, Section, Segmented } from '@/components/manage/analytics/ui';
 import { serviceName } from '@/components/manage/analytics/labels';
 import { Overview, heDate } from '@/components/manage/analytics/Overview';
 import { Enquiries } from '@/components/manage/analytics/Enquiries';
@@ -398,11 +398,18 @@ function Dashboard({
             rangeLabel={rangeLabel}
             outcomes={outcomes}
           />
+          {/* Right under the visits-and-taps chart it breaks down (Dan, 2026-10-29). */}
+          {sourceSeries.length > 1 && (
+            <Card title="תמהיל המקורות לאורך זמן" sub={rangeLabel}>
+              <SourceBars data={sourcePoints} series={sourceSeries} />
+            </Card>
+          )}
         </Section>
 
-        <Section id="trends" title="מגמות לאורך זמן" question="האם זה משתפר משבוע לשבוע. תמיד לפי שבועות, בלי קשר לטווח שנבחר למעלה.">
+        {/* Folded until opened (Dan, 2026-10-29); the weeks load only then. */}
+        <FoldedSection id="trends" title="מגמות לאורך זמן" question="האם זה משתפר משבוע לשבוע. תמיד לפי שבועות, בלי קשר לטווח שנבחר למעלה.">
           <Trends />
-        </Section>
+        </FoldedSection>
 
         <Section id="enquiries" title="לחיצות ליצירת קשר" question="מה הביא את הלחיצות על ווטסאפ, טלפון, מייל וטופס.">
           <Enquiries byButton={data.conversions_by_source || []} log={log} articleTitles={articleTitles} />
@@ -421,12 +428,6 @@ function Dashboard({
               siteConversions={data.totals.conversions}
             />
           </Card>
-
-          {sourceSeries.length > 1 && (
-            <Card title="תמהיל המקורות לאורך זמן" sub={rangeLabel}>
-              <SourceBars data={sourcePoints} series={sourceSeries} />
-            </Card>
-          )}
 
           {organic && (
             <Disclosure title="חיפוש אורגני - פירוט" sub="לאיזה עמוד גוגל שלח, והאם העמוד החזיק">

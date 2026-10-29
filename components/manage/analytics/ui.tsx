@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ArrowUp, ArrowDown, ChevronDown, Minus } from 'lucide-react';
 
 // The building blocks every section of /manage/analytics is made of, so the page
@@ -233,6 +233,44 @@ export function ShowMore({
       {open ? 'הצג פחות' : more}
       <ChevronDown className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
     </button>
+  );
+}
+
+/**
+ * A Section that starts folded: the heading is the toggle, and the content
+ * mounts on the first open, so a section that fetches its own data does not
+ * load until someone asks for it.
+ */
+export function FoldedSection({
+  id,
+  title,
+  question,
+  children,
+}: {
+  id: string;
+  title: string;
+  question: string;
+  children: ReactNode;
+}) {
+  const [opened, setOpened] = useState(false);
+  return (
+    <section id={id} aria-labelledby={`${id}-h`} className="scroll-mt-44 lg:scroll-mt-24">
+      <details className="group" onToggle={(e) => e.currentTarget.open && setOpened(true)}>
+        <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer select-none flex items-center justify-between gap-3 px-0.5 min-h-[44px]">
+          <span className="min-w-0">
+            <h2 id={`${id}-h`} className="text-base md:text-lg font-bold text-stone-800 leading-tight">
+              {title}
+            </h2>
+            <span className="block text-[12px] md:text-[13px] text-stone-500 mt-0.5">{question}</span>
+          </span>
+          <ChevronDown
+            className="w-5 h-5 flex-shrink-0 text-stone-400 transition-transform group-open:rotate-180"
+            aria-hidden="true"
+          />
+        </summary>
+        <div className="mt-3 md:mt-4">{opened && children}</div>
+      </details>
+    </section>
   );
 }
 
