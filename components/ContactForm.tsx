@@ -10,6 +10,7 @@ import {
   reportSiteError,
 } from '@/lib/analytics';
 import { getStoredAttribution } from '@/lib/attribution';
+import { clarityEvent } from '@/lib/clarity';
 import { isValidIsraeliPhone, PHONE_ERROR } from '@/lib/phone';
 
 // One definition for the field styling, so the two variants cannot drift.
@@ -77,6 +78,7 @@ export default function ContactForm({
     // hardest part of reaching out, and a name and number are enough to call.
     if (!formData.name || !formData.phone) {
       setError('נא למלא שם וטלפון');
+      clarityEvent('form_error');
       return;
     }
     // Checked again on the server, which is the authority; this is here so the
@@ -84,6 +86,7 @@ export default function ContactForm({
     if (!isValidIsraeliPhone(formData.phone)) {
       setPhoneTouched(true);
       setError(PHONE_ERROR);
+      clarityEvent('form_error');
       // Never reaches the server, so the server cannot count it. A number
       // refused here is the likeliest way a real enquiry quietly gives up.
       reportSiteError('contact_form', 'phone_rejected_client');
@@ -134,6 +137,7 @@ export default function ContactForm({
         reportSiteError('contact_form', `http_${status}`);
       }
       setError('לא הצלחנו לשלוח את ההודעה. אנא נסו שוב או צרו קשר ישירות בטלפון/WhatsApp.');
+      clarityEvent('form_error');
     } finally {
       setIsLoading(false);
     }
