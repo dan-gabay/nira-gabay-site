@@ -42,3 +42,6 @@ next-env.d.ts
 
 # article import pipeline - local working data (not for git)
 /data/
+
+# Hallmark design skill - local build logs and screenshots
+/.hallmark/

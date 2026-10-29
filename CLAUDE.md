@@ -99,6 +99,17 @@ Rules for growth-related code:
 
 ---
 
+## Hallmark design skill
+
+`.claude/skills/hallmark/` is the Hallmark design skill (Nutlope/hallmark v2.0.0, MIT, vendored at commit 4f6a46c). It runs only when Hallmark is named, e.g. `/hallmark audit app/page.tsx` or `/hallmark redesign <path>`.
+
+- On this site, Hallmark output is a proposal: the existing design, Hebrew RTL layout, contact paths and tracking stay unless Dan approves a change. Prefer `audit` first.
+- All growth rules above still apply (no street address, no invented testimonials/stats, CBT stays).
+- Do not run `scripts/imagegen.mjs` (needs a paid Together AI key) or `scripts/install-hook.mjs` (edits Claude settings) without Dan's approval.
+- To update: copy `skills/hallmark` from the upstream repo over this folder in a PR.
+
+---
+
 ## Key commands
 
 ```bash
