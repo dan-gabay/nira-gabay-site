@@ -21,8 +21,9 @@ import { CLARITY_ID } from '@/lib/tagging';
 //   3. Not loaded on /manage at all - see SiteChrome. The admin screens list
 //      real people's names, phone numbers and messages.
 //
-// Renders nothing without NEXT_PUBLIC_CLARITY_ID, so local and preview builds
-// record nobody.
+// The project id defaults in lib/tagging.ts, so every build records -
+// including local and preview ones. Their visits are automated or ours; use
+// the owner switch in /manage to keep a browser out.
 export default function Clarity() {
   if (!CLARITY_ID) return null;
 
