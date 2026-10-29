@@ -10,6 +10,7 @@
 // fires in local or preview builds.
 
 import { META_PIXEL_ID, GOOGLE_ADS_ID, usingGtm } from './tagging';
+import { clarityEvent } from './clarity';
 
 export { META_PIXEL_ID, GOOGLE_ADS_ID };
 
@@ -46,6 +47,9 @@ export function reportContactConversion(
   method: 'whatsapp' | 'phone' | 'email' | 'form',
 ): void {
   meta('Contact', { content_category: method });
+  // Not an ad platform, but the same moment: lets Clarity filter recordings to
+  // the sessions that reached out. Event name only (see lib/clarity.ts).
+  clarityEvent(`contact_${method}`);
 }
 
 /** Mailing-list signup. Real, but worth far less than a contact - kept separate. */

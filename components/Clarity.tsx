@@ -1,7 +1,10 @@
 'use client';
 
+import { useEffect } from 'react';
 import Script from 'next/script';
+import { usePathname } from 'next/navigation';
 import { CLARITY_ID } from '@/lib/tagging';
+import { clarityTag, pageType, trafficType } from '@/lib/clarity';
 
 // Microsoft Clarity: session replay and heatmaps.
 //
@@ -25,6 +28,18 @@ import { CLARITY_ID } from '@/lib/tagging';
 // including local and preview ones. Their visits are automated or ours; use
 // the owner switch in /manage to keep a browser out.
 export default function Clarity() {
+  const pathname = usePathname();
+
+  // Session tags for the Clarity filters (lib/clarity.ts). The traffic type
+  // is read from the URL the visit landed on, so only the first render counts:
+  // client-side navigation keeps the referrer but changes the query.
+  useEffect(() => {
+    clarityTag('traffic', trafficType(window.location.search, document.referrer));
+  }, []);
+  useEffect(() => {
+    if (pathname) clarityTag('page_type', pageType(pathname));
+  }, [pathname]);
+
   if (!CLARITY_ID) return null;
 
   return (

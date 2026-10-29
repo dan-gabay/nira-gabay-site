@@ -8,6 +8,7 @@ import { reportContactConversion, reportLeadConversion } from './conversions';
 import { recordContactIntent } from './contactIntent';
 import { visitorState, daysSinceFirst } from './visitor';
 import { usingGtm } from './tagging';
+import { clarityEvent, clarityEventOnce } from './clarity';
 import {
   isTrackedEvent,
   pageTypeFor,
@@ -523,7 +524,7 @@ export const trackCTAClick = (ctaName: string, location: string) => {
     event_label: ctaName,
     location: location,
     value: 5,
-  });
+  });  clarityEvent('cta_click');
 };
 
 // Article Page
@@ -611,7 +612,8 @@ export const trackFormFieldFocus = (formName: string, fieldName: string) => {
   trackEvent('form_field_focus', {
     event_category: 'Form',
     event_label: `${formName}_${fieldName}`,
-  });
+  });  // The first field touched is where the form starts; Clarity needs it once.
+  if (formName === 'contact_form') clarityEventOnce('form_start');
 };
 
 // Scroll to section
