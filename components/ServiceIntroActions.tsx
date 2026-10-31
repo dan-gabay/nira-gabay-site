@@ -19,8 +19,8 @@ export default function ServiceIntroActions({
   waHref: string;
 }) {
   const base =
-    'flex-1 inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-full ' +
-    'text-sm md:text-base font-medium transition-colors';
+    'flex-1 inline-flex items-center justify-center gap-1.5 sm:gap-2 min-h-[44px] px-3 sm:px-4 rounded-full ' +
+    'whitespace-nowrap text-sm md:text-base font-medium transition-colors';
 
   return (
     <div className="flex gap-2.5 md:gap-3 mt-3 md:mt-4">
@@ -29,7 +29,7 @@ export default function ServiceIntroActions({
         onClick={() => trackCTAClick('service_intro_form', `service_${serviceSlug}`)}
         className={`${base} bg-emerald-700 text-white hover:bg-emerald-800`}
       >
-        <PenLine className="w-4 h-4 md:w-[18px] md:h-[18px]" aria-hidden="true" />
+        <PenLine className="w-4 h-4 md:w-[18px] md:h-[18px] flex-shrink-0" aria-hidden="true" />
         לכתוב לי
       </a>
       <a
@@ -42,7 +42,7 @@ export default function ServiceIntroActions({
         }}
         className={`${base} border border-emerald-700/40 text-emerald-800 hover:bg-emerald-50`}
       >
-        <MessageCircle className="w-4 h-4 md:w-[18px] md:h-[18px]" aria-hidden="true" />
+        <MessageCircle className="w-4 h-4 md:w-[18px] md:h-[18px] flex-shrink-0" aria-hidden="true" />
         WhatsApp
       </a>
     </div>
