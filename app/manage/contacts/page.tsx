@@ -78,6 +78,8 @@ export default function ManageContactsPage() {
   const [leadError, setLeadError] = useState('');
   // Set when "הגיע" already saved the lead: the form then fills it in.
   const [savedLeadId, setSavedLeadId] = useState<string | null>(null);
+  // The instant save after "הגיע" is still on its way.
+  const [tapSaving, setTapSaving] = useState(false);
 
   useEffect(() => {
     loadMessages();
@@ -147,28 +149,37 @@ export default function ManageContactsPage() {
   // Writing "גוגל" into it from the gclid would overwrite the one signal that
   // can contradict the tracking, and leave no way to notice when it is wrong.
   async function startLeadFromIntent(intent: ContactIntent) {
+    // The form opens whatever happens. If the instant save fails, the form
+    // still carries the tap, and the outcome buttons create the lead with it
+    // (POST with intent_id) - the tap is never lost to a failed request.
     setIntents((prev) => prev.filter((i) => i.id !== intent.id));
+    setLinkedIntent(intent);
+    setSavedLeadId(null);
+    setNewLead({ ...EMPTY_LEAD, channel: intent.channel });
+    setLeadError('');
+    setShowAddForm(true);
+    setOpenId(null);
+    setView('new');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTapSaving(true);
     try {
       const res = await fetch('/api/manage/contacts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ channel: intent.channel, intent_id: intent.id }),
+        body: JSON.stringify({ channel: intent.channel, status: 'new', intent_id: intent.id }),
       });
-      if (!res.ok) throw new Error(`insert failed (${res.status})`);
       const d = await res.json().catch(() => ({}));
-      setLinkedIntent(intent);
-      setSavedLeadId(typeof d.id === 'string' ? d.id : null);
-      setNewLead({ ...EMPTY_LEAD, channel: intent.channel });
-      setLeadError('');
-      setShowAddForm(true);
-      setView('new');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (!res.ok || typeof d.id !== 'string') throw new Error(`${res.status} ${d.error || ''}`.trim());
+      setSavedLeadId(d.id);
       await loadMessages();
       refresh();
     } catch (error) {
-      console.error('Error saving lead from tap:', error);
-      alert('השמירה נכשלה. נסי שוב.');
-      await loadMessages();
+      const why = error instanceof Error ? error.message : String(error);
+      console.error('Error saving lead from tap:', why);
+      // Shown with the reason, so a failure can be traced. The form stays open.
+      setLeadError(`השמירה האוטומטית נכשלה (${why}). אפשר לשמור עם הכפתורים למטה.`);
+    } finally {
+      setTapSaving(false);
     }
   }
 
@@ -209,7 +220,11 @@ export default function ManageContactsPage() {
         : await fetch('/api/manage/contacts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(status ? { ...newLead, status } : newLead),
+            body: JSON.stringify({
+              ...newLead,
+              ...(status ? { status } : {}),
+              ...(linkedIntent ? { intent_id: linkedIntent.id } : {}),
+            }),
           });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
@@ -223,7 +238,7 @@ export default function ManageContactsPage() {
       console.error('Error adding lead:', error);
       const msg = error instanceof Error ? error.message : '';
       // Server messages in Hebrew (a bad phone number) are shown as they are.
-      setLeadError(/[א-ת]/.test(msg) ? msg : 'השמירה נכשלה. נסי שוב.');
+      setLeadError(/[א-ת]/.test(msg) ? msg : `השמירה נכשלה (${msg}). נסי שוב.`);
     } finally {
       setIsAddingLead(false);
     }
@@ -297,10 +312,10 @@ export default function ManageContactsPage() {
       <div className="space-y-4 md:space-y-5">
         {showAddForm && (
           <ManualLeadForm
-            linkedIntent={linkedIntent}
             lead={newLead}
             onChange={setNewLead}
-            saving={isAddingLead}
+            saving={isAddingLead || tapSaving}
+            saved={!!savedLeadId}
             error={leadError}
             onSave={(status) => addManualLead(status)}
           />
@@ -726,17 +741,17 @@ function IntentQueue({
 // default channel. heard_from and the site visit are on the saved lead's card,
 // as before; heard_from is never filled from the tap (see startLeadFromIntent).
 function ManualLeadForm({
-  linkedIntent,
   lead,
   onChange,
   saving,
+  saved,
   error,
   onSave,
 }: {
-  linkedIntent: ContactIntent | null;
   lead: typeof EMPTY_LEAD;
   onChange: (l: typeof EMPTY_LEAD) => void;
   saving: boolean;
+  saved: boolean;
   error: string;
   onSave: (status?: LeadStatus) => void;
 }) {
@@ -744,7 +759,7 @@ function ManualLeadForm({
     'w-full min-h-[48px] px-3.5 rounded-xl border border-stone-300 text-base bg-white focus:ring-2 focus:ring-stone-300 focus:outline-none';
   return (
     <section className="bg-white rounded-2xl border border-stone-300 shadow-sm p-4 md:p-5 space-y-2.5" aria-label="פנייה חדשה">
-      {linkedIntent && (
+      {saved && (
         <p className="text-sm text-emerald-800 inline-flex items-center gap-1.5">
           <Check className="w-4 h-4" aria-hidden="true" />
           הפנייה נשמרה. מה קרה איתה?
