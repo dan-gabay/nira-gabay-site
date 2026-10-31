@@ -180,10 +180,13 @@ export default function ManageContactsPage() {
     setShowAddForm(false);
   }
 
-  async function addManualLead() {
+  // Saved with one of the two outcomes Nira records (Dan, 31 Oct: the save
+  // button is "קבענו טיפול" / "לא רלוונטי"), or with none yet - the lead then
+  // stays new.
+  async function addManualLead(status?: LeadStatus) {
     const typed = !!(newLead.phone.trim() || newLead.message.trim() || newLead.name.trim());
     // A tap already saved the lead; with nothing typed there is nothing to add.
-    if (savedLeadId && !typed) {
+    if (savedLeadId && !typed && !status) {
       closeLeadForm();
       return;
     }
@@ -200,19 +203,20 @@ export default function ManageContactsPage() {
               phone: newLead.phone,
               message: newLead.message,
               name: newLead.name,
+              ...(status ? { status } : {}),
             }),
           })
         : await fetch('/api/manage/contacts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newLead),
+            body: JSON.stringify(status ? { ...newLead, status } : newLead),
           });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
         throw new Error(d.error || `save failed (${res.status})`);
       }
       closeLeadForm();
-      setView('new');
+      setView(status === 'started_therapy' ? 'clients' : status === 'irrelevant' ? 'irrelevant' : 'new');
       await loadMessages();
       refresh();
     } catch (error) {
@@ -298,7 +302,7 @@ export default function ManageContactsPage() {
             onChange={setNewLead}
             saving={isAddingLead}
             error={leadError}
-            onSave={addManualLead}
+            onSave={(status) => addManualLead(status)}
           />
         )}
 
@@ -715,13 +719,12 @@ function IntentQueue({
 // Manual lead - for calls and WhatsApp that never touched the form, or for a
 // tap that turned out to be a message.
 //
-// Built to fit one phone screen with the save button in view (Dan, 31 Oct):
-// phone, notes and save on top, everything else folded under "פרטים נוספים".
-// For a tap from the site the source is already known - the tap's campaign is
-// copied onto the lead and its channel is the tap's - so nothing about the
-// source is asked or shown; the visit is still one tap away in the fold, and
-// on the saved lead's card as before. heard_from stays NOT filled from the tap
-// (see startLeadFromIntent), it is simply not asked here for a site tap.
+// Built to fit one phone screen (Dan, 31 Oct): name, phone, notes and the two
+// outcome buttons, nothing else. For a tap from the site the source is already
+// known - the tap's campaign is copied onto the lead and its channel is the
+// tap's - so nothing about it is asked or shown. A hand-logged lead keeps the
+// default channel. heard_from and the site visit are on the saved lead's card,
+// as before; heard_from is never filled from the tap (see startLeadFromIntent).
 function ManualLeadForm({
   linkedIntent,
   lead,
@@ -735,7 +738,7 @@ function ManualLeadForm({
   onChange: (l: typeof EMPTY_LEAD) => void;
   saving: boolean;
   error: string;
-  onSave: () => void;
+  onSave: (status?: LeadStatus) => void;
 }) {
   const field =
     'w-full min-h-[48px] px-3.5 rounded-xl border border-stone-300 text-base bg-white focus:ring-2 focus:ring-stone-300 focus:outline-none';
@@ -744,9 +747,17 @@ function ManualLeadForm({
       {linkedIntent && (
         <p className="text-sm text-emerald-800 inline-flex items-center gap-1.5">
           <Check className="w-4 h-4" aria-hidden="true" />
-          הפנייה נשמרה. אפשר להוסיף טלפון והערות.
+          הפנייה נשמרה. מה קרה איתה?
         </p>
       )}
+      <input
+        value={lead.name}
+        onChange={(e) => onChange({ ...lead, name: e.target.value })}
+        placeholder="שם"
+        aria-label="שם"
+        autoComplete="off"
+        className={field}
+      />
       <input
         value={lead.phone}
         onChange={(e) => onChange({ ...lead, phone: e.target.value })}
@@ -762,7 +773,7 @@ function ManualLeadForm({
         onChange={(e) => onChange({ ...lead, message: e.target.value })}
         placeholder="הערות (מה רצו, מתי לחזור...)"
         aria-label="הערות"
-        rows={3}
+        rows={2}
         className={`${field} py-2.5 resize-none`}
       />
       {error && (
@@ -770,60 +781,30 @@ function ManualLeadForm({
           {error}
         </p>
       )}
+      <div className="grid grid-cols-2 gap-2.5">
+        <button
+          onClick={() => onSave('started_therapy')}
+          disabled={saving}
+          className="min-h-[52px] rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-base font-semibold transition-colors disabled:opacity-60"
+        >
+          קבענו טיפול
+        </button>
+        <button
+          onClick={() => onSave('irrelevant')}
+          disabled={saving}
+          className="min-h-[52px] rounded-xl bg-white border border-stone-300 hover:bg-stone-50 text-stone-800 text-base font-semibold transition-colors disabled:opacity-60"
+        >
+          לא רלוונטי
+        </button>
+      </div>
       <button
-        onClick={onSave}
+        onClick={() => onSave()}
         disabled={saving}
-        className="w-full min-h-[52px] rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-base font-semibold transition-colors disabled:opacity-60"
+        className="w-full min-h-[40px] text-sm text-stone-500 underline underline-offset-4 disabled:opacity-60"
       >
-        {saving ? 'שומרת...' : 'שמירה'}
+        {saving ? 'שומרת...' : 'עוד לא ידוע - לשמור בינתיים'}
       </button>
 
-      <details className="group rounded-xl border border-stone-200">
-        <summary className="list-none cursor-pointer select-none min-h-[44px] px-3.5 flex items-center justify-between text-sm text-stone-600">
-          <span>פרטים נוספים (לא חובה)</span>
-          <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180" aria-hidden="true" />
-        </summary>
-        <div className="px-3.5 pb-3.5 space-y-2.5">
-          <input
-            value={lead.name}
-            onChange={(e) => onChange({ ...lead, name: e.target.value })}
-            placeholder="שם"
-            aria-label="שם"
-            autoComplete="off"
-            className={field}
-          />
-          {/* A site tap already knows its channel and source. */}
-          {!linkedIntent && (
-            <>
-              <select
-                value={lead.channel}
-                onChange={(e) => onChange({ ...lead, channel: e.target.value })}
-                aria-label="איך פנו"
-                className={field}
-              >
-                {Object.entries(CHANNEL_LABELS).map(([v, l]) => (
-                  <option key={v} value={v}>
-                    {l}
-                  </option>
-                ))}
-              </select>
-              <input
-                value={lead.heard_from}
-                onChange={(e) => onChange({ ...lead, heard_from: e.target.value })}
-                placeholder="איך שמעו עלייך?"
-                aria-label="איך שמעו עלייך"
-                className={field}
-              />
-            </>
-          )}
-          {linkedIntent?.session_id && (
-            <section className="rounded-xl border border-stone-200 px-3.5 pt-2.5">
-              <h3 className="text-xs md:text-sm font-semibold text-stone-800">המסע באתר</h3>
-              <EnquiryJourneyLoader key={linkedIntent.session_id} session={linkedIntent.session_id} />
-            </section>
-          )}
-        </div>
-      </details>
     </section>
   );
 }
