@@ -117,29 +117,34 @@ export default function ServicesIndexPage() {
             {SERVICES.map((s) => {
               const Icon = ICONS[s.icon];
               return (
+                // Mobile: one full-width row per service (icon, title +
+                // tagline, "קראו עוד" at the far end). From sm up the card
+                // stacks vertically in the two-column grid, as before.
                 <Link
                   key={s.slug}
                   href={`/services/${s.slug}`}
-                  className="group flex flex-col rounded-3xl border border-stone-200 bg-white p-5 md:p-6 hover:border-emerald-200 hover:shadow-sm transition-colors"
+                  className="group flex flex-row items-center gap-3 sm:flex-col sm:items-stretch sm:gap-0 rounded-3xl border border-stone-200 bg-white p-4 sm:p-5 md:p-6 hover:border-emerald-200 hover:shadow-sm transition-colors"
                 >
                   <span
-                    className="w-11 h-11 md:w-12 md:h-12 rounded-2xl flex items-center justify-center mb-3.5"
+                    className="shrink-0 w-12 h-12 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-2xl flex items-center justify-center sm:mb-3.5"
                     style={{ background: '#E4F5EC' }}
                   >
                     <Icon
-                      className="w-5 h-5 md:w-6 md:h-6"
+                      className="w-6 h-6 sm:w-5 sm:h-5 md:w-6 md:h-6"
                       style={{ color: TEAL_DARK }}
                       aria-hidden="true"
                     />
                   </span>
-                  <h2 className="text-base md:text-xl font-bold text-stone-800 mb-1.5">
-                    {s.title}
-                  </h2>
-                  <p className="text-[13.5px] md:text-[0.9375rem] text-stone-600 leading-relaxed flex-1">
-                    {s.tagline}
-                  </p>
+                  <div className="flex-1 min-w-0 flex flex-col">
+                    <h2 className="text-base md:text-xl font-bold text-stone-800 mb-1 sm:mb-1.5">
+                      {s.title}
+                    </h2>
+                    <p className="text-[13.5px] md:text-[0.9375rem] text-stone-600 leading-relaxed flex-1">
+                      {s.tagline}
+                    </p>
+                  </div>
                   <span
-                    className="mt-3.5 inline-flex items-center gap-1.5 text-[13px] md:text-sm font-medium"
+                    className="shrink-0 self-end whitespace-nowrap sm:self-auto sm:mt-3.5 inline-flex items-center gap-1.5 text-[13px] md:text-sm font-medium"
                     style={{ color: TEAL_DARK }}
                   >
                     קראו עוד
