@@ -41,10 +41,10 @@ export default function Footer() {
             <h3 className="text-base md:text-xl font-bold text-white mb-3 md:mb-4 font-serif">ניווט מהיר</h3>
             <ul className="space-y-3">
               {navItems.map((item) => (
-                <li key={item.href}>
+                <li key={item.href} className="flex">
                   <Link 
                     href={item.href}
-                    className="inline-block py-1.5 -my-1.5 text-stone-400 hover:text-white transition-colors"
+                    className="inline-block py-1.5 -my-1.5 leading-5 md:leading-[inherit] text-stone-400 hover:text-white transition-colors"
                     onClick={() => trackFooterLinkClick(item.name)}
                   >
                     {item.name}
@@ -79,7 +79,7 @@ export default function Footer() {
                 instead of a list - owner call, height is not worth it. */}
             <ul className="space-y-3">
               {SERVICES.filter((s) => !s.discreet).map((s) => (
-                <li key={s.slug}>
+                <li key={s.slug} className="flex">
                   <Link
                     href={`/services/${s.slug}`}
                     className="inline-block py-1.5 -my-1.5 text-sm md:text-base text-stone-400 hover:text-white transition-colors"
