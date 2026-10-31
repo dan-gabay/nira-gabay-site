@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabaseServer';
 import { MANAGE_COOKIE, isManageAuthorized } from '@/lib/manageAuth';
 import { normalizePhone, PHONE_ERROR } from '@/lib/phone';
-import { withNote } from '@/components/manage/leads';
+import { splitNote, withNote } from '@/components/manage/leads';
 
 export const runtime = 'nodejs';
 
@@ -135,6 +135,9 @@ export async function PATCH(req: NextRequest) {
     heard_from?: string;
     name?: string;
     outcome_note?: string;
+    // Filled in on the inbox form after "הגיע" already created the lead.
+    phone?: string;
+    message?: string;
   };
   try {
     body = await req.json();
@@ -143,6 +146,12 @@ export async function PATCH(req: NextRequest) {
   }
 
   const update: Record<string, unknown> = {};
+  // Like the name, an empty phone keeps the one already there.
+  if (typeof body.phone === 'string' && body.phone.trim()) {
+    const normalizedPhone = normalizePhone(body.phone.trim());
+    if (!normalizedPhone) return NextResponse.json({ error: PHONE_ERROR }, { status: 400 });
+    update.phone = normalizedPhone;
+  }
   // Written on /manage/update after an outcome is chosen. An empty name keeps
   // the one already there rather than blanking it.
   if (typeof body.name === 'string' && body.name.trim()) update.name = body.name.trim().slice(0, 200);
@@ -158,15 +167,17 @@ export async function PATCH(req: NextRequest) {
   if (typeof body.heard_from === 'string') {
     update.heard_from = body.heard_from.slice(0, 200);
   }
-  if (!body.id || (Object.keys(update).length === 0 && typeof body.outcome_note !== 'string')) {
+  const hasMessage = typeof body.message === 'string' && body.message.trim() !== '';
+  if (!body.id || (Object.keys(update).length === 0 && typeof body.outcome_note !== 'string' && !hasMessage)) {
     return NextResponse.json({ error: 'bad request' }, { status: 400 });
   }
 
   const supabase = supabaseServer();
 
   // The outcome note lives at the end of `message` (see withNote), so the
-  // current message is read and only the note part replaced.
-  if (typeof body.outcome_note === 'string' && body.id) {
+  // current message is read and only the part being written replaced: the
+  // note, the text before it, or both.
+  if ((typeof body.outcome_note === 'string' || hasMessage) && body.id) {
     const { data: row, error: readError } = await supabase
       .from('contact_messages')
       .select('message')
@@ -176,7 +187,10 @@ export async function PATCH(req: NextRequest) {
       if (readError) console.error('manage contacts read failed:', readError.message);
       return NextResponse.json({ error: 'update failed' }, { status: readError ? 500 : 404 });
     }
-    update.message = withNote(row.message, body.outcome_note.slice(0, 2000)).slice(0, 7000);
+    const current = splitNote(row.message);
+    const text = hasMessage ? (body.message as string).trim().slice(0, 5000) : current.text;
+    const note = typeof body.outcome_note === 'string' ? body.outcome_note.slice(0, 2000) : current.note;
+    update.message = withNote(text, note).slice(0, 7000);
   }
 
   const { error } = await supabase

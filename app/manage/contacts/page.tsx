@@ -75,6 +75,9 @@ export default function ManageContactsPage() {
   const [linkedIntent, setLinkedIntent] = useState<ContactIntent | null>(null);
   const [isAddingLead, setIsAddingLead] = useState(false);
   const [newLead, setNewLead] = useState(EMPTY_LEAD);
+  const [leadError, setLeadError] = useState('');
+  // Set when "הגיע" already saved the lead: the form then fills it in.
+  const [savedLeadId, setSavedLeadId] = useState<string | null>(null);
 
   useEffect(() => {
     loadMessages();
@@ -130,9 +133,11 @@ export default function ManageContactsPage() {
     }
   }
 
-  // "A message did arrive." Opens the lead form carrying this tap, so saving
-  // copies its campaign onto the lead. The name still has to be typed - it is
-  // in the WhatsApp message and nowhere the site can reach.
+  // "A message did arrive." Saves the lead at once (Dan, 31 Oct: one tap is
+  // the answer, the form is optional), carrying this tap so the server copies
+  // its campaign onto the lead and claims the tap - it does not come back on
+  // refresh. Then the short form opens on that lead for the phone and notes,
+  // which are written onto it with PATCH.
   //
   // heard_from is deliberately NOT filled in from the tap. It holds what the
   // client herself said when asked how she found Nira, and strategy §4 keeps
@@ -141,35 +146,80 @@ export default function ManageContactsPage() {
   // recommended her, with the ad only being how she found the page again.
   // Writing "גוגל" into it from the gclid would overwrite the one signal that
   // can contradict the tracking, and leave no way to notice when it is wrong.
-  function startLeadFromIntent(intent: ContactIntent) {
-    setLinkedIntent(intent);
-    setNewLead({ ...EMPTY_LEAD, channel: intent.channel });
-    setShowAddForm(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  async function addManualLead() {
-    if (!newLead.name.trim()) {
-      alert('נא למלא שם');
-      return;
-    }
-    setIsAddingLead(true);
+  async function startLeadFromIntent(intent: ContactIntent) {
+    setIntents((prev) => prev.filter((i) => i.id !== intent.id));
     try {
       const res = await fetch('/api/manage/contacts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(linkedIntent ? { ...newLead, intent_id: linkedIntent.id } : newLead),
+        body: JSON.stringify({ channel: intent.channel, intent_id: intent.id }),
       });
       if (!res.ok) throw new Error(`insert failed (${res.status})`);
-      setNewLead(EMPTY_LEAD);
-      setLinkedIntent(null);
-      setShowAddForm(false);
+      const d = await res.json().catch(() => ({}));
+      setLinkedIntent(intent);
+      setSavedLeadId(typeof d.id === 'string' ? d.id : null);
+      setNewLead({ ...EMPTY_LEAD, channel: intent.channel });
+      setLeadError('');
+      setShowAddForm(true);
+      setView('new');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      await loadMessages();
+      refresh();
+    } catch (error) {
+      console.error('Error saving lead from tap:', error);
+      alert('השמירה נכשלה. נסי שוב.');
+      await loadMessages();
+    }
+  }
+
+  function closeLeadForm() {
+    setNewLead(EMPTY_LEAD);
+    setLinkedIntent(null);
+    setSavedLeadId(null);
+    setLeadError('');
+    setShowAddForm(false);
+  }
+
+  async function addManualLead() {
+    const typed = !!(newLead.phone.trim() || newLead.message.trim() || newLead.name.trim());
+    // A tap already saved the lead; with nothing typed there is nothing to add.
+    if (savedLeadId && !typed) {
+      closeLeadForm();
+      return;
+    }
+    setIsAddingLead(true);
+    setLeadError('');
+    try {
+      // A tap already saved the lead: only the details typed here are added.
+      const res = savedLeadId
+        ? await fetch('/api/manage/contacts', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: savedLeadId,
+              phone: newLead.phone,
+              message: newLead.message,
+              name: newLead.name,
+            }),
+          })
+        : await fetch('/api/manage/contacts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newLead),
+          });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || `save failed (${res.status})`);
+      }
+      closeLeadForm();
       setView('new');
       await loadMessages();
       refresh();
     } catch (error) {
       console.error('Error adding lead:', error);
-      alert('שגיאה בהוספת הליד');
+      const msg = error instanceof Error ? error.message : '';
+      // Server messages in Hebrew (a bad phone number) are shown as they are.
+      setLeadError(/[א-ת]/.test(msg) ? msg : 'השמירה נכשלה. נסי שוב.');
     } finally {
       setIsAddingLead(false);
     }
@@ -229,9 +279,8 @@ export default function ManageContactsPage() {
         actions={
           <button
             onClick={() => {
-              setShowAddForm((v) => !v);
-              setLinkedIntent(null);
-              setNewLead(EMPTY_LEAD);
+              if (showAddForm) closeLeadForm();
+              else setShowAddForm(true);
             }}
             className="inline-flex items-center gap-1.5 min-h-[44px] px-4 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium transition-colors"
           >
@@ -248,6 +297,7 @@ export default function ManageContactsPage() {
             lead={newLead}
             onChange={setNewLead}
             saving={isAddingLead}
+            error={leadError}
             onSave={addManualLead}
           />
         )}
@@ -623,7 +673,7 @@ function IntentQueue({
           <h2 id="intents-h" className="text-sm font-semibold text-stone-900">
             {intents.length === 1 ? 'מישהו לחץ על יצירת קשר. הגיעה הודעה?' : `${intents.length} לחיצות על יצירת קשר. הגיעו הודעות?`}
           </h2>
-          <p className="text-xs text-stone-500 mt-0.5">סימון &quot;הגיע&quot; פותח פנייה ושומר גם מאיזו מודעה זה בא.</p>
+          <p className="text-xs text-stone-500 mt-0.5">סימון &quot;הגיע&quot; שומר את הפנייה מיד, יחד עם המקור.</p>
         </div>
       </div>
       <ul className="divide-y divide-amber-200/60 border-t border-amber-200/60">
@@ -664,92 +714,116 @@ function IntentQueue({
 
 // Manual lead - for calls and WhatsApp that never touched the form, or for a
 // tap that turned out to be a message.
+//
+// Built to fit one phone screen with the save button in view (Dan, 31 Oct):
+// phone, notes and save on top, everything else folded under "פרטים נוספים".
+// For a tap from the site the source is already known - the tap's campaign is
+// copied onto the lead and its channel is the tap's - so nothing about the
+// source is asked or shown; the visit is still one tap away in the fold, and
+// on the saved lead's card as before. heard_from stays NOT filled from the tap
+// (see startLeadFromIntent), it is simply not asked here for a site tap.
 function ManualLeadForm({
   linkedIntent,
   lead,
   onChange,
   saving,
+  error,
   onSave,
 }: {
   linkedIntent: ContactIntent | null;
   lead: typeof EMPTY_LEAD;
   onChange: (l: typeof EMPTY_LEAD) => void;
   saving: boolean;
+  error: string;
   onSave: () => void;
 }) {
   const field =
-    'min-h-[44px] px-3.5 rounded-xl border border-stone-300 text-sm bg-white focus:ring-2 focus:ring-stone-300 focus:outline-none';
+    'w-full min-h-[48px] px-3.5 rounded-xl border border-stone-300 text-base bg-white focus:ring-2 focus:ring-stone-300 focus:outline-none';
   return (
-    <section className="bg-white rounded-2xl border border-stone-300 shadow-sm p-4 md:p-5 space-y-3" aria-label="פנייה ידנית">
-      {linkedIntent ? (
-        <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-2.5">
-          <p className="text-sm text-emerald-900 font-medium">
-            משויך ללחיצה מ{timeAgo(linkedIntent.created_at)} · {intentSource(linkedIntent)}
-          </p>
-          <p className="text-xs text-emerald-800/80 mt-0.5">המקור כבר נשמר - אין צורך למלא אותו. נשאר רק שם מההודעה.</p>
-        </div>
-      ) : (
-        <p className="text-sm text-stone-500">לתיעוד פנייה שהגיעה בטלפון או בוואטסאפ, כדי שתיספר יחד עם השאר.</p>
+    <section className="bg-white rounded-2xl border border-stone-300 shadow-sm p-4 md:p-5 space-y-2.5" aria-label="פנייה חדשה">
+      {linkedIntent && (
+        <p className="text-sm text-emerald-800 inline-flex items-center gap-1.5">
+          <Check className="w-4 h-4" aria-hidden="true" />
+          הפנייה נשמרה. אפשר להוסיף טלפון והערות.
+        </p>
       )}
-      {/* The visit behind the tap, open from the start: seeing what they read
-          is the point of this screen while the lead is logged. */}
-      {linkedIntent?.session_id && (
-        <section className="rounded-xl border border-stone-200 px-3.5 pt-2.5">
-          <h3 className="text-xs md:text-sm font-semibold text-stone-800">המסע באתר</h3>
-          <EnquiryJourneyLoader key={linkedIntent.session_id} session={linkedIntent.session_id} />
-        </section>
-      )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-        <input
-          value={lead.name}
-          onChange={(e) => onChange({ ...lead, name: e.target.value })}
-          placeholder="שם *"
-          aria-label="שם"
-          className={field}
-        />
-        <input
-          value={lead.phone}
-          onChange={(e) => onChange({ ...lead, phone: e.target.value })}
-          placeholder="טלפון (לא חובה)"
-          aria-label="טלפון"
-          dir="ltr"
-          inputMode="tel"
-          className={`${field} text-left`}
-        />
-        <select
-          value={lead.channel}
-          onChange={(e) => onChange({ ...lead, channel: e.target.value })}
-          aria-label="ערוץ"
-          className={field}
-        >
-          {Object.entries(CHANNEL_LABELS).map(([v, l]) => (
-            <option key={v} value={v}>
-              {l}
-            </option>
-          ))}
-        </select>
-        <input
-          value={lead.heard_from}
-          onChange={(e) => onChange({ ...lead, heard_from: e.target.value })}
-          placeholder={linkedIntent ? 'מה הם אמרו על איך הגיעו? (לא חובה)' : 'איך שמעו עלייך?'}
-          aria-label="איך שמעו עלייך"
-          className={field}
-        />
-      </div>
+      <input
+        value={lead.phone}
+        onChange={(e) => onChange({ ...lead, phone: e.target.value })}
+        placeholder="טלפון"
+        aria-label="טלפון"
+        dir="ltr"
+        inputMode="tel"
+        autoComplete="off"
+        className={`${field} text-left placeholder:text-right`}
+      />
       <textarea
         value={lead.message}
         onChange={(e) => onChange({ ...lead, message: e.target.value })}
-        placeholder="מה הם רצו?"
-        aria-label="תוכן הפנייה"
-        className={`w-full min-h-20 py-2.5 ${field}`}
+        placeholder="הערות (מה רצו, מתי לחזור...)"
+        aria-label="הערות"
+        rows={3}
+        className={`${field} py-2.5 resize-none`}
       />
+      {error && (
+        <p role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-3.5 py-2">
+          {error}
+        </p>
+      )}
       <button
         onClick={onSave}
         disabled={saving}
-        className="w-full min-h-[44px] rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium transition-colors disabled:opacity-60"
+        className="w-full min-h-[52px] rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-base font-semibold transition-colors disabled:opacity-60"
       >
-        {saving ? 'שומר...' : 'שמירת הפנייה'}
+        {saving ? 'שומרת...' : 'שמירה'}
       </button>
+
+      <details className="group rounded-xl border border-stone-200">
+        <summary className="list-none cursor-pointer select-none min-h-[44px] px-3.5 flex items-center justify-between text-sm text-stone-600">
+          <span>פרטים נוספים (לא חובה)</span>
+          <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180" aria-hidden="true" />
+        </summary>
+        <div className="px-3.5 pb-3.5 space-y-2.5">
+          <input
+            value={lead.name}
+            onChange={(e) => onChange({ ...lead, name: e.target.value })}
+            placeholder="שם"
+            aria-label="שם"
+            autoComplete="off"
+            className={field}
+          />
+          {/* A site tap already knows its channel and source. */}
+          {!linkedIntent && (
+            <>
+              <select
+                value={lead.channel}
+                onChange={(e) => onChange({ ...lead, channel: e.target.value })}
+                aria-label="איך פנו"
+                className={field}
+              >
+                {Object.entries(CHANNEL_LABELS).map(([v, l]) => (
+                  <option key={v} value={v}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+              <input
+                value={lead.heard_from}
+                onChange={(e) => onChange({ ...lead, heard_from: e.target.value })}
+                placeholder="איך שמעו עלייך?"
+                aria-label="איך שמעו עלייך"
+                className={field}
+              />
+            </>
+          )}
+          {linkedIntent?.session_id && (
+            <section className="rounded-xl border border-stone-200 px-3.5 pt-2.5">
+              <h3 className="text-xs md:text-sm font-semibold text-stone-800">המסע באתר</h3>
+              <EnquiryJourneyLoader key={linkedIntent.session_id} session={linkedIntent.session_id} />
+            </section>
+          )}
+        </div>
+      </details>
     </section>
   );
 }
