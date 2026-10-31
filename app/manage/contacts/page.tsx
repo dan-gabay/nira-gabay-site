@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Mail,
   Phone,
@@ -73,13 +73,13 @@ export default function ManageContactsPage() {
   // its campaign is copied onto the lead the server creates.
   const [showAddForm, setShowAddForm] = useState(false);
   const [linkedIntent, setLinkedIntent] = useState<ContactIntent | null>(null);
-  const [isAddingLead, setIsAddingLead] = useState(false);
   const [newLead, setNewLead] = useState(EMPTY_LEAD);
   const [leadError, setLeadError] = useState('');
   // Set when "הגיע" already saved the lead: the form then fills it in.
   const [savedLeadId, setSavedLeadId] = useState<string | null>(null);
-  // The instant save after "הגיע" is still on its way.
-  const [tapSaving, setTapSaving] = useState(false);
+  // The instant save after "הגיע", while it is on its way: an outcome tapped
+  // meanwhile waits for it in the background instead of blocking the buttons.
+  const tapSave = useRef<Promise<string | null> | null>(null);
 
   useEffect(() => {
     loadMessages();
@@ -161,26 +161,49 @@ export default function ManageContactsPage() {
     setOpenId(null);
     setView('new');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTapSaving(true);
-    try {
-      const res = await fetch('/api/manage/contacts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ channel: intent.channel, status: 'new', intent_id: intent.id }),
-      });
-      const d = await res.json().catch(() => ({}));
-      if (!res.ok || typeof d.id !== 'string') throw new Error(`${res.status} ${d.error || ''}`.trim());
-      setSavedLeadId(d.id);
-      await loadMessages();
-      refresh();
-    } catch (error) {
-      const why = error instanceof Error ? error.message : String(error);
-      console.error('Error saving lead from tap:', why);
-      // Shown with the reason, so a failure can be traced. The form stays open.
-      setLeadError(`השמירה האוטומטית נכשלה (${why}). אפשר לשמור עם הכפתורים למטה.`);
-    } finally {
-      setTapSaving(false);
-    }
+    const save = (async () => {
+      try {
+        const res = await fetch('/api/manage/contacts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ channel: intent.channel, status: 'new', intent_id: intent.id }),
+        });
+        const d = await res.json().catch(() => ({}));
+        if (!res.ok || typeof d.id !== 'string') throw new Error(`${res.status} ${d.error || ''}`.trim());
+        setSavedLeadId(d.id);
+        loadMessages().then(refresh);
+        return d.id as string;
+      } catch (error) {
+        const why = error instanceof Error ? error.message : String(error);
+        console.error('Error saving lead from tap:', why);
+        // Shown with the reason, so a failure can be traced. The form stays open.
+        setLeadError(`השמירה האוטומטית נכשלה (${why}). אפשר לשמור עם הכפתורים למטה.`);
+        return null;
+      } finally {
+        tapSave.current = null;
+      }
+    })();
+    tapSave.current = save;
+  }
+
+  // "Exactly the same form" for a lead that is still new and was logged by
+  // hand or from a tap (Dan, 31 Oct): tapping it in the list opens the form,
+  // filled in, rather than the full card. A lead from the site's own contact
+  // form keeps the card: its text is the person's message, not Nira's notes.
+  function openLeadInForm(m: ContactMessage) {
+    setLinkedIntent(null);
+    setSavedLeadId(m.id);
+    setNewLead({
+      ...EMPTY_LEAD,
+      channel: m.channel || 'other',
+      name: m.name && m.name !== 'ללא שם' ? m.name : '',
+      phone: m.phone || '',
+      message: splitNote(m.message).text,
+    });
+    setLeadError('');
+    setShowAddForm(true);
+    setOpenId(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function closeLeadForm() {
@@ -194,26 +217,35 @@ export default function ManageContactsPage() {
   // Saved with one of the two outcomes Nira records (Dan, 31 Oct: the save
   // button is "קבענו טיפול" / "לא רלוונטי"), or with none yet - the lead then
   // stays new.
+  //
+  // Runs in the background (Dan, 31 Oct): the form closes at once and the
+  // request goes out behind it. If it fails, the form comes back with what
+  // was typed and the reason.
   async function addManualLead(status?: LeadStatus) {
-    const typed = !!(newLead.phone.trim() || newLead.message.trim() || newLead.name.trim());
-    // A tap already saved the lead; with nothing typed there is nothing to add.
-    if (savedLeadId && !typed && !status) {
-      closeLeadForm();
-      return;
-    }
-    setIsAddingLead(true);
-    setLeadError('');
+    const lead = newLead;
+    const intent = linkedIntent;
+    const pending = tapSave.current;
+    let id = savedLeadId;
+    const typed = !!(lead.phone.trim() || lead.message.trim() || lead.name.trim());
+
+    closeLeadForm();
+    if (status) setView(status === 'started_therapy' ? 'clients' : 'irrelevant');
+    // A tap already saved (or is saving) the lead; with nothing to add, done.
+    if ((id || pending) && !typed && !status) return;
+
     try {
-      // A tap already saved the lead: only the details typed here are added.
-      const res = savedLeadId
+      if (!id && pending) id = await pending;
+      // A saved lead only gets the details typed here; otherwise it is created
+      // now, carrying the tap if there is one.
+      const res = id
         ? await fetch('/api/manage/contacts', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              id: savedLeadId,
-              phone: newLead.phone,
-              message: newLead.message,
-              name: newLead.name,
+              id,
+              phone: lead.phone,
+              message: lead.message,
+              name: lead.name,
               ...(status ? { status } : {}),
             }),
           })
@@ -221,26 +253,28 @@ export default function ManageContactsPage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              ...newLead,
+              ...lead,
               ...(status ? { status } : {}),
-              ...(linkedIntent ? { intent_id: linkedIntent.id } : {}),
+              ...(intent ? { intent_id: intent.id } : {}),
             }),
           });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
         throw new Error(d.error || `save failed (${res.status})`);
       }
-      closeLeadForm();
-      setView(status === 'started_therapy' ? 'clients' : status === 'irrelevant' ? 'irrelevant' : 'new');
       await loadMessages();
       refresh();
     } catch (error) {
       console.error('Error adding lead:', error);
       const msg = error instanceof Error ? error.message : '';
-      // Server messages in Hebrew (a bad phone number) are shown as they are.
+      // Back to the form with everything typed, and why it failed. Server
+      // messages in Hebrew (a bad phone number) are shown as they are.
+      setNewLead(lead);
+      setLinkedIntent(id ? null : intent);
+      setSavedLeadId(id);
       setLeadError(/[א-ת]/.test(msg) ? msg : `השמירה נכשלה (${msg}). נסי שוב.`);
-    } finally {
-      setIsAddingLead(false);
+      setShowAddForm(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 
@@ -314,7 +348,6 @@ export default function ManageContactsPage() {
           <ManualLeadForm
             lead={newLead}
             onChange={setNewLead}
-            saving={isAddingLead || tapSaving}
             saved={!!savedLeadId}
             error={leadError}
             onSave={(status) => addManualLead(status)}
@@ -386,6 +419,10 @@ export default function ManageContactsPage() {
                   lead={m}
                   active={shown?.id === m.id}
                   onOpen={() => {
+                    if (leadStatus(m) === 'new' && m.channel && m.channel !== 'form') {
+                      openLeadInForm(m);
+                      return;
+                    }
                     setOpenId(m.id);
                     if (window.matchMedia('(max-width: 1023px)').matches) window.scrollTo({ top: 0 });
                   }}
@@ -743,14 +780,12 @@ function IntentQueue({
 function ManualLeadForm({
   lead,
   onChange,
-  saving,
   saved,
   error,
   onSave,
 }: {
   lead: typeof EMPTY_LEAD;
   onChange: (l: typeof EMPTY_LEAD) => void;
-  saving: boolean;
   saved: boolean;
   error: string;
   onSave: (status?: LeadStatus) => void;
@@ -799,14 +834,12 @@ function ManualLeadForm({
       <div className="grid grid-cols-2 gap-2.5">
         <button
           onClick={() => onSave('started_therapy')}
-          disabled={saving}
           className="min-h-[52px] rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-base font-semibold transition-colors disabled:opacity-60"
         >
           קבענו טיפול
         </button>
         <button
           onClick={() => onSave('irrelevant')}
-          disabled={saving}
           className="min-h-[52px] rounded-xl bg-white border border-stone-300 hover:bg-stone-50 text-stone-800 text-base font-semibold transition-colors disabled:opacity-60"
         >
           לא רלוונטי
@@ -814,10 +847,9 @@ function ManualLeadForm({
       </div>
       <button
         onClick={() => onSave()}
-        disabled={saving}
         className="w-full min-h-[40px] text-sm text-stone-500 underline underline-offset-4 disabled:opacity-60"
       >
-        {saving ? 'שומרת...' : 'עוד לא ידוע - לשמור בינתיים'}
+        עוד לא ידוע - לשמור בינתיים
       </button>
 
     </section>
