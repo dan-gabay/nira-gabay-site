@@ -301,14 +301,17 @@ export default function ManageContactsPage() {
   const filtered = useMemo(() => {
     const v = VIEWS.find((x) => x.key === view)!;
     const q = query.trim().toLowerCase();
+    // The lead open in the short form is not listed under it as well.
+    const editing = showAddForm ? savedLeadId : null;
     return messages.filter((m) => {
+      if (m.id === editing) return false;
       if (!v.match(leadStatus(m))) return false;
       if (!q) return true;
       return [m.name, m.phone, m.email, m.message, m.heard_from]
         .filter(Boolean)
         .some((f) => String(f).toLowerCase().includes(q));
     });
-  }, [messages, view, query]);
+  }, [messages, view, query, showAddForm, savedLeadId]);
 
   // The open lead is looked up in all messages, not the filtered list, so a
   // lead whose status was just changed stays open instead of vanishing.

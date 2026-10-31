@@ -261,18 +261,22 @@ export async function POST(req: NextRequest) {
   // offline conversion import possible for WhatsApp enquiries.
   let attribution: Record<string, string | null> = {};
   let intentId: number | null = null;
+  let enquiryAt: string | null = null;
   if (typeof body.intent_id === 'number' && Number.isFinite(body.intent_id)) {
     const { data: intent, error: intentError } = await supabase
       .from('contact_intents')
-      .select('id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, gclid, landing_page, referrer')
+      .select('id, created_at, utm_source, utm_medium, utm_campaign, utm_term, utm_content, gclid, landing_page, referrer')
       .eq('id', Math.round(body.intent_id))
       .is('claimed_by', null)
       .maybeSingle();
     if (intentError) {
       console.error('manage contact intent read failed:', intentError.message);
     } else if (intent) {
-      const { id, ...fields } = intent;
+      const { id, created_at, ...fields } = intent;
       intentId = id as number;
+      // The enquiry happened when the person tapped, not when Nira logged it
+      // (Dan, 31 Oct): the lead is dated by the tap.
+      if (typeof created_at === 'string') enquiryAt = created_at;
       attribution = fields as Record<string, string | null>;
     }
   }
@@ -291,7 +295,7 @@ export async function POST(req: NextRequest) {
       channel,
       ...(status ? { status, status_updated_at: new Date().toISOString() } : {}),
       is_read: true, // Nira logs it herself - it's already "read"
-      created_date: new Date().toISOString(),
+      created_date: enquiryAt ?? new Date().toISOString(),
       ...attribution,
     },
   ]);
