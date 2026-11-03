@@ -16,7 +16,10 @@ import { toWhatsAppNumber } from './phone';
 import { BASE_URL } from './siteUrls';
 
 export type NotifyResult =
-  | { ok: true; to: string[] }
+  /** ownerOnly: Resend would only deliver to its account owner, so the notice
+   *  went there instead of to Nira (detail says why). Delivered, but still a
+   *  fault worth logging until the sending domain is verified. */
+  | { ok: true; to: string[]; ownerOnly?: true; detail?: string }
   | { ok: false; reason: 'not_configured' | 'send_failed'; detail: string };
 
 export type LeadNotice = {
@@ -59,9 +62,12 @@ function escapeHtml(s: string): string {
     .replace(/"/g, '&quot;');
 }
 
-function body(lead: LeadNotice, isTest: boolean): string {
+function body(lead: LeadNotice, isTest: boolean, missed: string[] | null = null): string {
   return [
     '<div dir="rtl" style="font-family:Arial,sans-serif">',
+    missed
+      ? `<p style="background:#fee2e2;padding:10px;border-radius:8px">המייל הזה נשלח אליך כי Resend עדיין לא מאפשר לשלוח אל ${escapeHtml(missed.join(', '))} (הדומיין niragabay.com לא מאומת שם). כדאי להעביר לנירה. הפנייה שמורה גם באזור הניהול.</p>`
+      : '',
     isTest
       ? '<p style="background:#fef3c7;padding:10px;border-radius:8px">זו הודעת בדיקה מאזור הניהול. לא הגיעה פנייה אמיתית.</p>'
       : '',
@@ -80,10 +86,45 @@ function body(lead: LeadNotice, isTest: boolean): string {
   ].join('');
 }
 
+// Resend's own test sender. It needs no domain, but Resend only lets it mail
+// the address that owns the Resend account.
+export const RESEND_TEST_SENDER = 'onboarding@resend.dev';
+
+// The sender once niragabay.com is verified in Resend. Used by default so that
+// verifying the domain is the whole fix: no env var has to be set as well.
+// CONTACT_NOTIFY_FROM still overrides it.
+export const SITE_SENDER = 'אתר נירה גבאי <leads@niragabay.com>';
+
+type ResendRefusal = { status: number; text: string };
+
+/**
+ * Resend's 403 for a test sender writing to anyone but the account owner:
+ * "You can only send testing emails to your own email address (x@y). ..."
+ * Returns that owner address, which is the one place the email CAN go.
+ */
+export function ownerOnlyAddress(r: ResendRefusal): string | null {
+  if (r.status !== 403 || !/only send testing emails/i.test(r.text)) return null;
+  const m = r.text.match(/own email address \(([^()\s]+@[^()\s]+)\)/i);
+  return m ? m[1] : null;
+}
+
+/** Resend's 403 for a `from` on a domain it has not verified. */
+export function isUnverifiedDomain(r: ResendRefusal): boolean {
+  return r.status === 403 && /not verified|verify a domain|domain is not/i.test(r.text);
+}
+
 /**
  * Sends the notification and says what happened. Never throws: the caller is
  * usually in the middle of accepting a lead, and nothing here is worth failing
  * that for.
+ *
+ * It degrades instead of giving up, because a lead nobody hears about is the
+ * one failure that costs a client:
+ *   1. the real sender (CONTACT_NOTIFY_FROM, else SITE_SENDER) to Nira;
+ *   2. if Resend says that domain is not verified, Resend's test sender;
+ *   3. if Resend says the test sender may only mail the account owner, the
+ *      notice goes to that owner, marked as such, and the result says
+ *      `ownerOnly` so the caller still logs that Nira did not get it directly.
  */
 export async function sendLeadEmail(
   lead: LeadNotice,
@@ -98,31 +139,57 @@ export async function sendLeadEmail(
     };
   }
 
-  const to = notifyRecipients();
+  const recipients = notifyRecipients();
   const isTest = opts.isTest === true;
+  const subject = isTest ? 'בדיקת התראות - niragabay.com' : `פנייה חדשה מהאתר: ${lead.name}`;
 
-  try {
+  const send = async (
+    from: string,
+    to: string[],
+    ownerOnly: boolean,
+  ): Promise<{ ok: true } | ({ ok: false } & ResendRefusal)> => {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: process.env.CONTACT_NOTIFY_FROM || 'onboarding@resend.dev',
+        from,
         to,
-        subject: isTest
-          ? 'בדיקת התראות - niragabay.com'
-          : `פנייה חדשה מהאתר: ${lead.name}`,
-        html: body(lead, isTest),
+        subject: ownerOnly ? `[לא הגיע לנירה] ${subject}` : subject,
+        html: body(lead, isTest, ownerOnly ? recipients : null),
       }),
     });
+    if (res.ok) return { ok: true };
+    // Resend explains refusals in the body (unverified sender domain, bad
+    // recipient, revoked key). That sentence is the whole value of a
+    // diagnostic, so it is passed through rather than reduced to a status.
+    return { ok: false, status: res.status, text: await res.text().catch(() => '') };
+  };
 
-    if (!res.ok) {
-      // Resend explains refusals in the body (unverified sender domain, bad
-      // recipient, revoked key). That sentence is the whole value of a
-      // diagnostic, so it is passed through rather than reduced to a status.
-      const text = await res.text().catch(() => '');
-      return { ok: false, reason: 'send_failed', detail: `${res.status}: ${text.slice(0, 400)}` };
+  try {
+    const primary = process.env.CONTACT_NOTIFY_FROM || SITE_SENDER;
+    let from = primary;
+    let r = await send(from, recipients, false);
+
+    if (!r.ok && from !== RESEND_TEST_SENDER && isUnverifiedDomain(r)) {
+      from = RESEND_TEST_SENDER;
+      r = await send(from, recipients, false);
     }
-    return { ok: true, to };
+    if (r.ok) return { ok: true, to: recipients };
+
+    const owner = ownerOnlyAddress(r);
+    if (owner && !recipients.includes(owner)) {
+      const o = await send(from, [owner], true);
+      if (o.ok) {
+        return {
+          ok: true,
+          to: [owner],
+          ownerOnly: true,
+          detail: `${r.status}: ${r.text.slice(0, 400)}`,
+        };
+      }
+      r = o;
+    }
+    return { ok: false, reason: 'send_failed', detail: `${r.status}: ${r.text.slice(0, 400)}` };
   } catch (e) {
     return {
       ok: false,
