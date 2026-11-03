@@ -15,6 +15,9 @@ The server has no write tools: `customers_list_accessible_customers`,
 future release that adds write tools exposes nothing until it is listed there.
 The version is pinned for the same reason.
 
+Campaign negative keywords are written by a separate, guarded script, not by
+this server: see `docs/google-ads-negatives.md`.
+
 Google Ads has no read-only OAuth scope (`adwords` is read-write), so read-only
 access is enforced by what this server can call. For defense in depth, the Google
 user behind the refresh token can be given "Read only" access in Google Ads.
