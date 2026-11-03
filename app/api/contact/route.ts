@@ -145,11 +145,16 @@ export async function POST(req: NextRequest) {
   for (const [channel, r] of Object.entries(notified)) {
     // 'not_configured' is a choice, not a fault: a channel nobody has set up
     // should not fill the log with the news every time a lead arrives.
-    if (!r.ok && r.reason !== 'not_configured') {
-      console.error(`lead ${channel} not sent (${r.reason}): ${r.detail}`);
+    // 'sent_to_owner_only': delivered, but to the Resend account owner rather
+    // than to Nira, so it still shows in the weekly failure check.
+    const fault = !r.ok
+      ? r.reason !== 'not_configured' ? r.reason : null
+      : r.ownerOnly ? 'sent_to_owner_only' : null;
+    if (fault) {
+      console.error(`lead ${channel} not sent to Nira (${fault}): ${r.detail ?? ''}`);
       await recordSiteError({
         action: channel === 'email' ? 'contact_notify_email' : 'contact_notify_telegram',
-        reason: r.reason,
+        reason: fault,
         path: attribution.source_page,
         userAgent: req.headers.get('user-agent'),
       });
