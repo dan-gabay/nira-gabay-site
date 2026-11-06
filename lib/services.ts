@@ -263,6 +263,7 @@ export const SERVICES: Service[] = [
       },
     ],
     articleSlugs: [
+      'partner-refuses-couples-therapy',
       'couples-parenting',
       'why-i-cant-create-a-healthy-relationship',
       'narcissistic-personality-parenting',
