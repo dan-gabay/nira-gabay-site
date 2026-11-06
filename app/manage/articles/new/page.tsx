@@ -132,7 +132,9 @@ export default function NewArticlePage() {
         is_published: formData.is_published,
         reading_time: formData.reading_time,
         scheduled_publish_at: scheduledAt,
-        created_date: new Date().toISOString(),
+        // created_date is the publish date (lib/publishDate.ts): the scheduled
+        // date when scheduled, otherwise now.
+        created_date: scheduledAt ?? new Date().toISOString(),
         updated_date: new Date().toISOString(),
         likes_count: 0,
         views_count: 0

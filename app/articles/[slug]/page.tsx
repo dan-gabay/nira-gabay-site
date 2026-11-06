@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import { formatPublishDate } from '@/lib/publishDate';
 import { draftMode } from 'next/headers';
 import { supabaseServer } from '../../../lib/supabaseServer';
 import { notFound } from 'next/navigation';
@@ -392,7 +393,7 @@ export default async function ArticlePage({ params }: Props) {
                 className="flex items-center gap-1"
               >
                 <Calendar className="w-4 h-4" />
-                {new Date(article.created_date).toLocaleDateString('he-IL')}
+                {formatPublishDate(article.created_date)}
               </time>
             )}
             
