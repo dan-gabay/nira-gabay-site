@@ -24,7 +24,7 @@ export async function GET(_request: NextRequest) {
 
   const { data: due, error: fetchError } = await supabase
     .from('articles')
-    .select('id, slug, title')
+    .select('id, slug, title, scheduled_publish_at')
     .eq('is_published', false)
     .not('scheduled_publish_at', 'is', null)
     .lte('scheduled_publish_at', now);
@@ -33,11 +33,13 @@ export async function GET(_request: NextRequest) {
     return NextResponse.json({ error: fetchError.message }, { status: 500 });
   }
 
-  if (due?.length) {
+  // One update per article: each one's publish date (created_date, see
+  // lib/publishDate.ts) is its own scheduled date, not the time the cron ran.
+  for (const a of due || []) {
     const { error: updateError } = await supabase
       .from('articles')
-      .update({ is_published: true, updated_date: now })
-      .in('id', ids(due));
+      .update({ is_published: true, created_date: a.scheduled_publish_at, updated_date: now })
+      .eq('id', a.id);
 
     if (updateError) {
       return NextResponse.json({ error: updateError.message }, { status: 500 });
@@ -67,4 +69,3 @@ export async function GET(_request: NextRequest) {
   });
 }
 
-const ids = (rows: Array<{ id: string }>) => rows.map((a) => a.id);
