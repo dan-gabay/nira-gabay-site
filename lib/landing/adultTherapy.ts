@@ -55,6 +55,18 @@ export const LP_ABOUT = {
   aboutLink: 'עוד עליי',
 };
 
+/**
+ * Short labels for the hero trust strip: the three trainings above, shortened.
+ * The CBT label deliberately does not name the University of Haifa - the
+ * approved wording attributes the programme to "a programme that appears on
+ * the certificate with the University of Haifa and other training bodies".
+ */
+export const LP_TRUST_LABELS = [
+  'פסיכותרפיה, מכון אדלר',
+  'הכשרה דו־שנתית ב־CBT',
+  'M.A בייעוץ חינוכי',
+];
+
 export type Training = { title: string; body: string };
 
 export const LP_TRAININGS: Training[] = [

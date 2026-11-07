@@ -22,6 +22,7 @@ import LandingFooter from '@/components/lp/LandingFooter';
 import LandingContactForm from '@/components/lp/LandingContactForm';
 import CertificatesViewer from '@/components/lp/CertificatesViewer';
 import { FormAnchorLink, LandingInternalLink } from '@/components/lp/LandingLinks';
+import LandingHeroActions from '@/components/lp/LandingHeroActions';
 import {
   LP_ABOUT,
   LP_ADULT_FORM_SOURCE,
@@ -32,6 +33,7 @@ import {
   LP_HOW,
   LP_META,
   LP_TRAININGS,
+  LP_TRUST_LABELS,
   LP_WHEN,
   LP_WHERE,
 } from '@/lib/landing/adultTherapy';
@@ -113,6 +115,8 @@ export default function AdultTherapyLandingPage() {
                 <p className="text-lg md:text-2xl text-white/90 font-medium leading-snug mb-4 md:mb-6">
                   {LP_HERO.subtitle}
                 </p>
+                <LandingHeroActions waHref={WA_HREF} location={LOCATION} />
+                <div className="h-5 lg:hidden" aria-hidden="true" />
                 <div className="space-y-3 md:space-y-4 max-w-xl">
                   {LP_HERO.paragraphs.map((p) => (
                     <p key={p} className="text-[15.5px] md:text-lg text-white/85 leading-relaxed">
@@ -124,6 +128,29 @@ export default function AdultTherapyLandingPage() {
                   <MapPin className="w-4 h-4 md:w-5 md:h-5 mt-0.5 flex-shrink-0" style={{ color: MINT }} aria-hidden="true" />
                   {LP_HERO.practical}
                 </p>
+
+                {/* Who is behind the page, before the form: her photo and the three
+                    trainings section 2 lists in full. Facts already on the page
+                    only, shortened to labels. */}
+                <div className="mt-5 md:mt-7 flex items-center gap-3">
+                  <Image
+                    src={PORTRAIT}
+                    alt=""
+                    width={56}
+                    height={56}
+                    className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover flex-shrink-0 ring-2 ring-white/30"
+                  />
+                  <ul className="flex flex-wrap gap-1.5 md:gap-2" aria-label="הכשרות">
+                    {LP_TRUST_LABELS.map((t) => (
+                      <li
+                        key={t}
+                        className="px-2.5 py-1 rounded-full bg-white/10 border border-white/20 text-[12.5px] md:text-sm text-white/90 leading-tight"
+                      >
+                        {t}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
 
               <div
