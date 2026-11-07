@@ -154,6 +154,8 @@ export function pageTypeFor(pathname: string): string {
   if (pathname.startsWith('/articles/topic/')) return 'topic';
   if (pathname.startsWith('/articles/')) return 'article';
   if (pathname.startsWith('/services/')) return 'service';
+  // Paid landing-page variants (A/B tests against the service pages).
+  if (pathname.startsWith('/lp/')) return 'landing';
   return 'other';
 }
 
@@ -167,6 +169,9 @@ export function entityFor(pathname: string): string | null {
   }
   if (pathname.startsWith('/services/')) {
     return pathname.replace('/services/', '') || null;
+  }
+  if (pathname.startsWith('/lp/')) {
+    return pathname.replace('/lp/', '') || null;
   }
   return null;
 }
