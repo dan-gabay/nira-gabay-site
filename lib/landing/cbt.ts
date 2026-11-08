@@ -1,13 +1,12 @@
 // Copy for the paid-traffic landing page /lp/cbt (the CBT ad group's landing
 // page; the organic CBT page is /services/cbt and is not changed).
 //
-// DRAFT - NOT APPROVED FOR PUBLISHING. Nira or Dan must approve every string
-// below before this page receives traffic. Each block notes where its wording
-// comes from:
+// Copy approved by Dan on 8 Nov 2026 (after his review of the preview). Do not
+// reword without owner approval. Each block notes where its wording came from:
 //   [adult-lp]  approved final copy of /lp/adult-therapy (lib/landing/adultTherapy.ts)
 //   [services]  text already live on /services/cbt (lib/services.ts)
 //   [new]       new wording, built only from verified facts
-//               (nira-growth/nira-credentials.md); needs approval.
+//               (nira-growth/nira-credentials.md).
 //
 // Rules kept: "מטפלת בפסיכותרפיה", never "פסיכולוגית"; no price, no
 // testimonials, no outcome promises, no fixed session length or weekly
