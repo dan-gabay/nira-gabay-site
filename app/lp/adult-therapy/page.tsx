@@ -404,7 +404,7 @@ export default function AdultTherapyLandingPage() {
             <div className="max-w-3xl mx-auto relative overflow-hidden rounded-3xl shadow-xl" style={{ background: TEAL_DARK }}>
               <Image src={FORM_BG} alt="" fill loading="lazy" className="object-cover" sizes="(max-width: 768px) 100vw, 768px" />
               <div className="relative px-5 py-8 md:px-12 md:py-12 text-center">
-                <h2 id="lp-closing" className="text-2xl md:text-4xl font-bold mb-3 md:mb-4" style={{ color: MINT }}>
+                <h2 id="lp-closing" className="text-2xl md:text-4xl font-bold text-white mb-3 md:mb-4">
                   {LP_CLOSING.h2}
                 </h2>
                 <p className="text-[15.5px] md:text-lg text-white/85 leading-relaxed max-w-xl mx-auto">
