@@ -31,7 +31,7 @@ export default function CertificatesViewer({
   primary = LP_CERTIFICATES_PRIMARY,
   more = LP_CERTIFICATES_MORE,
 }: {
-  /** Shown first ("תעודות ההכשרה"). Each page orders its own. */
+  /** Shown first in the grid. Each page orders its own. */
   primary?: Certificate[];
   more?: Certificate[];
 } = {}) {
@@ -74,9 +74,9 @@ export default function CertificatesViewer({
       >
         <div className="overflow-hidden">
           {loaded && (
-            <div className="pt-2 space-y-6 md:space-y-8">
-              <CertGroup heading="תעודות ההכשרה" certs={primary} />
-              <CertGroup heading="הכשרות נוספות" certs={more} />
+            <div className="pt-2">
+              {/* One continuous grid (Dan, 8 Nov): the page's primary three first. */}
+              <CertGrid certs={[...primary, ...more]} />
             </div>
           )}
         </div>
@@ -85,36 +85,33 @@ export default function CertificatesViewer({
   );
 }
 
-function CertGroup({ heading, certs }: { heading: string; certs: Certificate[] }) {
+function CertGrid({ certs }: { certs: Certificate[] }) {
   return (
-    <section>
-      <h3 className="text-sm md:text-base font-bold text-stone-800 mb-3">{heading}</h3>
-      <ul className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-3">
-        {certs.map((c) => (
-          <li key={c.src}>
-            <figure className="h-full rounded-2xl border border-stone-200 bg-stone-50 p-2 md:p-2.5">
-              {/* Tap opens the full-size image, for reading the details. */}
-              <a href={c.src} target="_blank" rel="noopener noreferrer" className="block">
-                <Image
-                  src={c.src}
-                  alt={`תעודה: ${c.caption}`}
-                  width={c.width}
-                  height={c.height}
-                  loading="lazy"
-                  sizes="(max-width: 1024px) 45vw, 220px"
-                  className="w-full h-auto rounded-lg bg-white"
-                />
-              </a>
-              <figcaption className="mt-2 text-xs md:text-[13px] text-stone-700 leading-relaxed">
-                <span className="inline-block mb-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-800 text-[11px] md:text-xs font-medium">
-                  {c.field}
-                </span>
-                <span className="block">{c.caption}</span>
-              </figcaption>
-            </figure>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <ul className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-3">
+      {certs.map((c) => (
+        <li key={c.src}>
+          <figure className="h-full rounded-2xl border border-stone-200 bg-stone-50 p-2 md:p-2.5">
+            {/* Tap opens the full-size image, for reading the details. */}
+            <a href={c.src} target="_blank" rel="noopener noreferrer" className="block">
+              <Image
+                src={c.src}
+                alt={`תעודה: ${c.caption}`}
+                width={c.width}
+                height={c.height}
+                loading="lazy"
+                sizes="(max-width: 1024px) 45vw, 220px"
+                className="w-full h-auto rounded-lg bg-white"
+              />
+            </a>
+            <figcaption className="mt-2 text-xs md:text-[13px] text-stone-700 leading-relaxed">
+              <span className="inline-block mb-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-800 text-[11px] md:text-xs font-medium">
+                {c.field}
+              </span>
+              <span className="block">{c.caption}</span>
+            </figcaption>
+          </figure>
+        </li>
+      ))}
+    </ul>
   );
 }
