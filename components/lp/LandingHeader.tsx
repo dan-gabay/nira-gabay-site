@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { PenLine } from 'lucide-react';
 import { trackCTAClick, trackLandingInternalNavigation } from '@/lib/analytics';
 import { LP_FORM_ANCHOR } from '@/lib/landing/adultTherapy';
+import { scrollToVisibleLpForm } from './formAnchor';
 
 /**
  * The landing page's header: the logo (home) and one "contact" button that
@@ -44,7 +45,10 @@ export default function LandingHeader({ source }: { source: string }) {
 
         <a
           href={`#${LP_FORM_ANCHOR}`}
-          onClick={() => trackCTAClick('lp_header_contact', source)}
+          onClick={(e) => {
+            trackCTAClick('lp_header_contact', source);
+            scrollToVisibleLpForm(e);
+          }}
           className="inline-flex items-center gap-1.5 min-h-[44px] px-4 md:px-5 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white text-sm md:text-base font-medium whitespace-nowrap transition-colors"
         >
           <PenLine className="w-4 h-4" aria-hidden="true" />

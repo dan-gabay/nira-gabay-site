@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { Send, Loader2, CheckCircle, MessageCircle, Check } from 'lucide-react';
 import {
   trackContactFormSubmit,
@@ -40,9 +40,12 @@ const FIELD =
 export default function LandingContactForm({
   sourceId,
   waHref,
+  waSource = 'lp_adult_hero_form',
 }: {
   sourceId: string;
   waHref: string;
+  /** Label for the WhatsApp click event under the form. */
+  waSource?: string;
 }) {
   const [formData, setFormData] = useState({ name: '', phone: '', message: '' });
   const [phoneTouched, setPhoneTouched] = useState(false);
@@ -59,7 +62,11 @@ export default function LandingContactForm({
     if (submitted) thanksRef.current?.focus();
   }, [submitted]);
 
-  const honeypotId = `lp-website-${sourceId}`;
+  // Field ids come from useId, not sourceId: a page may render the form twice
+  // (one copy for phones, one for desktop, only one visible), and ids must
+  // stay unique in the document.
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const honeypotId = `lp-website-${uid}`;
   const phoneInvalid = phoneTouched && !!formData.phone && !isValidIsraeliPhone(formData.phone);
 
   const fail = (message: string) => {
@@ -188,12 +195,12 @@ export default function LandingContactForm({
           aria-hidden="true"
         />
         <div>
-          <label htmlFor={`lp-name-${sourceId}`} className={labelCls}>
+          <label htmlFor={`lp-name-${uid}`} className={labelCls}>
             {LP_FORM.nameLabel} <span aria-hidden="true">*</span>
           </label>
           <input
             data-clarity-mask="true"
-            id={`lp-name-${sourceId}`}
+            id={`lp-name-${uid}`}
             name="name"
             type="text"
             autoComplete="name"
@@ -207,12 +214,12 @@ export default function LandingContactForm({
         </div>
 
         <div>
-          <label htmlFor={`lp-phone-${sourceId}`} className={labelCls}>
+          <label htmlFor={`lp-phone-${uid}`} className={labelCls}>
             {LP_FORM.phoneLabel} <span aria-hidden="true">*</span>
           </label>
           <input
             data-clarity-mask="true"
-            id={`lp-phone-${sourceId}`}
+            id={`lp-phone-${uid}`}
             name="phone"
             type="tel"
             autoComplete="tel"
@@ -227,35 +234,35 @@ export default function LandingContactForm({
             onFocus={() => trackFormFieldFocus('contact_form', 'phone')}
             onBlur={() => setPhoneTouched(true)}
             aria-invalid={phoneInvalid}
-            aria-describedby={phoneInvalid ? `lp-phone-help-${sourceId}` : undefined}
+            aria-describedby={phoneInvalid ? `lp-phone-help-${uid}` : undefined}
             className={`${FIELD} text-left ${phoneInvalid ? 'ring-2 ring-red-400 focus:ring-red-400' : ''}`}
             required
             aria-required="true"
           />
           {phoneInvalid && (
-            <p id={`lp-phone-help-${sourceId}`} className="mt-1.5 text-xs text-red-700">
+            <p id={`lp-phone-help-${uid}`} className="mt-1.5 text-xs text-red-700">
               {PHONE_ERROR}
             </p>
           )}
         </div>
 
         <div>
-          <label htmlFor={`lp-message-${sourceId}`} className={labelCls}>
+          <label htmlFor={`lp-message-${uid}`} className={labelCls}>
             {LP_FORM.messageLabel}
           </label>
           <textarea
             data-clarity-mask="true"
-            id={`lp-message-${sourceId}`}
+            id={`lp-message-${uid}`}
             name="message"
             value={formData.message}
             onChange={(e) => setFormData({ ...formData, message: e.target.value })}
             onFocus={() => trackFormFieldFocus('contact_form', 'message')}
-            aria-describedby={`lp-micro-${sourceId}`}
+            aria-describedby={`lp-micro-${uid}`}
             className={`${FIELD} min-h-20 md:min-h-24`}
           />
         </div>
 
-        <p id={`lp-micro-${sourceId}`} className="text-xs md:text-sm text-stone-500">
+        <p id={`lp-micro-${uid}`} className="text-xs md:text-sm text-stone-500">
           {LP_FORM.microcopy}
         </p>
 
@@ -283,7 +290,7 @@ export default function LandingContactForm({
           href={waHref}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => trackWhatsAppClick('lp_adult_hero_form')}
+          onClick={() => trackWhatsAppClick(waSource)}
           className="inline-flex items-center gap-1.5 min-h-[44px] text-emerald-800 underline underline-offset-4 hover:text-emerald-900"
         >
           <MessageCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />

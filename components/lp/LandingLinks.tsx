@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { trackCTAClick, trackLandingInternalNavigation } from '@/lib/analytics';
 import { LP_FORM_ANCHOR } from '@/lib/landing/adultTherapy';
+import { scrollToVisibleLpForm } from './formAnchor';
 
 /** A CTA that scrolls back to the hero form. Reports a cta_click, not a conversion. */
 export function FormAnchorLink({
@@ -20,7 +21,10 @@ export function FormAnchorLink({
   return (
     <a
       href={`#${LP_FORM_ANCHOR}`}
-      onClick={() => trackCTAClick(cta, location)}
+      onClick={(e) => {
+        trackCTAClick(cta, location);
+        scrollToVisibleLpForm(e);
+      }}
       className={className}
     >
       {children}
