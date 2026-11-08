@@ -225,7 +225,7 @@ export default function AdultTherapyLandingPage() {
                   })}
                 </ul>
 
-                <div className="mt-5 md:mt-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
+                <div className="mt-5 md:mt-6 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-x-5">
                   <CertificatesViewer />
                   <LandingInternalLink
                     href="/about"
