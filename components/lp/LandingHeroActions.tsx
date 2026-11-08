@@ -4,6 +4,7 @@ import { MessageCircle, PenLine, Phone } from 'lucide-react';
 import { trackCTAClick, trackContactMethodClick, trackWhatsAppClick } from '@/lib/analytics';
 import { CLINIC } from '@/lib/clinic';
 import { LP_FORM_ANCHOR } from '@/lib/landing/adultTherapy';
+import { scrollToVisibleLpForm } from './formAnchor';
 
 /**
  * Three ways to reach Nira on the first screen of a phone: jump to the form,
@@ -30,7 +31,10 @@ export default function LandingHeroActions({
     <div className="lg:hidden mt-5 grid grid-cols-2 gap-2.5">
       <a
         href={`#${LP_FORM_ANCHOR}`}
-        onClick={() => trackCTAClick('lp_hero_to_form', location)}
+        onClick={(e) => {
+          trackCTAClick('lp_hero_to_form', location);
+          scrollToVisibleLpForm(e);
+        }}
         className={`${base} col-span-2 min-h-[48px] text-base bg-white text-stone-900 hover:bg-stone-100`}
       >
         <PenLine className="w-4 h-4" aria-hidden="true" />
