@@ -52,14 +52,13 @@ export const LP_CBT_HERO = {
 };
 
 /**
- * [adult-lp] The three primary trainings, CBT first. The CBT line is the
- * approved adult-LP wording plus one [new] sentence on DBT (Dan, 6 Nov 2026:
- * DBT was part of the same programme; no separate certificate).
+ * [adult-lp] The three primary trainings, CBT first. CBT line worded by Dan
+ * (8 Nov 2026). DBT is mentioned in the hero paragraph instead.
  */
 export const LP_CBT_TRAININGS: Training[] = [
   {
     title: 'פסיכותרפיה קוגניטיבית־התנהגותית (CBT)',
-    body: 'בוגרת תוכנית הכשרה דו־שנתית, בהיקף של 348 שעות לימוד אקדמיות, 2022–2024, במסגרת תוכנית המופיעה בתעודה עם אוניברסיטת חיפה וגורמי הכשרה נוספים. ההכשרה כללה גם DBT.',
+    body: 'בוגרת תוכנית הכשרה דו־שנתית, בהיקף של 348 שעות לימוד אקדמיות, מאוניברסיטת חיפה.',
   },
   {
     title: 'פסיכותרפיה אינדיבידואלית',
