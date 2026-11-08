@@ -120,8 +120,8 @@ export const LP_CBT_HOW = {
     // [adult-lp] first-session paragraph 2.
     'אין צורך להתכונן מראש או לדעת להסביר הכול. אשאל שאלות כדי להכיר ולהבין את התמונה, ובסיום נוכל לדבר על המשך הדרך ולבחון אם הטיפול שאני מציעה מתאים לכם.',
   ],
-  // [adult-lp]
-  cta: 'אפשר להתחיל בשיחה',
+  // [new] Dan, 8 Nov: not the same words as the closing heading just below.
+  cta: 'לתיאום שיחת היכרות',
 };
 
 export const LP_CBT_FAQ = {
