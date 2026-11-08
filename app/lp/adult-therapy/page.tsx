@@ -23,6 +23,7 @@ import LandingContactForm from '@/components/lp/LandingContactForm';
 import CertificatesViewer from '@/components/lp/CertificatesViewer';
 import { FormAnchorLink, LandingInternalLink } from '@/components/lp/LandingLinks';
 import LandingHeroActions from '@/components/lp/LandingHeroActions';
+import { LP_FORM_ATTR } from '@/components/lp/formAnchor';
 import {
   LP_ABOUT,
   LP_ADULT_FORM_SOURCE,
@@ -152,11 +153,15 @@ export default function AdultTherapyLandingPage() {
                 </p>
               </div>
 
+              {/* Desktop copy of the form, beside the text. On phones the form
+                  comes after "Meet Nira" instead (below), so the contact
+                  buttons and the form don't sit on top of each other. */}
               <div
-                id={LP_FORM_ANCHOR}
-                className="scroll-mt-20 md:scroll-mt-24 bg-white rounded-3xl shadow-xl p-5 md:p-8"
+                id={`${LP_FORM_ANCHOR}-desktop`}
+                {...{ [LP_FORM_ATTR]: '' }}
+                className="hidden lg:block scroll-mt-24 bg-white rounded-3xl shadow-xl p-8"
               >
-                <LandingContactForm sourceId={LP_ADULT_FORM_SOURCE} waHref={WA_HREF} />
+                <LandingContactForm sourceId={LP_ADULT_FORM_SOURCE} waHref={WA_HREF} waSource="lp_adult_hero_form" />
               </div>
             </div>
           </div>
@@ -232,6 +237,19 @@ export default function AdultTherapyLandingPage() {
                   </LandingInternalLink>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ───────── 2b. Phone copy of the form (after "Meet Nira") ───────── */}
+        <section className="lg:hidden pb-10 bg-white" aria-label="השארת פרטים">
+          <div className="container mx-auto px-4">
+            <div
+              id={LP_FORM_ANCHOR}
+              {...{ [LP_FORM_ATTR]: '' }}
+              className="scroll-mt-20 bg-white rounded-3xl shadow-xl border border-stone-100 p-5"
+            >
+              <LandingContactForm sourceId={LP_ADULT_FORM_SOURCE} waHref={WA_HREF} waSource="lp_adult_form" />
             </div>
           </div>
         </section>
@@ -332,10 +350,13 @@ export default function AdultTherapyLandingPage() {
                   { Icon: Video, h3: LP_WHERE.zoomH3, body: LP_WHERE.zoom },
                 ].map(({ Icon, h3, body }) => (
                   <div key={h3} className="rounded-2xl border border-stone-200 bg-white p-4 md:p-5">
-                    <span className="w-10 h-10 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center mb-3">
-                      <Icon className="w-5 h-5 text-emerald-700" aria-hidden="true" />
-                    </span>
-                    <h3 className="text-base md:text-lg font-bold text-stone-800 mb-1.5">{h3}</h3>
+                    {/* Phone: icon and title on one line; from sm the icon sits above. */}
+                    <div className="flex items-center gap-3 mb-2 sm:block sm:mb-0">
+                      <span className="w-10 h-10 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0 sm:mb-3">
+                        <Icon className="w-5 h-5 text-emerald-700" aria-hidden="true" />
+                      </span>
+                      <h3 className="text-base md:text-lg font-bold text-stone-800 sm:mb-1.5">{h3}</h3>
+                    </div>
                     <p className="text-[14.5px] md:text-[0.9375rem] text-stone-600 leading-relaxed">{body}</p>
                   </div>
                 ))}
