@@ -28,6 +28,11 @@ const PATH_PREFILLS: Array<{ prefix: string; message: string }> = [
     prefix: '/lp/adult-therapy',
     message: SERVICES.find((s) => s.slug === 'adult-therapy')!.whatsappMessage,
   },
+  // The CBT landing page uses the same prefill as /services/cbt.
+  {
+    prefix: '/lp/cbt',
+    message: SERVICES.find((s) => s.slug === 'cbt')!.whatsappMessage,
+  },
 ];
 
 export function whatsappMessageForPath(pathname: string): string {

@@ -19,6 +19,7 @@ import {
 } from './siteEvents';
 import { isOptedOut } from './ownerOptOut';
 import { LP_ADULT_PATH, LP_ADULT_VARIANT } from './landing/adultTherapy';
+import { LP_CBT_PATH, LP_CBT_VARIANT } from './landing/cbt';
 
 declare global {
   interface Window {
@@ -196,6 +197,9 @@ function landingParams(): Record<string, string> {
   const path = window.location.pathname;
   if (path === LP_ADULT_PATH || path.startsWith(`${LP_ADULT_PATH}/`)) {
     return { page_type: 'landing', page_variant: LP_ADULT_VARIANT };
+  }
+  if (path === LP_CBT_PATH || path.startsWith(`${LP_CBT_PATH}/`)) {
+    return { page_type: 'landing', page_variant: LP_CBT_VARIANT };
   }
   return {};
 }

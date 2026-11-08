@@ -40,9 +40,12 @@ const FIELD =
 export default function LandingContactForm({
   sourceId,
   waHref,
+  waSource = 'lp_adult_hero_form',
 }: {
   sourceId: string;
   waHref: string;
+  /** Label for the WhatsApp click event under the form. */
+  waSource?: string;
 }) {
   const [formData, setFormData] = useState({ name: '', phone: '', message: '' });
   const [phoneTouched, setPhoneTouched] = useState(false);
@@ -283,7 +286,7 @@ export default function LandingContactForm({
           href={waHref}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => trackWhatsAppClick('lp_adult_hero_form')}
+          onClick={() => trackWhatsAppClick(waSource)}
           className="inline-flex items-center gap-1.5 min-h-[44px] text-emerald-800 underline underline-offset-4 hover:text-emerald-900"
         >
           <MessageCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />

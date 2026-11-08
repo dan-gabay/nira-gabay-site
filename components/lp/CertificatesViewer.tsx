@@ -23,7 +23,14 @@ import {
  * then lazy-loaded as they scroll into view), so eight certificate photos never
  * weigh on the first load of a mobile ad click.
  */
-export default function CertificatesViewer() {
+export default function CertificatesViewer({
+  primary = LP_CERTIFICATES_PRIMARY,
+  more = LP_CERTIFICATES_MORE,
+}: {
+  /** Shown first, under "ההכשרה המקצועית שלי". Each page orders its own. */
+  primary?: Certificate[];
+  more?: Certificate[];
+} = {}) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const openerRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
@@ -87,8 +94,8 @@ export default function CertificatesViewer() {
               </button>
             </div>
             <div className="overflow-y-auto overscroll-contain px-4 md:px-6 py-5 space-y-8">
-              <CertGroup heading={LP_ABOUT.trainingHeading} certs={LP_CERTIFICATES_PRIMARY} />
-              <CertGroup heading="הכשרות נוספות" certs={LP_CERTIFICATES_MORE} />
+              <CertGroup heading={LP_ABOUT.trainingHeading} certs={primary} />
+              <CertGroup heading="הכשרות נוספות" certs={more} />
             </div>
           </div>
         )}

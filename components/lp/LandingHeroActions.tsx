@@ -18,9 +18,12 @@ import { LP_FORM_ANCHOR, LP_INTRO_CALL } from '@/lib/landing/adultTherapy';
 export default function LandingHeroActions({
   waHref,
   location,
+  source = 'lp_adult_hero',
 }: {
   waHref: string;
   location: string;
+  /** Label for the WhatsApp / phone click events. */
+  source?: string;
 }) {
   const base =
     'inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3 rounded-full text-sm font-medium transition-colors whitespace-nowrap';
@@ -38,7 +41,7 @@ export default function LandingHeroActions({
         href={waHref}
         target="_blank"
         rel="noopener noreferrer"
-        onClick={() => trackWhatsAppClick('lp_adult_hero')}
+        onClick={() => trackWhatsAppClick(source)}
         className={`${base} border border-white/50 text-white hover:bg-white/15`}
       >
         <MessageCircle className="w-4 h-4" aria-hidden="true" />
@@ -46,7 +49,7 @@ export default function LandingHeroActions({
       </a>
       <a
         href={CLINIC.phoneHref}
-        onClick={() => trackContactMethodClick('phone', 'lp_adult_hero')}
+        onClick={() => trackContactMethodClick('phone', source)}
         aria-label={`התקשרו ${CLINIC.phoneDisplay}`}
         className={`${base} border border-white/50 text-white hover:bg-white/15`}
       >
