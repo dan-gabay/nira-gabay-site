@@ -18,6 +18,8 @@ import {
   type SiteEventPayload,
 } from './siteEvents';
 import { isOptedOut } from './ownerOptOut';
+import { LP_ADULT_PATH, LP_ADULT_VARIANT } from './landing/adultTherapy';
+import { LP_CBT_PATH, LP_CBT_VARIANT } from './landing/cbt';
 
 declare global {
   interface Window {
@@ -189,6 +191,19 @@ export const reportSiteError = (action: SiteErrorAction, reason: string) => {
   mirrorToStore('site_error', { source });
 };
 
+// page_type / page_variant for the paid landing pages. Nothing personal: the
+// path decides it, and only the variant name is sent.
+function landingParams(): Record<string, string> {
+  const path = window.location.pathname;
+  if (path === LP_ADULT_PATH || path.startsWith(`${LP_ADULT_PATH}/`)) {
+    return { page_type: 'landing', page_variant: LP_ADULT_VARIANT };
+  }
+  if (path === LP_CBT_PATH || path.startsWith(`${LP_CBT_PATH}/`)) {
+    return { page_type: 'landing', page_variant: LP_CBT_VARIANT };
+  }
+  return {};
+}
+
 // Under GTM every event goes to dataLayer and nowhere else. GTM defines
 // window.gtag as a side effect of loading GA4, so calling both would send each
 // event twice: once directly and once through the container's GA4 event tag.
@@ -200,6 +215,11 @@ export const trackEvent = (
   if (typeof window === 'undefined') return;
   // The owner's own browsing, switched off in /manage (lib/ownerOptOut.ts).
   if (isOptedOut()) return;
+
+  // Landing-page variants (/lp/*) tag every event they send, so GA4 can tell
+  // variant B of an A/B test apart from the control page. Added only on /lp/
+  // paths: events from every other page are sent exactly as before.
+  eventParams = { ...eventParams, ...landingParams() };
 
   // Our own store gets the event either way - it is independent of which ad
   // platform is loaded, and of whether one loaded at all.
@@ -761,5 +781,26 @@ export const trackCopyText = (pageType: string, pageId?: string) => {
   trackEvent('copy_text', {
     page_type: pageType,
     page_id: pageId,
+  });
+};
+
+// ===== LANDING PAGES (/lp/*) =====
+
+// A click from a landing page to another page of the site (logo, "עוד עליי",
+// footer links). Destination is a generic name, never anything personal. A
+// secondary signal only: leaving the landing page is not a conversion.
+export const trackLandingInternalNavigation = (destination: string) => {
+  trackEvent('landing_internal_navigation', {
+    event_category: 'Navigation',
+    event_label: destination,
+    destination,
+  });
+};
+
+// The certificates viewer was opened. Secondary engagement signal.
+export const trackLandingCertificatesOpen = () => {
+  trackEvent('landing_certificates_open', {
+    event_category: 'Engagement',
+    event_label: 'certificates',
   });
 };
