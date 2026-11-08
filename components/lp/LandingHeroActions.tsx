@@ -1,10 +1,9 @@
 'use client';
 
-import { Check, MessageCircle, PenLine, Phone } from 'lucide-react';
+import { MessageCircle, PenLine, Phone } from 'lucide-react';
 import { trackCTAClick, trackContactMethodClick, trackWhatsAppClick } from '@/lib/analytics';
 import { CLINIC } from '@/lib/clinic';
-import { MINT } from '@/lib/palette';
-import { LP_FORM_ANCHOR, LP_INTRO_CALL } from '@/lib/landing/adultTherapy';
+import { LP_FORM_ANCHOR } from '@/lib/landing/adultTherapy';
 
 /**
  * Three ways to reach Nira on the first screen of a phone: jump to the form,
@@ -18,9 +17,12 @@ import { LP_FORM_ANCHOR, LP_INTRO_CALL } from '@/lib/landing/adultTherapy';
 export default function LandingHeroActions({
   waHref,
   location,
+  source = 'lp_adult_hero',
 }: {
   waHref: string;
   location: string;
+  /** Label for the WhatsApp / phone click events. */
+  source?: string;
 }) {
   const base =
     'inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3 rounded-full text-sm font-medium transition-colors whitespace-nowrap';
@@ -38,7 +40,7 @@ export default function LandingHeroActions({
         href={waHref}
         target="_blank"
         rel="noopener noreferrer"
-        onClick={() => trackWhatsAppClick('lp_adult_hero')}
+        onClick={() => trackWhatsAppClick(source)}
         className={`${base} border border-white/50 text-white hover:bg-white/15`}
       >
         <MessageCircle className="w-4 h-4" aria-hidden="true" />
@@ -46,17 +48,13 @@ export default function LandingHeroActions({
       </a>
       <a
         href={CLINIC.phoneHref}
-        onClick={() => trackContactMethodClick('phone', 'lp_adult_hero')}
+        onClick={() => trackContactMethodClick('phone', source)}
         aria-label={`התקשרו ${CLINIC.phoneDisplay}`}
         className={`${base} border border-white/50 text-white hover:bg-white/15`}
       >
         <Phone className="w-4 h-4" aria-hidden="true" />
         <span dir="ltr">{CLINIC.phoneDisplay}</span>
       </a>
-      <p className="col-span-2 inline-flex items-center justify-center gap-1.5 text-sm text-white/90">
-        <Check className="w-4 h-4 flex-shrink-0" style={{ color: MINT }} aria-hidden="true" />
-        {LP_INTRO_CALL}
-      </p>
     </div>
   );
 }
