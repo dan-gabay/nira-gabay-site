@@ -190,7 +190,7 @@ export const LP_WHEN = {
  * condition here that the site does not already list.
  */
 export const LP_WHEN_TOPICS = {
-  heading: 'עוד נושאים שאפשר להגיע איתם:',
+  heading: 'עוד נושאים בהם אוכל לעזור:',
   items: [
     'התקפי חרדה',
     'חרדה חברתית',
