@@ -117,46 +117,45 @@ export default function CbtLandingPage() {
                 >
                   {LP_CBT_HERO.h1}
                 </h1>
-                <p className="text-base md:text-2xl text-white/90 font-medium leading-snug">
+                <p className="text-base md:text-2xl text-white/90 font-medium leading-snug mb-0 lg:mb-6">
                   {LP_CBT_HERO.subtitle}
                 </p>
 
-                {/* Mobile first screen, in this order: what (H1), who (photo + the
-                    CBT training first), where, then the ways to get in touch. The
-                    explanatory paragraphs come after the buttons. */}
-                <div className="mt-4 md:mt-6 flex items-center gap-3">
-                  <Image
-                    src={PORTRAIT}
-                    alt=""
-                    width={56}
-                    height={56}
-                    priority
-                    className="w-11 h-11 md:w-14 md:h-14 rounded-full object-cover flex-shrink-0 ring-2 ring-white/30"
-                  />
-                  <ul className="flex flex-wrap gap-1.5 md:gap-2" aria-label="הכשרות">
-                    {LP_CBT_TRUST_LABELS.map((t) => (
-                      <li
-                        key={t}
-                        className="px-2.5 py-1 rounded-full bg-white/10 border border-white/20 text-[12.5px] md:text-sm text-white/90 leading-tight"
-                      >
-                        {t}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <p className="mt-3 md:mt-5 inline-flex items-start gap-2 text-[14.5px] md:text-base text-white/90">
-                  <MapPin className="w-4 h-4 md:w-5 md:h-5 mt-0.5 flex-shrink-0" style={{ color: MINT }} aria-hidden="true" />
-                  {LP_CBT_HERO.practical}
-                </p>
-
+                {/* Phone: H1, buttons, the two paragraphs (who Nira is), then the
+                    form. The photo + trainings strip is desktop only; on a phone
+                    section 2 covers it right after the form. */}
                 <LandingHeroActions waHref={WA_HREF} location={LOCATION} source="lp_cbt_hero" />
-
-                <div className="mt-6 md:mt-7 space-y-3 md:space-y-4 max-w-xl">
+                <div className="h-5 lg:hidden" aria-hidden="true" />
+                <div className="space-y-3 md:space-y-4 max-w-xl">
                   {LP_CBT_HERO.paragraphs.map((p) => (
                     <p key={p} className="text-[15.5px] md:text-lg text-white/85 leading-relaxed">
                       {p}
                     </p>
                   ))}
+                </div>
+                <p className="mt-4 md:mt-6 inline-flex items-start gap-2 text-[14.5px] md:text-base text-white/90">
+                  <MapPin className="w-4 h-4 md:w-5 md:h-5 mt-0.5 flex-shrink-0" style={{ color: MINT }} aria-hidden="true" />
+                  {LP_CBT_HERO.practical}
+                </p>
+
+                <div className="hidden lg:flex mt-7 items-center gap-3">
+                  <Image
+                    src={PORTRAIT}
+                    alt=""
+                    width={56}
+                    height={56}
+                    className="w-14 h-14 rounded-full object-cover flex-shrink-0 ring-2 ring-white/30"
+                  />
+                  <ul className="flex flex-wrap gap-2" aria-label="הכשרות">
+                    {LP_CBT_TRUST_LABELS.map((t) => (
+                      <li
+                        key={t}
+                        className="px-2.5 py-1 rounded-full bg-white/10 border border-white/20 text-sm text-white/90 leading-tight"
+                      >
+                        {t}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
 
