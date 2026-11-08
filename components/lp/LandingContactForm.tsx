@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Send, Loader2, CheckCircle, MessageCircle } from 'lucide-react';
+import { Send, Loader2, CheckCircle, MessageCircle, Check } from 'lucide-react';
 import {
   trackContactFormSubmit,
   trackFormFieldFocus,
@@ -12,7 +12,7 @@ import {
 import { getStoredAttribution } from '@/lib/attribution';
 import { clarityEvent } from '@/lib/clarity';
 import { isValidIsraeliPhone, PHONE_ERROR } from '@/lib/phone';
-import { LP_FORM } from '@/lib/landing/adultTherapy';
+import { LP_FORM, LP_INTRO_CALL } from '@/lib/landing/adultTherapy';
 
 const FIELD =
   // text-base at every width: iOS Safari zooms into any focused field under
@@ -159,7 +159,11 @@ export default function LandingContactForm({
 
   return (
     <div>
-      <h2 className="text-xl md:text-2xl font-bold text-stone-800 mb-4 md:mb-5">{LP_FORM.title}</h2>
+      <h2 className="text-xl md:text-2xl font-bold text-stone-800 mb-1.5">{LP_FORM.title}</h2>
+      <p className="inline-flex items-center gap-1.5 text-sm md:text-[0.9375rem] font-medium text-emerald-800 mb-4 md:mb-5">
+        <Check className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+        {LP_INTRO_CALL}
+      </p>
 
       {error && (
         <div

@@ -1,9 +1,10 @@
 'use client';
 
-import { MessageCircle, PenLine, Phone } from 'lucide-react';
+import { Check, MessageCircle, PenLine, Phone } from 'lucide-react';
 import { trackCTAClick, trackContactMethodClick, trackWhatsAppClick } from '@/lib/analytics';
 import { CLINIC } from '@/lib/clinic';
-import { LP_FORM_ANCHOR } from '@/lib/landing/adultTherapy';
+import { MINT } from '@/lib/palette';
+import { LP_FORM_ANCHOR, LP_INTRO_CALL } from '@/lib/landing/adultTherapy';
 
 /**
  * Three ways to reach Nira on the first screen of a phone: jump to the form,
@@ -52,6 +53,10 @@ export default function LandingHeroActions({
         <Phone className="w-4 h-4" aria-hidden="true" />
         <span dir="ltr">{CLINIC.phoneDisplay}</span>
       </a>
+      <p className="col-span-2 inline-flex items-center justify-center gap-1.5 text-sm text-white/90">
+        <Check className="w-4 h-4 flex-shrink-0" style={{ color: MINT }} aria-hidden="true" />
+        {LP_INTRO_CALL}
+      </p>
     </div>
   );
 }

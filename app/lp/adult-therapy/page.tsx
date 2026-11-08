@@ -35,6 +35,7 @@ import {
   LP_TRAININGS,
   LP_TRUST_LABELS,
   LP_WHEN,
+  LP_WHEN_TOPICS,
   LP_WHERE,
 } from '@/lib/landing/adultTherapy';
 
@@ -258,6 +259,21 @@ export default function AdultTherapyLandingPage() {
                   </li>
                 ))}
               </ul>
+              <div className="mt-5 md:mt-6">
+                <p className="text-[14.5px] md:text-[0.9375rem] font-bold text-stone-800 mb-2.5">
+                  {LP_WHEN_TOPICS.heading}
+                </p>
+                <ul className="flex flex-wrap gap-2">
+                  {LP_WHEN_TOPICS.items.map((t) => (
+                    <li
+                      key={t}
+                      className="px-3 py-1.5 rounded-full border border-emerald-200 bg-white text-[13.5px] md:text-sm text-stone-700 leading-tight"
+                    >
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+              </div>
               <p className={`${BODY} mt-5 md:mt-7`}>{LP_WHEN.closing}</p>
             </div>
           </div>

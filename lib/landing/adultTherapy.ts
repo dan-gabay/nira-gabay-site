@@ -67,6 +67,13 @@ export const LP_TRUST_LABELS = [
   'M.A בייעוץ חינוכי',
 ];
 
+/**
+ * "Free, no-commitment intro call": the offer in Nira's live Google Ads
+ * headline, repeated on the page so the ad's promise is visible after the
+ * click. Added 7 Nov 2026 with Dan's approval (competitor review, item 3).
+ */
+export const LP_INTRO_CALL = 'שיחת היכרות ללא התחייבות';
+
 export type Training = { title: string; body: string };
 
 export const LP_TRAININGS: Training[] = [
@@ -185,6 +192,27 @@ export const LP_WHEN = {
     },
   ],
   closing: 'לא תמיד קל להגדיר במילים מה בדיוק מפריע. אפשר להתחיל גם משם.',
+};
+
+/**
+ * Specific difficulties people search for, shown as short tags under the
+ * section 3 cards. Added 7 Nov 2026 with Dan's approval (competitor review,
+ * item 5). Every tag is taken from what the live site already says Nira works
+ * with (lib/services.ts, adult-therapy and CBT `signs`); do not add a
+ * condition here that the site does not already list.
+ */
+export const LP_WHEN_TOPICS = {
+  heading: 'עוד נושאים שאפשר להגיע איתם:',
+  items: [
+    'התקפי חרדה',
+    'חרדה חברתית',
+    'חרדת בחינות',
+    'פחד מדיבור מול קהל',
+    'מחשבות שחוזרות בלולאה',
+    'הימנעות ממקומות או ממצבים',
+    'פרפקציוניזם וביקורת עצמית',
+    'דיכאון',
+  ],
 };
 
 export const LP_HOW = {
