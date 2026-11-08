@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
+import Image, { getImageProps } from 'next/image';
 import {
   ArrowLeft,
   BookOpen,
@@ -82,6 +82,21 @@ const TRAINING_ICONS = [Brain, BookOpen, GraduationCap];
 const H2 = 'text-xl md:text-3xl font-bold text-stone-800 leading-snug';
 const BODY = 'text-[15.5px] md:text-[1.0625rem] text-stone-600 leading-relaxed';
 
+const HERO_BG_DESKTOP = getImageProps({
+  src: ARTICLES_HERO_BG,
+  alt: '',
+  width: 1774,
+  height: 887,
+  sizes: '100vw',
+}).props.srcSet;
+const { srcSet: HERO_BG_MOBILE, ...HERO_BG_IMG } = getImageProps({
+  src: '/images/lp-hero-mobile.webp',
+  alt: '',
+  width: 1024,
+  height: 1536,
+  sizes: '100vw',
+}).props;
+
 export default function AdultTherapyLandingPage() {
   return (
     <>
@@ -89,16 +104,22 @@ export default function AdultTherapyLandingPage() {
 
       <main id="main-content">
         {/* ───────── 1. Hero + early form ───────── */}
-        <section className="relative overflow-hidden" style={{ background: TEAL_DARK }}>
-          <Image
-            src={ARTICLES_HERO_BG}
-            alt=""
-            fill
-            priority
-            className="object-cover"
-            style={{ objectPosition: 'left center' }}
-            sizes="100vw"
-          />
+        <section className="relative overflow-hidden bg-[#174C49] lg:bg-[#1A4A44]">
+          {/* Art-directed background: below lg a portrait image (2:3) shown at
+              full width from the top, no stretching, fading into the section's
+              solid colour (#174C49, the image's bottom colour); from lg the
+              wide desktop image, covering, as before. Same as /lp/cbt. */}
+          <picture>
+            <source media="(min-width: 1024px)" srcSet={HERO_BG_DESKTOP} sizes="100vw" />
+            <source media="(max-width: 1023px)" srcSet={HERO_BG_MOBILE} sizes="100vw" />
+            <img
+              {...HERO_BG_IMG}
+              alt=""
+              fetchPriority="high"
+              className="absolute inset-x-0 top-0 w-full h-auto lg:inset-0 lg:h-full lg:object-cover"
+              style={{ objectPosition: 'left center' }}
+            />
+          </picture>
           <div className="relative container mx-auto px-4 md:px-8 pt-7 pb-8 md:pt-14 md:pb-16">
             <div className="grid gap-7 lg:gap-12 lg:grid-cols-[1.1fr_1fr] items-center max-w-6xl mx-auto">
               <div className="text-white">
