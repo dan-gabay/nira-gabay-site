@@ -104,7 +104,7 @@ export default function CbtLandingPage() {
             style={{ objectPosition: 'left center' }}
             sizes="100vw"
           />
-          <div className="relative container mx-auto px-4 md:px-8 pt-7 pb-8 md:pt-14 md:pb-16">
+          <div className="relative container mx-auto px-4 md:px-8 pt-5 pb-8 md:pt-14 md:pb-16">
             <div className="grid gap-7 lg:gap-12 lg:grid-cols-[1.1fr_1fr] items-center max-w-6xl mx-auto">
               <div className="text-white">
                 <span
@@ -112,38 +112,26 @@ export default function CbtLandingPage() {
                   style={{ background: 'rgba(255,255,255,0.35)' }}
                 />
                 <h1
-                  className="text-[1.75rem] md:text-5xl font-bold leading-tight mb-2.5 md:mb-4"
+                  className="text-[1.65rem] md:text-5xl font-bold leading-tight mb-2 md:mb-4"
                   style={{ color: MINT }}
                 >
                   {LP_CBT_HERO.h1}
                 </h1>
-                <p className="text-lg md:text-2xl text-white/90 font-medium leading-snug mb-4 md:mb-6">
+                <p className="text-base md:text-2xl text-white/90 font-medium leading-snug">
                   {LP_CBT_HERO.subtitle}
                 </p>
-                <LandingHeroActions waHref={WA_HREF} location={LOCATION} source="lp_cbt_hero" />
-                <div className="h-5 lg:hidden" aria-hidden="true" />
-                <div className="space-y-3 md:space-y-4 max-w-xl">
-                  {LP_CBT_HERO.paragraphs.map((p) => (
-                    <p key={p} className="text-[15.5px] md:text-lg text-white/85 leading-relaxed">
-                      {p}
-                    </p>
-                  ))}
-                </div>
-                <p className="mt-4 md:mt-6 inline-flex items-start gap-2 text-[14.5px] md:text-base text-white/90">
-                  <MapPin className="w-4 h-4 md:w-5 md:h-5 mt-0.5 flex-shrink-0" style={{ color: MINT }} aria-hidden="true" />
-                  {LP_CBT_HERO.practical}
-                </p>
 
-                {/* Who is behind the page, before the form: her photo and the three
-                    trainings section 2 lists in full. Facts already on the page
-                    only, shortened to labels. */}
-                <div className="mt-5 md:mt-7 flex items-center gap-3">
+                {/* Mobile first screen, in this order: what (H1), who (photo + the
+                    CBT training first), where, then the ways to get in touch. The
+                    explanatory paragraphs come after the buttons. */}
+                <div className="mt-4 md:mt-6 flex items-center gap-3">
                   <Image
                     src={PORTRAIT}
                     alt=""
                     width={56}
                     height={56}
-                    className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover flex-shrink-0 ring-2 ring-white/30"
+                    priority
+                    className="w-11 h-11 md:w-14 md:h-14 rounded-full object-cover flex-shrink-0 ring-2 ring-white/30"
                   />
                   <ul className="flex flex-wrap gap-1.5 md:gap-2" aria-label="הכשרות">
                     {LP_CBT_TRUST_LABELS.map((t) => (
@@ -155,6 +143,20 @@ export default function CbtLandingPage() {
                       </li>
                     ))}
                   </ul>
+                </div>
+                <p className="mt-3 md:mt-5 inline-flex items-start gap-2 text-[14.5px] md:text-base text-white/90">
+                  <MapPin className="w-4 h-4 md:w-5 md:h-5 mt-0.5 flex-shrink-0" style={{ color: MINT }} aria-hidden="true" />
+                  {LP_CBT_HERO.practical}
+                </p>
+
+                <LandingHeroActions waHref={WA_HREF} location={LOCATION} source="lp_cbt_hero" />
+
+                <div className="mt-6 md:mt-7 space-y-3 md:space-y-4 max-w-xl">
+                  {LP_CBT_HERO.paragraphs.map((p) => (
+                    <p key={p} className="text-[15.5px] md:text-lg text-white/85 leading-relaxed">
+                      {p}
+                    </p>
+                  ))}
                 </div>
               </div>
 
