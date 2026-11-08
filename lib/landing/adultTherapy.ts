@@ -56,18 +56,6 @@ export const LP_ABOUT = {
 };
 
 /**
- * Short labels for the hero trust strip: the three trainings above, shortened.
- * The CBT label deliberately does not name the University of Haifa - the
- * approved wording attributes the programme to "a programme that appears on
- * the certificate with the University of Haifa and other training bodies".
- */
-export const LP_TRUST_LABELS = [
-  'פסיכותרפיה, מכון אדלר',
-  'הכשרה דו־שנתית ב־CBT',
-  'M.A בייעוץ חינוכי',
-];
-
-/**
  * "Free, no-commitment intro call": the offer in Nira's live Google Ads
  * headline, repeated on the page so the ad's promise is visible after the
  * click. Added 7 Nov 2026 with Dan's approval (competitor review, item 3).
