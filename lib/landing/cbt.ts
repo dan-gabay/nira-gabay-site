@@ -51,13 +51,6 @@ export const LP_CBT_HERO = {
   practical: 'בקליניקה במושב שואבה, באזור ירושלים, או בזום.',
 };
 
-/** [new] Hero trust strip: the trainings below, shortened. CBT first. */
-export const LP_CBT_TRUST_LABELS = [
-  'הכשרה דו־שנתית ב־CBT ו־DBT',
-  'פסיכותרפיה, מכון אדלר',
-  'M.A בייעוץ חינוכי',
-];
-
 /**
  * [adult-lp] The three primary trainings, CBT first. The CBT line is the
  * approved adult-LP wording plus one [new] sentence on DBT (Dan, 6 Nov 2026:

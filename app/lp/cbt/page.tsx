@@ -38,7 +38,6 @@ import {
   LP_CBT_HOW,
   LP_CBT_META,
   LP_CBT_TRAININGS,
-  LP_CBT_TRUST_LABELS,
   LP_CBT_WHEN,
 } from '@/lib/landing/cbt';
 
@@ -117,46 +116,25 @@ export default function CbtLandingPage() {
                 >
                   {LP_CBT_HERO.h1}
                 </h1>
-                <p className="text-base md:text-2xl text-white/90 font-medium leading-snug mb-0 lg:mb-6">
+                <p className="text-base md:text-2xl text-white/90 font-medium leading-snug">
                   {LP_CBT_HERO.subtitle}
                 </p>
 
-                {/* Phone: H1, buttons, the two paragraphs (who Nira is), then the
-                    form. The photo + trainings strip is desktop only; on a phone
-                    section 2 covers it right after the form. */}
-                <LandingHeroActions waHref={WA_HREF} location={LOCATION} source="lp_cbt_hero" />
-                <div className="h-5 lg:hidden" aria-hidden="true" />
-                <div className="space-y-3 md:space-y-4 max-w-xl">
+                {/* Phone: H1, intro paragraphs (who Nira is), contact buttons,
+                    location, then the form. Desktop: the same minus the buttons,
+                    with the form beside the text. */}
+                <div className="mt-4 md:mt-6 space-y-3 md:space-y-4 max-w-xl">
                   {LP_CBT_HERO.paragraphs.map((p) => (
                     <p key={p} className="text-[15.5px] md:text-lg text-white/85 leading-relaxed">
                       {p}
                     </p>
                   ))}
                 </div>
+                <LandingHeroActions waHref={WA_HREF} location={LOCATION} source="lp_cbt_hero" />
                 <p className="mt-4 md:mt-6 inline-flex items-start gap-2 text-[14.5px] md:text-base text-white/90">
                   <MapPin className="w-4 h-4 md:w-5 md:h-5 mt-0.5 flex-shrink-0" style={{ color: MINT }} aria-hidden="true" />
                   {LP_CBT_HERO.practical}
                 </p>
-
-                <div className="hidden lg:flex mt-7 items-center gap-3">
-                  <Image
-                    src={PORTRAIT}
-                    alt=""
-                    width={56}
-                    height={56}
-                    className="w-14 h-14 rounded-full object-cover flex-shrink-0 ring-2 ring-white/30"
-                  />
-                  <ul className="flex flex-wrap gap-2" aria-label="הכשרות">
-                    {LP_CBT_TRUST_LABELS.map((t) => (
-                      <li
-                        key={t}
-                        className="px-2.5 py-1 rounded-full bg-white/10 border border-white/20 text-sm text-white/90 leading-tight"
-                      >
-                        {t}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
               </div>
 
               <div
