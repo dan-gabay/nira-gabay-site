@@ -264,6 +264,124 @@
       },
       "observer": "Claude (SerpApi)",
       "notes": "מדידה ראשונה לשאלה הזו. המקור הראשון הוא מדריך של מכון טמיר על בריאות הנפש בירושלים. המפה המקומית לא נבדקה בריצה הזו."
+    },
+    {
+      "id": "2026-11-09-brand-nira-gabay-google_ai_overview",
+      "prompt_id": "brand-nira-gabay",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-09T23:46:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": true,
+      "nira_linked": true,
+      "position": 1,
+      "competitors": [],
+      "cited_sources": [
+        "d.co.il",
+        "hebpsy.net",
+        "niragabay.com",
+        "briuta-m.co.il",
+        "mentalytics.co.il",
+        "haaretz.co.il"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": null
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "התשובה מתארת את נירה כפסיכותרפיסטית, מדריכת הורים ויועצת חינוכית עם M.A, מזכירה את מכון אדלר רק בהקשר של הדרכת הורים, CBT ו-DBT, קליניקה בשואבה וזום, ומקשרת לאתר ולפרופיל בפסיכולוגיה עברית. היא גם מייחסת לה כתיבה בעיתון הארץ לפי עמוד כותבת בשם זהה: לא אומת שזו אותה נירה. האתר לא בעשרת הראשונים בתוצאות הרגילות לשאלה בניסוח הזה."
+    },
+    {
+      "id": "2026-11-09-couples-mevaseret-google_ai_overview",
+      "prompt_id": "couples-mevaseret",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-09T23:48:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": false,
+      "nira_linked": false,
+      "position": null,
+      "competitors": [
+        "בטיפולנט",
+        "עליזה שני",
+        "רבקה פדר ורטהיימר",
+        "מרכז רימון",
+        "על הספה",
+        "מכון קשרים - ד\"ר רונית שרון",
+        "מכון שילוב"
+      ],
+      "cited_sources": [
+        "rimonclinic.com",
+        "betipulnet.co.il",
+        "b144.co.il",
+        "alhasapa.co.il",
+        "google-business-profile"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": false
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "תשובה דלה: שתי מטפלות בשמן, אינדקסים, מכונים בירושלים, ואפילו ספא לזוגות. במפה המקומית אין אף מטפל זוגי מהאזור."
+    },
+    {
+      "id": "2026-11-09-parent-guidance-mateh-yehuda-google_ai_overview",
+      "prompt_id": "parent-guidance-mateh-yehuda",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-09T23:50:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": false,
+      "nira_linked": false,
+      "position": null,
+      "competitors": [
+        "השירות הפסיכולוגי החינוכי מטה יהודה",
+        "מרכז דפנה",
+        "המרכז המשלים למשפחה",
+        "אגף הרווחה מטה יהודה"
+      ],
+      "cited_sources": [
+        "m-yehuda.org.il"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": null
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "כל המקורות הם אתר המועצה האזורית מטה יהודה. אף מדריך הורים פרטי לא מוזכר. התשובה שואלת אם מחפשים מענה מסובסד או מדריך פרטי באזור."
+    },
+    {
+      "id": "2026-11-09-psychotherapy-mateh-yehuda-google_ai_overview",
+      "prompt_id": "psychotherapy-mateh-yehuda",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-09T23:52:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": false,
+      "nira_linked": false,
+      "position": null,
+      "competitors": [
+        "על הספה",
+        "מכון קשרים - ד\"ר רונית שרון"
+      ],
+      "cited_sources": [
+        "alhasapa.co.il",
+        "google-business-profile"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": false
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "שלושה מארבעת המקורות הם עמודי מטה יהודה של אינדקס על הספה, והרביעי פרופיל עסק של מכון בירושלים. אף מטפלת מהאזור לא מוזכרת בשמה. במפה המקומית שלושה מטפלים, נירה לא ביניהם."
     }
   ]
 }
