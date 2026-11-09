@@ -7,6 +7,11 @@
     { "id": "adult-therapy-mevaseret", "text": "טיפול רגשי למבוגרים באזור מבשרת", "service": "adult-therapy", "area": "מבשרת ציון", "active": true, "added": "2026-10-24" },
     { "id": "teen-therapy-jerusalem", "text": "טיפול במתבגרים באזור ירושלים", "service": "teen-therapy", "area": "ירושלים", "active": true, "added": "2026-10-24" },
     { "id": "couples-jerusalem", "text": "מטפלת זוגית מומלצת באזור ירושלים", "service": "couples-therapy", "area": "ירושלים", "active": true, "added": "2026-10-21" },
-    { "id": "cbt-anxiety-jerusalem", "text": "טיפול CBT לחרדה בירושלים", "service": "cbt", "area": "ירושלים", "active": true, "added": "2026-10-21" }
+    { "id": "cbt-anxiety-jerusalem", "text": "טיפול CBT לחרדה בירושלים", "service": "cbt", "area": "ירושלים", "active": true, "added": "2026-10-21" },
+    { "id": "brand-nira-gabay", "text": "מי זו נירה גבאי, מטפלת באזור ירושלים", "service": "brand", "area": "ירושלים", "active": true, "added": "2026-11-09" },
+    { "id": "couples-mevaseret", "text": "טיפול זוגי באזור מבשרת ציון", "service": "couples-therapy", "area": "מבשרת ציון", "active": true, "added": "2026-11-09" },
+    { "id": "parent-guidance-mateh-yehuda", "text": "הדרכת הורים במטה יהודה", "service": "parent-guidance", "area": "מטה יהודה", "active": true, "added": "2026-11-09" },
+    { "id": "psychotherapy-mateh-yehuda", "text": "פסיכותרפיסטית במטה יהודה והרי ירושלים", "service": "adult-therapy", "area": "מטה יהודה", "active": true, "added": "2026-11-09" },
+    { "id": "cbt-online-hebrew", "text": "טיפול CBT בזום בעברית", "service": "cbt", "area": "אונליין", "active": true, "added": "2026-11-09" }
   ]
 }
