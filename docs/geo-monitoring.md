@@ -21,7 +21,7 @@ Observations are append-only. Never edit or delete a past entry; add a new one, 
 
 1. Use a prompt id from `visibility-prompts.json`. If you add a prompt, add it there first.
 2. Choose the method the provider allows (`PROVIDERS` in `lib/geo/visibility.ts`):
-   - Google AI Overview: `serpapi` (run `engine=google` with the Jerusalem location, then `engine=google_ai_overview` with the returned `page_token` straight away, because the token expires within minutes) or `manual`.
+   - Google AI Overview: `serpapi` (run `engine=google` with the Jerusalem location, `no_cache=true` and `json_restrictor=ai_overview.page_token`, then `engine=google_ai_overview` with the returned `page_token` at once: the token expires in about one minute, so check one prompt at a time) or `manual`.
    - ChatGPT Search, Perplexity, Gemini, Copilot, Claude and Google AI Mode: `manual` only. A generic model API answer is not a search result, so it is rejected by `validateObservation`.
 3. Record what was seen: `answer_present`, `nira_mentioned` (`null` if you could not tell), `nira_linked`, `position` (only when Nira is mentioned), `competitors` as written (`null` if not recorded), `cited_sources` as domains, plus `observer` and `notes`.
 4. Use `evidence: "estimate"` for anything not actually seen. Estimates are shown apart and never counted as results.
