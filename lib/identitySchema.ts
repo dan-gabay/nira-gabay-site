@@ -20,7 +20,7 @@
 import { CLINIC } from '@/lib/clinic';
 import { SERVICES } from '@/lib/services';
 import { SERVICES_LIVE } from '@/lib/publish';
-import { BUSINESS_LISTINGS, CREDENTIALS, DIRECTORY_PROFILES, PROFESSIONAL_SUMMARY } from '@/lib/credentials';
+import { BUSINESS_LISTINGS, CREDENTIALS, DIRECTORY_PROFILES, HEALTHY_SEXUALITY, PROFESSIONAL_SUMMARY } from '@/lib/credentials';
 
 export const BASE_URL = 'https://www.niragabay.com';
 export const PERSON_ID = `${BASE_URL}/#nira`;
@@ -62,7 +62,7 @@ const SERVICE_NAMES: Array<{ slug: string; name: string; description: string }> 
   { slug: 'adult-therapy', name: 'טיפול במבוגרים', description: 'מרחב בטוח לעיבוד רגשי והתמודדות עם אתגרי החיים' },
   { slug: 'couples-therapy', name: 'טיפול זוגי', description: 'חיזוק הקשר הזוגי ושיפור התקשורת' },
   { slug: 'parent-guidance', name: 'הדרכת הורים', description: 'כלים מעשיים להורות מיטבית' },
-  { slug: 'sex-therapy', name: 'טיפול מיני', description: 'ליווי זוגות ויחידים בנושאי אינטימיות ומיניות' },
+  { slug: 'sex-therapy', name: 'טיפול מיני', description: 'התמחות במיניות בריאה' },
   { slug: 'cbt', name: 'טיפול קוגניטיבי התנהגותי (CBT)', description: 'גישה מעשית לטיפול בחרדות ודיכאון' },
 ];
 
@@ -86,7 +86,7 @@ export const personSchema = {
   url: `${BASE_URL}/about`,
   mainEntityOfPage: `${BASE_URL}/about`,
   jobTitle: 'מטפלת בפסיכותרפיה ומדריכת הורים',
-  description: `${PROFESSIONAL_SUMMARY} מלווה מתבגרים, מבוגרים, זוגות והורים בקליניקה במושב שואבה שבאזור ירושלים ובטיפול מקוון בזום.`,
+  description: `${PROFESSIONAL_SUMMARY} ${HEALTHY_SEXUALITY}. מלווה מתבגרים, מבוגרים, זוגות והורים בקליניקה במושב שואבה שבאזור ירושלים ובטיפול מקוון בזום.`,
   image: CLINIC.photo,
   telephone: CLINIC.phone,
   email: 'niraga1123@gmail.com',

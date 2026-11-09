@@ -5,22 +5,28 @@ import { enterStyle } from '@/lib/enter';
 import Image from 'next/image';
 import { GraduationCap, Award, Heart, MapPin, Users, BookOpen, Monitor } from 'lucide-react';
 import ArticleCtaBanner from '@/components/ArticleCtaBanner';
-import { CREDENTIALS, credentialDetails, HEALTHY_SEXUALITY_EXPERIENCE } from '@/lib/credentials';
+import { CREDENTIALS, credentialDetails } from '@/lib/credentials';
 
 // Each card is a certificate Nira holds (lib/credentials.ts, verified against
 // the originals on 6 Nov 2026), with its institution, year and hours, so a
 // reader - or an AI system quoting the page - can see exactly what stands
-// behind "מטפלת בפסיכותרפיה". Experience follows as experience, not as a
-// qualification.
+// behind "מטפלת בפסיכותרפיה". The two cards after them keep the page's
+// existing wording (owner decision, 9 Nov 2026).
 const credentialIcon = { degree: GraduationCap, license: Award, certificate: BookOpen } as const;
 
-const experienceCard = {
-  icon: Users,
-  title: 'ניסיון רב-שנתי',
-  description:
-    'שנים של עבודה עם מתבגרים, מבוגרים, זוגות והורים במסגרות שונות - פרטי, מוסדי וחינוכי, וניסיון רב בטיפול בבוגרים ובמתבגרים על הרצף האוטיסטי בתפקוד גבוה ובהדרכת הוריהם. ' +
-    `לצד זה, ${HEALTHY_SEXUALITY_EXPERIENCE}, להורים, למחנכים ולמבוגרים.`,
-};
+const moreCards = [
+  {
+    icon: Award,
+    title: 'התמחות במיניות בריאה',
+    description: 'הכשרה ייחודית בתחום המיניות הבריאה, המאפשרת ליווי זוגות ויחידים בנושאים אינטימיים.',
+  },
+  {
+    icon: Users,
+    title: 'ניסיון רב-שנתי',
+    description:
+      'שנים של עבודה עם מתבגרים, מבוגרים וזוגות במסגרות שונות - פרטי, מוסדי וחינוכי, וניסיון רב בטיפול בבוגרים ובמתבגרים על הרצף האוטיסטי בתפקוד גבוה ובהדרכת הוריהם.',
+  },
+];
 
 const experiences = [
   'ייעוץ חינוכי בבתי ספר',
@@ -142,9 +148,9 @@ export default function About() {
                   באוניברסיטת חיפה, כדי להביא לחדר גם כלים ממוקדים ומעשיים.
                 </p>
                 <p>
-                  לאורך השנים העברתי גם סדנאות למיניות בריאה, מתוך הבנה שזהו תחום חיוני שלעתים
-                  קרובות נשאר בצל. אני מאמינה שמיניות בריאה היא חלק בלתי נפרד מחיים מלאים, ושיחה
-                  עליה מצריכה רגישות, מקצועיות וחוסר שיפוטיות.
+                  התמחותי במיניות בריאה נולדה מתוך הבנה שזהו תחום חיוני שלעתים קרובות נשאר בצל. 
+                  אני מאמינה שמיניות בריאה היא חלק בלתי נפרד מחיים מלאים ומאושרים, וליווי בתחום 
+                  הזה מצריך רגישות, מקצועיות וחוסר שיפוטיות.
                 </p>
               </div>
             </Reveal>
@@ -203,17 +209,20 @@ export default function About() {
                 </Reveal>
               );
             })}
-            <Reveal
-              y={30}
-              duration={0.5}
-              className="bg-white rounded-2xl p-5 md:p-8 shadow-lg border border-stone-100 md:col-span-2"
-            >
-              <div className="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center mb-4 md:mb-6">
-                <experienceCard.icon className="w-5 h-5 md:w-7 md:h-7 text-stone-700" />
-              </div>
-              <h3 className="text-base md:text-xl font-bold text-stone-800 mb-2 md:mb-3">{experienceCard.title}</h3>
-              <p className="text-sm md:text-base text-stone-600 leading-relaxed">{experienceCard.description}</p>
-            </Reveal>
+            {moreCards.map((card) => (
+              <Reveal
+                key={card.title}
+                y={30}
+                duration={0.5}
+                className="bg-white rounded-2xl p-5 md:p-8 shadow-lg border border-stone-100"
+              >
+                <div className="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center mb-4 md:mb-6">
+                  <card.icon className="w-5 h-5 md:w-7 md:h-7 text-stone-700" />
+                </div>
+                <h3 className="text-base md:text-xl font-bold text-stone-800 mb-2 md:mb-3">{card.title}</h3>
+                <p className="text-sm md:text-base text-stone-600 leading-relaxed">{card.description}</p>
+              </Reveal>
+            ))}
           </div>
         </div>
       </section>

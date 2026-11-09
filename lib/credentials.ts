@@ -10,9 +10,10 @@
 // Two rules that are easy to break when editing:
 // - DBT is not a separate certificate. It was part of the University of Haifa
 //   CBT program, so it appears only inside that entry.
-// - Healthy sexuality (מיניות בריאה) is experience from workshops Nira led. It
-//   is NOT a training, certification or specialisation and must never be
-//   added to this list. See `HEALTHY_SEXUALITY_EXPERIENCE` below.
+// - Healthy sexuality (מיניות בריאה) is not backed by a certificate, so it
+//   must never be added to this list or to `hasCredential`. The site's prose
+//   keeps its existing wording, "התמחות במיניות בריאה" (owner decision,
+//   9 Nov 2026); see `HEALTHY_SEXUALITY` below.
 //
 // Nira is not a psychologist, a social worker or any Ministry of Health
 // licensed profession. Nothing here may suggest otherwise.
@@ -109,10 +110,11 @@ export function credentialLine(c: Credential): string {
 }
 
 /**
- * The only accepted way to describe healthy sexuality. Workshop experience,
- * never a qualification.
+ * The site's existing wording for healthy sexuality, kept by owner decision
+ * (9 Nov 2026). Prose only: it is not a certificate and stays out of
+ * `CREDENTIALS` and the schema's `hasCredential`.
  */
-export const HEALTHY_SEXUALITY_EXPERIENCE = 'ניסיון בהעברת סדנאות למיניות בריאה';
+export const HEALTHY_SEXUALITY = 'התמחות במיניות בריאה';
 
 /**
  * The one-sentence professional summary, shared by the Person schema and the

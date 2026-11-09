@@ -14,7 +14,7 @@
 import { SERVICES, type Service } from '@/lib/services';
 import { TOPICS, type Topic } from '@/lib/topics';
 import { CLINIC, ONLINE } from '@/lib/clinic';
-import { CREDENTIALS, credentialLine, DIRECTORY_PROFILES, HEALTHY_SEXUALITY_EXPERIENCE, PROFESSIONAL_SUMMARY } from '@/lib/credentials';
+import { CREDENTIALS, credentialLine, DIRECTORY_PROFILES, HEALTHY_SEXUALITY, PROFESSIONAL_SUMMARY } from '@/lib/credentials';
 import { PRIVACY_INTRO, PRIVACY_SECTIONS, PRIVACY_UPDATED } from '@/lib/privacy';
 
 export const BASE_URL = 'https://www.niragabay.com';
@@ -113,7 +113,7 @@ export function notFoundMarkdown(pathname: string): string {
 export function homeMarkdown(latest: ArticleSummary[]): string {
   return doc(
     '# נירה גבאי - פסיכותרפיה והדרכת הורים',
-    `נירה גבאי היא ${PROFESSIONAL_SUMMARY} מלווה מתבגרים, מבוגרים, זוגות והורים בקליניקה במושב שואבה שבאזור ירושלים, וכן בטיפול מקוון בזום ובייעוץ טלפוני.`,
+    `נירה גבאי היא ${PROFESSIONAL_SUMMARY} ${HEALTHY_SEXUALITY}. מלווה מתבגרים, מבוגרים, זוגות והורים בקליניקה במושב שואבה שבאזור ירושלים, וכן בטיפול מקוון בזום ובייעוץ טלפוני.`,
     ['## תחומי טיפול', '', bullets(SERVICES.map((s) => `[${s.title}](${abs(`/services/${s.slug}`)}) - ${s.cardDescription}`))].join('\n'),
     latest.length
       ? ['## מאמרים אחרונים', '', bullets(latest.map((a) => `[${a.title}](${abs(`/articles/${a.slug}`)})`))].join('\n')
@@ -136,7 +136,7 @@ export function aboutMarkdown(): string {
       '',
       bullets(CREDENTIALS.map(credentialLine)),
       '',
-      `בנוסף: ${HEALTHY_SEXUALITY_EXPERIENCE}. זהו ניסיון מעשי ולא הסמכה.`,
+      `בנוסף: ${HEALTHY_SEXUALITY}.`,
       '',
       'חשוב לדיוק: נירה גבאי היא מטפלת בפסיכותרפיה ומדריכת הורים, ואיננה פסיכולוגית קלינית ואיננה פסיכיאטרית. היא אינה רושמת תרופות ואינה מבצעת אבחון פסיכודיאגנוסטי.',
     ].join('\n'),

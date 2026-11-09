@@ -2,9 +2,9 @@
 //
 // The list in lib/credentials.ts was checked against the certificates. These
 // tests keep every surface that repeats it (About Markdown, Person JSON-LD,
-// llms.txt) in step with that list, and keep out the two claims that were
-// wrong before: healthy sexuality as a qualification, and DBT as a separate
-// certificate.
+// llms.txt) in step with that list, and keep two things out of the
+// structured credentials: healthy sexuality (no certificate) and DBT as a
+// separate certificate.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -13,9 +13,7 @@ import { join } from 'node:path';
 
 import { CREDENTIALS, credentialLine, DIRECTORY_PROFILES, BUSINESS_LISTINGS } from '@/lib/credentials';
 import { personSchema, practiceSchema } from '@/lib/identitySchema';
-import { aboutMarkdown, homeMarkdown } from '@/lib/agent/markdown';
-import { SERVICES } from '@/lib/services';
-import { TOPICS } from '@/lib/topics';
+import { aboutMarkdown } from '@/lib/agent/markdown';
 
 const ROOT = join(__dirname, '..');
 const read = (p: string) => readFileSync(join(ROOT, p), 'utf8');
@@ -58,22 +56,8 @@ test('About Markdown and llms.txt list every credential', () => {
   for (const url of [...DIRECTORY_PROFILES, ...BUSINESS_LISTINGS]) assert.ok(llms.includes(url), url);
 });
 
-test('healthy sexuality is never presented as a training, certification or specialisation', () => {
-  const banned = [/התמחות[^.]{0,20}מיניות/, /הכשרה[^.]{0,25}מיניות/, /הסמכה ב[^.]{0,15}מיניות/, /specialisation in healthy sexuality/i];
-  const surfaces: Record<string, string> = {
-    'llms.txt': read('public/llms.txt'),
-    'about page': read('app/about/page.tsx'),
-    'about layout': read('app/about/layout.tsx'),
-    'about.md': aboutMarkdown(),
-    'home.md': homeMarkdown([]),
-    'person schema': JSON.stringify(personSchema),
-    'practice schema': JSON.stringify(practiceSchema),
-    services: JSON.stringify(SERVICES),
-    topics: JSON.stringify(TOPICS),
-  };
-  for (const [name, text] of Object.entries(surfaces)) {
-    for (const re of banned) assert.ok(!re.test(text), `${name} matches ${re}`);
-  }
+test('healthy sexuality is prose only, never a credential node', () => {
+  assert.ok(!JSON.stringify(personSchema.hasCredential).includes('מיניות'));
 });
 
 test('no street address or house number in the identity schema', () => {
