@@ -12,6 +12,7 @@
     { "id": "couples-mevaseret", "text": "טיפול זוגי באזור מבשרת ציון", "service": "couples-therapy", "area": "מבשרת ציון", "active": true, "added": "2026-11-09" },
     { "id": "parent-guidance-mateh-yehuda", "text": "הדרכת הורים במטה יהודה", "service": "parent-guidance", "area": "מטה יהודה", "active": true, "added": "2026-11-09" },
     { "id": "psychotherapy-mateh-yehuda", "text": "פסיכותרפיסטית במטה יהודה והרי ירושלים", "service": "adult-therapy", "area": "מטה יהודה", "active": true, "added": "2026-11-09" },
+    { "id": "teen-therapy-mateh-yehuda", "text": "טיפול רגשי למתבגרים באזור מטה יהודה", "service": "teen-therapy", "area": "מטה יהודה", "active": true, "added": "2026-11-09" },
     { "id": "cbt-online-hebrew", "text": "טיפול CBT בזום בעברית", "service": "cbt", "area": "אונליין", "active": true, "added": "2026-11-09" }
   ]
 }
