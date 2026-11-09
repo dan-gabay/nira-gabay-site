@@ -14,12 +14,13 @@
 // which is what /clinic already used - and the actual qualification is stated
 // in `jobTitle`, `description` and `hasCredential`, where it is true.
 //
-// Nothing here may claim a credential Nira does not hold. The three lines in
-// `hasCredential` are the ones her own About page states.
+// Nothing here may claim a credential Nira does not hold. `hasCredential` is
+// built from lib/credentials.ts, the same verified list the About page shows.
 
 import { CLINIC } from '@/lib/clinic';
 import { SERVICES } from '@/lib/services';
 import { SERVICES_LIVE } from '@/lib/publish';
+import { BUSINESS_LISTINGS, CREDENTIALS, DIRECTORY_PROFILES, PROFESSIONAL_SUMMARY } from '@/lib/credentials';
 
 export const BASE_URL = 'https://www.niragabay.com';
 export const PERSON_ID = `${BASE_URL}/#nira`;
@@ -29,6 +30,22 @@ const SAME_AS = [
   'https://www.facebook.com/nira.gabay',
   'https://www.instagram.com/niragabay',
 ];
+
+// The Person also links to the therapist directories that profile her. They
+// describe Nira, not the clinic, so they go on the Person node only.
+const PERSON_SAME_AS = [...SAME_AS, ...DIRECTORY_PROFILES];
+
+// One node per verified credential. The issuing institution goes in
+// `recognizedBy`; institution, year and hours are repeated as a plain
+// `description`, which is what AI systems quote.
+const credentialNodes = CREDENTIALS.map((c) => ({
+  '@type': 'EducationalOccupationalCredential',
+  credentialCategory: c.category,
+  name: c.title,
+  description: `${c.institution}, ${c.year}${c.hours ? `, ${c.hours} שעות` : ''}`,
+  recognizedBy: { '@type': 'EducationalOrganization', name: c.institution },
+  dateCreated: c.year.slice(-4),
+}));
 
 // The practice's Google Business Profile, by its CID - the stable form of a
 // Maps listing URL, unlike share links, which are redirects that expire.
@@ -45,7 +62,7 @@ const SERVICE_NAMES: Array<{ slug: string; name: string; description: string }> 
   { slug: 'adult-therapy', name: 'טיפול במבוגרים', description: 'מרחב בטוח לעיבוד רגשי והתמודדות עם אתגרי החיים' },
   { slug: 'couples-therapy', name: 'טיפול זוגי', description: 'חיזוק הקשר הזוגי ושיפור התקשורת' },
   { slug: 'parent-guidance', name: 'הדרכת הורים', description: 'כלים מעשיים להורות מיטבית' },
-  { slug: 'sex-therapy', name: 'טיפול מיני', description: 'התמחות במיניות בריאה' },
+  { slug: 'sex-therapy', name: 'טיפול מיני', description: 'ליווי זוגות ויחידים בנושאי אינטימיות ומיניות' },
   { slug: 'cbt', name: 'טיפול קוגניטיבי התנהגותי (CBT)', description: 'גישה מעשית לטיפול בחרדות ודיכאון' },
 ];
 
@@ -69,12 +86,11 @@ export const personSchema = {
   url: `${BASE_URL}/about`,
   mainEntityOfPage: `${BASE_URL}/about`,
   jobTitle: 'מטפלת בפסיכותרפיה ומדריכת הורים',
-  description:
-    'מטפלת בפסיכותרפיה ומדריכת הורים. בעלת תואר שני (M.A) בייעוץ חינוכי, הכשרה בטיפול קוגניטיבי התנהגותי (CBT) וב-DBT מאוניברסיטת חיפה והתמחות במיניות בריאה. מלווה מתבגרים, מבוגרים וזוגות בקליניקה במושב שואבה שבאזור ירושלים ובטיפול מקוון בזום.',
+  description: `${PROFESSIONAL_SUMMARY} מלווה מתבגרים, מבוגרים, זוגות והורים בקליניקה במושב שואבה שבאזור ירושלים ובטיפול מקוון בזום.`,
   image: CLINIC.photo,
   telephone: CLINIC.phone,
   email: 'niraga1123@gmail.com',
-  sameAs: SAME_AS,
+  sameAs: PERSON_SAME_AS,
   knowsLanguage: ['he', 'en'],
   knowsAbout: [
     'פסיכותרפיה',
@@ -82,27 +98,13 @@ export const personSchema = {
     'טיפול במתבגרים',
     'טיפול זוגי',
     'טיפול קוגניטיבי התנהגותי (CBT)',
+    'DBT',
+    'גישה אדלריאנית',
+    'ייעוץ חינוכי',
     'חרדה',
     'מיניות בריאה',
   ],
-  hasCredential: [
-    {
-      '@type': 'EducationalOccupationalCredential',
-      credentialCategory: 'degree',
-      name: 'תואר שני (M.A) בייעוץ חינוכי',
-    },
-    {
-      '@type': 'EducationalOccupationalCredential',
-      credentialCategory: 'certificate',
-      name: 'הכשרה בטיפול קוגניטיבי התנהגותי (CBT) וב-DBT',
-      recognizedBy: { '@type': 'CollegeOrUniversity', name: 'אוניברסיטת חיפה' },
-    },
-    {
-      '@type': 'EducationalOccupationalCredential',
-      credentialCategory: 'certificate',
-      name: 'התמחות במיניות בריאה',
-    },
-  ],
+  hasCredential: credentialNodes,
   worksFor: { '@id': PRACTICE_ID },
 };
 
@@ -128,7 +130,7 @@ export const practiceSchema = {
   image: 'https://70wu4ifcxmk7qisg.public.blob.vercel-storage.com/hero-desktop.png',
   telephone: CLINIC.phone,
   email: 'niraga1123@gmail.com',
-  sameAs: [...SAME_AS, GOOGLE_BUSINESS_PROFILE],
+  sameAs: [...SAME_AS, GOOGLE_BUSINESS_PROFILE, ...BUSINESS_LISTINGS],
   hasMap: GOOGLE_BUSINESS_PROFILE,
   founder: { '@id': PERSON_ID },
   employee: { '@id': PERSON_ID },
