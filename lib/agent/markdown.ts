@@ -233,6 +233,19 @@ export function serviceMarkdown(service: Service): string {
   return doc(
     `# ${service.title}`,
     service.tagline,
+    service.facts
+      ? [
+          '## בקצרה',
+          '',
+          bullets([
+            `למי זה מתאים: ${service.facts.suits}`,
+            `איך זה עובד: ${service.facts.process}`,
+            `איפה: ${service.facts.where}`,
+            `הכשרה: ${service.facts.credential}`,
+            `איך מתחילים: ${service.facts.start}`,
+          ]),
+        ].join('\n')
+      : null,
     service.intro.join('\n\n'),
     service.signs.length
       ? ['## מתי פונים', '', bullets(service.signs)].join('\n')
@@ -240,6 +253,9 @@ export function serviceMarkdown(service: Service): string {
     ...service.sections.map((sec) => [`## ${sec.heading}`, '', sec.body.join('\n\n')].join('\n')),
     service.firstSession.length
       ? ['## המפגש הראשון', '', service.firstSession.join('\n\n')].join('\n')
+      : null,
+    service.location
+      ? [`## ${service.location.heading}`, '', service.location.body.join('\n\n')].join('\n')
       : null,
     service.faq.length
       ? ['## שאלות נפוצות', '', service.faq.map((f) => `### ${f.q}\n\n${f.a}`).join('\n\n')].join('\n')

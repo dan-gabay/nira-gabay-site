@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { Check } from 'lucide-react';
 import { supabaseServer } from '@/lib/supabaseServer';
-import { SERVICES, getService, type Service } from '@/lib/services';
+import { SERVICES, getService, type Service, type ServiceFacts } from '@/lib/services';
 import { SERVICES_LIVE, UNPUBLISHED_ROBOTS } from '@/lib/publish';
 import { whatsappHref } from '@/lib/whatsapp';
 import { CLINIC } from '@/lib/clinic';
@@ -29,6 +29,14 @@ import type { ArticleListItem } from '@/app/articles/ArticlesBrowser';
 export const revalidate = 3600;
 
 const BASE_URL = 'https://www.niragabay.com';
+
+const FACT_ROWS: Array<[keyof ServiceFacts, string]> = [
+  ['suits', 'למי זה מתאים'],
+  ['process', 'איך זה עובד'],
+  ['where', 'איפה'],
+  ['credential', 'הכשרה'],
+  ['start', 'איך מתחילים'],
+];
 
 export function generateStaticParams() {
   return SERVICES.map((s) => ({ slug: s.slug }));
@@ -104,6 +112,8 @@ function buildSchema(service: Service, url: string) {
     areaServed: [
       { '@type': 'City', name: 'ירושלים' },
       { '@type': 'City', name: 'מבשרת ציון' },
+      { '@type': 'City', name: 'אבו גוש' },
+      { '@type': 'AdministrativeArea', name: 'מטה יהודה' },
       { '@type': 'City', name: 'בית שמש' },
       { '@type': 'City', name: 'מודיעין' },
       { '@type': 'Country', name: 'ישראל' },
@@ -241,6 +251,33 @@ export default async function ServicePage({
           })}
         </div>
       </div>
+
+      {/* ───────── In short ─────────
+          GEO plan item 3 (B-61): the five facts an AI assistant, or a
+          visitor skimming on a phone, needs before the longer copy. Plain
+          sentences in a definition list, so each one can be quoted alone. */}
+      {service.facts && (
+        <section className="pt-5 md:pt-8 bg-white">
+          <div className="container mx-auto px-4 md:px-8">
+            <div
+              className="max-w-3xl mx-auto rounded-3xl p-4 md:p-6"
+              style={{ background: '#F4FAF7', border: '1px solid #D6EDE3' }}
+            >
+              <h2 className="text-base md:text-xl font-bold text-stone-800 mb-2.5 md:mb-3">
+                {service.navLabel} בקצרה
+              </h2>
+              <dl className="grid gap-2 md:gap-2.5 text-[14px] md:text-[0.96875rem] leading-relaxed">
+                {FACT_ROWS.map(([key, label]) => (
+                  <div key={key} className="md:flex md:gap-3">
+                    <dt className="font-semibold text-stone-800 md:w-28 md:flex-shrink-0">{label}</dt>
+                    <dd className="text-stone-600">{service.facts![key]}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ───────── Intro ───────── */}
       <section className="pt-6 md:pt-10 bg-white">
