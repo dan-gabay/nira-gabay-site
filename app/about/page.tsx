@@ -3,7 +3,10 @@ import React from 'react';
 import Reveal from '@/components/Reveal';
 import { enterStyle } from '@/lib/enter';
 import Image from 'next/image';
-import { GraduationCap, Award, Heart, MapPin, Users, BookOpen, Monitor } from 'lucide-react';
+import {
+  GraduationCap, Award, Heart, MapPin, Users, Monitor, MessagesSquare, Brain,
+  HeartHandshake, ScrollText, Puzzle, Layers, Briefcase,
+} from 'lucide-react';
 import ArticleCtaBanner from '@/components/ArticleCtaBanner';
 import { CREDENTIALS, credentialDetails } from '@/lib/credentials';
 
@@ -12,7 +15,18 @@ import { CREDENTIALS, credentialDetails } from '@/lib/credentials';
 // reader - or an AI system quoting the page - can see exactly what stands
 // behind "מטפלת בפסיכותרפיה". The two cards after them keep the page's
 // existing wording (owner decision, 9 Nov 2026).
-const credentialIcon = { degree: GraduationCap, license: Award, certificate: BookOpen } as const;
+//
+// One icon per card, in the order of CREDENTIALS, so no two cards share one.
+const credentialIcons = [
+  MessagesSquare, // individual psychotherapy
+  Brain, // CBT and DBT
+  Users, // parent and family groups
+  HeartHandshake, // couples therapy
+  GraduationCap, // M.A.
+  ScrollText, // counselling licence
+  Puzzle, // learning disabilities and ADHD
+  Layers, // schema therapy tools
+];
 
 const moreCards = [
   {
@@ -21,7 +35,7 @@ const moreCards = [
     description: 'הכשרה ייחודית בתחום המיניות הבריאה, המאפשרת ליווי זוגות ויחידים בנושאים אינטימיים.',
   },
   {
-    icon: Users,
+    icon: Briefcase,
     title: 'ניסיון רב-שנתי',
     description:
       'שנים של עבודה עם מתבגרים, מבוגרים וזוגות במסגרות שונות - פרטי, מוסדי וחינוכי, וניסיון רב בטיפול בבוגרים ובמתבגרים על הרצף האוטיסטי בתפקוד גבוה ובהדרכת הוריהם.',
@@ -191,7 +205,7 @@ export default function About() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 max-w-5xl mx-auto">
             {CREDENTIALS.map((credential, index) => {
-              const Icon = credentialIcon[credential.category];
+              const Icon = credentialIcons[index] ?? GraduationCap;
               return (
                 <Reveal
                   key={credential.title}
@@ -200,10 +214,12 @@ export default function About() {
                   delay={Math.min(index, 4) * 0.1}
                   className="bg-white rounded-2xl p-5 md:p-8 shadow-lg border border-stone-100"
                 >
-                  <div className="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center mb-4 md:mb-6">
-                    <Icon className="w-5 h-5 md:w-7 md:h-7 text-stone-700" />
+                  <div className="flex items-center gap-3 mb-2 md:block md:mb-0">
+                    <div className="w-11 h-11 md:w-14 md:h-14 shrink-0 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center md:mb-6">
+                      <Icon className="w-5 h-5 md:w-7 md:h-7 text-stone-700" />
+                    </div>
+                    <h3 className="text-base md:text-xl font-bold text-stone-800 md:mb-2">{credential.title}</h3>
                   </div>
-                  <h3 className="text-base md:text-xl font-bold text-stone-800 mb-1 md:mb-2">{credential.title}</h3>
                   <p className="text-sm md:text-base text-amber-800 mb-2 md:mb-3">{credentialDetails(credential)}</p>
                   <p className="text-sm md:text-base text-stone-600 leading-relaxed">{credential.note}</p>
                 </Reveal>
@@ -216,10 +232,12 @@ export default function About() {
                 duration={0.5}
                 className="bg-white rounded-2xl p-5 md:p-8 shadow-lg border border-stone-100"
               >
-                <div className="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center mb-4 md:mb-6">
-                  <card.icon className="w-5 h-5 md:w-7 md:h-7 text-stone-700" />
+                <div className="flex items-center gap-3 mb-2 md:block md:mb-0">
+                  <div className="w-11 h-11 md:w-14 md:h-14 shrink-0 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center md:mb-6">
+                    <card.icon className="w-5 h-5 md:w-7 md:h-7 text-stone-700" />
+                  </div>
+                  <h3 className="text-base md:text-xl font-bold text-stone-800 md:mb-3">{card.title}</h3>
                 </div>
-                <h3 className="text-base md:text-xl font-bold text-stone-800 mb-2 md:mb-3">{card.title}</h3>
                 <p className="text-sm md:text-base text-stone-600 leading-relaxed">{card.description}</p>
               </Reveal>
             ))}
