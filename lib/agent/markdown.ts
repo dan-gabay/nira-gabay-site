@@ -14,6 +14,7 @@
 import { SERVICES, type Service } from '@/lib/services';
 import { TOPICS, type Topic } from '@/lib/topics';
 import { CLINIC, ONLINE } from '@/lib/clinic';
+import { CREDENTIALS, credentialLine, DIRECTORY_PROFILES, HEALTHY_SEXUALITY, PROFESSIONAL_SUMMARY } from '@/lib/credentials';
 import { PRIVACY_INTRO, PRIVACY_SECTIONS, PRIVACY_UPDATED } from '@/lib/privacy';
 
 export const BASE_URL = 'https://www.niragabay.com';
@@ -112,7 +113,7 @@ export function notFoundMarkdown(pathname: string): string {
 export function homeMarkdown(latest: ArticleSummary[]): string {
   return doc(
     '# נירה גבאי - פסיכותרפיה והדרכת הורים',
-    'נירה גבאי היא מטפלת בפסיכותרפיה ומדריכת הורים. בעלת תואר שני (M.A) בייעוץ חינוכי, הכשרה בטיפול קוגניטיבי התנהגותי (CBT) וב-DBT מאוניברסיטת חיפה והתמחות במיניות בריאה. מלווה מתבגרים, מבוגרים וזוגות בקליניקה במושב שואבה שבאזור ירושלים, וכן בטיפול מקוון בזום ובייעוץ טלפוני.',
+    `נירה גבאי היא ${PROFESSIONAL_SUMMARY} ${HEALTHY_SEXUALITY}. מלווה מתבגרים, מבוגרים, זוגות והורים בקליניקה במושב שואבה שבאזור ירושלים, וכן בטיפול מקוון בזום ובייעוץ טלפוני.`,
     ['## תחומי טיפול', '', bullets(SERVICES.map((s) => `[${s.title}](${abs(`/services/${s.slug}`)}) - ${s.cardDescription}`))].join('\n'),
     latest.length
       ? ['## מאמרים אחרונים', '', bullets(latest.map((a) => `[${a.title}](${abs(`/articles/${a.slug}`)})`))].join('\n')
@@ -131,11 +132,11 @@ export function aboutMarkdown(): string {
     [
       '## הכשרה',
       '',
-      bullets([
-        'תואר שני (M.A) בייעוץ חינוכי',
-        'הכשרה בטיפול קוגניטיבי התנהגותי (CBT) וב-DBT, אוניברסיטת חיפה',
-        'התמחות במיניות בריאה',
-      ]),
+      'כל ההכשרות שלמטה מגובות בתעודות, עם שם המוסד, השנה והיקף השעות:',
+      '',
+      bullets(CREDENTIALS.map(credentialLine)),
+      '',
+      `בנוסף: ${HEALTHY_SEXUALITY}.`,
       '',
       'חשוב לדיוק: נירה גבאי היא מטפלת בפסיכותרפיה ומדריכת הורים, ואיננה פסיכולוגית קלינית ואיננה פסיכיאטרית. היא אינה רושמת תרופות ואינה מבצעת אבחון פסיכודיאגנוסטי.',
     ].join('\n'),
@@ -145,6 +146,7 @@ export function aboutMarkdown(): string {
       'זוגות שרוצים לשנות את הדרך שבה הם מדברים זה עם זה',
       'הורים שמחפשים כלים מעשיים ולא עוד ביקורת',
     ])].join('\n'),
+    ['## פרופילים באתרי מטפלים', '', bullets(DIRECTORY_PROFILES)].join('\n'),
     `העמוד המלא, בגרסת HTML: ${abs('/about')}`,
     contactBlock(),
     recoveryBlock(),

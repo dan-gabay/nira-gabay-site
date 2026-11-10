@@ -3,30 +3,43 @@ import React from 'react';
 import Reveal from '@/components/Reveal';
 import { enterStyle } from '@/lib/enter';
 import Image from 'next/image';
-import { GraduationCap, Award, Heart, MapPin, Users, BookOpen, Monitor } from 'lucide-react';
+import {
+  GraduationCap, Award, Heart, MapPin, Users, Monitor, MessagesSquare, Brain,
+  HeartHandshake, ScrollText, Puzzle, Layers, Briefcase,
+} from 'lucide-react';
 import ArticleCtaBanner from '@/components/ArticleCtaBanner';
+import { CREDENTIALS, credentialDetails } from '@/lib/credentials';
 
-const milestones = [
-  {
-    icon: GraduationCap,
-    title: 'השכלה מקצועית',
-    description: 'תואר שני M.A בייעוץ חינוכי, עם התמחות בטיפול רגשי והתפתחותי.'
-  },
+// Each card is a certificate Nira holds (lib/credentials.ts, verified against
+// the originals on 6 Nov 2026), with its institution, year and hours, so a
+// reader - or an AI system quoting the page - can see exactly what stands
+// behind "מטפלת בפסיכותרפיה". The two cards after them keep the page's
+// existing wording (owner decision, 9 Nov 2026).
+//
+// One icon per card, in the order of CREDENTIALS, so no two cards share one.
+const credentialIcons = [
+  MessagesSquare, // individual psychotherapy
+  Brain, // CBT and DBT
+  Users, // parent and family groups
+  HeartHandshake, // couples therapy
+  GraduationCap, // M.A.
+  ScrollText, // counselling licence
+  Puzzle, // learning disabilities and ADHD
+  Layers, // schema therapy tools
+];
+
+const moreCards = [
   {
     icon: Award,
     title: 'התמחות במיניות בריאה',
-    description: 'הכשרה ייחודית בתחום המיניות הבריאה, המאפשרת ליווי זוגות ויחידים בנושאים אינטימיים.'
+    description: 'הכשרה ייחודית בתחום המיניות הבריאה, המאפשרת ליווי זוגות ויחידים בנושאים אינטימיים.',
   },
   {
-    icon: BookOpen,
-    title: 'הכשרה בטיפול קוגניטיבי התנהגותי (CBT) וב-DBT',
-    description: 'הכשרה מקצועית בטיפול CBT וב-DBT מאוניברסיטת חיפה - גישה מעשית ומוכחת מדעית לטיפול בחרדות ודיכאון.'
-  },
-  {
-    icon: Users,
+    icon: Briefcase,
     title: 'ניסיון רב-שנתי',
-    description: 'שנים של עבודה עם מתבגרים, מבוגרים וזוגות במסגרות שונות - פרטי, מוסדי וחינוכי, וניסיון רב בטיפול בבוגרים ובמתבגרים על הרצף האוטיסטי בתפקוד גבוה ובהדרכת הוריהם.'
-  }
+    description:
+      'שנים של עבודה עם מתבגרים, מבוגרים וזוגות במסגרות שונות - פרטי, מוסדי וחינוכי, וניסיון רב בטיפול בבוגרים ובמתבגרים על הרצף האוטיסטי בתפקוד גבוה ובהדרכת הוריהם.',
+  },
 ];
 
 const experiences = [
@@ -85,6 +98,9 @@ export default function About() {
               <p className="text-xs md:text-lg text-stone-500">
                 פסיכותרפיה | CBT | הדרכת הורים | טיפול זוגי
               </p>
+              <p className="text-xs md:text-base text-stone-500 mt-2 md:mt-3">
+                בוגרת מכון אדלר | M.A בייעוץ חינוכי | CBT ו-DBT, אוניברסיטת חיפה
+              </p>
             </div>
           </div>
         </div>
@@ -141,6 +157,11 @@ export default function About() {
                   ואיפשר לי להכיר את האתגרים מזוויות שונות.
                 </p>
                 <p>
+                  ההכשרה הטיפולית המרכזית שלי היא במכון אדלר: התוכנית התלת-שנתית בפסיכותרפיה,
+                  ההסמכה להנחיית קבוצות הורים ומשפחה וקורס בטיפול זוגי. לצידן למדתי CBT ו-DBT
+                  באוניברסיטת חיפה, כדי להביא לחדר גם כלים ממוקדים ומעשיים.
+                </p>
+                <p>
                   התמחותי במיניות בריאה נולדה מתוך הבנה שזהו תחום חיוני שלעתים קרובות נשאר בצל. 
                   אני מאמינה שמיניות בריאה היא חלק בלתי נפרד מחיים מלאים ומאושרים, וליווי בתחום 
                   הזה מצריך רגישות, מקצועיות וחוסר שיפוטיות.
@@ -183,19 +204,41 @@ export default function About() {
             <div className="w-16 md:w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mt-4 md:mt-6 mx-auto" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 max-w-5xl mx-auto">
-            {milestones.map((milestone, index) => (
+            {CREDENTIALS.map((credential, index) => {
+              const Icon = credentialIcons[index] ?? GraduationCap;
+              return (
+                <Reveal
+                  key={credential.title}
+                  y={30}
+                  duration={0.5}
+                  delay={Math.min(index, 4) * 0.1}
+                  className="bg-white rounded-2xl p-5 md:p-8 shadow-lg border border-stone-100"
+                >
+                  <div className="flex items-center gap-3 mb-2 md:block md:mb-0">
+                    <div className="w-11 h-11 md:w-14 md:h-14 shrink-0 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center md:mb-6">
+                      <Icon className="w-5 h-5 md:w-7 md:h-7 text-stone-700" />
+                    </div>
+                    <h3 className="text-base md:text-xl font-bold text-stone-800 md:mb-2">{credential.title}</h3>
+                  </div>
+                  <p className="text-sm md:text-base text-amber-800 mb-2 md:mb-3">{credentialDetails(credential)}</p>
+                  <p className="text-sm md:text-base text-stone-600 leading-relaxed">{credential.note}</p>
+                </Reveal>
+              );
+            })}
+            {moreCards.map((card) => (
               <Reveal
-                key={index}
+                key={card.title}
                 y={30}
                 duration={0.5}
-                delay={index * 0.1}
                 className="bg-white rounded-2xl p-5 md:p-8 shadow-lg border border-stone-100"
               >
-                <div className="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center mb-4 md:mb-6">
-                  <milestone.icon className="w-5 h-5 md:w-7 md:h-7 text-stone-700" />
+                <div className="flex items-center gap-3 mb-2 md:block md:mb-0">
+                  <div className="w-11 h-11 md:w-14 md:h-14 shrink-0 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center md:mb-6">
+                    <card.icon className="w-5 h-5 md:w-7 md:h-7 text-stone-700" />
+                  </div>
+                  <h3 className="text-base md:text-xl font-bold text-stone-800 md:mb-3">{card.title}</h3>
                 </div>
-                <h3 className="text-base md:text-xl font-bold text-stone-800 mb-2 md:mb-3">{milestone.title}</h3>
-                <p className="text-sm md:text-base text-stone-600 leading-relaxed">{milestone.description}</p>
+                <p className="text-sm md:text-base text-stone-600 leading-relaxed">{card.description}</p>
               </Reveal>
             ))}
           </div>
