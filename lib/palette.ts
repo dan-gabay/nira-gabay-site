@@ -30,3 +30,10 @@ export const CHIP_BASE =
 export const CHIP_IDLE =
   'bg-white text-emerald-900 border border-emerald-200 hover:bg-emerald-50';
 export const CHIP_ACTIVE = 'text-white shadow-sm';
+
+// "You are here" marker for the service-page tab row. Unlike the article
+// filters (where CHIP_ACTIVE marks a toggle), this is the current page, so it
+// must not look tappable: no fill or border, just bold emerald text with an
+// underline. Rendered as a <span aria-current="page">, not a link.
+export const CHIP_CURRENT =
+  'px-1 min-h-[40px] md:min-h-[44px] inline-flex items-center text-xs md:text-sm font-bold whitespace-nowrap flex-shrink-0 text-emerald-700 shadow-[inset_0_-3px_0_#047857] cursor-default select-none';

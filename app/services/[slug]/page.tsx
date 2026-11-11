@@ -12,11 +12,10 @@ import { CLINIC } from '@/lib/clinic';
 import {
   TEAL_DARK,
   MINT,
-  MINT_DARK,
   ARTICLES_HERO_BG,
   CHIP_BASE,
   CHIP_IDLE,
-  CHIP_ACTIVE,
+  CHIP_CURRENT,
 } from '@/lib/palette';
 import ArticleRow from '@/components/ArticleRow';
 import ServiceContact from '@/components/ServiceContact';
@@ -225,20 +224,22 @@ export default async function ServicePage({
         >
           {/* Current service first (rightmost in RTL) so it is never cut off on
               mobile; ordered on the server, so no client scroll or layout shift. */}
-          {[service, ...SERVICES.filter((s) => s.slug !== service.slug)].map((s) => {
-            const isActive = s.slug === service.slug;
-            return (
-              <Link
-                key={s.slug}
-                href={`/services/${s.slug}`}
-                aria-current={isActive ? 'page' : undefined}
-                className={`${CHIP_BASE} ${isActive ? CHIP_ACTIVE : CHIP_IDLE}`}
-                style={isActive ? { background: MINT_DARK } : undefined}
-              >
-                {s.navLabel}
-              </Link>
-            );
-          })}
+          {/* The current service is a plain "you are here" marker, not a link:
+              Clarity showed visitors tapping the filled pill as if it were a
+              button. A thin divider separates it from the sibling links. */}
+          <span aria-current="page" className={CHIP_CURRENT}>
+            {service.navLabel}
+          </span>
+          <span aria-hidden="true" className="w-px h-6 bg-stone-300 flex-shrink-0 ms-1" />
+          {SERVICES.filter((s) => s.slug !== service.slug).map((s) => (
+            <Link
+              key={s.slug}
+              href={`/services/${s.slug}`}
+              className={`${CHIP_BASE} ${CHIP_IDLE}`}
+            >
+              {s.navLabel}
+            </Link>
+          ))}
         </div>
       </div>
 
