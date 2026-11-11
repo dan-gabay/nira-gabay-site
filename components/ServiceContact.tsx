@@ -8,11 +8,11 @@ import { FORM_BG, TEAL_DARK } from '@/lib/palette';
 export const ROLE = 'מטפלת בפסיכותרפיה ומדריכת הורים';
 
 // The same file the home page's mobile hero uses. It is already a tight
-// 495x505 headshot, so a circular crop is a near-exact fit and needs no
+// 571x582 headshot, so a circular crop is a near-exact fit and needs no
 // repositioning - and being local it actually loads, unlike the blob-hosted
 // profile.png on /clinic. Replacing that one file changes her photo in both
 // places, which is the behaviour you want from a portrait.
-export const PORTRAIT = '/images/hero-mobile.jpg';
+export const PORTRAIT = '/images/hero-mobile.webp';
 
 /**
  * The closing block on a service page: the form, with WhatsApp and phone.
