@@ -264,6 +264,514 @@
       },
       "observer": "Claude (SerpApi)",
       "notes": "מדידה ראשונה לשאלה הזו. המקור הראשון הוא מדריך של מכון טמיר על בריאות הנפש בירושלים. המפה המקומית לא נבדקה בריצה הזו."
+    },
+    {
+      "id": "2026-11-09-brand-nira-gabay-google_ai_overview",
+      "prompt_id": "brand-nira-gabay",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-09T23:46:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": true,
+      "nira_linked": true,
+      "position": 1,
+      "competitors": [],
+      "cited_sources": [
+        "d.co.il",
+        "hebpsy.net",
+        "niragabay.com",
+        "briuta-m.co.il",
+        "mentalytics.co.il",
+        "haaretz.co.il"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": null
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "התשובה מתארת את נירה כפסיכותרפיסטית, מדריכת הורים ויועצת חינוכית עם M.A, מזכירה את מכון אדלר רק בהקשר של הדרכת הורים, CBT ו-DBT, קליניקה בשואבה וזום, ומקשרת לאתר ולפרופיל בפסיכולוגיה עברית. היא גם מייחסת לה כתיבה בעיתון הארץ לפי עמוד כותבת בשם זהה: לא אומת שזו אותה נירה. האתר לא בעשרת הראשונים בתוצאות הרגילות לשאלה בניסוח הזה."
+    },
+    {
+      "id": "2026-11-09-couples-mevaseret-google_ai_overview",
+      "prompt_id": "couples-mevaseret",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-09T23:48:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": false,
+      "nira_linked": false,
+      "position": null,
+      "competitors": [
+        "בטיפולנט",
+        "עליזה שני",
+        "רבקה פדר ורטהיימר",
+        "מרכז רימון",
+        "על הספה",
+        "מכון קשרים - ד\"ר רונית שרון",
+        "מכון שילוב"
+      ],
+      "cited_sources": [
+        "rimonclinic.com",
+        "betipulnet.co.il",
+        "b144.co.il",
+        "alhasapa.co.il",
+        "google-business-profile"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": false
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "תשובה דלה: שתי מטפלות בשמן, אינדקסים, מכונים בירושלים, ואפילו ספא לזוגות. במפה המקומית אין אף מטפל זוגי מהאזור."
+    },
+    {
+      "id": "2026-11-09-parent-guidance-mateh-yehuda-google_ai_overview",
+      "prompt_id": "parent-guidance-mateh-yehuda",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-09T23:50:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": false,
+      "nira_linked": false,
+      "position": null,
+      "competitors": [
+        "השירות הפסיכולוגי החינוכי מטה יהודה",
+        "מרכז דפנה",
+        "המרכז המשלים למשפחה",
+        "אגף הרווחה מטה יהודה"
+      ],
+      "cited_sources": [
+        "m-yehuda.org.il"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": null
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "כל המקורות הם אתר המועצה האזורית מטה יהודה. אף מדריך הורים פרטי לא מוזכר. התשובה שואלת אם מחפשים מענה מסובסד או מדריך פרטי באזור."
+    },
+    {
+      "id": "2026-11-09-psychotherapy-mateh-yehuda-google_ai_overview",
+      "prompt_id": "psychotherapy-mateh-yehuda",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-09T23:52:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": false,
+      "nira_linked": false,
+      "position": null,
+      "competitors": [
+        "על הספה",
+        "מכון קשרים - ד\"ר רונית שרון"
+      ],
+      "cited_sources": [
+        "alhasapa.co.il",
+        "google-business-profile"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": false
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "שלושה מארבעת המקורות הם עמודי מטה יהודה של אינדקס על הספה, והרביעי פרופיל עסק של מכון בירושלים. אף מטפלת מהאזור לא מוזכרת בשמה. במפה המקומית שלושה מטפלים, נירה לא ביניהם."
+    },
+    {
+      "id": "2026-11-13-cbt-mevaseret-google_ai_overview",
+      "prompt_id": "cbt-mevaseret",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-13T22:30:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": false,
+      "nira_linked": false,
+      "position": null,
+      "competitors": [
+        "אירית שילה פורמן",
+        "ד\"ר שרה גנשיל",
+        "יאיר ברקו",
+        "דורית ויגדור",
+        "מרכז רימון",
+        "מכון טמיר"
+      ],
+      "cited_sources": [
+        "b144.co.il",
+        "google-business-profile",
+        "d.co.il",
+        "rimonclinic.com"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": false
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "נבדק פעמיים באותו ערב. בריצה השנייה ארבעה מטפלים בשמם, ביניהם דורית ויגדור (CBT, הדרכת הורים, זום, אזור מבשרת): פרופיל דומה מאוד לנירה. בריצה הראשונה רק אינדקסים (B144, דפי זהב, טיפול חכם, איזי)."
+    },
+    {
+      "id": "2026-11-13-psychotherapist-jerusalem-google_ai_overview",
+      "prompt_id": "psychotherapist-jerusalem",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-13T22:01:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": false,
+      "nira_linked": false,
+      "position": null,
+      "competitors": [
+        "ד\"ר רונית שרון (מכון קשרים)",
+        "יאיר ברקו",
+        "זהבית גלבוע נגארי",
+        "רותי הרש",
+        "חפצי הלפר"
+      ],
+      "cited_sources": [
+        "google-business-profile",
+        "alhasapa.co.il"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": false
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "חמישה שמות, שלושה מהם מפרופיל עסק בגוגל של מכון קשרים ויאיר ברקו."
+    },
+    {
+      "id": "2026-11-13-parent-guidance-jerusalem-google_ai_overview",
+      "prompt_id": "parent-guidance-jerusalem",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-13T22:03:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": false,
+      "nira_linked": false,
+      "position": null,
+      "competitors": [
+        "מרכז שפר",
+        "אסנת יהודה (מוסמכת מכון אדלר)",
+        "הדס מזר",
+        "מרכז מענה",
+        "מרכז י.נ.ר"
+      ],
+      "cited_sources": [
+        "midrag.co.il",
+        "easy.co.il",
+        "google-business-profile"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": false
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "כל החמישה מפרופילי עסק בגוגל (10-61 ביקורות). אסנת יהודה מוצגת כ'מוסמכת מכון אדלר', כמו נירה."
+    },
+    {
+      "id": "2026-11-13-adult-therapy-mevaseret-google_ai_overview",
+      "prompt_id": "adult-therapy-mevaseret",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-13T22:35:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": false,
+      "nira_linked": false,
+      "position": null,
+      "competitors": [
+        "אירית שילה פורמן",
+        "דנה גביש בירן",
+        "רוני שלו",
+        "מנור בן אברהם",
+        "ישי אריעז"
+      ],
+      "cited_sources": [
+        "d.co.il",
+        "easy.co.il",
+        "alhasapa.co.il",
+        "b144.co.il",
+        "infomed.co.il"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": null
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "נבדק פעמיים. בריצה השנייה חמישה מטפלים, שניים מהם מתוך עמודי B144 של מבשרת ציון (CBT, פסיכותרפיה). בריצה הראשונה רק אינדקסים. התשובה משתנה בין ריצות."
+    },
+    {
+      "id": "2026-11-13-teen-therapy-jerusalem-google_ai_overview",
+      "prompt_id": "teen-therapy-jerusalem",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-13T22:08:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": false,
+      "nira_linked": false,
+      "position": null,
+      "competitors": [
+        "בטיפולנט",
+        "על הספה"
+      ],
+      "cited_sources": [
+        "betipulnet.co.il",
+        "alhasapa.co.il",
+        "medicbook.co.il"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": null
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "תשובה כללית: אינדקסים, קופות חולים, אונליין. אף מטפל בשמו."
+    },
+    {
+      "id": "2026-11-13-couples-jerusalem-google_ai_overview",
+      "prompt_id": "couples-jerusalem",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-13T22:10:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": false,
+      "nira_linked": false,
+      "position": null,
+      "competitors": [
+        "סיגל כהן",
+        "מאיה חיימוביץ",
+        "ד\"ר רונית שרון (מכון קשרים)",
+        "חדוה סגל",
+        "נעמה אנסבכר",
+        "מכון איזונים"
+      ],
+      "cited_sources": [
+        "google-business-profile",
+        "izoonim.co.il",
+        "easy.co.il"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": false
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "שלושת השמות הראשונים מפרופילי עסק בגוגל, כמו ב-9.11."
+    },
+    {
+      "id": "2026-11-13-cbt-anxiety-jerusalem-google_ai_overview",
+      "prompt_id": "cbt-anxiety-jerusalem",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-13T22:12:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": false,
+      "nira_linked": false,
+      "position": null,
+      "competitors": [
+        "איזי",
+        "אתר המטפלים",
+        "קופות החולים",
+        "הדסה"
+      ],
+      "cited_sources": [
+        "maccabi4u.co.il",
+        "instagram.com",
+        "jamanetwork.com",
+        "easy.co.il",
+        "m-il.co.il"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": null
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "תשובה כללית בלי מטפלים בשמם."
+    },
+    {
+      "id": "2026-11-13-brand-nira-gabay-google_ai_overview",
+      "prompt_id": "brand-nira-gabay",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-13T22:14:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": true,
+      "nira_linked": true,
+      "position": 1,
+      "competitors": [],
+      "cited_sources": [
+        "hebpsy.net",
+        "niragabay.com",
+        "briuta-m.co.il",
+        "mentalytics.co.il",
+        "instagram.com"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": null
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "שיפור מול 9.11: מציינת עכשיו 'בוגרת לימודי פסיכותרפיה אינדיווידואלית והדרכת הורים במכון אדלר', CBT ו-DBT, שואבה וזום, ומקשרת לאתר, לפסיכולוגיה עברית ולאינסטגרם. הייחוס לעיתון הארץ נעלם. עדיין 'יועצת חינוכית (M.A.)' בפתיח."
+    },
+    {
+      "id": "2026-11-13-couples-mevaseret-google_ai_overview",
+      "prompt_id": "couples-mevaseret",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-13T22:16:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": false,
+      "nira_linked": false,
+      "position": null,
+      "competitors": [
+        "עליזה שני (בוגרת מכון אדלר)",
+        "ענבר עזרי M.A (הר אדר, ביקורת אחת)",
+        "לוטוס ספא",
+        "עץ ומים",
+        "מכון קשרים",
+        "מכון שילוב"
+      ],
+      "cited_sources": [
+        "google-business-profile",
+        "easy.co.il"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": false
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "שתי היועצות הזוגיות שנבחרו הן פרופילי עסק בגוגל בקטגוריה 'ייעוץ נישואין או זוגי', אחת עם ביקורת אחת בלבד. עדיין מופיעים ספא."
+    },
+    {
+      "id": "2026-11-13-parent-guidance-mateh-yehuda-google_ai_overview",
+      "prompt_id": "parent-guidance-mateh-yehuda",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-13T22:18:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": false,
+      "nira_linked": false,
+      "position": null,
+      "competitors": [
+        "אגף הרווחה",
+        "השירות הפסיכולוגי-חינוכי מטה יהודה"
+      ],
+      "cited_sources": [
+        "m-yehuda.org.il"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": null
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "רק אתר המועצה, כמו ב-9.11. התשובה מציעה 'איתור מדריך הורים פרטי ביישוב ספציפי במטה יהודה'."
+    },
+    {
+      "id": "2026-11-13-psychotherapy-mateh-yehuda-google_ai_overview",
+      "prompt_id": "psychotherapy-mateh-yehuda",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-13T22:20:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": false,
+      "nira_linked": false,
+      "position": null,
+      "competitors": [
+        "תומר - פסיכותרפיה ויעוץ",
+        "שרון יהודה",
+        "איילת אלדן",
+        "פורטל טנא",
+        "דפי זהב"
+      ],
+      "cited_sources": [
+        "d.co.il"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": false
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "לראשונה שמות פרטיים (שלושה), במקום עמודי על הספה ב-9.11."
+    },
+    {
+      "id": "2026-11-13-teen-therapy-mateh-yehuda-google_ai_overview",
+      "prompt_id": "teen-therapy-mateh-yehuda",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-13T22:22:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": false,
+      "nira_linked": false,
+      "position": null,
+      "competitors": [
+        "על הספה",
+        "בטיפולנט"
+      ],
+      "cited_sources": [
+        "alhasapa.co.il"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": false
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "קו בסיס ראשון. תשובה כללית: אינדקסים, שפ\"ח, קופות. אף מטפל בשמו. במפה המקומית שלושה מטפלים, נירה לא ביניהם."
+    },
+    {
+      "id": "2026-11-13-cbt-online-hebrew-google_ai_overview",
+      "prompt_id": "cbt-online-hebrew",
+      "provider": "google_ai_overview",
+      "observed_at": "2026-11-13T22:25:00Z",
+      "method": "serpapi",
+      "evidence": "observed",
+      "location": "Jerusalem, Israel",
+      "answer_present": true,
+      "nira_mentioned": false,
+      "nira_linked": false,
+      "position": null,
+      "competitors": [
+        "אתר המטפלים",
+        "Somebuddy"
+      ],
+      "cited_sources": [
+        "b144.co.il",
+        "find-tipul.co.il",
+        "jamanetwork.com",
+        "somebuddytherapy.co.il",
+        "nekudathaor.co.il",
+        "hebpsy.net",
+        "m-il.co.il"
+      ],
+      "serp": {
+        "organic_top10": false,
+        "local_pack": null
+      },
+      "observer": "Claude (SerpApi)",
+      "notes": "קו בסיס ראשון. המקור הראשון הוא עמוד B144 'טיפול אונליין בשואבה' (כנראה הרישום של נירה, לא אומת: B144 חוסם את הבדיקה), אבל היא לא מוזכרת בשמה."
     }
   ]
 }
