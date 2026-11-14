@@ -8,6 +8,8 @@ import {
   PROVIDERS,
   buildVisibilityReport,
   loadVisibilityReport,
+  mergeObservations,
+  observationsFromRuns,
   validateObservation,
   type Observation,
   type Prompt,
@@ -102,4 +104,21 @@ test('the observations committed in the repo are all valid', () => {
   assert.ok(r.measuredPairs > 0);
   // Every committed observation is evidence, not an estimate.
   assert.equal(r.estimates.length, 0);
+});
+
+test('database rows become observations keyed by the row id', () => {
+  const [o] = observationsFromRuns([{ id: 'row-1', output_snapshot: obs({ id: 'other' }) }]);
+  assert.equal(o.id, 'row-1');
+  assert.equal(o.prompt_id, obs({}).prompt_id);
+});
+
+test('a malformed database row is reported as invalid, not dropped', () => {
+  const r = loadVisibilityReport(observationsFromRuns([{ id: 'bad', output_snapshot: null }]));
+  assert.ok(r.invalid.some((i) => i.id === 'bad'));
+});
+
+test('a database row replaces a file entry with the same id', () => {
+  const merged = mergeObservations([obs({ id: 'x', notes: 'file' })], [obs({ id: 'x', notes: 'db' }), obs({ id: 'y' })]);
+  assert.equal(merged.length, 2);
+  assert.equal(merged.find((o) => o.id === 'x')?.notes, 'db');
 });
