@@ -203,7 +203,7 @@ export default function About() {
             </p>
             <div className="w-16 md:w-24 h-1 bg-gradient-to-l from-amber-400 to-stone-400 rounded-full mt-4 md:mt-6 mx-auto" />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-w-6xl mx-auto">
             {CREDENTIALS.map((credential, index) => {
               const Icon = credentialIcons[index] ?? GraduationCap;
               return (
@@ -212,7 +212,7 @@ export default function About() {
                   y={30}
                   duration={0.5}
                   delay={Math.min(index, 4) * 0.1}
-                  className="bg-white rounded-2xl p-5 md:p-8 shadow-lg border border-stone-100"
+                  className="bg-white rounded-2xl p-5 md:p-7 shadow-lg border border-stone-100"
                 >
                   <div className="flex items-center gap-3 mb-2 md:block md:mb-0">
                     <div className="w-11 h-11 md:w-14 md:h-14 shrink-0 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center md:mb-6">
@@ -225,12 +225,14 @@ export default function About() {
                 </Reveal>
               );
             })}
-            {moreCards.map((card) => (
+            {/* 8 certificates + 2 cards = 10: the last one spans the row at
+                three columns so no card is left alone on a line. */}
+            {moreCards.map((card, index) => (
               <Reveal
                 key={card.title}
                 y={30}
                 duration={0.5}
-                className="bg-white rounded-2xl p-5 md:p-8 shadow-lg border border-stone-100"
+                className={`bg-white rounded-2xl p-5 md:p-7 shadow-lg border border-stone-100 ${index === moreCards.length - 1 ? 'lg:col-span-3' : ''}`}
               >
                 <div className="flex items-center gap-3 mb-2 md:block md:mb-0">
                   <div className="w-11 h-11 md:w-14 md:h-14 shrink-0 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center md:mb-6">
