@@ -7,6 +7,7 @@ import { GROUP_LABELS } from '@/components/manage/TrafficSources';
 import { BarList, Card, Empty, ShowMore, SubHead, type BarRow } from './ui';
 import { CHANNEL_LABELS, DEVICE_LABELS, buttonLabel, pageName } from './labels';
 import { EnquiryJourneyLoader } from './EnquiryJourney';
+import { sourceName } from '@/lib/sourceNames';
 import type { EnquiryRow } from './types';
 
 // "מה הביא פניות?" At a dozen enquiries a month every one of them is worth
@@ -188,7 +189,7 @@ function LogRow({ row: r, articleTitles }: { row: EnquiryRow; articleTitles: Map
             />
             <span className="min-w-0">
               {GROUP_LABELS[r.grp] || r.grp}
-              {r.detail && <span className="text-stone-500"> · &quot;{r.detail}&quot;</span>}
+              {r.detail && <span className="text-stone-500"> · &quot;{sourceName(r.detail)}&quot;</span>}
             </span>
           </p>
           <p className="text-stone-400">
