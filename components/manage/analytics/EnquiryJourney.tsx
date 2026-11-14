@@ -5,6 +5,7 @@ import { ACTION_COLOR } from '@/components/manage/Charts';
 import { duration } from './ui';
 import { journeyLabel, pageName } from './labels';
 import type { EnquiryJourney } from './types';
+import { sourceName } from '@/lib/sourceNames';
 
 // The whole story of one enquiry, opened from its row in "הפניות עצמן": the
 // visit it came from, event by event with the time spent on each page, what
@@ -175,7 +176,7 @@ export function JourneyPanel({
             ))}
           </p>
           <p className="text-stone-500">
-            {v.paid ? 'מודעה בגוגל' : v.referrer_host || 'כניסה ישירה'}
+            {v.paid ? 'מודעה בגוגל' : sourceName(v.referrer_host) || 'כניסה ישירה'}
             {v.utm_term && <> · &quot;{v.utm_term}&quot;</>}
           </p>
         </section>

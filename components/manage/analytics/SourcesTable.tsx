@@ -7,6 +7,7 @@ import { GROUP_LABELS, type TrafficRow } from '@/components/manage/TrafficSource
 import { enquiries as enquiryCount } from '@/lib/heCount';
 import { Empty, MIN_FOR_RATE, Explain, one, pct, rateText } from './ui';
 import { pageName } from './labels';
+import { mergeBySourceName, sourceName } from '@/lib/sourceNames';
 import type { SiteBehavior, SourceRow } from './types';
 
 type Landing = NonNullable<SiteBehavior['source_landings']>[number];
@@ -76,14 +77,21 @@ export function SourcesTable({
   const ranked = [...rows].sort((a, b) => b.visits - a.visits);
   const maxShare = Math.max(...ranked.map((r) => r.visits / total));
 
+  // One row per site, by name: a directory's tagged visits (utm_source) and its
+  // untagged ones (referring host) are the same source (lib/sourceNames.ts).
   const detailsFor = (grp: string) =>
-    details.filter((t) => t.grp === grp && t.detail).sort((a, b) => b.visits - a.visits);
+    mergeBySourceName(details.filter((t) => t.grp === grp && t.detail));
 
   // "נחתו ב:" - the top two pages a detail's visits landed on, with counts
   // only when there is more than one page.
-  const landedOn = (grp: string, detail: string | null) => {
-    const top = landings
-      .filter((l) => l.grp === grp && l.detail === detail)
+  const landedOn = (grp: string, name: string) => {
+    const byPage = new Map<string, number>();
+    for (const l of landings) {
+      if (l.grp !== grp || sourceName(l.detail) !== name) continue;
+      byPage.set(l.landing, (byPage.get(l.landing) || 0) + l.visits);
+    }
+    const top = [...byPage]
+      .map(([landing, visits]) => ({ landing, visits }))
       .sort((a, b) => b.visits - a.visits);
     if (top.length === 0) return null;
     if (top.length === 1) return pageName(top[0].landing, articleTitles);
@@ -204,11 +212,11 @@ export function SourcesTable({
                   <p className="text-[11px] text-stone-400 mb-1.5">{DETAIL_LABELS[r.grp] || 'פירוט'}</p>
                   <ol className="space-y-1">
                     {sub.map((t) => {
-                      const landed = landedOn(t.grp, t.detail);
+                      const landed = landedOn(t.grp, t.name);
                       return (
-                        <li key={`${t.grp}-${t.detail}`} className="flex items-center gap-2 text-[12px] md:text-[13px] text-stone-600">
+                        <li key={`${t.grp}-${t.name}`} className="flex items-center gap-2 text-[12px] md:text-[13px] text-stone-600">
                           <span className="flex-1 min-w-0">
-                            <span className="block truncate" title={t.detail || ''}>{t.detail}</span>
+                            <span className="block truncate" title={t.detail || ''}>{t.name}</span>
                             {landed && (
                               <span className="block text-[11px] leading-snug text-stone-400">נחתו ב: {landed}</span>
                             )}
