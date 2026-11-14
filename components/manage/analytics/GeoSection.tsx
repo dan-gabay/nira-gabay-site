@@ -510,7 +510,7 @@ function VisibilitySection({ report }: { report: VisibilityReport }) {
         <Explain>
           כל תוצאה כאן היא תשובה שמישהו באמת ראה, עם התאריך והדרך שבה נבדקה. אין כאן הערכות, ותשובה של מודל דרך API כללי
           לא נחשבת כתוצאה של ChatGPT או של חיפוש: אין בה שלב חיפוש, מיקום או מקורות. התשובות משתנות בין בדיקות ובין משתמשים,
-          ולכן תצפית אחת היא סימן ולא דירוג. השאילתות נמצאות ב-lib/geo/visibility-prompts.json והתצפיות ב-visibility-observations.json.
+          ולכן תצפית אחת היא סימן ולא דירוג. השאילתות נמצאות ב-lib/geo/visibility-prompts.json. תצפיות עד 9.11.2026 נמצאות ב-visibility-observations.json, וכל בדיקה מאז נשמרת ישירות בטבלת agent_runs ומופיעה כאן בלי עדכון קוד.
         </Explain>
       </>
     </Block>

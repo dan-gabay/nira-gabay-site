@@ -6,7 +6,7 @@ import { TOPICS } from '@/lib/topics';
 import { SERVICES } from '@/lib/services';
 import { addDays, israelDay } from '@/lib/trends';
 import { BASELINE_DAYS, buildCrawlReport, unreadListedPages, type BotHit } from '@/lib/geo/crawl';
-import { loadVisibilityReport } from '@/lib/geo/visibility';
+import { OBSERVATION_AGENT, loadVisibilityReport, observationsFromRuns, type ObservationRun } from '@/lib/geo/visibility';
 import { runQuickChecks } from '@/lib/geo/siteChecks';
 
 export const runtime = 'nodejs';
@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
 
 // The GEO section (/manage/analytics, folded under מקורות) in one call: crawl activity from bot_hits, AI
 // referral visits from manage_analytics, the prompt observations from the
-// repo, and a quick live check of what the site serves to crawlers.
+// repo and agent_runs, and a quick live check of what the site serves to crawlers.
 //
 // No migration. bot_hits is read directly (three columns, paged) and folded in
 // lib/geo/crawl.ts; manage_analytics already separates ai_referral visits. If
@@ -117,6 +117,17 @@ export async function GET(req: NextRequest) {
 
     const checks = await runQuickChecks(BASE_URL, fetch);
 
+    // AI-answer observations recorded after 9 Nov 2026 live in agent_runs
+    // (see lib/geo/visibility.ts). A failed read still shows the repo ones.
+    const runs = await supabase
+      .from('agent_runs')
+      .select('id, output_snapshot')
+      .eq('agent_name', OBSERVATION_AGENT)
+      .eq('status', 'done')
+      .limit(5000);
+    if (runs.error) console.error('manage geo: agent_runs read failed:', runs.error.message);
+    const visibility = loadVisibilityReport(observationsFromRuns((runs.data ?? []) as ObservationRun[]));
+
     return NextResponse.json({
       generatedAt: new Date().toISOString(),
       rangeDays: days,
@@ -126,7 +137,8 @@ export async function GET(req: NextRequest) {
       unread: unreadListedPages(crawl, listed),
       titles: Object.fromEntries(((titles.data || []) as Array<{ slug: string; title: string }>).map((a) => [a.slug, a.title])),
       referrals,
-      visibility: loadVisibilityReport(),
+      visibility,
+      visibilityDbError: runs.error ? 'load failed' : null,
       checks,
     });
   } catch (e) {

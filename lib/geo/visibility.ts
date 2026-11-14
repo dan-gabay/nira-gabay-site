@@ -14,9 +14,12 @@
 //   3. Says, per prompt and provider, either what the latest observation was
 //      or that it has never been measured - never a number in between.
 //
-// A file in the repo rather than a table, on purpose: Dan prefers no
-// migrations, observations are rare (monthly), each one is reviewed in a PR
-// before it reaches the dashboard, and the history is the git history.
+// Where observations live: the repo file holds the ones up to 9 Nov 2026;
+// every later check is written to the existing (otherwise unused) agent_runs
+// table, one row per observation, so a check reaches the dashboard without a
+// PR or a deploy (Dan, 15 Nov 2026). No migration: agent_name marks the rows,
+// output_snapshot holds the observation. Both sources go through the same
+// validateObservation, so a bad row is listed as invalid and never shown.
 
 import promptsFile from './visibility-prompts.json';
 import observationsFile from './visibility-observations.json';
@@ -242,10 +245,39 @@ export function buildVisibilityReport(prompts: Prompt[], observations: Observati
   };
 }
 
-/** The report from the files in the repo. */
-export function loadVisibilityReport(): VisibilityReport {
+/** agent_runs.agent_name for an AI-visibility observation row. */
+export const OBSERVATION_AGENT = 'geo_visibility';
+
+/** The agent_runs columns this module reads. */
+export type ObservationRun = { id: string; output_snapshot: unknown };
+
+/**
+ * agent_runs rows -> observations. The row id is the observation id, so a row
+ * whose snapshot says otherwise is still keyed by the row. A snapshot that is
+ * not an object is kept as an invalid entry rather than dropped silently.
+ */
+export function observationsFromRuns(rows: ObservationRun[]): Observation[] {
+  return rows.map((r) => {
+    const snap = r.output_snapshot;
+    if (!snap || typeof snap !== 'object' || Array.isArray(snap)) {
+      return { id: r.id, prompt_id: '', provider: 'google_ai_overview', observed_at: '', method: 'manual', evidence: 'observed', answer_present: false, nira_mentioned: null, nira_linked: null, position: null, competitors: null, cited_sources: [], observer: '' } as Observation;
+    }
+    return { ...(snap as Observation), id: r.id };
+  });
+}
+
+/** Repo file first, database rows after; a database row replaces a file entry with the same id. */
+export function mergeObservations(fromFile: Observation[], fromDb: Observation[]): Observation[] {
+  const byId = new Map<string, Observation>();
+  for (const o of fromFile) byId.set(o.id, o);
+  for (const o of fromDb) byId.set(o.id, o);
+  return [...byId.values()];
+}
+
+/** The report from the repo files plus any observations read from the database. */
+export function loadVisibilityReport(fromDb: Observation[] = []): VisibilityReport {
   return buildVisibilityReport(
     promptsFile.prompts as Prompt[],
-    observationsFile.observations as Observation[],
+    mergeObservations(observationsFile.observations as Observation[], fromDb),
   );
 }
