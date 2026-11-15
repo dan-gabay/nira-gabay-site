@@ -1,12 +1,12 @@
 // Tests for lib/geo/siteChecks.ts, the rules behind verify-agent-readiness and
 // the live health card in the GEO section. The robots.txt cases use the site's own
-// generated file, so a change to app/robots.ts that shuts out an AI crawler
+// generated file, so a change to lib/robots.ts that shuts out an AI crawler
 // fails here before it reaches production.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import robots from '@/app/robots';
+import robots from '@/lib/robots';
 import {
   AI_AGENTS,
   MUST_404,
@@ -24,7 +24,7 @@ import {
 
 const BASE = 'https://www.niragabay.com';
 
-/** app/robots.ts rendered the way Next renders it. */
+/** lib/robots.ts rendered the way Next renders it. */
 function siteRobotsTxt(): string {
   const r = robots();
   const rules = Array.isArray(r.rules) ? r.rules : [r.rules];
