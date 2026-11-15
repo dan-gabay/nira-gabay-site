@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import ServiceIntroActions from '@/components/ServiceIntroActions';
 import { PORTRAIT, ROLE } from '@/components/ServiceContact';
 
@@ -35,7 +36,12 @@ export default function ServiceIntroContact({
           className="max-w-3xl mx-auto rounded-3xl p-4 md:p-6"
           style={{ background: '#F4FAF7', border: '1px solid #D6EDE3' }}
         >
-          <div className="flex items-center gap-3 md:gap-4">
+          {/* Photo and name lead to /about: Clarity showed visitors tapping
+              them expecting to read who Nira is (Nov 2026). */}
+          <Link
+            href="/about"
+            className="group flex items-center gap-3 md:gap-4 w-fit rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+          >
             <Image
               src={PORTRAIT}
               alt={`נירה גבאי, ${ROLE}`}
@@ -48,8 +54,11 @@ export default function ServiceIntroContact({
                 נירה גבאי
               </p>
               <p className="text-xs md:text-sm text-stone-600 leading-relaxed">{ROLE}</p>
+              <p className="text-xs md:text-sm text-emerald-800 underline underline-offset-2 group-hover:no-underline mt-0.5">
+                עוד עליי
+              </p>
             </div>
-          </div>
+          </Link>
           <p className="text-[14.5px] md:text-[1rem] text-stone-600 leading-relaxed mt-3 md:mt-4">
             {discreet
               ? 'אפשר לכתוב לי בכמה מילים, בלי להיכנס לפרטים. אחזור אליכם בדיסקרטיות מלאה.'

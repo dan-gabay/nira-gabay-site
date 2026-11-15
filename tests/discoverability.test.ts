@@ -16,7 +16,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import robots from '@/app/robots';
+import robots, { renderRobotsTxt } from '@/lib/robots';
 import { buildArticleSchema, articleImageAlt } from '@/lib/articleSchema';
 import {
   authorRef,
@@ -107,6 +107,16 @@ test('the markdown representation stays crawlable under the /api/ block', () => 
     const disallow = asArray(group.disallow).find((d) => '/api/md/'.startsWith(d));
     assert.ok(disallow && '/api/md/'.length > disallow.length);
   }
+});
+
+test('robots.txt states a Content-Signal in every group', () => {
+  const txt = renderRobotsTxt();
+  const groups = txt.split(/\n(?=User-Agent:)/).filter((g) => g.startsWith('User-Agent:'));
+  assert.equal(groups.length, rules().length);
+  for (const g of groups) {
+    assert.match(g, /^Content-Signal: search=yes, ai-input=yes, ai-train=(yes|no)$/m, g.split('\n')[0]);
+  }
+  assert.match(txt, /^Sitemap: https:\/\/\S+\/sitemap\.xml$/m);
 });
 
 test('robots.txt advertises both sitemaps', () => {
