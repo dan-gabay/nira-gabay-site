@@ -22,6 +22,8 @@ const NAMES: Array<[RegExp, string]> = [
   [/^(www\.)?(parenthub(\.co\.il)?)$/i, 'פרנטהאב'],
   [/^(www\.)?(li-cbt(\.org\.il)?)$/i, 'האגודה הישראלית ל-CBT'],
   [/^(www\.)?(hakehila(\.co\.il)?)$/i, 'הקהילה'],
+  [/^(www\.)?alhasapa(\.co\.il)?$/i, 'על הספה'],
+  [/^(www\.)?easy(\.co\.il)?$/i, 'איזי'],
 ];
 
 /** A referring site's display name, from its utm_source tag or its host. */
