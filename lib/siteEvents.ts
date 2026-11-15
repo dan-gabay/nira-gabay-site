@@ -18,6 +18,11 @@
 export const TRACKED_EVENTS = [
   // reach
   'page_view',
+  // Sent once per page after ENGAGED_SECONDS of the tab being visible. A
+  // one-page visit has a single row and no duration - it starts and ends on
+  // the same event - so without this a person who read the page for two
+  // minutes and a bot that left at once both read as "0 seconds".
+  'page_engaged',
   // engagement
   'article_read',
   'article_completed',
@@ -61,6 +66,9 @@ export const CONVERSION_EVENTS: readonly string[] = [
   'contact_form_submit',
 ];
 
+/** Visible time on a page before page_engaged is sent. */
+export const ENGAGED_SECONDS = 10;
+
 const TRACKED = new Set<string>(TRACKED_EVENTS);
 export const isTrackedEvent = (name: string): boolean => TRACKED.has(name);
 export const isConversion = (name: string): boolean =>
@@ -69,6 +77,7 @@ export const isConversion = (name: string): boolean =>
 /** Hebrew labels for the admin. */
 export const EVENT_LABELS: Record<string, string> = {
   page_view: 'צפיות בעמודים',
+  page_engaged: 'נשארו בעמוד 10 שניות ומעלה',
   article_read: 'קריאת מאמר',
   article_completed: 'סיום קריאה',
   article_like: 'לייק',

@@ -12,6 +12,7 @@ import {
   reportSiteError,
 } from '@/lib/analytics';
 import { captureAttribution } from '@/lib/attribution';
+import { ENGAGED_SECONDS } from '@/lib/siteEvents';
 
 // Determine page type from pathname
 const getPageType = (pathname: string): string => {
@@ -158,6 +159,41 @@ export default function AnalyticsProvider({ children }: { children: React.ReactN
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, [handleScroll]);
+
+  // page_engaged: once per page, after ENGAGED_SECONDS of the tab actually
+  // being visible (lib/siteEvents.ts). Time in a background tab does not
+  // count, so a page opened and never looked at stays unengaged.
+  useEffect(() => {
+    let visibleMs = 0;
+    let since = document.visibilityState === 'visible' ? Date.now() : null;
+    let sent = false;
+    const check = () => {
+      if (sent) return;
+      const total = visibleMs + (since !== null ? Date.now() - since : 0);
+      if (total >= ENGAGED_SECONDS * 1000) {
+        sent = true;
+        if (document.querySelector('[data-page-not-found]')) return;
+        trackEvent('page_engaged', {
+          page_type: getPageType(pathname),
+          event_label: getPageType(pathname),
+        });
+      }
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        if (since === null) since = Date.now();
+      } else if (since !== null) {
+        visibleMs += Date.now() - since;
+        since = null;
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    const timer = setInterval(check, 2000);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [pathname]);
 
   // Engagement time tracking
   useEffect(() => {
