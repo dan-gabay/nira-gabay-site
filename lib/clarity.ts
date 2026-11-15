@@ -86,6 +86,7 @@ export function trafficType(search: string, referrer: string): string {
 export function pageType(pathname: string): string {
   if (pathname === '/') return 'home';
   if (pathname.startsWith('/services')) return 'service';
+  if (pathname.startsWith('/lp/')) return 'landing';
   if (pathname === '/articles') return 'articles';
   if (pathname.startsWith('/articles/')) return 'article';
   if (pathname.startsWith('/contact')) return 'contact';

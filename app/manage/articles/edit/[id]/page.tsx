@@ -40,6 +40,9 @@ export default function EditArticlePage() {
   const [uploading, setUploading] = useState(false);
   // The image_url stored in the database, to delete it once a replacement is saved.
   const [savedImageUrl, setSavedImageUrl] = useState('');
+  // Whether the article was already live when loaded: re-saving a live article
+  // must not move its publish date (created_date, see lib/publishDate.ts).
+  const [wasPublished, setWasPublished] = useState(false);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [draftMetadata, setDraftMetadata] = useState<DraftMetadata | null>(null);
@@ -133,6 +136,7 @@ export default function EditArticlePage() {
       });
 
       setSavedImageUrl(data.image_url || '');
+      setWasPublished(Boolean(data.is_published));
 
       // Google data is only asked for the stored, published slug, not for
       // whatever is in the form while editing.
@@ -247,7 +251,12 @@ export default function EditArticlePage() {
           meta_title: formData.meta_title || null,
           meta_description: formData.meta_description || null,
           focus_keyword: formData.focus_keyword || null,
-          updated_date: new Date().toISOString()
+          updated_date: new Date().toISOString(),
+          // created_date is the publish date (lib/publishDate.ts): set it when
+          // the article goes live now, or to the date it is scheduled for.
+          ...(formData.is_published
+            ? (wasPublished ? {} : { created_date: new Date().toISOString() })
+            : (scheduledAt ? { created_date: scheduledAt } : {})),
         })
         .eq('id', articleId);
 

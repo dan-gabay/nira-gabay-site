@@ -9,6 +9,7 @@ import {
 } from '@/lib/siteEvents';
 import { botKindFromUserAgent } from '@/lib/botDetect';
 import { OPT_OUT_COOKIE, optedOutFromCookie } from '@/lib/ownerOptOut';
+import { isCountableDeployment } from '@/lib/countableDeployment';
 
 export const runtime = 'nodejs';
 
@@ -48,6 +49,12 @@ function deviceFrom(ua: string | null): string {
 }
 
 export async function POST(req: NextRequest) {
+  // A preview deployment shares the production database; a reviewer opening
+  // a PR link is not a visitor (lib/countableDeployment.ts).
+  if (!isCountableDeployment()) {
+    return new NextResponse(null, { status: 204 });
+  }
+
   // The owner's own browsing (lib/ownerOptOut.ts). The client already sends
   // nothing, this catches a tab that was open before the switch was flipped.
   if (optedOutFromCookie(req.cookies.get(OPT_OUT_COOKIE)?.value)) {

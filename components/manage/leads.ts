@@ -1,6 +1,8 @@
 // What the enquiries inbox and the home screen both need to know about a
 // lead: its shape, the lifecycle it moves through, and how to reach it.
 
+import { sourceName } from '@/lib/sourceNames';
+
 export type LeadStatus = 'new' | 'spoke' | 'started_therapy' | 'ongoing' | 'irrelevant';
 
 export type ContactMessage = {
@@ -105,12 +107,12 @@ export function timeAgo(iso: string): string {
 export function attribution(m: ContactMessage): Array<[string, string]> {
   const parts: Array<[string, string]> = [];
   if (m.utm_source || m.utm_medium) {
-    parts.push(['מקור', [m.utm_source, m.utm_medium].filter(Boolean).join(' / ')]);
+    parts.push(['מקור', [sourceName(m.utm_source), m.utm_medium].filter(Boolean).join(' / ')]);
   } else if (m.gclid) {
     parts.push(['מקור', 'Google Ads']);
   } else if (m.referrer) {
     try {
-      parts.push(['הפניה', new URL(m.referrer).hostname]);
+      parts.push(['הפניה', sourceName(new URL(m.referrer).hostname)]);
     } catch {
       parts.push(['הפניה', m.referrer]);
     }
@@ -127,8 +129,8 @@ export function attribution(m: ContactMessage): Array<[string, string]> {
 export function intentSource(i: ContactIntent): string {
   if (i.utm_term) return `Google Ads · ${i.utm_term}`;
   if (i.gclid) return 'Google Ads';
-  if (i.utm_campaign) return `${i.utm_source || 'קמפיין'} · ${i.utm_campaign}`;
-  if (i.utm_source) return i.utm_source;
+  if (i.utm_campaign) return `${sourceName(i.utm_source) || 'קמפיין'} · ${i.utm_campaign}`;
+  if (i.utm_source) return sourceName(i.utm_source);
   return 'ישיר / אורגני';
 }
 

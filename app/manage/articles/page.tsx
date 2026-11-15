@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
+import { formatPublishDate } from '@/lib/publishDate';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
@@ -114,13 +115,17 @@ function ManageArticlesInner() {
 
   async function togglePublish(id: string, currentStatus: boolean) {
     try {
+      // Publishing now makes now the article's publish date (lib/publishDate.ts).
+      const patch = currentStatus
+        ? { is_published: false, scheduled_publish_at: null }
+        : { is_published: true, scheduled_publish_at: null, created_date: new Date().toISOString() };
       const { error } = await supabase
         .from('articles')
-        .update({ is_published: !currentStatus, scheduled_publish_at: null })
+        .update(patch)
         .eq('id', id);
       if (error) throw error;
       setArticles((prev) => prev.map((a) =>
-        a.id === id ? { ...a, is_published: !currentStatus, scheduled_publish_at: null } : a
+        a.id === id ? { ...a, ...patch } : a
       ));
       refresh();
     } catch (error) {
@@ -337,7 +342,7 @@ function ManageArticlesInner() {
                       <badge.Icon className="w-3 h-3" aria-hidden="true" />
                       {badge.label}
                       {status === 'scheduled' && article.scheduled_publish_at && (
-                        <> · {new Date(article.scheduled_publish_at).toLocaleDateString('he-IL')}</>
+                        <> · {formatPublishDate(article.scheduled_publish_at)}</>
                       )}
                     </span>
                     <span className="inline-flex items-center gap-1" title="צפיות">
@@ -350,7 +355,7 @@ function ManageArticlesInner() {
                       <span className="sr-only">לייקים</span>
                       {article.likes_count || 0}
                     </span>
-                    <span>{new Date(article.created_date).toLocaleDateString('he-IL')}</span>
+                    <span>{formatPublishDate(article.created_date)}</span>
                     {!article.image_url && <span className="text-amber-700">ללא תמונה</span>}
                   </div>
                 </div>

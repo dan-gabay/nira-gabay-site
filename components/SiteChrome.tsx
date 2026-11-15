@@ -42,6 +42,14 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
     return <>{children}</>;
   }
 
+  // Paid landing pages (/lp/*) bring their own minimal header and footer
+  // (logo + one contact button; contact details, privacy, accessibility), so
+  // they are rendered as the page itself rather than inside the site's full
+  // navigation. Trackers, analytics and the accessibility menu stay exactly as
+  // on every other page, so measurement matches the control page. The floating
+  // WhatsApp button is left out (see below).
+  const isLanding = pathname?.startsWith('/lp/') ?? false;
+
   return (
     <>
       {!optedOut && (
@@ -54,10 +62,19 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
       )}
       <AnalyticsProvider>
         <ExitIntentTracker />
-        <Header />
-        <main id="main-content">{children}</main>
-        <Footer />
-        <WhatsAppButton />
+        {isLanding ? (
+          children
+        ) : (
+          <>
+            <Header />
+            <main id="main-content">{children}</main>
+            <Footer />
+          </>
+        )}
+        {/* Not on landing pages: on a phone it covered the hero form's name
+            field, and those pages carry WhatsApp in the first screen and under
+            the form instead. */}
+        {!isLanding && <WhatsAppButton />}
         <AccessibilityMenu />
       </AnalyticsProvider>
     </>

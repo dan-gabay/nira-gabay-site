@@ -21,6 +21,18 @@ const PATH_PREFILLS: Array<{ prefix: string; message: string }> = [
     message: s.whatsappMessage,
   })),
   { prefix: '/clinic', message: 'שלום נירה, אשמח לקבל הנחיות הגעה לקליניקה' },
+  // The adult-therapy landing page (A/B variant B) uses the same prefill as its
+  // control page, /services/adult-therapy, so WhatsApp is not a difference
+  // between the two variants.
+  {
+    prefix: '/lp/adult-therapy',
+    message: SERVICES.find((s) => s.slug === 'adult-therapy')!.whatsappMessage,
+  },
+  // The CBT landing page uses the same prefill as /services/cbt.
+  {
+    prefix: '/lp/cbt',
+    message: SERVICES.find((s) => s.slug === 'cbt')!.whatsappMessage,
+  },
 ];
 
 export function whatsappMessageForPath(pathname: string): string {

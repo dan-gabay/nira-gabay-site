@@ -3,7 +3,7 @@
 Backlog B-49. A folded section "נראות במנועי AI" under מקורות on /manage/analytics, behind the existing `/manage` gate, that answers three questions:
 
 1. **Which AI crawlers and search engines read the site, and what did they read?** Folded from `public.bot_hits` by `lib/geo/crawl.ts`.
-2. **Does Nira appear in AI answers to the prompts we care about?** Read from the repo files `lib/geo/visibility-prompts.json` and `lib/geo/visibility-observations.json` by `lib/geo/visibility.ts`.
+2. **Does Nira appear in AI answers to the prompts we care about?** Prompts come from `lib/geo/visibility-prompts.json`. Observations come from `lib/geo/visibility-observations.json` (up to 9 Nov 2026) plus rows in `public.agent_runs` with `agent_name = 'geo_visibility'` (every later check), merged by `lib/geo/visibility.ts`.
 3. **Does the site serve crawlers correctly right now?** The quick checks in `lib/geo/siteChecks.ts` run live on every load. The full check runs as `npm run verify:agent-readiness`.
 
 The page reads everything through `GET /api/manage/geo?range=7|30|56|90`, which returns 401 without the admin cookie.
@@ -17,15 +17,25 @@ The page reads everything through `GET /api/manage/geo?range=7|30|56|90`, which 
 
 ## Adding a visibility observation
 
-Observations are append-only. Never edit or delete a past entry; add a new one, and review it in a PR.
+Observations are append-only. Never edit or delete a past entry; add a new one.
+
+New observations go to the database, not the repo file, so a check shows on the page at once with no PR and no deploy (Dan, 15 Nov 2026). Insert one `agent_runs` row per observation (no migration; the table was unused):
+
+```sql
+insert into public.agent_runs (id, agent_name, run_type, status, started_at, finished_at, output_snapshot)
+values ('<date>-<prompt_id>-<provider>', 'geo_visibility', '<provider>', 'done',
+        '<observed_at>', '<observed_at>', '<the observation as JSON>'::jsonb);
+```
+
+The row `id` is the observation id; `output_snapshot` has the same shape as a file entry (see `Observation` in `lib/geo/visibility.ts`, including `"position": null` when Nira is not mentioned). Rows are validated on every page load: an invalid row is listed under the results as not shown, never counted. Adding or retiring a prompt still changes `visibility-prompts.json` in a PR.
 
 1. Use a prompt id from `visibility-prompts.json`. If you add a prompt, add it there first.
 2. Choose the method the provider allows (`PROVIDERS` in `lib/geo/visibility.ts`):
-   - Google AI Overview: `serpapi` (run `engine=google` with the Jerusalem location, then `engine=google_ai_overview` with the returned `page_token` straight away, because the token expires within minutes) or `manual`.
+   - Google AI Overview: `serpapi` (run `engine=google` with the Jerusalem location, `no_cache=true` and `json_restrictor=ai_overview.page_token`, then `engine=google_ai_overview` with the returned `page_token` at once: the token expires in about one minute, so check one prompt at a time) or `manual`.
    - ChatGPT Search, Perplexity, Gemini, Copilot, Claude and Google AI Mode: `manual` only. A generic model API answer is not a search result, so it is rejected by `validateObservation`.
 3. Record what was seen: `answer_present`, `nira_mentioned` (`null` if you could not tell), `nira_linked`, `position` (only when Nira is mentioned), `competitors` as written (`null` if not recorded), `cited_sources` as domains, plus `observer` and `notes`.
 4. Use `evidence: "estimate"` for anything not actually seen. Estimates are shown apart and never counted as results.
-5. Run `npm test`. `tests/geo-visibility.test.ts` fails on any invalid entry in the repo file.
+5. After inserting, open the section on /manage/analytics and check that nothing is listed as invalid. `npm test` still checks the repo file.
 
 ## Crawler names
 
