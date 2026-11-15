@@ -8,6 +8,8 @@ test('a directory is named the same by its tag and by its host', () => {
   assert.equal(sourceName('koltipul'), 'כל טיפול');
   assert.equal(sourceName('www.koltipul.co.il'), 'כל טיפול');
   assert.equal(sourceName('mentalytics'), 'מנטליטיקס');
+  assert.equal(sourceName('alhasapa'), 'על הספה');
+  assert.equal(sourceName('www.alhasapa.co.il'), 'על הספה');
 });
 
 test('an unknown source is still shown, never blank', () => {
