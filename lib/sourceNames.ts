@@ -24,6 +24,12 @@ const NAMES: Array<[RegExp, string]> = [
   [/^(www\.)?(hakehila(\.co\.il)?)$/i, 'הקהילה'],
   [/^(www\.)?alhasapa(\.co\.il)?$/i, 'על הספה'],
   [/^(www\.)?easy(\.co\.il)?$/i, 'איזי'],
+  // Map listings (nira-growth/maps-listings): each links here with
+  // ?utm_source=<platform>&utm_medium=organic&utm_campaign=<platform>_maps.
+  [/^(www\.)?(osm|openstreetmap(\.org)?)$/i, 'OpenStreetMap (מפה)'],
+  [/^(www\.)?waze(\.com)?$/i, 'Waze'],
+  [/^(www\.)?foursquare(\.com)?$/i, 'Foursquare'],
+  [/^(apple|maps\.apple(\.com)?)$/i, 'Apple Maps'],
 ];
 
 /** A referring site's display name, from its utm_source tag or its host. */
