@@ -12,13 +12,14 @@ import { trackWhatsAppClick, trackCTAClick } from '@/lib/analytics';
 const TEAL_DEEP = '#16323b';
 
 // Mobile hero photo. Kept as its own file so the shot can be swapped without
-// touching this component - just replace public/images/hero-mobile.jpg.
-// The photo is already a tight 495x505 headshot, so the square crop is a
+// touching this component - just replace public/images/hero-mobile.webp.
+// The photo is a tight 571x582 headshot (same framing as the previous
+// 495x505 shot, without its graphic overlay), so the square crop is a
 // near-exact fit and needs no repositioning.
-const MOBILE_HERO_SRC = '/images/hero-mobile.jpg';
+const MOBILE_HERO_SRC = '/images/hero-mobile.webp';
 const MOBILE_HERO_POSITION = '50% 50%';
 const BLUR_MOBILE =
-  'data:image/webp;base64,UklGRrQAAABXRUJQVlA4IKgAAAAQBACdASoQABEAPt1apkyopSOiMAgBEBuJbACdMoMjbDHGPtxllet2SAD+Ctj7ntfZfZ1cHNhRCfPQBFkcDHx4UGZB7i6eko08IMLx8h/bIB7ukkzdgTAUrmW0EDN3qqXgCaaTF8D9qmEtrg2wrHoaR5SE7YSgppgZU5mdnewB61nYx4h3OiCCb9da/P0oRv8m7XWvz9KEb/JvmhJmo3lovC+icpoAAAA=';
+  'data:image/webp;base64,UklGRsIAAABXRUJQVlA4ILYAAADwBACdASoQABEAPpE4l0eloyIhMAgAsBIJZACdMoRwJoHeZi38HKQ7i8kohpZXTHAA/m0Si+ZjN55ZK323ziOpz8O3ziCJY5lZZF08LLtrc3+daN+cquPuZN0PF+y9J26zJjP7Oqat/DFET2O6Qa/NNvNzvoOviK3sEqw7Hwz3KZtgYQCsta9g1MfqMij82/GX4GFaN+21yI3x2ku122hsx0al64CyvOefGMEyUnxip5RhM0UAAA==';
 
 // Inlined low-res blurs of the actual photos (generated from the source images).
 // They fill the hero box with the full composition instantly, so the heavy image
