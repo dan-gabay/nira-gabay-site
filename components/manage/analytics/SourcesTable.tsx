@@ -29,6 +29,7 @@ const DETAIL_LABELS: Record<string, string> = {
   social: 'לפי הרשת',
   ai_referral: 'לפי הכלי שהמליץ',
   referral: 'לפי האתר המפנה',
+  direct: 'לפי עמוד הנחיתה',
 };
 
 type Verdict = { glyph: '▲' | '▼' | '='; text: string; tone: 'up' | 'down' | 'flat' } | null;
@@ -82,6 +83,20 @@ export function SourcesTable({
   const detailsFor = (grp: string) =>
     mergeBySourceName(details.filter((t) => t.grp === grp && t.detail));
 
+  // Direct visits have no keyword or site to break down by, so their detail
+  // is the page they landed on (source_landings rows with detail 'direct',
+  // db/2026-11-17-direct-landings.sql). Counts only, nothing per visitor.
+  const directPages = () => {
+    const byPage = new Map<string, number>();
+    for (const l of landings) {
+      if (l.grp !== 'direct') continue;
+      byPage.set(l.landing, (byPage.get(l.landing) || 0) + l.visits);
+    }
+    return [...byPage]
+      .map(([landing, visits]) => ({ landing, visits }))
+      .sort((a, b) => b.visits - a.visits);
+  };
+
   // "נחתו ב:" - the top two pages a detail's visits landed on, with counts
   // only when there is more than one page.
   const landedOn = (grp: string, name: string) => {
@@ -115,8 +130,9 @@ export function SourcesTable({
 
       <ul className="divide-y divide-stone-100">
         {ranked.map((r) => {
-          const sub = detailsFor(r.grp);
-          const expandable = sub.length > 0;
+          const sub = r.grp === 'direct' ? [] : detailsFor(r.grp);
+          const pages = r.grp === 'direct' ? directPages() : [];
+          const expandable = sub.length > 0 || pages.length > 0;
           const isOpen = open === r.grp;
           const enough = r.visits >= MIN_FOR_RATE;
           const share = r.visits / total;
@@ -210,6 +226,19 @@ export function SourcesTable({
               {isOpen && (
                 <div className="pb-3 ps-8 pe-2 md:ps-10">
                   <p className="text-[11px] text-stone-400 mb-1.5">{DETAIL_LABELS[r.grp] || 'פירוט'}</p>
+                  {pages.length > 0 && (
+                    <ol className="space-y-1">
+                      {pages.map((p) => (
+                        <li key={p.landing} className="flex items-center gap-2 text-[12px] md:text-[13px] text-stone-600">
+                          <span className="flex-1 min-w-0 block truncate" title={p.landing}>
+                            {pageName(p.landing, articleTitles)}
+                          </span>
+                          <span className="flex-shrink-0 tabular-nums text-stone-800 w-8 text-end">{p.visits}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                  {sub.length > 0 && (
                   <ol className="space-y-1">
                     {sub.map((t) => {
                       const landed = landedOn(t.grp, t.name);
@@ -231,6 +260,7 @@ export function SourcesTable({
                       );
                     })}
                   </ol>
+                  )}
                 </div>
               )}
             </li>
