@@ -106,6 +106,12 @@ export type ArticleEngagement = {
     by_channel: Array<{ channel: string; n: number }>;
     by_article: Array<{ path: string; slug: string; title: string; n: number }>;
   } | null;
+  /**
+   * Readings per article per bucket (slug -> buckets with a reading), counted
+   * in app/api/manage/article-engagement/route.ts with the same unit as
+   * per_article. Null if that read failed; the rows then show no trend.
+   */
+  article_trend?: Record<string, Array<{ day: string; n: number }>> | null;
 };
 
 const clickTime = (iso: string) =>
@@ -137,6 +143,70 @@ const CHANNEL_LABELS: Record<string, string> = {
   share_sheet: 'תפריט השיתוף',
 };
 
+// At most this many bars in an article's trend: a week stays daily, a month is
+// pairs of days, a quarter is about six days a bar. Ninety one-pixel days of
+// mostly zeroes would read as noise, not as a shape.
+const TREND_BARS = 15;
+
+/** Sums an article's buckets into at most TREND_BARS bars, oldest first. */
+function binTrend(points: Array<{ day: string; n: number }> | undefined, buckets: string[]): number[] {
+  if (!points || points.length === 0 || buckets.length === 0) return [];
+  const by = new Map(points.map((p) => [p.day, p.n]));
+  const size = Math.ceil(buckets.length / TREND_BARS);
+  const out: number[] = [];
+  // Grouped from the newest end, so the last bar is always the latest days and
+  // a short group, if any, is the oldest one.
+  for (let end = buckets.length; end > 0; end -= size) {
+    let sum = 0;
+    for (let i = Math.max(0, end - size); i < end; i++) sum += by.get(buckets[i]) || 0;
+    out.unshift(sum);
+  }
+  return out;
+}
+
+/**
+ * The shape of one article's readings across the range, oldest on the left
+ * like every other time axis on the page (the charts draw SVG left to right).
+ * Scaled to the article's own busiest
+ * bar: it answers "steady, rising, or one spike", not "how many" - the number
+ * beside it does that.
+ */
+function TrendBars({ bars, label }: { bars: number[]; label: string }) {
+  const peak = Math.max(0, ...bars);
+  if (bars.length < 2 || peak === 0) return null;
+  const w = 56;
+  const h = 14;
+  const step = w / bars.length;
+  const bw = Math.max(1.5, step - 1);
+  return (
+    <svg
+      width={w}
+      height={h}
+      viewBox={`0 0 ${w} ${h}`}
+      className="flex-shrink-0 self-center"
+      role="img"
+      aria-label={label}
+    >
+      <title>{label}</title>
+      {bars.map((v, i) => {
+        const bh = v === 0 ? 1 : Math.max(2, (v / peak) * h);
+        const x = i * step;
+        return (
+          <rect
+            key={i}
+            x={x.toFixed(1)}
+            y={(h - bh).toFixed(1)}
+            width={bw.toFixed(1)}
+            height={bh.toFixed(1)}
+            rx={0.5}
+            fill={v === 0 ? '#e7e5e4' : DEPTH_COLOR.finished}
+          />
+        );
+      })}
+    </svg>
+  );
+}
+
 /**
  * One article's readings: magnitude across rows and composition within one, in
  * a single 6px row.
@@ -150,9 +220,12 @@ const CHANNEL_LABELS: Record<string, string> = {
 function ArticleRow({
   row,
   max,
+  trend,
 }: {
   row: ArticleEngagement['per_article'][number];
   max: number;
+  /** Readings per bar across the range, oldest first; empty for no trend. */
+  trend: number[];
 }) {
   const reactions = row.shares + row.likes + row.comments;
   const opened = row.openings - row.reads;
@@ -182,6 +255,7 @@ function ArticleRow({
             aria-label={reactionTitle}
           />
         )}
+        <TrendBars bars={trend} label={`${row.title}: פתיחות לאורך התקופה, ${trend.join(', ')}`} />
         <span className="flex-shrink-0 tabular-nums text-stone-400">
           <strong className="text-stone-800 font-semibold">{row.openings}</strong>
           {' · '}
@@ -270,6 +344,29 @@ export default function ArticleEngagementCard({
           granularity={data.granularity}
         />
       </div>
+
+      {/* The leading articles in the range, most opened first, each with the
+          shape of its openings over the range and how far the readers got.
+          Right under the chart, because "which articles, and how many" is the
+          first question asked of this card. */}
+      <CardPart>
+        <SubHead title="המאמרים המובילים בתקופה" aside="מגמה · פתיחות · נקרא · עד הסוף" />
+
+        <ul className="space-y-2">
+          {shown.map((row) => (
+            <ArticleRow
+              key={row.slug}
+              row={row}
+              max={maxOpenings}
+              trend={binTrend(data.article_trend?.[row.slug], buckets)}
+            />
+          ))}
+        </ul>
+
+        {rows.length > ROWS_SHOWN && (
+          <ShowMore open={showAll} onToggle={() => setShowAll((v) => !v)} more={`הצג את כל ${rows.length} המאמרים`} />
+        )}
+      </CardPart>
 
       {/* The mark row's own legend is inside the chart; this is the breakdown
           the tile above can only total. Only when something happened. */}
@@ -375,23 +472,6 @@ export default function ArticleEngagementCard({
               </li>
             ))}
           </ul>
-        )}
-      </CardPart>
-
-      {/* Which article holds a reader. The card above this one on the page ranks
-          articles by views; this ranks the same articles by what happened after
-          the view, which is the part a ranking by volume hides. */}
-      <CardPart>
-        <SubHead title="לפי מאמר" aside="פתיחות · נקרא · עד הסוף" />
-
-        <ul className="space-y-2">
-          {shown.map((row) => (
-            <ArticleRow key={row.slug} row={row} max={maxOpenings} />
-          ))}
-        </ul>
-
-        {rows.length > ROWS_SHOWN && (
-          <ShowMore open={showAll} onToggle={() => setShowAll((v) => !v)} more={`הצג את כל ${rows.length} המאמרים`} />
         )}
       </CardPart>
 
