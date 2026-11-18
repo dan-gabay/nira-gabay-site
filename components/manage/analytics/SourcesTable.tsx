@@ -97,8 +97,8 @@ export function SourcesTable({
       .sort((a, b) => b.visits - a.visits);
   };
 
-  // "נחתו ב:" - the top two pages a detail's visits landed on, with counts
-  // only when there is more than one page.
+  // "נחתו ב:" - every page a detail's visits landed on (Dan wants the full
+  // list, never "ועוד"), with counts only when there is more than one page.
   const landedOn = (grp: string, name: string) => {
     const byPage = new Map<string, number>();
     for (const l of landings) {
@@ -111,9 +111,8 @@ export function SourcesTable({
     if (top.length === 0) return null;
     if (top.length === 1) return pageName(top[0].landing, articleTitles);
     return top
-      .slice(0, 2)
       .map((l) => `${pageName(l.landing, articleTitles)} (${l.visits})`)
-      .join(' · ') + (top.length > 2 ? ' ועוד' : '');
+      .join(' · ');
   };
 
   return (
