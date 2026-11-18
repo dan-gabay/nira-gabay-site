@@ -90,7 +90,34 @@ export type ArticleEngagement = {
   share_channels: Array<{ channel: string; n: number }>;
   top_hops: Array<{ src: string; src_title: string; dst: string; dst_title: string; n: number }>;
   first_event: string | null;
+  /**
+   * The latest presses of a share button (newest first, up to 100), read in
+   * app/api/manage/article-engagement/route.ts. Null if that read failed.
+   */
+  share_clicks?: Array<{ at: string; channel: string | null; slug: string; title: string }> | null;
+  /**
+   * Visits that arrived through a link a share button handed out - tagged
+   * utm_medium=share by lib/shareLink.ts, so known only from the day that
+   * shipped. Null if the read failed.
+   */
+  shared_visits?: {
+    visits: number;
+    converted: number;
+    by_channel: Array<{ channel: string; n: number }>;
+    by_article: Array<{ path: string; slug: string; title: string; n: number }>;
+  } | null;
 };
+
+const clickTime = (iso: string) =>
+  new Date(iso).toLocaleString('he-IL', {
+    timeZone: 'Asia/Jerusalem',
+    day: 'numeric',
+    month: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+const CLICKS_SHOWN = 8;
 
 const DEPTH_COLOR = Object.fromEntries(DEPTH_SERIES.map((s) => [s.key, s.color]));
 
@@ -106,6 +133,8 @@ const CHANNEL_LABELS: Record<string, string> = {
   instagram: 'אינסטגרם',
   copy_link: 'העתקת קישור',
   native: 'תפריט השיתוף',
+  // The share sheet's tag on the link itself (lib/shareLink.ts).
+  share_sheet: 'תפריט השיתוף',
 };
 
 /**
@@ -185,6 +214,7 @@ export default function ArticleEngagementCard({
   buckets: string[];
 }) {
   const [showAll, setShowAll] = useState(false);
+  const [showAllClicks, setShowAllClicks] = useState(false);
   const t = data.totals;
   const p = data.previous;
 
@@ -210,6 +240,8 @@ export default function ArticleEngagementCard({
   const maxOpenings = rows.length > 0 ? rows[0].openings : 0;
 
   const nav = data.navigation;
+  const clicks = data.share_clicks;
+  const shared = data.shared_visits;
 
   return (
     <div>
@@ -248,6 +280,67 @@ export default function ArticleEngagementCard({
             ` (${channels.map((c) => `${CHANNEL_LABELS[c.channel] || c.channel} ${c.n}`).join(', ')})`}
           , {likes(t.likes)}, {comments(t.comments)}.
         </Note>
+      )}
+
+      {/* Each press of a share button, by article - the count above says
+          how many, this says which article and which button. */}
+      {clicks && clicks.length > 0 && (
+        <CardPart>
+          <SubHead title="לחיצות על שיתוף" aside={`${clicks.length}${clicks.length >= 100 ? '+' : ''}`} />
+          <ul className="space-y-1 text-[11px] md:text-xs text-stone-500">
+            {(showAllClicks ? clicks : clicks.slice(0, CLICKS_SHOWN)).map((c, i) => (
+              <li key={`${c.at}-${i}`} className="flex items-baseline gap-2 min-w-0">
+                <span className="tabular-nums shrink-0">{clickTime(c.at)}</span>
+                <span className="shrink-0 text-stone-700">{c.channel ? CHANNEL_LABELS[c.channel] || c.channel : 'שיתוף'}</span>
+                <span className="truncate">{c.title}</span>
+              </li>
+            ))}
+          </ul>
+          {clicks.length > CLICKS_SHOWN && (
+            <ShowMore
+              open={showAllClicks}
+              onToggle={() => setShowAllClicks((v) => !v)}
+              more={`הצג את כל ${clicks.length} הלחיצות`}
+            />
+          )}
+        </CardPart>
+      )}
+
+      {/* Who came back through a shared link. The link carries the button it
+          was shared from (lib/shareLink.ts), so a friend opening it from
+          WhatsApp is no longer counted as a direct visit. */}
+      {shared && (
+        <CardPart>
+          <SubHead title="כניסות מקישור ששותף" />
+          <p className="text-[12px] md:text-[13px] text-stone-600 leading-relaxed">
+            {shared.visits === 0 ? (
+              <>עוד לא הגיע אף ביקור דרך קישור ששותף ממאמר.</>
+            ) : (
+              <>
+                <strong className="text-stone-800 tabular-nums">{shared.visits}</strong> ביקורים הגיעו דרך
+                קישור ששותף ממאמר
+                {shared.by_channel.length > 0 &&
+                  ` (${shared.by_channel.map((c) => `${CHANNEL_LABELS[c.channel] || c.channel} ${c.n}`).join(', ')})`}
+                {shared.converted > 0 && (
+                  <>
+                    , ומהם <span className="tabular-nums">{shared.converted}</span> פנו לנירה
+                  </>
+                )}
+                .
+              </>
+            )}
+          </p>
+          {shared.by_article.length > 0 && (
+            <ul className="mt-2 space-y-1 text-[11px] md:text-xs text-stone-500">
+              {shared.by_article.slice(0, 5).map((a) => (
+                <li key={a.path} className="truncate">
+                  <span className="text-stone-700">{a.title}</span>
+                  <span className="tabular-nums"> · {a.n}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardPart>
       )}
 
       {/* Did one article lead to another. This is the only question on the card
@@ -309,6 +402,9 @@ export default function ArticleEngagementCard({
         המאמר היה על המסך וגם עברו לפחות 40% מזמן הקריאה המשוער, בלשונית פעילה.
         אחוזי גלילה מדויקים וזמן קריאה אינם נשמרים ולכן אינם מופיעים כאן. לאיזו
         רשת בוצע שיתוף נשמר רק מ-22.9.2026, ולכן שיתופים קודמים מופיעים בלי רשת.
+        &quot;כניסות מקישור ששותף&quot; נספרות רק מהיום שבו קישורי השיתוף התחילו לשאת
+        תיוג (utm_medium=share). פייסבוק עשוי לפרסם את כתובת המאמר בלי התיוג, ואז
+        הביקור מזוהה כפייסבוק לפי האתר המפנה, אבל לא נספר כאן.
       </Explain>
     </div>
   );
