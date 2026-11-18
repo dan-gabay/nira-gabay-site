@@ -7,6 +7,7 @@ import { supabase as supabaseClient } from '@/lib/supabaseClient';
 import { trackArticleLike, trackArticleShare, reportSiteError } from '@/lib/analytics';
 import { FACEBOOK_APP_ID } from '@/lib/facebook';
 import { isOptedOut } from '@/lib/ownerOptOut';
+import { articleShareUrl } from '@/lib/shareLink';
 
 // The Postgres/PostgREST code when there is one (e.g. 42501 for a policy
 // refusal), never the message: these writes go straight from the browser to
@@ -136,7 +137,7 @@ export default function ArticleInteractions({
   async function shareNative() {
     trackArticleShare('native', articleId, document.title);
     try {
-      await navigator.share({ title: document.title, url: window.location.href });
+      await navigator.share({ title: document.title, url: articleShareUrl('share_sheet') });
     } catch {
       // User cancelled the share sheet - nothing to do
     }
@@ -145,7 +146,7 @@ export default function ArticleInteractions({
   async function copyLink() {
     trackArticleShare('copy_link', articleId, document.title);
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(articleShareUrl('copy_link'));
       setToastMessage('הקישור הועתק!');
     } catch {
       setToastMessage('משהו השתבש, נסו שוב');
@@ -153,7 +154,9 @@ export default function ArticleInteractions({
   }
 
   function shareOnWhatsApp() {
-    const url = window.location.href;
+    // Tagged (lib/shareLink.ts): WhatsApp opens links with no referrer, so
+    // without the tag the friend's visit would be counted as direct.
+    const url = articleShareUrl('whatsapp');
     const text = `קראו את המאמר הזה מאת נירה גבאי`;
     // Deliberately NOT trackWhatsAppClick: that is the "reached out to Nira"
     // event and it now reports a conversion to the ad platforms. Sharing an
@@ -163,11 +166,12 @@ export default function ArticleInteractions({
   }
 
   function shareOnFacebook() {
-    // The canonical address, not location.href: a visitor who arrived from an
-    // ad or a Facebook post carries gclid/fbclid/utm params, and those would
-    // otherwise be baked into every re-share.
-    const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href;
-    const url = canonical || window.location.origin + window.location.pathname;
+    // The canonical address plus the share tag (lib/shareLink.ts), not
+    // location.href: a visitor who arrived from an ad or a Facebook post
+    // carries gclid/fbclid/utm params, and those would otherwise be baked into
+    // every re-share. Facebook may still post the page's og:url (untagged); a
+    // visit from it is then known as Facebook by its referrer instead.
+    const url = articleShareUrl('facebook');
     trackArticleShare('facebook', articleId, document.title);
 
     // The official Share Dialog, not sharer.php: on a phone with the Facebook
@@ -192,7 +196,7 @@ export default function ArticleInteractions({
   }
 
   function shareOnInstagram() {
-    const url = window.location.href;
+    const url = articleShareUrl('instagram');
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
     // Track conversion

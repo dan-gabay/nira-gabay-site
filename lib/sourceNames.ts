@@ -30,6 +30,12 @@ const NAMES: Array<[RegExp, string]> = [
   [/^(www\.)?waze(\.com)?$/i, 'Waze'],
   [/^(www\.)?foursquare(\.com)?$/i, 'Foursquare'],
   [/^(apple|maps\.apple(\.com)?)$/i, 'Apple Maps'],
+  // Article share buttons (lib/shareLink.ts) tag the link they hand out with
+  // utm_medium=share. WhatsApp, Facebook and Instagram are grouped as social
+  // by their utm_source; these two name no network, so they would otherwise
+  // show under other sites by their raw tag.
+  [/^copy_link$/i, 'קישור ששותף ממאמר (הועתק)'],
+  [/^share_sheet$/i, 'קישור ששותף ממאמר (תפריט שיתוף)'],
 ];
 
 /** A referring site's display name, from its utm_source tag or its host. */
