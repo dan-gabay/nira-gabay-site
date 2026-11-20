@@ -130,14 +130,14 @@ export const LP_CERTIFICATES_MORE: Certificate[] = [
   },
   {
     src: '/images/certificates/adler-couples-therapy-2021.webp',
-    caption: 'טיפול זוגי, מכון אדלר, 108 שעות, 2021',
+    caption: 'טיפול זוגי, מכון אדלר, 2021',
     field: 'טיפול זוגי',
     width: 1000,
     height: 1250,
   },
   {
     src: '/images/certificates/schema-therapy-tools-2026.webp',
-    caption: 'כלים בסכמה תרפיה ליועצות חינוכיות, 30 שעות, 2026',
+    caption: 'כלים בסכמה תרפיה ליועצות חינוכיות, 2026',
     field: 'סכמה תרפיה',
     width: 1000,
     height: 1250,
