@@ -50,11 +50,11 @@ export const CREDENTIALS: Credential[] = [
   },
   {
     // Added by Dan, 20 Nov 2026. Certificate not yet seen; Dan chose the
-    // card wording (title "פסיכותרפיה דינאמית", line "הכשרה מאוניברסיטת
+    // card wording (title "פסיכותרפיה דינאמית", line "בהכשרה מאוניברסיטת
     // בר-אילן") and its place as the second card.
     title: 'פסיכותרפיה דינאמית',
     institution: 'אוניברסיטת בר-אילן',
-    detailsLabel: 'הכשרה מאוניברסיטת בר-אילן',
+    detailsLabel: 'בהכשרה מאוניברסיטת בר-אילן',
     category: 'certificate',
     note: 'הבנה של דפוסים רגשיים ושל הקשר הטיפולי מנקודת מבט דינאמית.',
   },
