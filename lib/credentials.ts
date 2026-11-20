@@ -25,7 +25,9 @@ export type Credential = {
   institution: string;
   /** Year the credential was completed, or a range for a multi-year program. */
   year: string;
-  /** Scope in hours, when the certificate states it. */
+  /** Scope in hours, when the certificate states it and the owner wants it
+   *  shown. Couples therapy and schema-therapy hours are omitted on purpose
+   *  (Dan, 20 Nov 2026). */
   hours?: number;
   /** schema.org credentialCategory. */
   category: 'degree' | 'certificate' | 'license';
@@ -62,7 +64,6 @@ export const CREDENTIALS: Credential[] = [
     title: 'קורס הכשרה בטיפול זוגי',
     institution: 'מכון אדלר, בית הספר לפסיכותרפיה',
     year: '2021',
-    hours: 108,
     category: 'certificate',
     note: 'עבודה עם זוגות על תקשורת, משברים וקשר.',
   },
@@ -92,7 +93,6 @@ export const CREDENTIALS: Credential[] = [
     title: 'כלים בסכמה תרפיה',
     institution: 'מכון מפרשים, המכללה האקדמית תל אביב-יפו',
     year: '2026',
-    hours: 30,
     category: 'certificate',
     note: 'השתלמות בכלים מעולם הסכמה תרפיה.',
   },
