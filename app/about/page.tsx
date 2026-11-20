@@ -19,8 +19,8 @@ import { CREDENTIALS, credentialDetails } from '@/lib/credentials';
 // One icon per card, in the order of CREDENTIALS, so no two cards share one.
 const credentialIcons = [
   MessagesSquare, // individual psychotherapy
-  Brain, // CBT and DBT
   BookOpen, // dynamic psychotherapy
+  Brain, // CBT and DBT
   Users, // parent and family groups
   HeartHandshake, // couples therapy
   GraduationCap, // M.A.

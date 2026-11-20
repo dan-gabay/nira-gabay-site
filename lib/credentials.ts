@@ -26,6 +26,9 @@ export type Credential = {
   /** Year the credential was completed, or a range for a multi-year program.
    *  Optional: left out until the owner confirms it. */
   year?: string;
+  /** Replaces "institution, year" in the visible details line, when the
+   *  owner wants different wording there. The schema still uses `institution`. */
+  detailsLabel?: string;
   /** Scope in hours, when the certificate states it and the owner wants it
    *  shown. Couples therapy and schema-therapy hours are omitted on purpose
    *  (Dan, 20 Nov 2026). */
@@ -46,20 +49,22 @@ export const CREDENTIALS: Credential[] = [
     note: 'הבסיס לעבודה הטיפולית עם מבוגרים ומתבגרים.',
   },
   {
+    // Added by Dan, 20 Nov 2026. Certificate not yet seen; Dan chose the
+    // card wording (title "פסיכותרפיה דינאמית", line "הכשרה מאוניברסיטת
+    // בר-אילן") and its place as the second card.
+    title: 'פסיכותרפיה דינאמית',
+    institution: 'אוניברסיטת בר-אילן',
+    detailsLabel: 'הכשרה מאוניברסיטת בר-אילן',
+    category: 'certificate',
+    note: 'הבנה של דפוסים רגשיים ושל הקשר הטיפולי מנקודת מבט דינאמית.',
+  },
+  {
     title: 'הכשרה דו-שנתית בטיפול קוגניטיבי התנהגותי (CBT), כולל DBT',
     institution: 'אוניברסיטת חיפה, בית הספר לפסיכולוגיה',
     year: '2022-2024',
     hours: 348,
     category: 'certificate',
     note: 'כלים ממוקדים לחרדה, דפוסי מחשבה וויסות רגשי.',
-  },
-  {
-    // Added by Dan, 20 Nov 2026. Certificate not yet seen; year to be added
-    // once Dan confirms it.
-    title: 'הכשרה בפסיכותרפיה דינאמית',
-    institution: 'אוניברסיטת בר-אילן',
-    category: 'certificate',
-    note: 'הבנה של דפוסים רגשיים ושל הקשר הטיפולי מנקודת מבט דינאמית.',
   },
   {
     title: 'הסמכה להנחיית קבוצות הורים ומשפחה (תוכנית תלת-שנתית)',
@@ -110,6 +115,7 @@ export const CREDENTIALS: Credential[] = [
 /** "מכון אדלר, 2019, 790 שעות" - the compact form used in lists. */
 export function credentialDetails(c: Credential): string {
   const hours = c.hours ? `, ${c.hours.toLocaleString('en-US')} שעות` : '';
+  if (c.detailsLabel) return `${c.detailsLabel}${hours}`;
   const year = c.year ? `, ${c.year}` : '';
   return `${c.institution}${year}${hours}`;
 }
