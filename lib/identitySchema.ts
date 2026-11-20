@@ -42,9 +42,9 @@ const credentialNodes = CREDENTIALS.map((c) => ({
   '@type': 'EducationalOccupationalCredential',
   credentialCategory: c.category,
   name: c.title,
-  description: `${c.institution}, ${c.year}${c.hours ? `, ${c.hours} שעות` : ''}`,
+  description: `${c.institution}${c.year ? `, ${c.year}` : ''}${c.hours ? `, ${c.hours} שעות` : ''}`,
   recognizedBy: { '@type': 'EducationalOrganization', name: c.institution },
-  dateCreated: c.year.slice(-4),
+  ...(c.year ? { dateCreated: c.year.slice(-4) } : {}),
 }));
 
 // The practice's Google Business Profile, by its CID - the stable form of a

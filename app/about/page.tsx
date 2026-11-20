@@ -5,7 +5,7 @@ import { enterStyle } from '@/lib/enter';
 import Image from 'next/image';
 import {
   GraduationCap, Award, Heart, MapPin, Users, Monitor, MessagesSquare, Brain,
-  HeartHandshake, ScrollText, Puzzle, Layers, Briefcase,
+  HeartHandshake, ScrollText, Puzzle, Layers, Briefcase, BookOpen,
 } from 'lucide-react';
 import ArticleCtaBanner from '@/components/ArticleCtaBanner';
 import { CREDENTIALS, credentialDetails } from '@/lib/credentials';
@@ -19,6 +19,7 @@ import { CREDENTIALS, credentialDetails } from '@/lib/credentials';
 // One icon per card, in the order of CREDENTIALS, so no two cards share one.
 const credentialIcons = [
   MessagesSquare, // individual psychotherapy
+  BookOpen, // dynamic psychotherapy
   Brain, // CBT and DBT
   Users, // parent and family groups
   HeartHandshake, // couples therapy
@@ -225,14 +226,14 @@ export default function About() {
                 </Reveal>
               );
             })}
-            {/* 8 certificates + 2 cards = 10: the last one spans the row at
-                three columns so no card is left alone on a line. */}
+            {/* 9 certificates + 2 cards = 11: the last one spans two columns
+                so no card is left alone on a line (2-col and 3-col grids). */}
             {moreCards.map((card, index) => (
               <Reveal
                 key={card.title}
                 y={30}
                 duration={0.5}
-                className={`bg-white rounded-2xl p-5 md:p-7 shadow-lg border border-stone-100 ${index === moreCards.length - 1 ? 'lg:col-span-3' : ''}`}
+                className={`bg-white rounded-2xl p-5 md:p-7 shadow-lg border border-stone-100 ${index === moreCards.length - 1 ? 'md:col-span-2' : ''}`}
               >
                 <div className="flex items-center gap-3 mb-2 md:block md:mb-0">
                   <div className="w-11 h-11 md:w-14 md:h-14 shrink-0 rounded-2xl bg-gradient-to-br from-amber-100 to-stone-100 flex items-center justify-center md:mb-6">
