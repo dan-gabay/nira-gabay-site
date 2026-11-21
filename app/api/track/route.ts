@@ -10,6 +10,7 @@ import {
 import { botKindFromUserAgent } from '@/lib/botDetect';
 import { OPT_OUT_COOKIE, optedOutFromCookie } from '@/lib/ownerOptOut';
 import { isCountableDeployment } from '@/lib/countableDeployment';
+import { articleSlugForView, incrementArticleViews } from '@/lib/articleViews';
 
 export const runtime = 'nodejs';
 
@@ -84,19 +85,21 @@ export async function POST(req: NextRequest) {
     const clickKind = rawKind && isClickKind(rawKind) ? rawKind : null;
 
     const ua = req.headers.get('user-agent');
+    // null for a person. The client's navigator.webdriver is trusted only to
+    // ADD a flag: it can reveal a driven browser behind an ordinary UA, and
+    // a forged `false` merely leaves a bot looking like everyone else.
+    const botKind = botKindFromUserAgent(ua) ?? (body.automated === true ? 'automation' : null);
+    const path = clip(body.path);
     const supabase = supabaseServer();
     const { error } = await supabase.from('site_events').insert({
       event_name: name,
-      path: clip(body.path),
+      path,
       page_type: clip(body.page_type),
       entity: clip(body.entity),
       source: clip(body.source),
       session_id: clip(body.session_id),
       device: deviceFrom(ua),
-      // null for a person. The client's navigator.webdriver is trusted only to
-      // ADD a flag: it can reveal a driven browser behind an ordinary UA, and
-      // a forged `false` merely leaves a bot looking like everyone else.
-      bot_kind: botKindFromUserAgent(ua) ?? (body.automated === true ? 'automation' : null),
+      bot_kind: botKind,
       // Clamped, not trusted: these come from the visitor's own storage, so a
       // crafted body can only describe itself, and cannot describe anyone else.
       visit_number: clampInt(body.visit_number, 1, 10000),
@@ -113,7 +116,16 @@ export async function POST(req: NextRequest) {
       is_conversion: isConversion(name),
     });
 
-    if (error) console.error('track insert failed:', error.message);
+    if (error) {
+      console.error('track insert failed:', error.message);
+    } else {
+      // The article's public view counter moves with the page_view the
+      // dashboard counts, never apart from it (lib/articleViews.ts).
+      const slug = articleSlugForView(name, path, botKind);
+      if (slug && !(await incrementArticleViews(supabase, slug))) {
+        console.error('article view count failed:', slug);
+      }
+    }
   } catch (e) {
     console.error('track failed:', e);
   }

@@ -6,7 +6,6 @@ import { getUserIdentifier } from '@/lib/userIdentifier';
 import { supabase as supabaseClient } from '@/lib/supabaseClient';
 import { trackArticleLike, trackArticleShare, reportSiteError } from '@/lib/analytics';
 import { FACEBOOK_APP_ID } from '@/lib/facebook';
-import { isOptedOut } from '@/lib/ownerOptOut';
 import { articleShareUrl } from '@/lib/shareLink';
 
 // The Postgres/PostgREST code when there is one (e.g. 42501 for a policy
@@ -20,13 +19,11 @@ function supabaseErrorReason(error: unknown): string {
 type ArticleInteractionsProps = {
   articleId: string;
   initialLikesCount: number;
-  initialViewsCount: number;
 };
 
 export default function ArticleInteractions({ 
   articleId, 
   initialLikesCount,
-  initialViewsCount 
 }: ArticleInteractionsProps) {
   const [hasLiked, setHasLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(initialLikesCount);
@@ -37,7 +34,8 @@ export default function ArticleInteractions({
   // בדיקה אם המשתמש כבר נתן לייק
   useEffect(() => {
     checkUserLike();
-    incrementViewCount();
+    // Views are counted on the server, from the page_view /api/track stores
+    // (lib/articleViews.ts), not here.
     // navigator.share is only known on the client (avoid hydration mismatch)
     setCanNativeShare(typeof navigator !== 'undefined' && !!navigator.share);
   }, [articleId]);
@@ -60,31 +58,6 @@ export default function ArticleInteractions({
       .single();
     
     setHasLiked(!!data);
-  }
-
-  async function incrementViewCount() {
-    // The owner rereading an article is not a view (lib/ownerOptOut.ts).
-    if (isOptedOut()) return;
-    // עדכון ספירת הצפיות (רק אם טרם נספר היום)
-    const lastViewedKey = `article_viewed_${articleId}`;
-    const lastViewed = localStorage.getItem(lastViewedKey);
-    const today = new Date().toDateString();
-    
-    if (lastViewed !== today) {
-      // Atomic increment via RPC; fall back to the old read-modify-write
-      // update if the function doesn't exist yet in the DB.
-      const { error: rpcError } = await supabaseClient
-        .rpc('increment_article_views', { aid: articleId });
-
-      if (rpcError) {
-        await supabaseClient
-          .from('articles')
-          .update({ views_count: initialViewsCount + 1 })
-          .eq('id', articleId);
-      }
-
-      localStorage.setItem(lastViewedKey, today);
-    }
   }
 
   async function handleLike() {
