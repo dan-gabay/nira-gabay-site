@@ -515,7 +515,6 @@ export default async function ArticlePage({ params }: Props) {
           <ArticleInteractions 
             articleId={article.id}
             initialLikesCount={article.likes_count || 0}
-            initialViewsCount={article.views_count || 0}
           />
 
           {/* Visible FAQ - same content as the FAQPage JSON-LD above */}
